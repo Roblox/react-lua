@@ -1,6 +1,5 @@
 -- import {
 -- enableSchedulerDebugging,
--- enableProfiling,
 -- } from './SchedulerFeatureFlags';
 -- import {
 -- requestHostCallback,
@@ -82,10 +81,6 @@ local function advanceTimers(currentTime)
 			timer.sortIndex = timer.expirationTime
 
 			push(taskQueue, timer)
-			if enableProfiling then
-				markTaskStart(timer, currentTime)
-				timer.isQueued = true
-			end
 		else
 			-- Remaining timers are pending.
 			return;
@@ -113,10 +108,6 @@ local function handleTimeout(currentTime)
 end
 
 function flushWork(hasTimeRemaining, initialTime)
-	if enableProfiling then
-		markSchedulerUnsuspended(initialTime)
-	end
-
 	-- We'll need a host callback the next time work is scheduled.
 	isHostCallbackScheduled = false
 	if isHostTimeoutScheduled then
@@ -129,32 +120,13 @@ function flushWork(hasTimeRemaining, initialTime)
 	local previousPriorityLevel = currentPriorityLevel
 	-- TODO(align): Does this really just not care about the failure case?
 	local ok, result = pcall(function()
-		if enableProfiling then
-			local ok, result = pcall(function()
-				return workLoop(hasTimeRemaining, initialTime)
-			end)
-
-			if not ok then
-				if currentTask ~= nil then
-					local currentTime = getCurrentTime()
-					markTaskErrored(currentTask, currentTime)
-					currentTask.isQueued = false
-				end
-				error(result)
-			end
-		else
-			-- No catch in prod code path.
-			return workLoop(hasTimeRemaining, initialTime)
-		end
+		-- No catch in prod code path.
+		return workLoop(hasTimeRemaining, initialTime)
 	end)
 
 	currentTask = null
 	currentPriorityLevel = previousPriorityLevel
 	isPerformingWork = false
-	if enableProfiling then
-		local currentTime = getCurrentTime()
-		markSchedulerSuspended(currentTime)
-	end
 
 	if not ok then
 		error(result)
@@ -192,10 +164,6 @@ function workLoop(hasTimeRemaining, initialTime)
 				currentTask.callback = continuationCallback
 				markTaskYield(currentTask, currentTime)
 			else
-				if enableProfiling then
-					markTaskCompleted(currentTask, currentTime)
-					currentTask.isQueued = false
-				end
 				if currentTask == peek(taskQueue) then
 					pop(taskQueue)
 				end
@@ -337,10 +305,6 @@ function unstable_scheduleCallback(priorityLevel, callback, options)
 	}
 	taskIdCounter = taskIdCounter + 1
 
-	if enableProfiling then
-		newTask.isQueued = false
-	end
-
 	if startTime > currentTime then
 		-- This is a delayed task.
 		newTask.sortIndex = startTime
@@ -361,10 +325,6 @@ function unstable_scheduleCallback(priorityLevel, callback, options)
 	else
 		newTask.sortIndex = expirationTime
 		push(taskQueue, newTask)
-		if enableProfiling then
-			markTaskStart(newTask, currentTime)
-			newTask.isQueued = true
-		end
 		-- Schedule a host callback, if needed. If we're already performing work,
 		-- wait until the next time we yield.
 		if not isHostCallbackScheduled and not isPerformingWork then
@@ -393,14 +353,6 @@ function unstable_getFirstCallbackNode()
 end
 
 function unstable_cancelCallback(task)
-	if enableProfiling then
-		if task.isQueued then
-			local currentTime = getCurrentTime()
-			markTaskCanceled(task, currentTime)
-			task.isQueued = false
-		end
-	end
-
 	-- Null out the callback to indicate the task has been canceled. (Can't
 	-- remove from the queue because you can't remove arbitrary nodes from an
 	-- array based heap, only the first one.)
@@ -433,11 +385,3 @@ return {
 	unstable_now = getCurrentTime,
 	unstable_forceFrameRate = forceFrameRate,
 }
-
--- export const unstable_Profiling = enableProfiling
--- ? {
--- 	startLoggingProfilingEvents,
--- 	stopLoggingProfilingEvents,
--- 	sharedProfilingBuffer,
--- 	end
--- : null;
