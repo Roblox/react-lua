@@ -1,0 +1,11 @@
+[package]
+name = "roact/scheduler"
+version = "0.1.0"
+author = "Paul Doyle <pdoyle@roblox.com>"
+
+# Optional fields and their definitions can be found at:
+# https://pages.github.rbx.com/pdoyle/rotriever-docs/reference/manifest-format/#manifest-fields
+
+[dependencies]
+# Different kinds of dependencies are specified in different ways. See more details at:
+# https://pages.github.rbx.com/pdoyle/rotriever-docs/reference/manifest-format/#specifying-manifest-dependencies
