@@ -10,7 +10,6 @@
 -- forceFrameRate,
 -- requestPaint,
 -- } from './SchedulerHostConfig';
--- import {push, pop, peek} from './SchedulerMinHeap';
 
 -- -- TODO: Use symbols?
 -- import {
@@ -33,6 +32,12 @@
 -- stopLoggingProfilingEvents,
 -- startLoggingProfilingEvents,
 -- } from './SchedulerProfiling';
+
+-- TODO(align): Right now, this is mimicking the js as closely as possible;
+-- typically, the lua-y way to do things would be to refer to these as members.
+-- Which should we use?
+local SchedulerMinHeap = require(script.Parent.SchedulerMinHeap)
+local push, peek, pop = SchedulerMinHeap.push, SchedulerMinHeap.peek, SchedulerMinHeap.pop
 
 -- Max 31 bit integer. The max integer size in V8 for 32-bit systems.
 -- Math.pow(2, 30) - 1
@@ -58,7 +63,7 @@ local taskIdCounter = 1
 -- Pausing the scheduler is useful for debugging.
 local isSchedulerPaused = false
 
-local currentTask = null
+local currentTask = nil
 local currentPriorityLevel = NormalPriority
 
 -- This is set while performing work, to prevent re-entrancy.
@@ -124,7 +129,7 @@ function flushWork(hasTimeRemaining, initialTime)
 		return workLoop(hasTimeRemaining, initialTime)
 	end)
 
-	currentTask = null
+	currentTask = nil
 	currentPriorityLevel = previousPriorityLevel
 	isPerformingWork = false
 
@@ -151,7 +156,7 @@ function workLoop(hasTimeRemaining, initialTime)
 
 		local callback = currentTask.callback
 		if typeof(callback) == "function" then
-			currentTask.callback = null
+			currentTask.callback = nil
 			currentPriorityLevel = currentTask.priorityLevel
 
 			local didUserCallbackTimeout = currentTask.expirationTime <= currentTime
