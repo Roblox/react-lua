@@ -15,7 +15,9 @@ local function setTimeout(callback, delayTime: number, ...): Task
 		[Status] = SCHEDULED
 	}
 
-	delay(delayTime, function()
+	-- To mimic the JS interface, we're expecting delayTime to be in ms
+	local delayTimeMs = delayTime / 1000
+	delay(delayTimeMs, function()
 		if task[Status] == SCHEDULED then
 			callback(unpack(args))
 			task[Status] = DONE
