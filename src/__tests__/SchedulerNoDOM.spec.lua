@@ -1,6 +1,6 @@
 --!strict
 return function()
-	local makeTimeout = require(script.Parent.Parent.makeTimeout)
+	local makeTimeout = require(script.Parent.Parent.Timeout.makeTimeout)
 	local makeHostConfig = require(script.Parent.Parent.SchedulerHostConfig)
 	local makeScheduler = require(script.Parent.Parent.Scheduler)
 

@@ -1,7 +1,7 @@
 --!nonstrict
 return function()
 	local makeTimeout = require(script.Parent.Parent.makeTimeout)
-	local createSpy = require(script.Parent.Parent.createSpy)
+	local createSpy = require(script.Parent.Parent.Parent.createSpy)
 
 	local Timeout
 	local mockTime, timeouts

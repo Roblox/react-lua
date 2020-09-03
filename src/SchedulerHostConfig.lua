@@ -1,9 +1,9 @@
--- TODO(align): react splits these up depending on what time tracking logic and
--- DOM API members are available in the given environment. Should we do a
--- similar thing with lua 5.1? We'll need to be able to convert from luau to
--- stock lua. Could we instead use a luau repl instead of roblox?
--- local getCurrentTime = tick
-
+-- (align) This implementation is converted from the "naive" implementation that
+-- the React scheduler falls bak on in the absence of certain DOM APIs.
+--
+-- This is likely to be the implementation that React Native applications run
+-- with, and should be considered sufficiently sophisticated. More research
+-- needs to be done to verify this.
 return function(Timeout, getCurrentTime)
 	local setTimeout = Timeout.setTimeout
 	local clearTimeout = Timeout.clearTimeout
