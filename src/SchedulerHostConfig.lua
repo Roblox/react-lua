@@ -1,12 +1,10 @@
-local Timeout = require(script.Parent.Timeout)
-
 -- TODO(align): react splits these up depending on what time tracking logic and
 -- DOM API members are available in the given environment. Should we do a
 -- similar thing with lua 5.1? We'll need to be able to convert from luau to
 -- stock lua. Could we instead use a luau repl instead of roblox?
 -- local getCurrentTime = tick
 
-return function(getCurrentTime)
+return function(Timeout, getCurrentTime)
 	local setTimeout = Timeout.setTimeout
 	local clearTimeout = Timeout.clearTimeout
 

@@ -1,22 +1,22 @@
 --!nonstrict
 return function()
-	local Timeout = require(script.Parent.Parent.Timeout)
+	local makeTimeout = require(script.Parent.Parent.makeTimeout)
 	local createSpy = require(script.Parent.Parent.createSpy)
 
-	local fakeTime, timeouts
+	local Timeout
+	local mockTime, timeouts
 
 	local function advanceTime(amount)
 		-- Account for milliseconds to seconds conversion here, since Timeout
 		-- will make the same adjustment
-		fakeTime += amount / 1000
+		mockTime += amount / 1000
 		for _, update in pairs(timeouts) do
-			update(fakeTime)
+			update(mockTime)
 		end
 	end
 
-	local function fakeDelay(delayTime, callback)
-		local targetTime = fakeTime + delayTime
-		print("Running callback in", delayTime, "simulated seconds...")
+	local function mockDelay(delayTime, callback)
+		local targetTime = mockTime + delayTime
 		timeouts[callback] = function(time)
 			if time >= targetTime then
 				callback()
@@ -26,13 +26,9 @@ return function()
 	end
 
 	beforeEach(function()
-		fakeTime = 0
+		mockTime = 0
 		timeouts = {}
-		getfenv(Timeout.setTimeout).delay = fakeDelay
-	end)
-
-	afterEach(function()
-		getfenv(Timeout.setTimeout).delay = delay
+		Timeout = makeTimeout(mockDelay)
 	end)
 
 	describe("Delay override logic", function()

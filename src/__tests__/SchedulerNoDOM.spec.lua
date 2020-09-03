@@ -1,6 +1,6 @@
 --!strict
 return function()
-	local Timeout = require(script.Parent.Parent.Timeout)
+	local makeTimeout = require(script.Parent.Parent.makeTimeout)
 	local makeHostConfig = require(script.Parent.Parent.SchedulerHostConfig)
 	local makeScheduler = require(script.Parent.Parent.Scheduler)
 
@@ -26,7 +26,6 @@ return function()
 
 		local function mockDelay(delayTime, callback)
 			local targetTime = mockTime + delayTime
-			print("Running callback in", delayTime, "simulated seconds...")
 			timeouts[callback] = function(time: number)
 				if time >= targetTime then
 					callback()
@@ -58,9 +57,8 @@ return function()
 		beforeEach(function()
 			mockTime = 0
 			timeouts = {}
-			getfenv(Timeout.setTimeout).delay = mockDelay
-
-			local HostConfig = makeHostConfig(function()
+			local Timeout = makeTimeout(mockDelay)
+			local HostConfig = makeHostConfig(Timeout, function()
 				return mockTime
 			end)
 			local Scheduler = makeScheduler(HostConfig)
@@ -69,10 +67,6 @@ return function()
 			ImmediatePriority = Scheduler.unstable_ImmediatePriority
 			UserBlockingPriority = Scheduler.unstable_UserBlockingPriority
 			NormalPriority = Scheduler.unstable_NormalPriority
-		end)
-
-		afterEach(function()
-			getfenv(Timeout.setTimeout).delay = delay
 		end)
 
 		it('runAllTimers flushes all scheduled callbacks', function()
