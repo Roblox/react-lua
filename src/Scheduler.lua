@@ -1,37 +1,21 @@
--- import {
--- enableSchedulerDebugging,
--- } from './SchedulerFeatureFlags';
--- import {
--- requestHostCallback,
--- requestHostTimeout,
--- cancelHostTimeout,
--- shouldYieldToHost,
--- getCurrentTime,
--- forceFrameRate,
--- requestPaint,
--- } from './SchedulerHostConfig';
+local SchedulerHostConfig = require(script.Parent.SchedulerHostConfig)
 
--- -- TODO: Use symbols?
--- import {
--- ImmediatePriority,
--- UserBlockingPriority,
--- NormalPriority,
--- LowPriority,
--- IdlePriority,
--- } from './SchedulerPriorities';
--- import {
--- sharedProfilingBuffer,
--- markTaskRun,
--- markTaskYield,
--- markTaskCompleted,
--- markTaskCanceled,
--- markTaskErrored,
--- markSchedulerSuspended,
--- markSchedulerUnsuspended,
--- markTaskStart,
--- stopLoggingProfilingEvents,
--- startLoggingProfilingEvents,
--- } from './SchedulerProfiling';
+local requestHostCallback = SchedulerHostConfig.requestHostCallback
+local requestHostTimeout = SchedulerHostConfig.requestHostTimeout
+local cancelHostTimeout = SchedulerHostConfig.cancelHostTimeout
+local shouldYieldToHost = SchedulerHostConfig.shouldYieldToHost
+local getCurrentTime = SchedulerHostConfig.getCurrentTime
+local forceFrameRate = SchedulerHostConfig.forceFrameRate
+local requestPaint = SchedulerHostConfig.requestPaint
+
+-- TODO: Use symbols?
+local SchedulerPriorities = require(script.Parent.SchedulerPriorities)
+
+local ImmediatePriority = SchedulerPriorities.ImmediatePriority
+local UserBlockingPriority = SchedulerPriorities.UserBlockingPriority
+local NormalPriority = SchedulerPriorities.NormalPriority
+local LowPriority = SchedulerPriorities.LowPriority
+local IdlePriority = SchedulerPriorities.IdlePriority
 
 -- TODO(align): Right now, this is mimicking the js as closely as possible;
 -- typically, the lua-y way to do things would be to refer to these as members.
@@ -142,10 +126,7 @@ function workLoop(hasTimeRemaining, initialTime)
 	local currentTime = initialTime
 	advanceTimers(currentTime)
 	currentTask = peek(taskQueue)
-	while
-		currentTask ~= nil and
-		not (enableSchedulerDebugging and isSchedulerPaused)
-	do
+	while currentTask ~= nil and not isSchedulerPaused do
 		if
 			currentTask.expirationTime > currentTime and
 			(not hasTimeRemaining or shouldYieldToHost())
@@ -160,14 +141,16 @@ function workLoop(hasTimeRemaining, initialTime)
 			currentPriorityLevel = currentTask.priorityLevel
 
 			local didUserCallbackTimeout = currentTask.expirationTime <= currentTime
-			markTaskRun(currentTask, currentTime)
+			-- With `enableProfiling` flag logic removed, this is a no-op
+			-- markTaskRun(currentTask, currentTime)
 
 			local continuationCallback = callback(didUserCallbackTimeout)
 			currentTime = getCurrentTime()
 
 			if typeof(continuationCallback) == "function" then
 				currentTask.callback = continuationCallback
-				markTaskYield(currentTask, currentTime)
+				-- With `enableProfiling` flag logic removed, this is a no-op
+				-- markTaskYield(currentTask, currentTime)
 			else
 				if currentTask == peek(taskQueue) then
 					pop(taskQueue)
@@ -256,11 +239,14 @@ function unstable_wrapCallback(callback)
 		currentPriorityLevel = parentPriorityLevel
 
 		local ok, result = pcall(function()
-			return callback.apply(this, arguments)
+			return callback()
 		end)
 
 		currentPriorityLevel = previousPriorityLevel
 
+		-- (align): A bit unclear what to do in this case; original logic
+		-- returns result regardless, but in our case it may be an error. Since
+		-- the original code has no catch, this seems like the correct approach.
 		if not ok then
 			error(result)
 		end
