@@ -57,7 +57,7 @@ return function(config)
 	local isHostCallbackScheduled = false
 	local isHostTimeoutScheduled = false
 
-	local handleTimeout
+	local handleTimeout, flushWork
 
 	local function advanceTimers(currentTime)
 		-- Check for tasks that are no longer delayed and add them to the queue.
@@ -137,7 +137,24 @@ return function(config)
 		end
 	end
 
-	local function flushWork(hasTimeRemaining, initialTime)
+	handleTimeout = function(currentTime)
+		isHostTimeoutScheduled = false
+		advanceTimers(currentTime)
+
+		if not isHostCallbackScheduled then
+			if peek(taskQueue) ~= nil then
+				isHostCallbackScheduled = true
+				requestHostCallback(flushWork)
+			else
+				local firstTimer = peek(timerQueue)
+				if firstTimer ~= nil then
+					requestHostTimeout(handleTimeout, firstTimer.startTime - currentTime);
+				end
+			end
+		end
+	end
+
+	flushWork = function(hasTimeRemaining, initialTime)
 		-- We'll need a host callback the next time work is scheduled.
 		isHostCallbackScheduled = false
 		if isHostTimeoutScheduled then
@@ -161,23 +178,8 @@ return function(config)
 		if not ok then
 			error(result)
 		end
-	end
 
-	handleTimeout = function(currentTime)
-		isHostTimeoutScheduled = false
-		advanceTimers(currentTime)
-
-		if not isHostCallbackScheduled then
-			if peek(taskQueue) ~= nil then
-				isHostCallbackScheduled = true
-				requestHostCallback(flushWork)
-			else
-				local firstTimer = peek(timerQueue)
-				if firstTimer ~= nil then
-					requestHostTimeout(handleTimeout, firstTimer.startTime - currentTime);
-				end
-			end
-		end
+		return result
 	end
 
 	local function unstable_runWithPriority(priorityLevel, eventHandler)
@@ -236,13 +238,14 @@ return function(config)
 	local function unstable_wrapCallback(callback)
 		local parentPriorityLevel = currentPriorityLevel
 
-		return function()
+		return function(...)
 			-- This is a fork of runWithPriority, inlined for performance.
 			local previousPriorityLevel = currentPriorityLevel
 			currentPriorityLevel = parentPriorityLevel
 
+			local args = {...}
 			local ok, result = pcall(function()
-				return callback()
+				return callback(unpack(args))
 			end)
 
 			currentPriorityLevel = previousPriorityLevel
