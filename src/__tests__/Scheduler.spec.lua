@@ -40,7 +40,7 @@ return function()
 					tostring(key),
 					tostring(value),
 					tostring(b[key])
-				), 3)
+				), 2)
 			end
 		end
 
@@ -50,7 +50,7 @@ return function()
 					tostring(key),
 					tostring(a[key]),
 					tostring(value)
-				), 3)
+				), 2)
 			end
 		end
 	end
@@ -66,7 +66,7 @@ return function()
 			error(("Did not find expected substring '%s' in thrown error. Thrown error:\n%s"):format(
 				tostring(substring),
 				tostring(result)
-			))
+			), 2)
 		end
 	end
 
@@ -74,8 +74,7 @@ return function()
 		local actualYields = Scheduler.unstable_clearYields()
 		if #actualYields ~= 0 then
 			error("Log of yielded values is not empty. " ..
-				"Call expectToHaveYielded(Scheduler, ...) first."
-			)
+				"Call expectToHaveYielded(Scheduler, ...) first.", 3)
 		end
 	end
 
@@ -83,14 +82,28 @@ return function()
 		assertYieldsWereCleared(Scheduler)
 		Scheduler.unstable_flushAllWithoutAsserting()
 		local actualYields = Scheduler.unstable_clearYields()
-		expectShallowEqual(actualYields, expectedYields)
+
+		local ok, result = pcall(function()
+			expectShallowEqual(actualYields, expectedYields)
+		end)
+
+		if not ok then
+			error(result, 2)
+		end
 	end
 
 	local function expectToFlushAndYieldThrough(Scheduler, expectedYields)
 		assertYieldsWereCleared(Scheduler)
 		Scheduler.unstable_flushNumberOfYields(#expectedYields)
 		local actualYields = Scheduler.unstable_clearYields()
-		expectShallowEqual(actualYields, expectedYields)
+
+		local ok, result = pcall(function()
+			expectShallowEqual(actualYields, expectedYields)
+		end)
+
+		if not ok then
+			error(result, 2)
+		end
 	end
 
 	local function expectToFlushWithoutYielding(Scheduler)
@@ -101,12 +114,26 @@ return function()
 		assertYieldsWereCleared(Scheduler)
 		Scheduler.unstable_flushExpired()
 		local actualYields = Scheduler.unstable_clearYields()
-		expectShallowEqual(actualYields, expectedYields)
+
+		local ok, result = pcall(function()
+			expectShallowEqual(actualYields, expectedYields)
+		end)
+
+		if not ok then
+			error(result, 2)
+		end
 	end
 
 	local function expectToHaveYielded(Scheduler, expectedYields)
 		local actualYields = Scheduler.unstable_clearYields()
-		expectShallowEqual(actualYields, expectedYields)
+
+		local ok, result = pcall(function()
+			expectShallowEqual(actualYields, expectedYields)
+		end)
+
+		if not ok then
+			error(result, 2)
+		end
 	end
 
 	describe("Scheduler", function()
