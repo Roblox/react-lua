@@ -94,25 +94,6 @@ return function()
 			if not ok then
 				error(result)
 			end
-
-			-- local ok, result = pcall(function()
-			-- 	local hasMoreWork = true
-			-- 	repeat
-			-- 		hasMoreWork = cb(true, currentTime)
-			-- 	until not hasMoreWork or didStop
-
-			-- 	if not hasMoreWork then
-			-- 		scheduledCallback = nil
-			-- 	end
-			-- end)
-
-			-- expectedNumberOfYields = -1
-			-- didStop = false
-			-- isFlushing = false
-
-			-- if not ok then
-			-- 	error(result)
-			-- end
 		end
 	end
 
