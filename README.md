@@ -12,6 +12,7 @@ The main Scheduler logic has been ported along with a couple of associated utili
 Files:
 * (new file) -> `src/Timeout/Timeout.lua`
 * (new file) -> `src/Timeout/makeTimeout.lua`
+
 Test Files:
 * (new file) -> `src/Timeout/__tests__/Timeout.spec.lua`
 
@@ -20,6 +21,7 @@ An added utility that replicates the interface of `setTimeout` and `clearTimeout
 #### MinHeap
 Files:
 * `src/SchedulerMinHeap.js` -> `src/SchedulerMinHeap.lua`
+
 Test Files:
 * (new file) -> `src/__tests__/SchedulerMinHeap.spec.lua`
 
@@ -30,6 +32,7 @@ Files:
 * `src/Scheduler.js` -> `src/Scheduler.lua`
 * `src/SchedulerPriorities.js` -> `src/SchedulerPriorities.lua`
 * `src/forks/SchedulerHostConfig.default.js` -> `src/SchedulerHostConfig.lua`
+
 Test Files:
 * `src/forks/SchedulerHostConfig.mock.js` -> `src/MockSchedulerHostConfig.lua`
 * `src/__tests__/Scheduler-test.js` -> `src/__tests__/Scheduler.spec.lua`
@@ -48,6 +51,7 @@ A number of components in the scheduler repository are considered extraneous or 
 Files:
 * `unstable_post_task.js`
 * `src/SchedulerPostTask.js`
+
 Test Files:
 * `src/__tests__/SchedulerPostTask-test.js`
 
@@ -56,6 +60,7 @@ An alternate implementation of the Scheduler interface based on the new postTask
 #### Profiling
 Files:
 * `src/SchedulerProfiling.js`
+
 Test files:
 * `src/__tests__/SchedulerProfiling-test.js`
 
@@ -66,6 +71,7 @@ Files:
 * `tracing.js`
 * `src/Tracing.js`
 * `src/TracingSubscription.js`
+
 Test files:
 * `src/__tests__/Tracing-test.js`
 * `src/__tests__/Tracing-test.internal.js`
