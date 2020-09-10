@@ -1,3 +1,4 @@
+-- upstream https://github.com/facebook/react/blob/9abc2785cb070148d64fae81e523246b90b92016/packages/scheduler/src/__tests__/Scheduler-test.js
 return function() 
 	local makeScheduler = require(script.Parent.Parent.Scheduler)
 	local makeMockSchedulerHostConfig = require(script.Parent.Parent.MockSchedulerHostConfig)
