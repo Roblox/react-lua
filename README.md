@@ -61,11 +61,9 @@ testez run --target roblox-cli modules/scheduler/
 
 * For deviations due to Lua langauge differences (no spread operator) that don't involve changing the logic, don't put a deviation comment. Just use the appropriate equivalent from the Cryo and other utility libraries.
 
-* For files that are new and Roblox-specific, use the file name:
-```Timeout.roblox.lua```
+* For files that are new and Roblox-specific, use the file name: ```Timeout.roblox.lua```
 
-* and for Roblox-specific tests, use the file name format:
-```Timeout.roblox.spec.lua```
+* and for Roblox-specific tests, use the file name format: ```Timeout.roblox.spec.lua```
 
 
 
