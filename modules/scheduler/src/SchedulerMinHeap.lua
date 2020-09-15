@@ -1,4 +1,5 @@
 --!strict
+-- upstream https://github.com/facebook/react/blob/e706721490e50d0bd6af2cd933dbf857fd8b61ed/packages/scheduler/src/SchedulerMinHeap.js
 type Node = {
 	id: number,
 	sortIndex: number,

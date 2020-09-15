@@ -1,3 +1,4 @@
+-- upstream https://github.com/facebook/react/blob/0f6e3cd61cf4a5a1491bb3c92780936aebc2a146/packages/scheduler/src/SchedulerPriorities.js
 export type PriorityLevel = number
 
 -- TODO: Use symbols?

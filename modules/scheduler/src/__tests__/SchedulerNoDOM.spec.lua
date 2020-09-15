@@ -1,4 +1,5 @@
 --!strict
+-- upstream https://github.com/facebook/react/blob/3e94bce765d355d74f6a60feb4addb6d196e3482/packages/scheduler/src/__tests__/SchedulerNoDOM-test.js
 return function()
 	local makeTimeout = require(script.Parent.Parent.Timeout.makeTimeout)
 	local makeHostConfig = require(script.Parent.Parent.SchedulerHostConfig)
