@@ -1,0 +1,12 @@
+{
+  "name": "roact-alignment",
+  "tree": {
+    "$className": "Folder",
+    "dependencies": {
+      "$path": "packages"
+    },
+    "modules": {
+      "$path": "modules"
+    }
+  }
+}

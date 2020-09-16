@@ -43,8 +43,18 @@ export PATH=$PATH:~/.foreman/bin/
 Now you can run the tests, edit code, and contribute!
 
 ```
-testez run --target roblox-cli modules/scheduler/
+rojo build --out model.rbxmx
+roblox-cli run  --load.model model.rbxmx --run bin/spec.lua
 ```
+
+# Common Issues
+
+If rojo doesn't understand the nested project structure, exemplified by require statements not finding things, make sure you don't have a globally-installed rojo binary that is shadowing the one this project specifies locally. You *must* be using rojo 6.0 or above.
+
+Once you remove the global rojo, you'll need to tickle bash's PATH hash cache so it doesn't keep looking in the place rojo *was*. (Yes, this is weird.) To update the bash path hash cache, run:
+```hash -d rojo```
+
+To avoid this in the future, be sure that your foreman binary path is *before* the carbo binary path in your `PATH` enviroment.
 
 # Contribution Guidelines
 

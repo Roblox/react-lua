@@ -1,1 +1,6 @@
 rotriever.lock
+Packages/
+**/*.rbx[lm]*
+.DS_Store
+.vscode
+**/luacov.*

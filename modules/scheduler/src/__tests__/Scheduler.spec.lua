@@ -305,7 +305,6 @@ return function()
 			}
 			local function C()
 				while #tasks > 0 do
-					print(#tasks)
 					local label, ms = unpack(shift(tasks))
 					Scheduler.unstable_advanceTime(ms)
 					Scheduler.unstable_yieldValue(label)

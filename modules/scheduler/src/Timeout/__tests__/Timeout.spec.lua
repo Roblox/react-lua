@@ -1,7 +1,9 @@
 --!nonstrict
 return function()
+	local Packages = script.Parent.Parent.Parent.Parent
 	local makeTimeout = require(script.Parent.Parent.makeTimeout)
-	local createSpy = require(script.Parent.Parent.Parent.createSpy)
+	local RobloxJest = require(Packages.RobloxJest)
+	local createSpy = RobloxJest.createSpy
 
 	local Timeout
 	local mockTime, timeouts
