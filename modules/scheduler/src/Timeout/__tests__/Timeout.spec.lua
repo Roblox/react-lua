@@ -1,8 +1,8 @@
 --!nonstrict
 return function()
-	local Packages = script.Parent.Parent.Parent.Parent
+	local Modules = script.Parent.Parent.Parent.Parent
 	local makeTimeout = require(script.Parent.Parent.makeTimeout)
-	local RobloxJest = require(Packages.RobloxJest)
+	local RobloxJest = require(Modules.RobloxJest)
 	local createSpy = RobloxJest.createSpy
 
 	local Timeout

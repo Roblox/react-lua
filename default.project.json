@@ -1,12 +1,21 @@
 {
-  "name": "roact-alignment",
+  "name": "RoactAlignment",
   "tree": {
     "$className": "Folder",
-    "dependencies": {
-      "$path": "packages"
+    "Packages": {
+      "$path": "Packages"
     },
-    "modules": {
-      "$path": "modules"
+    "Modules": {
+      "$className": "Folder",
+      "Reconciler": {
+        "$path": "modules/reconciler/src"
+      },
+      "RobloxJest": {
+        "$path": "modules/roblox-jest/src"
+      },
+      "Scheduler": {
+        "$path": "modules/scheduler/src"
+      }
     }
   }
 }
