@@ -58,7 +58,7 @@ return function(config)
 	local isHostCallbackScheduled = false
 	local isHostTimeoutScheduled = false
 
-	local handleTimeout, flushWork
+	local workLoop, handleTimeout, flushWork
 
 	local function advanceTimers(currentTime)
 		-- Check for tasks that are no longer delayed and add them to the queue.
@@ -83,7 +83,7 @@ return function(config)
 		end
 	end
 
-	local function workLoop(hasTimeRemaining, initialTime)
+	workLoop = function(hasTimeRemaining, initialTime)
 		local currentTime = initialTime
 		advanceTimers(currentTime)
 		currentTask = peek(taskQueue)
@@ -266,11 +266,11 @@ return function(config)
 		local currentTime = getCurrentTime()
 
 		local startTime
-		-- TODO(align): VALIDATE conversion from `typeof options === "table" && options !== null`
+
 		if typeof(options) == "table" then
-			local delay = options.delay
-			if typeof(delay) == "number" and delay > 0 then
-				startTime = currentTime + delay
+			local delayMillis = options.delay
+			if typeof(delayMillis) == "number" and delayMillis > 0 then
+				startTime = currentTime + delayMillis
 			else
 				startTime = currentTime
 			end

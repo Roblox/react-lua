@@ -3,7 +3,7 @@ return function()
 	local scheduledCallback: ((boolean, number) -> ()) | nil = nil
 	local scheduledTimeout: ((number) -> ()) | nil = nil
 	local timeoutTime: number = -1
-	local yieldedValues: { [number]: any } = nil
+	local yieldedValues: { [number]: any } | nil = nil
 	local expectedNumberOfYields: number = -1
 	local didStop: boolean = false
 	local isFlushing: boolean = false
@@ -29,8 +29,11 @@ return function()
 	end
 
 	local function shouldYieldToHost(): boolean
+		-- deviation: widening type to workaround Luau shortcomings
+		-- https://jira.rbx.com/browse/CLI-35978
+		local values: any = yieldedValues
 		if
-			(expectedNumberOfYields ~= -1 and yieldedValues ~= nil and #yieldedValues >= expectedNumberOfYields) or
+			(expectedNumberOfYields ~= -1 and values ~= nil and #values >= expectedNumberOfYields) or
 			(shouldYieldForPaint and needsPaint)
 		then
 			-- We yielded at least as many values as expected. Stop flushing.
@@ -135,7 +138,10 @@ return function()
 		if scheduledCallback ~= nil then
 			isFlushing = true
 			local ok, result = pcall(function()
-				local hasMoreWork = scheduledCallback(false, currentTime)
+				-- deviation: widening type to workaround Luau shortcomings
+				-- https://jira.rbx.com/browse/CLI-35978
+				local callback: any = scheduledCallback
+				local hasMoreWork = callback(false, currentTime)
 				if not hasMoreWork then
 					scheduledCallback = nil
 				end
@@ -214,7 +220,10 @@ return function()
 		if yieldedValues == nil then
 			yieldedValues = {value}
 		else
-			table.insert(yieldedValues, value)
+			-- deviation: widening type to workaround Luau shortcomings
+			-- https://jira.rbx.com/browse/CLI-35978
+			local values: any = yieldedValues
+			table.insert(values, value)
 		end
 	end
 
@@ -228,7 +237,10 @@ return function()
 		currentTime += ms
 
 		if scheduledTimeout ~= nil and timeoutTime <= currentTime then
-			scheduledTimeout(currentTime)
+			-- deviation: widening type to workaround Luau shortcomings
+			-- https://jira.rbx.com/browse/CLI-35978
+			local timeout: any = scheduledTimeout
+			timeout(currentTime)
 			timeoutTime = -1
 			scheduledTimeout = nil
 		end

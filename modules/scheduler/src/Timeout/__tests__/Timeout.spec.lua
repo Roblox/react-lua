@@ -19,8 +19,8 @@ return function()
 
 	local function mockDelay(delayTime, callback)
 		local targetTime = mockTime + delayTime
-		timeouts[callback] = function(time)
-			if time >= targetTime then
+		timeouts[callback] = function(currentTime)
+			if currentTime >= targetTime then
 				callback()
 				timeouts[callback] = nil
 			end

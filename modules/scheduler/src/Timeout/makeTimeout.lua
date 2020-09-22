@@ -9,7 +9,7 @@ local SCHEDULED = 1
 local DONE = 2
 local CANCELLED = 3
 
-return function(delay)
+return function(delayImpl)
 	local function setTimeout(callback, delayTime: number, ...): Task
 		local args = {...}
 		local task = {
@@ -18,7 +18,7 @@ return function(delay)
 	
 		-- To mimic the JS interface, we're expecting delayTime to be in ms
 		local delayTimeMs = delayTime / 1000
-		delay(delayTimeMs, function()
+		delayImpl(delayTimeMs, function()
 			if task[Status] == SCHEDULED then
 				callback(unpack(args))
 				task[Status] = DONE

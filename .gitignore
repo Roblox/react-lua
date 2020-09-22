@@ -1,5 +1,6 @@
 rotriever.lock
-Packages/
+Packages/*
+!Packages/.robloxrc
 **/*.rbx[lm]*
 .DS_Store
 .vscode

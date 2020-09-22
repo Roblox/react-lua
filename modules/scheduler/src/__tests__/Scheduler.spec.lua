@@ -8,8 +8,10 @@ return function()
 	local ImmediatePriority
 	local UserBlockingPriority
 	local NormalPriority
-	local LowPriority
-	local IdlePriority
+	-- deviation: These are only used in a commented-out __DEV__-only test
+	-- (commented out to silence lints)
+	-- local LowPriority
+	-- local IdlePriority
 	local scheduleCallback
 	local cancelCallback
 	local wrapCallback
@@ -71,18 +73,18 @@ return function()
 		end
 	end
 
-	local function assertYieldsWereCleared(Scheduler)
-		local actualYields = Scheduler.unstable_clearYields()
+	local function assertYieldsWereCleared(scheduler)
+		local actualYields = scheduler.unstable_clearYields()
 		if #actualYields ~= 0 then
 			error("Log of yielded values is not empty. " ..
-				"Call expectToHaveYielded(Scheduler, ...) first.", 3)
+				"Call expectToHaveYielded(scheduler, ...) first.", 3)
 		end
 	end
 
-	local function expectToFlushAndYield(Scheduler, expectedYields)
-		assertYieldsWereCleared(Scheduler)
-		Scheduler.unstable_flushAllWithoutAsserting()
-		local actualYields = Scheduler.unstable_clearYields()
+	local function expectToFlushAndYield(scheduler, expectedYields)
+		assertYieldsWereCleared(scheduler)
+		scheduler.unstable_flushAllWithoutAsserting()
+		local actualYields = scheduler.unstable_clearYields()
 
 		local ok, result = pcall(function()
 			expectShallowEqual(actualYields, expectedYields)
@@ -93,10 +95,10 @@ return function()
 		end
 	end
 
-	local function expectToFlushAndYieldThrough(Scheduler, expectedYields)
-		assertYieldsWereCleared(Scheduler)
-		Scheduler.unstable_flushNumberOfYields(#expectedYields)
-		local actualYields = Scheduler.unstable_clearYields()
+	local function expectToFlushAndYieldThrough(scheduler, expectedYields)
+		assertYieldsWereCleared(scheduler)
+		scheduler.unstable_flushNumberOfYields(#expectedYields)
+		local actualYields = scheduler.unstable_clearYields()
 
 		local ok, result = pcall(function()
 			expectShallowEqual(actualYields, expectedYields)
@@ -107,14 +109,14 @@ return function()
 		end
 	end
 
-	local function expectToFlushWithoutYielding(Scheduler)
-		return expectToFlushAndYield(Scheduler, {})
+	local function expectToFlushWithoutYielding(scheduler)
+		return expectToFlushAndYield(scheduler, {})
 	end
 
-	local function expectToFlushExpired(Scheduler, expectedYields)
-		assertYieldsWereCleared(Scheduler)
-		Scheduler.unstable_flushExpired()
-		local actualYields = Scheduler.unstable_clearYields()
+	local function expectToFlushExpired(scheduler, expectedYields)
+		assertYieldsWereCleared(scheduler)
+		scheduler.unstable_flushExpired()
+		local actualYields = scheduler.unstable_clearYields()
 
 		local ok, result = pcall(function()
 			expectShallowEqual(actualYields, expectedYields)
@@ -125,8 +127,8 @@ return function()
 		end
 	end
 
-	local function expectToHaveYielded(Scheduler, expectedYields)
-		local actualYields = Scheduler.unstable_clearYields()
+	local function expectToHaveYielded(scheduler, expectedYields)
+		local actualYields = scheduler.unstable_clearYields()
 
 		local ok, result = pcall(function()
 			expectShallowEqual(actualYields, expectedYields)
@@ -146,8 +148,10 @@ return function()
 			ImmediatePriority = Scheduler.unstable_ImmediatePriority
 			UserBlockingPriority = Scheduler.unstable_UserBlockingPriority
 			NormalPriority = Scheduler.unstable_NormalPriority
-			LowPriority = Scheduler.unstable_LowPriority
-			IdlePriority = Scheduler.unstable_IdlePriority
+			-- deviation: These are only used in a commented-out __DEV__-only
+			-- test (commented out to silence lints)
+			-- LowPriority = Scheduler.unstable_LowPriority
+			-- IdlePriority = Scheduler.unstable_IdlePriority
 			scheduleCallback = Scheduler.unstable_scheduleCallback
 			cancelCallback = Scheduler.unstable_cancelCallback
 			wrapCallback = Scheduler.unstable_wrapCallback

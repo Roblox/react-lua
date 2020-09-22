@@ -15,7 +15,7 @@ return function()
 		return increment
 	end
 
-	local function node(sortIndex: number, id: number?)
+	local function makeNode(sortIndex: number, id: number?)
 		return {
 			sortIndex = sortIndex,
 			id = id or getIncrement(),
@@ -25,17 +25,17 @@ return function()
 	describe("push", function()
 		it("should add a value to the minHeap", function()
 			local h = {}
-			Heap.push(h, node(42))
+			Heap.push(h, makeNode(42))
 			verifyOrder(h)
 		end)
 
 		it("properly sort a minHeap each time", function()
 			local h = {}
-			Heap.push(h, node(2))
+			Heap.push(h, makeNode(2))
 			verifyOrder(h)
-			Heap.push(h, node(1))
+			Heap.push(h, makeNode(1))
 			verifyOrder(h)
-			Heap.push(h, node(3))
+			Heap.push(h, makeNode(3))
 			verifyOrder(h)
 		end)
 	end)
@@ -49,7 +49,7 @@ return function()
 
 		it("return the only value on a minHeap of one element", function()
 			local h = {}
-			Heap.push(h, node(42))
+			Heap.push(h, makeNode(42))
 			verifyOrder(h)
 
 			local node = Heap.peek(h)
@@ -58,9 +58,9 @@ return function()
 
 		it("return the smaller value on a minHeap of two elements", function()
 			local h = {}
-			Heap.push(h, node(42))
+			Heap.push(h, makeNode(42))
 			verifyOrder(h)
-			Heap.push(h, node(1))
+			Heap.push(h, makeNode(1))
 			verifyOrder(h)
 
 			local node = Heap.peek(h)
@@ -69,16 +69,16 @@ return function()
 
 		it("return the smallest value on a minHeap of 10 elements", function()
 			local h = {}
-			Heap.push(h, node(10))
-			Heap.push(h, node(7))
-			Heap.push(h, node(1))
-			Heap.push(h, node(5))
-			Heap.push(h, node(6))
-			Heap.push(h, node(9))
-			Heap.push(h, node(8))
-			Heap.push(h, node(4))
-			Heap.push(h, node(2))
-			Heap.push(h, node(3))
+			Heap.push(h, makeNode(10))
+			Heap.push(h, makeNode(7))
+			Heap.push(h, makeNode(1))
+			Heap.push(h, makeNode(5))
+			Heap.push(h, makeNode(6))
+			Heap.push(h, makeNode(9))
+			Heap.push(h, makeNode(8))
+			Heap.push(h, makeNode(4))
+			Heap.push(h, makeNode(2))
+			Heap.push(h, makeNode(3))
 			verifyOrder(h)
 
 			local node = Heap.peek(h)
@@ -89,11 +89,11 @@ return function()
 	describe("pop", function()
 		it("remove the smallest element on a minHeap of 5 elements", function()
 			local h = {}
-			Heap.push(h, node(1))
-			Heap.push(h, node(2))
-			Heap.push(h, node(3))
-			Heap.push(h, node(4))
-			Heap.push(h, node(5))
+			Heap.push(h, makeNode(1))
+			Heap.push(h, makeNode(2))
+			Heap.push(h, makeNode(3))
+			Heap.push(h, makeNode(4))
+			Heap.push(h, makeNode(5))
 
 			local node = Heap.pop(h)
 			verifyOrder(h)
