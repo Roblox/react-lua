@@ -1,4 +1,19 @@
 -- upstream https://github.com/facebook/react/blob/9abc2785cb070148d64fae81e523246b90b92016/packages/scheduler/src/Scheduler.js
+--[[*
+* Copyright (c) Facebook, Inc. and its affiliates.
+*
+* This source code is licensed under the MIT license found in the
+* LICENSE file in the root directory of this source tree.
+*
+]]
+
+local SchedulerHostConfig = require(script.Parent.SchedulerHostConfig)
+
+local SchedulerMinHeap = require(script.Parent.SchedulerMinHeap)
+local push = SchedulerMinHeap.push
+local peek = SchedulerMinHeap.peek
+local pop = SchedulerMinHeap.pop
+
 -- TODO: Use symbols?
 local SchedulerPriorities = require(script.Parent.SchedulerPriorities)
 
@@ -8,15 +23,7 @@ local NormalPriority = SchedulerPriorities.NormalPriority
 local LowPriority = SchedulerPriorities.LowPriority
 local IdlePriority = SchedulerPriorities.IdlePriority
 
--- TODO(align): Right now, this is mimicking the js as closely as possible;
--- typically, the lua-y way to do things would be to refer to these as members.
--- Which should we use?
-local SchedulerMinHeap = require(script.Parent.SchedulerMinHeap)
-local push = SchedulerMinHeap.push
-local peek = SchedulerMinHeap.peek
-local pop = SchedulerMinHeap.pop
-
-return function(config)
+local function makeScheduler(config)
 	local requestHostCallback = config.requestHostCallback
 	local requestHostTimeout = config.requestHostTimeout
 	local cancelHostTimeout = config.cancelHostTimeout
@@ -384,3 +391,10 @@ return function(config)
 		unstable_forceFrameRate = forceFrameRate,
 	}
 end
+
+local Default = makeScheduler(SchedulerHostConfig.Default)
+
+return {
+	makeSchedulerWithArgs = makeScheduler,
+	Default = Default,
+}

@@ -1,7 +1,16 @@
 -- upstream https://github.com/facebook/react/blob/9abc2785cb070148d64fae81e523246b90b92016/packages/scheduler/src/__tests__/Scheduler-test.js
-return function() 
-	local makeScheduler = require(script.Parent.Parent.Scheduler)
-	local makeMockSchedulerHostConfig = require(script.Parent.Parent.MockSchedulerHostConfig)
+--[[*
+* Copyright (c) Facebook, Inc. and its affiliates.
+*
+* This source code is licensed under the MIT license found in the
+* LICENSE file in the root directory of this source tree.
+*
+* @emails react-core
+]]
+
+return function()
+	local SchedulerModule = require(script.Parent.Parent.Scheduler)
+	local SchedulerHostConfig = require(script.Parent.Parent.SchedulerHostConfig)
 
 	local Scheduler
 	local runWithPriority
@@ -141,8 +150,8 @@ return function()
 
 	describe("Scheduler", function()
 		beforeEach(function()
-			local HostConfig = makeMockSchedulerHostConfig()
-			Scheduler = makeScheduler(HostConfig)
+			local HostConfig = SchedulerHostConfig.mock()
+			Scheduler = SchedulerModule.makeSchedulerWithArgs(HostConfig)
 
 			runWithPriority = Scheduler.unstable_runWithPriority
 			ImmediatePriority = Scheduler.unstable_ImmediatePriority

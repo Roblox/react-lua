@@ -1,23 +1,52 @@
 --!strict
 -- upstream https://github.com/facebook/react/blob/e706721490e50d0bd6af2cd933dbf857fd8b61ed/packages/scheduler/src/SchedulerMinHeap.js
+--[[*
+* Copyright (c) Facebook, Inc. and its affiliates.
+*
+* This source code is licensed under the MIT license found in the
+* LICENSE file in the root directory of this source tree.
+*
+* @flow
+]]
+
+type Heap = { [number]: Node }
 type Node = {
 	id: number,
 	sortIndex: number,
 }
-type Heap = { [number]: Node }
 
-local function compare(a, b)
-	-- Compare sort index first, then task id.
-	local diff = a.sortIndex - b.sortIndex
+local exports = {}
+-- deviation: Preemptively declare local functions to keep lua happy
+local compare, siftUp, siftDown
 
-	if diff == 0 then
-		return a.id - b.id
-	end
+exports.push = function(heap: Heap, node: Node)
+	local index = #heap + 1
+	heap[index] = node
 
-	return diff
+	siftUp(heap, node, index)
 end
 
-local function siftUp(heap, node, index)
+exports.peek = function(heap: Heap): Node?
+	return heap[1]
+end
+
+exports.pop = function(heap: Heap): Node?
+	local first = heap[1]
+	if first ~= nil then
+		local last = heap[#heap]
+		heap[#heap] = nil
+
+		if last ~= first then
+			heap[1] = last
+			siftDown(heap, last, 1)
+		end
+		return first
+	else
+		return nil
+	end
+end
+
+siftUp = function(heap, node, index)
 	while true do
 		local parentIndex = math.floor(index / 2)
 		local parent = heap[parentIndex];
@@ -33,7 +62,7 @@ local function siftUp(heap, node, index)
 	end
 end
 
-local function siftDown(heap, node, index)
+siftDown = function(heap, node, index)
 	local length = #heap
 	while (index < length) do
 		local leftIndex = index * 2
@@ -63,31 +92,15 @@ local function siftDown(heap, node, index)
 	end
 end
 
-return {
-	push = function(heap: Heap, node: Node)
-		local index = #heap + 1
-		heap[index] = node
-	
-		siftUp(heap, node, index)
-	end,
+compare = function(a, b)
+	-- Compare sort index first, then task id.
+	local diff = a.sortIndex - b.sortIndex
 
-	peek = function(heap: Heap): Node?
-		return heap[1]
-	end,
+	if diff == 0 then
+		return a.id - b.id
+	end
 
-	pop = function(heap: Heap): Node?
-		local first = heap[1]
-		if first ~= nil then
-			local last = heap[#heap]
-			heap[#heap] = nil
-	
-			if last ~= first then
-				heap[1] = last
-				siftDown(heap, last, 1)
-			end
-			return first
-		else
-			return nil
-		end
-	end,
-}
+	return diff
+end
+
+return exports

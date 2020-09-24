@@ -1,4 +1,13 @@
--- upstream https://github.com/facebook/react/blob/0f6e3cd61cf4a5a1491bb3c92780936aebc2a146/packages/scheduler/src/SchedulerPriorities.js
+-- upstream https://github.com/facebook/react/blob/00748c53e183952696157088a858352cc77b0010/packages/scheduler/src/SchedulerHostConfig.js
+--[[*
+* Copyright (c) Facebook, Inc. and its affiliates.
+*
+* This source code is licensed under the MIT license found in the
+* LICENSE file in the root directory of this source tree.
+*
+* @flow
+]]
+
 export type PriorityLevel = number
 
 -- TODO: Use symbols?

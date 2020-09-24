@@ -1,3 +1,3 @@
 return {
-	Scheduler = require(script.Scheduler),
+	Scheduler = require(script.Scheduler).Default
 }

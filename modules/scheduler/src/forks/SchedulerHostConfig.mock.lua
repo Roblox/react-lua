@@ -1,4 +1,16 @@
+-- upstream: https://github.com/facebook/react/blob/5474a83e258b497584bed9df95de1d554bc53f89/packages/scheduler/src/forks/SchedulerHostConfig.mock.js
+--[[*
+* Copyright (c) Facebook, Inc. and its affiliates.
+*
+* This source code is licensed under the MIT license found in the
+* LICENSE file in the root directory of this source tree.
+*
+* @flow
+]]
+
 return function()
+	local exports = {}
+
 	local currentTime: number = 0
 	local scheduledCallback: ((boolean, number) -> ()) | nil = nil
 	local scheduledTimeout: ((number) -> ()) | nil = nil
@@ -10,25 +22,25 @@ return function()
 	local needsPaint: boolean = false
 	local shouldYieldForPaint: boolean = false
 
-	local function requestHostCallback(callback: (boolean) -> ())
+	exports.requestHostCallback = function(callback: (boolean) -> ())
 		scheduledCallback = callback
 	end
 
-	local function cancelHostCallback()
+	exports.cancelHostCallback = function()
 		scheduledCallback = nil
 	end
 
-	local function requestHostTimeout(callback: (number) -> (), ms: number)
+	exports.requestHostTimeout = function(callback: (number) -> (), ms: number)
 		scheduledTimeout = callback
 		timeoutTime = currentTime + ms
 	end
 
-	local function cancelHostTimeout()
+	exports.cancelHostTimeout = function()
 		scheduledTimeout = nil
 		timeoutTime = -1
 	end
 
-	local function shouldYieldToHost(): boolean
+	exports.shouldYieldToHost = function(): boolean
 		-- deviation: widening type to workaround Luau shortcomings
 		-- https://jira.rbx.com/browse/CLI-35978
 		local values: any = yieldedValues
@@ -44,15 +56,15 @@ return function()
 		return false
 	end
 
-	local function getCurrentTime(): number
+	exports.getCurrentTime = function(): number
 		return currentTime
 	end
 
-	local function forceFrameRate()
+	exports.forceFrameRate = function()
 		-- No-op
 	end
 
-	local function reset()
+	exports.reset = function()
 		if isFlushing then
 			error('Cannot reset while already flushing work.')
 		end
@@ -69,7 +81,7 @@ return function()
 	end
 
 	-- Should only be used via an assertion helper that inspects the yielded values.
-	local function unstable_flushNumberOfYields(count: number)
+	exports.unstable_flushNumberOfYields = function(count: number)
 		if isFlushing then
 			error('Already flushing work.')
 		end
@@ -100,7 +112,7 @@ return function()
 		end
 	end
 
-	local function unstable_flushUntilNextPaint()
+	exports.unstable_flushUntilNextPaint = function()
 		if isFlushing then
 			error('Already flushing work.')
 		end
@@ -131,7 +143,7 @@ return function()
 		end
 	end
 
-	local function unstable_flushExpired()
+	exports.unstable_flushExpired = function()
 		if isFlushing then
 			error('Already flushing work.')
 		end
@@ -155,7 +167,7 @@ return function()
 		end
 	end
 
-	local function unstable_flushAllWithoutAsserting(): boolean
+	exports.unstable_flushAllWithoutAsserting = function(): boolean
 		-- Returns false if no work was flushed.
 		if isFlushing then
 			error('Already flushing work.')
@@ -186,7 +198,7 @@ return function()
 		end
 	end
 
-	local function unstable_clearYields(): { [number]: any }
+	exports.unstable_clearYields = function(): { [number]: any }
 		if yieldedValues == nil then
 			return {}
 		end
@@ -195,13 +207,13 @@ return function()
 		return values
 	end
 
-	local function unstable_flushAll()
+	exports.unstable_flushAll = function()
 		if yieldedValues ~= nil then
 			error('Log is not empty. Assert on the log of yielded values before ' ..
 				'flushing additional work.'
 			)
 		end
-		unstable_flushAllWithoutAsserting()
+		exports.unstable_flushAllWithoutAsserting()
 		if yieldedValues ~= nil then
 			error('While flushing work, something yielded a value. Use an ' ..
 				'assertion helper to assert on the log of yielded values, e.g. ' ..
@@ -210,7 +222,7 @@ return function()
 		end
 	end
 
-	local function unstable_yieldValue(value: any)
+	exports.unstable_yieldValue = function(value: any)
 		-- eslint-disable-next-line react-internal/no-production-logging
 		-- if console.log.name == 'disabledLog' then
 		-- 	-- If console.log has been patched, we assume we're in render
@@ -227,7 +239,7 @@ return function()
 		end
 	end
 
-	local function unstable_advanceTime(ms: number)
+	exports.unstable_advanceTime = function(ms: number)
 		-- eslint-disable-next-line react-internal/no-production-logging
 		-- if console.log.name == 'disabledLog' then
 		-- 	-- If console.log has been patched, we assume we're in render
@@ -246,27 +258,9 @@ return function()
 		end
 	end
 
-	local function requestPaint()
+	exports.requestPaint = function()
 		needsPaint = true
 	end
 
-	return {
-		requestHostCallback = requestHostCallback,
-		cancelHostCallback = cancelHostCallback,
-		requestHostTimeout = requestHostTimeout,
-		cancelHostTimeout = cancelHostTimeout,
-		shouldYieldToHost = shouldYieldToHost,
-		getCurrentTime = getCurrentTime,
-		forceFrameRate = forceFrameRate,
-		reset = reset,
-		unstable_flushNumberOfYields = unstable_flushNumberOfYields,
-		unstable_flushUntilNextPaint = unstable_flushUntilNextPaint,
-		unstable_flushExpired = unstable_flushExpired,
-		unstable_flushAllWithoutAsserting = unstable_flushAllWithoutAsserting,
-		unstable_clearYields = unstable_clearYields,
-		unstable_flushAll = unstable_flushAll,
-		unstable_yieldValue = unstable_yieldValue,
-		unstable_advanceTime = unstable_advanceTime,
-		requestPaint = requestPaint,
-	}
+	return exports
 end

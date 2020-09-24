@@ -1,9 +1,18 @@
 --!strict
 -- upstream https://github.com/facebook/react/blob/3e94bce765d355d74f6a60feb4addb6d196e3482/packages/scheduler/src/__tests__/SchedulerNoDOM-test.js
+--[[*
+* Copyright (c) Facebook, Inc. and its affiliates.
+*
+* This source code is licensed under the MIT license found in the
+* LICENSE file in the root directory of this source tree.
+*
+* @emails react-core
+]]
+
 return function()
 	local makeTimeout = require(script.Parent.Parent.Timeout.makeTimeout)
-	local makeHostConfig = require(script.Parent.Parent.SchedulerHostConfig)
-	local makeScheduler = require(script.Parent.Parent.Scheduler)
+	local SchedulerHostConfig = require(script.Parent.Parent.SchedulerHostConfig)
+	local Scheduler = require(script.Parent.Parent.Scheduler)
 
 	local scheduleCallback
 	local ImmediatePriority
@@ -59,15 +68,15 @@ return function()
 			mockTime = 0
 			timeouts = {}
 			local Timeout = makeTimeout(mockDelay)
-			local HostConfig = makeHostConfig(Timeout, function()
+			local HostConfig = SchedulerHostConfig.makeDefaultWithArgs(Timeout, function()
 				return mockTime
 			end)
-			local Scheduler = makeScheduler(HostConfig)
+			local SchedulerInstance = Scheduler.makeSchedulerWithArgs(HostConfig)
 
-			scheduleCallback = Scheduler.unstable_scheduleCallback
-			ImmediatePriority = Scheduler.unstable_ImmediatePriority
-			UserBlockingPriority = Scheduler.unstable_UserBlockingPriority
-			NormalPriority = Scheduler.unstable_NormalPriority
+			scheduleCallback = SchedulerInstance.unstable_scheduleCallback
+			ImmediatePriority = SchedulerInstance.unstable_ImmediatePriority
+			UserBlockingPriority = SchedulerInstance.unstable_UserBlockingPriority
+			NormalPriority = SchedulerInstance.unstable_NormalPriority
 		end)
 
 		it('runAllTimers flushes all scheduled callbacks', function()
