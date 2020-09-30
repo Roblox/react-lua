@@ -12,9 +12,9 @@
 -- This is likely to be the implementation that React Native applications run
 -- with, and should be considered sufficiently sophisticated. More research
 -- needs to be done to verify this.
-return function(Timeout, getCurrentTime)
-	local setTimeout = Timeout.setTimeout
-	local clearTimeout = Timeout.clearTimeout
+return function(Timers, getCurrentTime)
+	local setTimeout = Timers.setTimeout
+	local clearTimeout = Timers.clearTimeout
 
 	local exports = {}
 	exports.getCurrentTime = getCurrentTime

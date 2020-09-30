@@ -7,6 +7,9 @@
     },
     "Modules": {
       "$className": "Folder",
+      "JSPolyfill": {
+        "$path": "modules/js-polyfill/src"
+      },
       "Reconciler": {
         "$path": "modules/reconciler/src"
       },

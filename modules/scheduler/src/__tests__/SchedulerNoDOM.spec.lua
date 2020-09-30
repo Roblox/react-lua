@@ -10,7 +10,8 @@
 ]]
 
 return function()
-	local makeTimeout = require(script.Parent.Parent.Timeout.makeTimeout)
+	local Workspace = script.Parent.Parent.Parent
+	local makeTimerImpl = require(Workspace.JSPolyfill.Timers.makeTimerImpl)
 	local SchedulerHostConfig = require(script.Parent.Parent.SchedulerHostConfig)
 	local Scheduler = require(script.Parent.Parent.Scheduler)
 
@@ -31,7 +32,7 @@ return function()
 					timeoutsRemaining = true
 					update(mockTime)
 				end
-			until not timeoutsRemaining 
+			until not timeoutsRemaining
 		end
 
 		local function mockDelay(delayTime, callback)
@@ -67,8 +68,8 @@ return function()
 		beforeEach(function()
 			mockTime = 0
 			timeouts = {}
-			local Timeout = makeTimeout(mockDelay)
-			local HostConfig = SchedulerHostConfig.makeDefaultWithArgs(Timeout, function()
+			local Timers = makeTimerImpl(mockDelay)
+			local HostConfig = SchedulerHostConfig.makeDefaultWithArgs(Timers, function()
 				return mockTime
 			end)
 			local SchedulerInstance = Scheduler.makeSchedulerWithArgs(HostConfig)
@@ -97,10 +98,10 @@ return function()
 
 			assert(shallowEqual(log, {'A', 'B', 'C'}))
 		end)
-		
+
 		it('executes callbacks in order of priority', function()
 			local log = {}
-			
+
 			scheduleCallback(NormalPriority, function()
 				table.insert(log, 'A')
 			end)
