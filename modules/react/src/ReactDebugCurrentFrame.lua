@@ -1,0 +1,52 @@
+--[[*
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
+ ]]
+-- Unknown globals fail type checking (see "Unknown symbols" section of
+-- https://roblox.github.io/luau/typecheck.html)
+--!nolint UnknownGlobal
+--!nocheck
+
+local ReactDebugCurrentFrame = {}
+
+local currentExtraStackFrame = nil
+
+ReactDebugCurrentFrame.setExtraStackFrame = function (stack: string?)
+	if __DEV__ then
+		currentExtraStackFrame = stack
+	end
+end
+
+if __DEV__ then
+	ReactDebugCurrentFrame.setExtraStackFrame = function(stack: string?)
+		if __DEV__ then
+			currentExtraStackFrame = stack
+		end
+	end
+
+	-- Stack implementation injected by the current renderer.
+	ReactDebugCurrentFrame.getCurrentStack = nil
+
+	ReactDebugCurrentFrame.getStackAddendum = function()
+		local stack = ''
+
+		-- Add an extra top frame while an element is being validated
+		if currentExtraStackFrame then
+			stack = stack .. currentExtraStackFrame
+		end
+
+		-- Delegate to the injected renderer-specific implementation
+		local impl = ReactDebugCurrentFrame.getCurrentStack
+		if impl then
+			stack = stack .. (impl() or '')
+		end
+
+		return stack
+	end
+end
+
+return ReactDebugCurrentFrame

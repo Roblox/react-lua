@@ -12,7 +12,7 @@ local makeMockSchedulerHostConfig = require(script.Parent.forks["SchedulerHostCo
 local makeDefaultSchedulerHostConfig = require(script.Parent.forks["SchedulerHostConfig.default"])
 
 local Workspace = script.Parent.Parent
-local Timers = require(Workspace.JSPolyfills.Timers)
+local Timers = require(Workspace.JSPolyfill.Timers)
 
 -- deviation: React expects this module to be replaced via a bundler. Our
 -- workflow does not currently include a bundling step, so instead we expose

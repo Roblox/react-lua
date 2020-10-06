@@ -46,7 +46,7 @@ exports.pop = function(heap: Heap): Node?
 	end
 end
 
-siftUp = function(heap, node, index)
+siftUp = function(heap: Heap, node, index)
 	while true do
 		local parentIndex = math.floor(index / 2)
 		local parent = heap[parentIndex];
@@ -62,7 +62,7 @@ siftUp = function(heap, node, index)
 	end
 end
 
-siftDown = function(heap, node, index)
+siftDown = function(heap: Heap, node, index)
 	local length = #heap
 	while (index < length) do
 		local leftIndex = index * 2
@@ -92,7 +92,7 @@ siftDown = function(heap, node, index)
 	end
 end
 
-compare = function(a, b)
+compare = function(a: Node, b: Node)
 	-- Compare sort index first, then task id.
 	local diff = a.sortIndex - b.sortIndex
 

@@ -10,6 +10,9 @@
       "JSPolyfill": {
         "$path": "modules/js-polyfill/src"
       },
+      "React": {
+        "$path": "modules/react/src"
+      },
       "Reconciler": {
         "$path": "modules/reconciler/src"
       },
@@ -18,6 +21,9 @@
       },
       "Scheduler": {
         "$path": "modules/scheduler/src"
+      },
+      "Shared": {
+        "$path": "modules/shared/src"
       }
     }
   }

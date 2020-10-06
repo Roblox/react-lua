@@ -1,7 +1,7 @@
 --!nonstrict
 return function()
 	local Modules = script.Parent.Parent.Parent.Parent
-	local makeTimeout = require(script.Parent.Parent.makeTimeout)
+	local makeTimerImpl = require(script.Parent.Parent.makeTimerImpl)
 	local RobloxJest = require(Modules.RobloxJest)
 	local createSpy = RobloxJest.createSpy
 
@@ -30,7 +30,7 @@ return function()
 	beforeEach(function()
 		mockTime = 0
 		timeouts = {}
-		Timeout = makeTimeout(mockDelay)
+		Timeout = makeTimerImpl(mockDelay)
 	end)
 
 	describe("Delay override logic", function()

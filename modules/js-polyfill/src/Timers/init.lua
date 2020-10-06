@@ -1,3 +1,3 @@
-local makeTimerImpl = require(script.Parent.makeTimerImpl)
+local makeTimerImpl = require(script.makeTimerImpl)
 
 return makeTimerImpl(delay)
