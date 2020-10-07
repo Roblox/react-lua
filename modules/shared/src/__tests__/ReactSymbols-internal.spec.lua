@@ -10,44 +10,50 @@
 --!strict
 
 return function()
-	describe('ReactSymbols', function()
-		-- deviation: This doesn't have any affect for this test
-		-- beforeEach(() => jest.resetModules());
+	-- deviation: This doesn't have any affect for this test
+	-- beforeEach(() => jest.resetModules());
 
-		local function expectToBeUnique(keyValuePairs)
-			local map = {}
-			for key, value in pairs(keyValuePairs) do
-				if map[value] ~= nil then
-					error(string.format("%s value %s is the same as %s", key, tostring(value), map[value]))
-				end
-				map[value] = key
+	local function expectToBeUnique(keyValuePairs)
+		local map = {}
+		for key, value in pairs(keyValuePairs) do
+			if map[value] ~= nil then
+				error(string.format("%s value %s is the same as %s", key, tostring(value), map[value]))
 			end
+			map[value] = key
 		end
+	end
 
-		-- deviation: Symbol values are not used
-		itSKIP('Symbol values should be unique', function()
-			-- expectToBeUnique(require(script.Parent.ReactSymbols));
-		end)
+	-- deviation: Symbol values are not used
+	itSKIP('Symbol values should be unique', function()
+		-- expectToBeUnique(require(script.Parent.ReactSymbols));
+	end)
 
-		it('numeric values should be unique', function()
-			-- deviation: We don't use symbol anyways, so it's no use to
-			-- override it. We also don't need to filter any values, since
-			-- they're internal-only.
-			local ReactSymbols = require(script.Parent.Parent.ReactSymbols)
-			expectToBeUnique(ReactSymbols)
+	-- deviation: FIXME: verify that the equivalent legacy numeric values in the
+	-- commented out portion of this test are actually a thing; they don't seem
+	-- to exist, so we may be able to update the upstream test and the pull in
+	-- the simplified logic
+	it('numeric values should be unique', function()
+		-- deviation: We don't use symbol anyways, so it's no use to
+		-- override it. We also don't need to filter any values, since
+		-- they're internal-only.
+		local ReactSymbols = require(script.Parent.Parent.ReactSymbols)
+		expectToBeUnique(ReactSymbols)
 
-			-- const originalSymbolFor = global.Symbol.for;
-			-- global.Symbol.for = null;
-			-- try {
-			-- 	entries = Object.entries(require('shared/ReactSymbols')).filter(
-			-- 		// REACT_ASYNC_MODE_TYPE and REACT_CONCURRENT_MODE_TYPE have the same numeric value
-			-- 		// for legacy backwards compatibility
-			-- 		([key]) => key !== 'REACT_ASYNC_MODE_TYPE',
-			-- 	);
-			-- 	expectToBeUnique(entries);
-			-- } finally {
-			-- 	global.Symbol.for = originalSymbolFor;
-			-- }
-		end)
+		-- deviation: We comment out this chunk because we're not actually using
+		-- a global `Symbol` definition in the first place, so we don't need to
+		-- un-polyfill them
+
+		-- const originalSymbolFor = global.Symbol.for;
+		-- global.Symbol.for = null;
+		-- try {
+		-- 	entries = Object.entries(require('shared/ReactSymbols')).filter(
+		-- 		// REACT_ASYNC_MODE_TYPE and REACT_CONCURRENT_MODE_TYPE have the same numeric value
+		-- 		// for legacy backwards compatibility
+		-- 		([key]) => key !== 'REACT_ASYNC_MODE_TYPE',
+		-- 	);
+		-- 	expectToBeUnique(entries);
+		-- } finally {
+		-- 	global.Symbol.for = originalSymbolFor;
+		-- }
 	end)
 end
