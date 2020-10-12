@@ -43,8 +43,9 @@ export PATH=$PATH:~/.foreman/bin/
 Now you can run the tests, edit code, and contribute!
 
 ```
-rojo build --out model.rbxmx
-roblox-cli run  --load.model model.rbxmx --run bin/spec.lua
+rotrieve install
+rojo build --output model.rbxmx
+roblox-cli run --load.model model.rbxmx --run bin/spec.lua
 ```
 
 # Common Issues
