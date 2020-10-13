@@ -8,19 +8,7 @@
 * @flow
 ]]
 
-local makeMockSchedulerHostConfig = require(script.Parent.forks["SchedulerHostConfig.mock"])
-local makeDefaultSchedulerHostConfig = require(script.Parent.forks["SchedulerHostConfig.default"])
-
-local Workspace = script.Parent.Parent
-local Timers = require(Workspace.JSPolyfill.Timers)
-
--- deviation: React expects this module to be replaced via a bundler. Our
--- workflow does not currently include a bundling step, so instead we expose
--- functions to create the desired kinds of host configs
-local Default = makeDefaultSchedulerHostConfig(Timers, delay)
-
-return {
-	mock = makeMockSchedulerHostConfig,
-	makeDefaultWithArgs = makeDefaultSchedulerHostConfig,
-	Default = Default,
-}
+-- deviation: In React, this module throws an error and is expected to be
+-- replaced via a bundler. In our case, we mock it explicitly when we need to
+-- mock it, and return the "default" here
+return require(script.Parent.forks["SchedulerHostConfig.default"])

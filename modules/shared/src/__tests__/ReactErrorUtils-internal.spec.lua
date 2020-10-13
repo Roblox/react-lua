@@ -208,9 +208,7 @@ return function()
 		local ops = {}
 		RobloxJest.resetModules();
 		RobloxJest.mock(script.Parent.Parent.invokeGuardedCallbackImpl, function()
-			print("Mocking the fake one")
 			return function(reporter, name, func, context, a)
-				print("Using the fake one")
 				push(ops, a)
 				local ok, result = pcall(function()
 					func(context, a)

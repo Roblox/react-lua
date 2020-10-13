@@ -13,52 +13,22 @@
 
 return function()
 	local Workspace = script.Parent.Parent.Parent
-	local makeTimerImpl = require(Workspace.JSPolyfill.Timers.makeTimerImpl)
-	local SchedulerHostConfig = require(script.Parent.Parent.SchedulerHostConfig)
-	local Scheduler = require(script.Parent.Parent.Scheduler)
+	local RobloxJest = require(Workspace.RobloxJest)
 
 	local scheduleCallback
 	local ImmediatePriority
 	local UserBlockingPriority
 	local NormalPriority
 
-	local mockTime, timeouts
-
-	local function runAllTimers()
-		local timeoutsRemaining = true
-		repeat
-			mockTime += 16.67
-			timeoutsRemaining = false
-			for _, update in pairs(timeouts) do
-				timeoutsRemaining = true
-				update(mockTime)
-			end
-		until not timeoutsRemaining
-	end
-
-	local function mockDelay(delayTime, callback)
-		local targetTime = mockTime + delayTime
-		timeouts[callback] = function(currentTime: number)
-			if currentTime >= targetTime then
-				callback()
-				timeouts[callback] = nil
-			end
-		end
-	end
-
 	beforeEach(function()
-		mockTime = 0
-		timeouts = {}
-		local Timers = makeTimerImpl(mockDelay)
-		local HostConfig = SchedulerHostConfig.makeDefaultWithArgs(Timers, function()
-			return mockTime
-		end)
-		local SchedulerInstance = Scheduler.makeSchedulerWithArgs(HostConfig)
+		RobloxJest.resetModules()
+		RobloxJest.useFakeTimers()
+		local Scheduler = require(script.Parent.Parent.Scheduler)
 
-		scheduleCallback = SchedulerInstance.unstable_scheduleCallback
-		ImmediatePriority = SchedulerInstance.unstable_ImmediatePriority
-		UserBlockingPriority = SchedulerInstance.unstable_UserBlockingPriority
-		NormalPriority = SchedulerInstance.unstable_NormalPriority
+		scheduleCallback = Scheduler.unstable_scheduleCallback
+		ImmediatePriority = Scheduler.unstable_ImmediatePriority
+		UserBlockingPriority = Scheduler.unstable_UserBlockingPriority
+		NormalPriority = Scheduler.unstable_NormalPriority
 	end)
 
 	it('runAllTimers flushes all scheduled callbacks', function()
@@ -75,7 +45,7 @@ return function()
 
 		expect(log).toEqual({})
 
-		runAllTimers()
+		RobloxJest.runAllTimers()
 
 		expect(log).toEqual({'A', 'B', 'C'})
 	end)
@@ -97,7 +67,7 @@ return function()
 		end)
 
 		expect(log).toEqual({})
-		runAllTimers()
+		RobloxJest.runAllTimers()
 		expect(log).toEqual({'C', 'D', 'A', 'B'})
 	end)
 
@@ -116,7 +86,7 @@ return function()
 			error('Oops C')
 		end)
 
-		expect(runAllTimers).toThrow('Oops A')
+		expect(RobloxJest.runAllTimers).toThrow('Oops A')
 		expect(log).toEqual({'A'})
 
 		log = {}
@@ -124,7 +94,7 @@ return function()
 		-- B and C flush in a subsequent event. That way, the second error is not
 		-- swallowed.
 		expect(function()
-			runAllTimers()
+			RobloxJest.runAllTimers()
 		end).toThrow('Oops C')
 		expect(log).toEqual({'B', 'C'})
 	end)

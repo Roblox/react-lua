@@ -10,12 +10,12 @@
 --!strict
 
 return function()
+	local Workspace = script.Parent.Parent.Parent
+	local RobloxJest = require(Workspace.RobloxJest)
 	local formatProdErrorMessage
 
 	beforeEach(function()
-		-- deviation: This modules only has pure functions, so resetting is a no
-		-- op in this case
-		-- jest.resetModules()
+		RobloxJest.resetModules()
 		formatProdErrorMessage = require(script.Parent.Parent.formatProdErrorMessage)
 	end)
 

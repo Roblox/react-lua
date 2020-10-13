@@ -12,8 +12,8 @@
 --!nocheck
 
 return function()
-	local SchedulerModule = require(script.Parent.Parent.Scheduler)
-	local SchedulerHostConfig = require(script.Parent.Parent.SchedulerHostConfig)
+	local Workspace = script.Parent.Parent.Parent
+	local RobloxJest = require(Workspace.RobloxJest)
 
 	local Scheduler
 	local runWithPriority
@@ -45,8 +45,12 @@ return function()
 	end
 
 	beforeEach(function()
-		local HostConfig = SchedulerHostConfig.mock()
-		Scheduler = SchedulerModule.makeSchedulerWithArgs(HostConfig)
+		RobloxJest.resetModules()
+		RobloxJest.mock(script.Parent.Parent.SchedulerHostConfig, function()
+			return require(script.Parent.Parent.forks["SchedulerHostConfig.mock"])
+		end)
+		local HostConfig = require(script.Parent.Parent.SchedulerHostConfig)
+		Scheduler = require(script.Parent.Parent.Scheduler)
 
 		runWithPriority = Scheduler.unstable_runWithPriority
 		ImmediatePriority = Scheduler.unstable_ImmediatePriority

@@ -1,4 +1,6 @@
 --!strict
+local FakeTimers = require(script.Parent.FakeTimers)
+
 local requiredModules: { [ModuleScript]: any } = {}
 local mocks: { [ModuleScript]: () -> any } = {}
 
@@ -9,7 +11,7 @@ local function requireOverride(scriptInstance: ModuleScript): any
 	--
 	-- TODO: This is a little janky, so we should find a way to do this that's a
 	-- little more robust. We may want to apply it to anything in RobloxJest?
-	if scriptInstance == script then
+	if scriptInstance == script or scriptInstance == script.Parent then
 		return require(scriptInstance)
 	end
 
@@ -38,6 +40,8 @@ local function requireOverride(scriptInstance: ModuleScript): any
 		local moduleFunction = loadmodule(scriptInstance)
 
 		getfenv(moduleFunction).require = requireOverride
+		getfenv(moduleFunction).delay = FakeTimers.delayOverride
+		getfenv(moduleFunction).tick = FakeTimers.tickOverride
 		moduleResult = moduleFunction()
 
 		if moduleResult == nil then
@@ -82,6 +86,8 @@ local function mock(scriptInstance: ModuleScript, callback: () -> any)
 	-- Make sure that the further requires used by this mock will also be using
 	-- the require override
 	getfenv(callback).require = requireOverride
+	getfenv(callback).delay = FakeTimers.delayOverride
+	getfenv(callback).tick = FakeTimers.tickOverride
 	mocks[scriptInstance] = callback
 end
 

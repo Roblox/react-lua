@@ -6,68 +6,72 @@
 * LICENSE file in the root directory of this source tree.
 ]]
 
+local Workspace = script.Parent.Parent.Parent
+local Timers = require(Workspace.JSPolyfill.Timers)
+
+-- deviation: getCurrentTime will always map to `tick` in Luau
+local getCurrentTime = tick
+
 -- deviation: This implementation is converted from the "naive" implementation that
 -- the React scheduler falls bak on in the absence of certain DOM APIs.
 --
 -- This is likely to be the implementation that React Native applications run
 -- with, and should be considered sufficiently sophisticated. More research
 -- needs to be done to verify this.
-return function(Timers, getCurrentTime)
-	local setTimeout = Timers.setTimeout
-	local clearTimeout = Timers.clearTimeout
+local setTimeout = Timers.setTimeout
+local clearTimeout = Timers.clearTimeout
 
-	local exports = {}
-	exports.getCurrentTime = getCurrentTime
+local exports = {}
+exports.getCurrentTime = getCurrentTime
 
-	local _callback = nil
-	local _timeoutID = nil
+local _callback = nil
+local _timeoutID = nil
 
-	local function _flushCallback()
-		if _callback ~= nil then
-			local ok, result = pcall(function()
-				local currentTime = getCurrentTime()
-				local hasRemainingTime = true
-				_callback(hasRemainingTime, currentTime)
-				_callback = nil
-			end)
+local function _flushCallback()
+	if _callback ~= nil then
+		local ok, result = pcall(function()
+			local currentTime = getCurrentTime()
+			local hasRemainingTime = true
+			_callback(hasRemainingTime, currentTime)
+			_callback = nil
+		end)
 
-			if not ok then
-				setTimeout(_flushCallback, 0)
-				error(result)
-			end
-		end
-	end
-
-	local function requestHostCallback(cb)
-		if _callback ~= nil then
-			-- Protect against re-entrancy.
-			setTimeout(requestHostCallback, 0, cb)
-		else
-			_callback = cb
+		if not ok then
 			setTimeout(_flushCallback, 0)
+			error(result)
 		end
 	end
-
-	exports.requestHostCallback = requestHostCallback
-	exports.cancelHostCallback = function()
-		_callback = nil
-	end
-	exports.requestHostTimeout = function(cb, ms)
-		_timeoutID = setTimeout(cb, ms)
-	end
-	exports.cancelHostTimeout = function()
-		clearTimeout(_timeoutID)
-	end
-	exports.shouldYieldToHost = function()
-		return false
-	end
-	exports.requestPaint = function()
-	end
-	exports.forceFrameRate = function()
-	end
-
-	return exports
 end
+
+local function requestHostCallback(cb)
+	if _callback ~= nil then
+		-- Protect against re-entrancy.
+		setTimeout(requestHostCallback, 0, cb)
+	else
+		_callback = cb
+		setTimeout(_flushCallback, 0)
+	end
+end
+
+exports.requestHostCallback = requestHostCallback
+exports.cancelHostCallback = function()
+	_callback = nil
+end
+exports.requestHostTimeout = function(cb, ms)
+	_timeoutID = setTimeout(cb, ms)
+end
+exports.cancelHostTimeout = function()
+	clearTimeout(_timeoutID)
+end
+exports.shouldYieldToHost = function()
+	return false
+end
+exports.requestPaint = function()
+end
+exports.forceFrameRate = function()
+end
+
+return exports
 
 -- deviation: This module in React exports a different implementation if it
 -- detects certain APIs from the DOM interface. For our purposes, these will
