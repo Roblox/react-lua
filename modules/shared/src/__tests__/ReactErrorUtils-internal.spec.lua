@@ -15,8 +15,6 @@ return function()
 	local RobloxJest = require(Workspace.RobloxJest)
 	local Error = require(Workspace.JSPolyfill.Error)
 
-	local invokeGuardedCallbackImpl = require(script.Parent.Parent.invokeGuardedCallbackImpl)
-	local ReactErrorUtilsModule = require(script.Parent.Parent.ReactErrorUtils)
 	local ReactErrorUtils
 
 	-- deviation: FIXME: add arrays polyfill w/ push/pop/shift/etc.
@@ -26,7 +24,8 @@ return function()
 
 	beforeEach(function()
 		-- TODO: can we express this test with only public API?
-		ReactErrorUtils = ReactErrorUtilsModule.makeWithArgs(invokeGuardedCallbackImpl)
+		RobloxJest.resetModules()
+		ReactErrorUtils = require(script.Parent.Parent.ReactErrorUtils)
 	end)
 
 	it('it should rethrow caught errors', function()
@@ -156,10 +155,9 @@ return function()
 	end)
 
 	it('handles nested errors in separate renderers', function()
-		-- deviation: call our initializer instead of using module resetting
-		local ReactErrorUtils1 = ReactErrorUtilsModule.makeWithArgs(invokeGuardedCallbackImpl);
-		-- jest.resetModules();
-		local ReactErrorUtils2 = ReactErrorUtilsModule.makeWithArgs(invokeGuardedCallbackImpl);
+		local ReactErrorUtils1 = require(script.Parent.Parent.ReactErrorUtils)
+		RobloxJest.resetModules()
+		local ReactErrorUtils2 = require(script.Parent.Parent.ReactErrorUtils)
 		expect(ReactErrorUtils1).never.to.equal(ReactErrorUtils2)
 
 		local ops = {}
@@ -208,18 +206,22 @@ return function()
 
 	it('can be shimmed', function()
 		local ops = {}
-		-- deviation: No module resetting/mocking support
-		-- jest.resetModules();
-		ReactErrorUtils = ReactErrorUtilsModule.makeWithArgs(function(reporter, name, func, context, a)
-			push(ops, a)
-			local ok, result = pcall(function()
-				func(context, a)
-			end)
+		RobloxJest.resetModules();
+		RobloxJest.mock(script.Parent.Parent.invokeGuardedCallbackImpl, function()
+			print("Mocking the fake one")
+			return function(reporter, name, func, context, a)
+				print("Using the fake one")
+				push(ops, a)
+				local ok, result = pcall(function()
+					func(context, a)
+				end)
 
-			if not ok then
-				reporter.onError(result)
+				if not ok then
+					reporter.onError(result)
+				end
 			end
 		end)
+		ReactErrorUtils = require(script.Parent.Parent.ReactErrorUtils)
 
 		-- deviation: no need to wrap in try/finally since we don't need to
 		-- undo the mock like we would with jest

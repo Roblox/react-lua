@@ -1,0 +1,2 @@
+-- This module returns no value. No return value is distinct from a "nil" value,
+-- and has subtly different behavior in some situations
