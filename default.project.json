@@ -7,14 +7,14 @@
     },
     "Modules": {
       "$className": "Folder",
-      "JSPolyfill": {
-        "$path": "modules/js-polyfill/src"
+      "RobloxJSPolyfill": {
+        "$path": "modules/roblox-js-polyfill/src"
       },
       "React": {
         "$path": "modules/react/src"
       },
-      "Reconciler": {
-        "$path": "modules/reconciler/src"
+      "ReactReconciler": {
+        "$path": "modules/react-reconciler/src"
       },
       "RobloxJest": {
         "$path": "modules/roblox-jest/src"

@@ -7,7 +7,7 @@
 ]]
 
 local Workspace = script.Parent.Parent.Parent
-local Timers = require(Workspace.JSPolyfill.Timers)
+local Timers = require(Workspace.RobloxJSPolyfill.Timers)
 
 -- deviation: getCurrentTime will always map to `tick` in Luau
 local getCurrentTime = tick

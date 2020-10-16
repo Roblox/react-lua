@@ -10,7 +10,7 @@
 --!nolint UnknownGlobal
 --!nocheck
 local Workspace = script.Parent.Parent
-local console = require(Workspace.JSPolyfill.console)
+local console = require(Workspace.RobloxJSPolyfill.console)
 
 local ReactSharedInternals = require(script.Parent.ReactSharedInternals)
 -- In DEV, calls to console.warn and console.error get replaced

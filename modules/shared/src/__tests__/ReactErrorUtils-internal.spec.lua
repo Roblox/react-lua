@@ -13,7 +13,7 @@
 return function()
 	local Workspace = script.Parent.Parent.Parent
 	local RobloxJest = require(Workspace.RobloxJest)
-	local Error = require(Workspace.JSPolyfill.Error)
+	local Error = require(Workspace.RobloxJSPolyfill.Error)
 
 	local ReactErrorUtils
 

@@ -1,5 +1,5 @@
 {
-  "name": "JSPolyfill",
+  "name": "ReactReconciler",
   "tree": {
     "$path": "src"
   }

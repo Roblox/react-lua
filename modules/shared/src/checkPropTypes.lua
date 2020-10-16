@@ -12,8 +12,8 @@
 --!nolint UnknownGlobal
 --!nocheck
 local Workspace = script.Parent.Parent
-local console = require(Workspace.JSPolyfill.console)
-local Error = require(Workspace.JSPolyfill.Error)
+local console = require(Workspace.RobloxJSPolyfill.console)
+local Error = require(Workspace.RobloxJSPolyfill.Error)
 
 local loggedTypeFailures = {}
 

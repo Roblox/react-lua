@@ -8,7 +8,7 @@
 -- `Object.defineProperties` to ensure that properties are modifiable. In Lua,
 -- these operations are as simple as assigning to functions.
 local Workspace = script.Parent.Parent
-local console = require(Workspace.JSPolyfill.console)
+local console = require(Workspace.RobloxJSPolyfill.console)
 
  -- Helpers to patch console.logs to avoid logging during side-effect free
 -- replaying on render function. This currently only patches the object

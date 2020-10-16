@@ -7,7 +7,7 @@
  *
  ]]
 local Workspace = script.Parent.Parent
-local Timers = require(Workspace.JSPolyfill.Timers)
+local Timers = require(Workspace.RobloxJSPolyfill.Timers)
 
 return function(task)
 	-- deviation: Replace with setImmediate once we create an equivalent polyfill
