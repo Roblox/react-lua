@@ -13,6 +13,9 @@
       "React": {
         "$path": "modules/react/src"
       },
+      "ReactIs": {
+        "$path": "modules/react-is/src"
+      },
       "ReactReconciler": {
         "$path": "modules/react-reconciler/src"
       },

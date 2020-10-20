@@ -31,7 +31,6 @@ return function(array: Array, start: number, deleteCount: number?, ...): Array
 			local lastIndex = math.min(length, start + math.max(0, deleteCount - 1))
 
 			for i = start, lastIndex do
-				print("remove", array[i])
 				local deleted = table.remove(array, start)
 				table.insert(deletedItems, deleted)
 			end
