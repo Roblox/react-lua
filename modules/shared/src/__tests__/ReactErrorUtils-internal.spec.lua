@@ -7,8 +7,6 @@
  *
  * @emails react-core
 ]]
---!nolint UnknownGlobal
---!nocheck
 
 return function()
 	local Workspace = script.Parent.Parent.Parent
@@ -188,7 +186,7 @@ return function()
 		expect(ops[3]).to.equal(false)
 	end)
 
-	if not __DEV__ then
+	if not _G.__DEV__ then
 		-- jsdom doesn't handle this properly, but Chrome and Firefox should. Test
 		-- this with a fixture.
 		it('catches nil values', function()

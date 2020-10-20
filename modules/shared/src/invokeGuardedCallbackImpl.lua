@@ -7,10 +7,6 @@
  *
  * @flow
  ]]
--- Unknown globals fail type checking (see "Unknown symbols" section of
--- https://roblox.github.io/luau/typecheck.html)
---!nolint UnknownGlobal
---!nocheck
 -- local invariant = require(script.Parent.invariant)
 
 -- deviation: with flow types stripped, it's easier to use varargs directly
@@ -31,7 +27,7 @@ end
 
 local invokeGuardedCallbackImpl = invokeGuardedCallbackProd
 
-if __DEV__ then
+if _G.__DEV__ then
 	-- In DEV mode, we swap out invokeGuardedCallback for a special version
 	-- that plays more nicely with the browser's DevTools. The idea is to preserve
 	-- "Pause on exceptions" behavior. Because React wraps all user-provided

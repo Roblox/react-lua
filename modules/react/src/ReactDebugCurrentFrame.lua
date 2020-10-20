@@ -6,24 +6,20 @@
  *
  * @flow
  ]]
--- Unknown globals fail type checking (see "Unknown symbols" section of
--- https://roblox.github.io/luau/typecheck.html)
---!nolint UnknownGlobal
---!nocheck
 
 local ReactDebugCurrentFrame = {}
 
 local currentExtraStackFrame = nil
 
 ReactDebugCurrentFrame.setExtraStackFrame = function (stack: string?)
-	if __DEV__ then
+	if _G.__DEV__ then
 		currentExtraStackFrame = stack
 	end
 end
 
-if __DEV__ then
+if _G.__DEV__ then
 	ReactDebugCurrentFrame.setExtraStackFrame = function(stack: string?)
-		if __DEV__ then
+		if _G.__DEV__ then
 			currentExtraStackFrame = stack
 		end
 	end

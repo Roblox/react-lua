@@ -7,10 +7,6 @@
  *
  * @flow
  ]]
--- Unknown globals fail type checking (see "Unknown symbols" section of
--- https://roblox.github.io/luau/typecheck.html)
---!nolint UnknownGlobal
---!nocheck
 local Workspace = script.Parent.Parent
 local console = require(Workspace.RobloxJSPolyfill.console)
 local Error = require(Workspace.RobloxJSPolyfill.Error)
@@ -25,7 +21,7 @@ local ReactSharedInternals = require(script.Parent.ReactSharedInternals)
 local ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame
 
 function setCurrentlyValidatingElement(element)
-	if __DEV__ then
+	if _G.__DEV__ then
 		if element then
 			local owner = element._owner
 			local stack = describeUnknownElementTypeFrameInDEV(
@@ -41,7 +37,7 @@ function setCurrentlyValidatingElement(element)
 end
 
 local function checkPropTypes(typeSpecs, values, location, componentName, element)
-	if __DEV__ then
+	if _G.__DEV__ then
 		-- deviation: hasOwnProperty shouldn't be relevant to lua objects
 		-- $FlowFixMe This is okay but Flow doesn't know it.
 		-- local has = Function.call.bind(Object.prototype.hasOwnProperty)

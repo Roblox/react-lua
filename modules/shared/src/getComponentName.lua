@@ -8,10 +8,6 @@
 * @flow
 ]]
 --!nolint LocalShadowPedantic
--- Unknown globals fail type checking (see "Unknown symbols" section of
--- https://roblox.github.io/luau/typecheck.html)
---!nolint UnknownGlobal
---!nocheck
 local ReactSymbols = require(script.Parent.ReactSymbols)
 local REACT_CONTEXT_TYPE = ReactSymbols.REACT_CONTEXT_TYPE
 local REACT_FORWARD_REF_TYPE = ReactSymbols.REACT_FORWARD_REF_TYPE
@@ -43,7 +39,7 @@ local function getComponentName(type)
 		return nil
 	end
 
-	if __DEV__ then
+	if _G.__DEV__ then
 		if typeof(type.tag) == 'number' then
 			warn(
 				'Received an unexpected object in getComponentName(). ' ..

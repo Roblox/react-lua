@@ -1,7 +1,3 @@
--- FIXME: roblox-cli has special, hard-coded types for TestEZ that break when we
---use custom matchers added via `expect.extend`
---!nocheck
-
 return function()
     local Workspace = script.Parent.Parent.Parent
     local ReactBaseClasses = require(Workspace.React.ReactBaseClasses)

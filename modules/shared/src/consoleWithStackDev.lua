@@ -5,10 +5,6 @@
 * This source code is licensed under the MIT license found in the
 * LICENSE file in the root directory of this source tree.
 ]]
--- Unknown globals fail type checking (see "Unknown symbols" section of
--- https://roblox.github.io/luau/typecheck.html)
---!nolint UnknownGlobal
---!nocheck
 local Workspace = script.Parent.Parent
 local console = require(Workspace.RobloxJSPolyfill.console)
 
@@ -25,7 +21,7 @@ local printWarning
 
 local exports = {}
 exports.warn = function(format, ...)
-	if __DEV__ then
+	if _G.__DEV__ then
 		-- deviation: varargs works differently in lua
 		local argsLength = select("#", ...)
 		local args = {}
@@ -37,7 +33,7 @@ exports.warn = function(format, ...)
 	end
 end
 exports.error = function(format, ...)
-	if __DEV__ then
+	if _G.__DEV__ then
 		-- deviation: varargs works differently in lua
 		local argsLength = select("#", ...)
 		local args = {}
@@ -52,7 +48,7 @@ end
 printWarning = function(level, format, args)
 	-- When changing this logic, you might want to also
 	-- update consoleWithStackDev.www.js as well.
-	if __DEV__ then
+	if _G.__DEV__ then
 		local ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame
 		local stack = ReactDebugCurrentFrame.getStackAddendum()
 

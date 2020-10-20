@@ -1,8 +1,3 @@
--- Unknown globals fail type checking (see "Unknown symbols" section of
--- https://roblox.github.io/luau/typecheck.html)
---!nolint UnknownGlobal
---!nocheck
-
 -- deviation: Lua objects don't have any special properties the way that JS
 -- Objects do; this has been modified from the JS, which uses
 -- `Object.defineProperties` to ensure that properties are modifiable. In Lua,
@@ -27,7 +22,7 @@ local disabledLog = function() end
 
 local exports = {}
 exports.disableLogs = function()
-	if __DEV__ then
+	if _G.__DEV__ then
 		if disabledDepth == 0 then
 			prevLog = console.log
 			prevInfo = console.info
@@ -51,7 +46,7 @@ exports.disableLogs = function()
 end
 
 exports.reenableLogs = function()
-	if __DEV__ then
+	if _G.__DEV__ then
 		disabledDepth = disabledDepth - 1
 
 		if disabledDepth == 0 then

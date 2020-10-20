@@ -1,8 +1,3 @@
--- Unknown globals fail type checking (see "Unknown symbols" section of
--- https://roblox.github.io/luau/typecheck.html)
---!nolint UnknownGlobal
---!nocheck
-
 --[[*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
@@ -72,7 +67,7 @@ exports.isValidElementType = isValidElementType
 local hasWarnedAboutDeprecatedIsAsyncMode = false
 local hasWarnedAboutDeprecatedIsConcurrentMode = false -- AsyncMode should be deprecated
 exports.isAsyncMode = function(object)
-	if __DEV__ then
+	if _G.__DEV__ then
 		if not hasWarnedAboutDeprecatedIsAsyncMode then
 			hasWarnedAboutDeprecatedIsAsyncMode = true
 			-- Using console['warn'] to evade Babel and ESLint
@@ -85,7 +80,7 @@ exports.isAsyncMode = function(object)
 end
 
 exports.isConcurrentMode = function(object)
-	if __DEV__ then
+	if _G.__DEV__ then
 		if not hasWarnedAboutDeprecatedIsConcurrentMode then
 			hasWarnedAboutDeprecatedIsConcurrentMode = true
 			-- Using console['warn'] to evade Babel and ESLint

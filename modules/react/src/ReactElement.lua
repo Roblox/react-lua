@@ -1,7 +1,3 @@
--- Unknown globals fail type checking (see "Unknown symbols" section of
--- https://roblox.github.io/luau/typecheck.html)
---!nolint UnknownGlobal
---!nocheck
 --[[*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
@@ -25,14 +21,14 @@ local RESERVED_PROPS = {
 
 local specialPropKeyWarningShown, specialPropRefWarningShown, didWarnAboutStringRefs
 
-if __DEV__ then
+if _G.__DEV__ then
 	didWarnAboutStringRefs = {}
 end
 
 local exports = {}
 
-hasValidRef = function(config)
-	if __DEV__ then
+local function hasValidRef(config)
+	if _G.__DEV__ then
 		if config and config.ref then
 			local getter = config.ref.get
 
@@ -45,8 +41,8 @@ hasValidRef = function(config)
 	return config.ref ~= nil
 end
 
-hasValidKey = function(config)
-	if __DEV__ then
+local function hasValidKey(config)
+	if _G.__DEV__ then
 		if config.key then
 			local getter = config.key.get
 
@@ -59,9 +55,9 @@ hasValidKey = function(config)
 	return config.key ~= nil
 end
 
-defineKeyPropWarningGetter = function(props, displayName)
+local function defineKeyPropWarningGetter(props, displayName)
 	local warnAboutAccessingKey = function()
-		if __DEV__ then
+		if _G.__DEV__ then
 			if not specialPropKeyWarningShown then
 				specialPropKeyWarningShown = true
 				console.error(
@@ -78,7 +74,7 @@ end
 
 local function defineRefPropWarningGetter(props, displayName)
 	local warnAboutAccessingRef = function()
-		if __DEV__ then
+		if _G.__DEV__ then
 			if not specialPropRefWarningShown then
 				specialPropRefWarningShown = true
 				console.error(
@@ -93,8 +89,8 @@ local function defineRefPropWarningGetter(props, displayName)
 	props.ref = warnAboutAccessingRef
 end
 
-warnIfStringRefCannotBeAutoConverted = function(config)
-	if __DEV__ then
+local function warnIfStringRefCannotBeAutoConverted(config)
+	if _G.__DEV__ then
 		if
 			typeof(config.ref) == 'string' and
 			ReactCurrentOwner.current and
@@ -150,7 +146,7 @@ local ReactElement = function(_type, key, ref, self, source, owner, props)
 	-- This tag allows us to uniquely identify this as a React Element
 	element['$$typeof'] = REACT_ELEMENT_TYPE
 
-	if __DEV__ then
+	if _G.__DEV__ then
 		-- The validation flag is currently mutative. We put it on
 		-- an external backing store so that we can freeze the whole object.
 		-- This can be replaced with a WeakMap once they are implemented in
@@ -308,7 +304,7 @@ exports.createElement = function(_type, config, ...)
 		if hasValidRef(config) then
 			ref = config.ref
 
-			if __DEV__ then
+			if _G.__DEV__ then
 				warnIfStringRefCannotBeAutoConverted(config)
 			end
 		end
@@ -352,7 +348,7 @@ exports.createElement = function(_type, config, ...)
 			table.insert(childArray, toInsert)
 		end
 
-		if __DEV__ then
+		if _G.__DEV__ then
 			if Object.freeze then
 				Object.freeze(childArray)
 			end
@@ -366,14 +362,14 @@ exports.createElement = function(_type, config, ...)
 	if typeof(_type) == 'table' and _type.defaultProps then
 		local defaultProps = _type.defaultProps
 
-		for propName, _ in pair(defaultProps) do
+		for propName, _ in pairs(defaultProps) do
 			if props[propName] == nil then
 				props[propName] = defaultProps[propName]
 			end
 		end
 	end
 
-	if __DEV__ then
+	if _G.__DEV__ then
 		if key or ref then
 			local displayName
 

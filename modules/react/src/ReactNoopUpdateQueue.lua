@@ -1,7 +1,3 @@
--- Unknown globals fail type checking (see "Unknown symbols" section of
--- https://roblox.github.io/luau/typecheck.html)
---!nolint UnknownGlobal
---!nocheck
 --[[*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
@@ -15,7 +11,7 @@ local console = require(Workspace.RobloxJSPolyfill.console)
 local didWarnStateUpdateForUnmountedComponent = {}
 
 function warnNoop(publicInstance, callerName)
-	if __DEV__ then
+	if _G.__DEV__ then
 		local constructor = publicInstance.constructor
 		local componentName = ((constructor and (constructor.displayName or constructor.name)) or 'ReactClass')
 		local warningKey = componentName + '.' + callerName

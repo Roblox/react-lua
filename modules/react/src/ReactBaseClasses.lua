@@ -1,7 +1,3 @@
--- Unknown globals fail type checking (see "Unknown symbols" section of
--- https://roblox.github.io/luau/typecheck.html)
---!nolint UnknownGlobal
---!nocheck
 --[[*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
@@ -9,12 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  ]]
 local Workspace = script.Parent.Parent
+local console = require(Workspace.RobloxJSPolyfill.console)
 local invariant = require(Workspace.Shared.invariant)
 local Object = require(Workspace.RobloxJSPolyfill.Object)
 local ReactNoopUpdateQueue = require(script.Parent.ReactNoopUpdateQueue)
 local emptyObject = {}
 
-if __DEV__ then
+if _G.__DEV__ then
   Object.freeze(emptyObject)
 end
 --[[*
@@ -137,7 +134,7 @@ end
  ]]
 
 
-if __DEV__ then
+if _G.__DEV__ then
   local deprecatedAPIs = {
     isMounted = {'isMounted', 'Instead, make sure to clean up subscriptions and pending requests in ' .. 'componentWillUnmount to prevent memory leaks.'},
     replaceState = {'replaceState', 'Refactor your code to use setState instead (see ' .. 'https:--github.com/facebook/react/issues/3236).'}

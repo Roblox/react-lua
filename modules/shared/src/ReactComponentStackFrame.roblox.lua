@@ -3,10 +3,6 @@
 -- stack structure
 
 --!nolint LocalShadowPedantic
--- Unknown globals fail type checking (see "Unknown symbols" section of
--- https://roblox.github.io/luau/typecheck.html)
---!nolint UnknownGlobal
---!nocheck
 local ReactFeatureFlags = require(script.Parent.ReactFeatureFlags)
 local enableComponentStackLocations = ReactFeatureFlags.enableComponentStackLocations
 
@@ -281,7 +277,7 @@ describeFunctionComponentFrame = function(fn, source, ownerFn)
 		local name = fn.displayName or fn.name or nil
 		local ownerName = nil
 
-		if __DEV__ and ownerFn then
+		if _G.__DEV__ and ownerFn then
 			ownerName = ownerFn.displayName or ownerFn.name or nil
 		end
 
@@ -296,7 +292,7 @@ function shouldConstruct(Component)
 end
 
 describeUnknownElementTypeFrameInDEV = function(type, source, ownerFn)
-	if not __DEV__ then
+	if not _G.__DEV__ then
 		return ''
 	end
 
