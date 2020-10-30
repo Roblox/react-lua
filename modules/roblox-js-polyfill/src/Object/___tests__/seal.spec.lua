@@ -1,7 +1,7 @@
 --!nocheck
 return function()
 	local Workspace = script.Parent.Parent.Parent.Parent
-	local freeze = require(script.Parent.Parent.freeze)
+	local seal = require(script.Parent.Parent.seal)
 	local RobloxJest = require(Workspace.RobloxJest)
 
 	beforeAll(function()
@@ -11,34 +11,33 @@ return function()
 	end)
 
 	it("should return the same table", function()
-		local unfrozen = {
+		local unsealed = {
 			a = 1,
 		}
-		local frozen = freeze(unfrozen)
+		local sealed = seal(unsealed)
 
-		expect(frozen).to.equal(unfrozen)
+		expect(sealed).to.equal(unsealed)
 	end)
 
-	it("should allow access to any keys that were defined when it was frozen", function()
-		local t = freeze({
+	it("should allow access to any keys that were defined when it was sealed", function()
+		local t = seal({
 			a = 1,
 		})
 
 		expect(t.a).to.equal(1)
 	end)
 
-	itFIXME("should prohibit assignment to existing values", function()
-		local t = freeze({
+	it("should allow mutation of existing values", function()
+		local t = seal({
 			a = 1,
 		})
-	
-		expect(function()
-			t.a = 2
-		end).to.throw()
+
+		t.a = 2
+		expect(t.a).to.equal(2)
 	end)
 
 	it("should preserve iteration functionality", function()
-		local t = freeze({
+		local t = seal({
 			a = 1,
 			b = 2,
 		})
@@ -50,7 +49,7 @@ return function()
 
 		expect(tPairsCopy).toEqual(t)
 
-		local a = freeze({ "hello", "world" })
+		local a = seal({ "hello", "world" })
 
 		local aIpairsCopy = {}
 		for i, v in ipairs(a) do
@@ -61,7 +60,7 @@ return function()
 	end)
 
 	it("should error when setting a nonexistent key", function()
-		local t = freeze({
+		local t = seal({
 			a = 1,
 			b = 2,
 		})

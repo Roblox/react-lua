@@ -19,6 +19,9 @@
       "ReactReconciler": {
         "$path": "modules/react-reconciler/src"
       },
+      "ReactShallowRenderer": {
+        "$path": "modules/react-shallow-renderer/src"
+      },
       "RobloxJest": {
         "$path": "modules/roblox-jest/src"
       },

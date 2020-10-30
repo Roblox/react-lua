@@ -30,7 +30,9 @@ exports.typeOf = function(object)
 			then
 				return __type
 			else
-				local __typeofType = __type and __type['$$typeof']
+				-- deviation: We need to check that __type is a table before we
+				-- index into it, or Luau will throw errors
+				local __typeofType = __type and typeof(__type) == "table" and __type['$$typeof']
 
 				if
 					__typeofType == ReactSymbols.REACT_CONTEXT_TYPE or

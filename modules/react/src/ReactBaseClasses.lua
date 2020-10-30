@@ -14,26 +14,14 @@ local emptyObject = {}
 if _G.__DEV__ then
   Object.freeze(emptyObject)
 end
+
 --[[*
  * Base class helpers for the updating state of a component.
- ]]
-
+]]
+-- FIXME: Due to metatable inheritance, this field will be accessible and true
+-- on class component _instances_ as well as class component definitions; this
+-- is probably not correct
 local componentClassPrototype = {}
-
-function componentClassPrototype.__ctor(props, context, updater)
-  local self = {}
-
-  self.props = props
-  self.context = context
-  -- If a component has string refs, we will assign a different object later.
-  self.refs = emptyObject
-  -- We initialize the default updater but the real one gets injected by the
-  -- renderer.
-  self.updater = updater or ReactNoopUpdateQueue
-
-  return self
-end
-
 componentClassPrototype.isReactComponent = true
 
 local componentClassMetatable = {
@@ -70,7 +58,28 @@ function Component:extend(name)
   class.__index = class
   class.__componentName = name
 
-  setmetatable(class, componentClassMetatable)
+  function class.__ctor(props, context, updater)
+    local instance = {}
+
+    instance.props = props
+    instance.context = context
+    -- If a component has string refs, we will assign a different object later.
+    instance.refs = emptyObject
+    -- We initialize the default updater but the real one gets injected by the
+    -- renderer.
+    instance.updater = updater or ReactNoopUpdateQueue
+
+    -- deviation: TODO: revisit this; make sure that we properly initialize
+    -- things like `state` if its necessary, consider if we want some sort of
+    -- alternate naming or syntax for the constructor equivalent
+    if typeof(class.init) == 'function' then
+      class.init(instance)
+    end
+
+    return setmetatable(instance, class)
+  end
+
+  setmetatable(class, getmetatable(self))
 
   return class
 end
@@ -105,7 +114,10 @@ function Component:setState(partialState, callback)
     typeof(partialState) == 'table' or typeof(partialState) == 'function' or partialState == nil,
     'setState(...): takes an object of state variables to update or a ' .. 'function which returns an object of state variables.'
   )
-  self.updater.enqueueSetState(self, partialState, callback, 'setState')
+  -- self.updater.enqueueSetState must be called with ':' so that it has access
+  -- to the updater's `self`, but it must also be passed the component instance
+  -- as the next argument (hence, `self` as the first argument)
+  self.updater:enqueueSetState(self, partialState, callback, 'setState')
 end
 
 --[[*
@@ -125,7 +137,10 @@ end
 
 
 function Component:forceUpdate(callback)
-  self.updater.enqueueForceUpdate(self, callback, 'forceUpdate')
+  -- self.updater.enqueueSetState must be called with ':' so that it has access
+  -- to the updater's `self`, but it must also be passed the component instance
+  -- as the next argument (hence, `self` as the first argument)
+  self.updater:enqueueForceUpdate(self, callback, 'forceUpdate')
 end
 --[[*
  * Deprecated APIs. These APIs used to exist on classic React classes but since
@@ -174,7 +189,11 @@ local pureComponentClassPrototype = {}
 Object.assign(pureComponentClassPrototype, componentClassPrototype)
 pureComponentClassPrototype.isPureReactComponent = true
 
-setmetatable(PureComponent, pureComponentClassPrototype)
+-- ROBLOX: FIXME: we should clean this up and align the implementations of
+-- Component and PureComponent more clearly and explicitly
+setmetatable(PureComponent, {
+  __index = pureComponentClassPrototype
+})
 
 return {
   Component = Component,

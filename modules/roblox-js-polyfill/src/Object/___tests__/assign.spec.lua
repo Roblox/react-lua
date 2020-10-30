@@ -66,4 +66,20 @@ return function()
 
 		expect(target.foo).to.equal(source2.foo)
 	end)
+
+	it("should ignore non-table arguments", function()
+		local target = {
+			foo = 1,
+		}
+
+		local source1 = {
+			foo = 2,
+			bar = 1,
+		}
+
+		assign(target, nil, true, 1, source1)
+
+		expect(target.foo).to.equal(2)
+		expect(target.bar).to.equal(1)
+	end)
 end

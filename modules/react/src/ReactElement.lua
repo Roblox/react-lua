@@ -7,7 +7,7 @@
 local Workspace = script.Parent.Parent
 local console = require(Workspace.RobloxJSPolyfill.console)
 local getComponentName = require(Workspace.Shared.getComponentName)
--- local invariant = require(Workspace.Shared.invariant)
+local invariant = require(Workspace.Shared.invariant)
 local Object = require(Workspace.RobloxJSPolyfill.Object)
 local REACT_ELEMENT_TYPE = require(Workspace.Shared.ReactSymbols).REACT_ELEMENT_TYPE
 local ReactCurrentOwner = require(script.Parent.ReactCurrentOwner)
@@ -29,7 +29,7 @@ local exports = {}
 
 local function hasValidRef(config)
 	if _G.__DEV__ then
-		if config and config.ref then
+		if config and config.ref and typeof(config.ref) == 'table' then
 			local getter = config.ref.get
 
 			if getter and getter.isReactWarning then
@@ -73,17 +73,21 @@ local function defineKeyPropWarningGetter(props, displayName)
 end
 
 local function defineRefPropWarningGetter(props, displayName)
-	local warnAboutAccessingRef = function()
-		if _G.__DEV__ then
-			if not specialPropRefWarningShown then
-				specialPropRefWarningShown = true
-				console.error(
-					'%s: `ref` is not a prop. Trying to access it will result ' .. 'in `nil` being returned. If you need to access the same ' .. 'value within the child component, you should pass it as a different ' .. 'prop. (https://reactjs.org/link/special-props)',
-					displayName
-				)
+	-- deviation: Use a __call metamethod here to make this function-like, but
+	-- still able to have the `isReactWarning` flag defined on it
+	local warnAboutAccessingRef = setmetatable({}, {
+		__call = function()
+			if _G.__DEV__ then
+				if not specialPropRefWarningShown then
+					specialPropRefWarningShown = true
+					console.error(
+						'%s: `ref` is not a prop. Trying to access it will result ' .. 'in `nil` being returned. If you need to access the same ' .. 'value within the child component, you should pass it as a different ' .. 'prop. (https://reactjs.org/link/special-props)',
+						displayName
+					)
+				end
 			end
-		end
-	end
+		end,
+	})
 
 	warnAboutAccessingRef.isReactWarning = true
 	props.ref = warnAboutAccessingRef
@@ -334,7 +338,6 @@ exports.createElement = function(_type, config, ...)
 
 	-- Children can be more than one argument, and those are transferred onto
 	-- the newly allocated props object.
-
 	local childrenLength = select('#', ...)
 
 	if childrenLength == 1 then
@@ -411,76 +414,80 @@ end
 --  local newElement = ReactElement(oldElement.type, newKey, oldElement.ref, oldElement._self, oldElement._source, oldElement._owner, oldElement.props)
 --  return newElement
 --end
-----[[*
--- * Clone and return a new ReactElement using element as the starting point.
--- * See https://reactjs.org/docs/react-api.html#cloneelement
--- ]]
---
---export function cloneElement(element, config, children)
---  invariant(!(element == nil or element == nil), 'React.cloneElement(...): The argument must be a React element, but you passed %s.', element)
---  local propName; -- Original props are copied
---
---  local props = Object.assign(}, element.props); -- Reserved names are extracted
---
---  local key = element.key
---  local ref = element.ref; -- Self is preserved since the owner is preserved.
---
---  local self = element._self; -- Source is preserved since cloneElement is unlikely to be targeted by a
---  -- transpiler, and the original source is probably a better indicator of the
---  -- true owner.
---
---  local source = element._source; -- Owner will be preserved, unless ref is overridden
---
---  local owner = element._owner
---
---  if config ~= nil)
---    if hasValidRef(config))
---      -- Silently steal the ref from the parent.
---      ref = config.ref
---      owner = ReactCurrentOwner.current
---    end
---
---    if hasValidKey(config))
---      key = '' .. config.key
---    } -- Remaining properties override existing props
---
---
---    local defaultProps
---
---    if element.type and element.type.defaultProps)
---      defaultProps = element.type.defaultProps
---    end
---
---    for (propName in config)
---      if hasOwnProperty.call(config, propName) and !RESERVED_PROPS.hasOwnProperty(propName))
---        if config[propName] == nil and defaultProps ~= nil)
---          -- Resolve default props
---          props[propName] = defaultProps[propName]
---        } else
---          props[propName] = config[propName]
---        end
---      end
---    end
---  } -- Children can be more than one argument, and those are transferred onto
---  -- the newly allocated props object.
---
---
---  local childrenLength = arguments.length - 2
---
---  if childrenLength == 1)
---    props.children = children
---  } else if childrenLength > 1)
---    local childArray = Array(childrenLength)
---
---    for (local i = 0; i < childrenLength; i++)
---      childArray[i] = arguments[i + 2]
---    end
---
---    props.children = childArray
---  end
---
---  return ReactElement(element.type, key, ref, self, source, owner, props)
---end
+
+--[[*
+* Clone and return a new ReactElement using element as the starting point.
+* See https://reactjs.org/docs/react-api.html#cloneelement
+]]
+
+exports.cloneElement = function(element, config, ...)
+ invariant(not (element == nil or element == nil), 'React.cloneElement(...): The argument must be a React element, but you passed ' .. tostring(element))
+
+ -- Original props are copied
+ local props = Object.assign({}, element.props)
+ 
+ -- Reserved names are extracted
+ local key = element.key
+ local ref = element.ref
+
+ -- Self is preserved since the owner is preserved.
+ local self = element._self
+
+ -- Source is preserved since cloneElement is unlikely to be targeted by a
+ -- transpiler, and the original source is probably a better indicator of the
+ -- true owner.
+ local source = element._source;
+
+ -- Owner will be preserved, unless ref is overridden
+ local owner = element._owner
+
+ if config ~= nil then
+   if hasValidRef(config) then
+     -- Silently steal the ref from the parent.
+     ref = config.ref
+     owner = ReactCurrentOwner.current
+   end
+
+   if hasValidKey(config) then
+     key = '' .. config.key
+   end
+  end
+
+   -- Remaining properties override existing props
+   local defaultProps
+
+	if element.type and element.type.defaultProps then
+     defaultProps = element.type.defaultProps
+   end
+
+   for propName, _ in pairs(config) do
+     if config[propName] and not RESERVED_PROPS[propName] then
+       if config[propName] == nil and defaultProps ~= nil then
+         -- Resolve default props
+         props[propName] = defaultProps[propName]
+       else
+         props[propName] = config[propName]
+       end
+     end
+   end
+
+ -- Children can be more than one argument, and those are transferred onto
+ -- the newly allocated props object.
+ local childrenLength = select('#', ...)
+
+ if childrenLength == 1 then
+	 props.children = select(1, ...)
+ elseif childrenLength > 1 then
+   local childArray = {}
+   for i = 1, childrenLength do
+	local toInsert = select(i, ...)
+	table.insert(childArray, toInsert)
+   end
+   props.children = childArray
+ end
+
+ return ReactElement(element.type, key, ref, self, source, owner, props)
+end
 --[[*
  * Verifies the object is a ReactElement.
  * See https://reactjs.org/docs/react-api.html#isvalidelement
@@ -490,7 +497,7 @@ end
  ]]
 
 exports.isValidElement = function(object)
-	return ((typeof(object) == 'table' and object ~= nil) and object['$$typeof'] == REACT_ELEMENT_TYPE)
+	return typeof(object) == 'table' and object['$$typeof'] == REACT_ELEMENT_TYPE
 end
 
 return exports

@@ -52,7 +52,7 @@ local function deepEqual(a: any, b: any)
 		return true
 	end
 
-	local message = "{1} ~= {2}"
+	local message = string.format("{1} (%s) ~= {2} (%s)", tostring(a), tostring(b))
 	return false, message
 end
 

@@ -13,10 +13,10 @@ local ReactDebugCurrentFrame = require(script.Parent.ReactDebugCurrentFrame)
 local IsSomeRendererActing = require(script.Parent.IsSomeRendererActing)
 
 local ReactSharedInternals = {
-	ReactCurrentDispatcher,
-	ReactCurrentBatchConfig,
-	ReactCurrentOwner,
-	IsSomeRendererActing,
+	ReactCurrentDispatcher = ReactCurrentDispatcher,
+	ReactCurrentBatchConfig = ReactCurrentBatchConfig,
+	ReactCurrentOwner = ReactCurrentOwner,
+	IsSomeRendererActing = IsSomeRendererActing,
 	-- deviation: This is understood by Luau as a sealed table, so we specify
 	-- this key to make it safe to assign to it below
 	ReactDebugCurrentFrame = nil,

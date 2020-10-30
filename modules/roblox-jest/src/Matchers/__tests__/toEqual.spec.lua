@@ -5,7 +5,7 @@ return function()
 		local result = toEqual(1, 2)
 
 		expect(result.pass).to.equal(false)
-		expect(result.message).to.equal("received ~= expected")
+		expect(result.message).to.equal("received (1) ~= expected (2)")
 
 		result = toEqual({
 			foo = 1,
@@ -14,7 +14,7 @@ return function()
 		})
 
 		expect(result.pass).to.equal(false)
-		expect(result.message:find("received%[foo%] ~= expected%[foo%]")).to.be.ok()
+		expect(result.message:find("received%[foo%] %(1%) ~= expected%[foo%] %(2%)")).to.be.ok()
 	end)
 
 	it("should compare non-table values using standard '==' equality", function()
@@ -73,7 +73,7 @@ return function()
 		local result = toEqual(A, C)
 
 		expect(result.pass).to.equal(false)
-		expect(result.message:find("received%[nested%]%[bar%] ~= expected%[nested%]%[bar%]")).to.be.ok()
+		expect(result.message:find("received%[nested%]%[bar%] %(2%) ~= expected%[nested%]%[bar%] %(3%)")).to.be.ok()
 	end)
 
 	it("should be commutative", function()

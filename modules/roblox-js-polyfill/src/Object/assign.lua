@@ -10,7 +10,7 @@ local function assign(target, ...)
 	for index = 1, select("#", ...) do
 		local source = select(index, ...)
 
-		if source ~= nil then
+		if source ~= nil and typeof(source) == "table" then
 			for key, value in pairs(source) do
 				if value == None then
 					target[key] = nil

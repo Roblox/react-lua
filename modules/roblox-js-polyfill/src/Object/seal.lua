@@ -1,6 +1,6 @@
 -- FIXME: We need to shore this up to be much closer to the actual
--- `Object.freeze` functionality in JS
-local function freeze(t)
+-- `Object.seal` functionality in JS
+local function seal(t)
 	local name = tostring(t)
 
 	return setmetatable(t, {
@@ -17,4 +17,4 @@ local function freeze(t)
 	})
 end
 
-return freeze
+return seal

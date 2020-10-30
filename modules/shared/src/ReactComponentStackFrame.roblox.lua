@@ -225,17 +225,17 @@ end
 -- local BEFORE_SLASH_PATTERN = "^(.*)[\\/]"
 
 -- deviation: FIXME: This function likely needs to work differently with Roblox
--- Lua modules than it does with js files. For now, it's directly translated.
+-- Lua modules than it does with js files. For now, it's very haphazardly
+-- translated
 describeComponentFrame = function(name, source, ownerName)
-	-- local sourceInfo = ''
+	local sourceInfo = ''
 
-	-- if __DEV__ and source then
-	-- 	local path = source.fileName
-	-- 	local fileName = string.gsub(path, BEFORE_SLASH_PATTERN, '');
+	if _G.__DEV__ and source then
+		local fileName = source.Name
 
 	-- 	-- In DEV, include code for a common special case:
 	-- 	-- prefer "folder/index.js" instead of just "index.js".
-	-- 	if string.sub(filename, 1, 6) == "index." then
+	-- 	if string.sub(fileName, 1, 6) == "index." then
 	-- 		-- deviation: finding matching strings works differently in Lua
 	-- 		local matches = {}
 	-- 		for match in string.gfind(path, BEFORE_SLASH_PATTERN) do
@@ -250,12 +250,12 @@ describeComponentFrame = function(name, source, ownerName)
 	-- 		end
 	-- 	end
 
-	-- 	sourceInfo = ' (at ' .. fileName .. ':' .. source.lineNumber .. ')'
-	-- elseif ownerName then
-	-- 	sourceInfo = ' (created by ' .. ownerName .. ')'
-	-- end
+		sourceInfo = ' (at ' .. fileName .. ':' .. source.lineNumber .. ')'
+	elseif ownerName then
+		sourceInfo = ' (created by ' .. ownerName .. ')'
+	end
 
-	-- return '\n    in ' .. (name or 'Unknown') .. sourceInfo
+	return '\n    in ' .. (name or 'Unknown') .. sourceInfo
 end
 
 local describeClassComponentFrame = function(ctor, source, ownerFn)

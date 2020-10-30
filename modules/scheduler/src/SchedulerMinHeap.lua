@@ -46,7 +46,7 @@ exports.pop = function(heap: Heap): Node?
 	end
 end
 
-siftUp = function(heap: Heap, node, index)
+siftUp = function(heap: Heap, node, index: number)
 	while true do
 		local parentIndex = math.floor(index / 2)
 		local parent = heap[parentIndex];
