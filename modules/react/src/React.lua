@@ -5,7 +5,9 @@ local ReactBaseClasses = require(script.Parent.ReactBaseClasses)
 local ReactElement = require(script.Parent.ReactElement)
 local ReactCreateRef = require(script.Parent.ReactCreateRef)
 local ReactForwardRef = require(script.Parent.ReactForwardRef)
+local ReactHooks = require(script.Parent.ReactHooks)
 local ReactMemo = require(script.Parent.ReactMemo)
+local ReactContext = require(script.Parent.ReactContext)
 local ReactSymbols = require(Workspace.Shared.ReactSymbols)
 
 return {
@@ -21,5 +23,13 @@ return {
 	Profiler = ReactSymbols.REACT_PROFILER_TYPE,
 	StrictMode = ReactSymbols.REACT_STRICT_MODE_TYPE,
 	Suspense = ReactSymbols.REACT_SUSPENSE_TYPE,
-	memo = ReactMemo.memo
+	memo = ReactMemo.memo,
+	useState = ReactHooks.useState,
+	useReducer = ReactHooks.useReducer,
+	useEffect = ReactHooks.useEffect,
+	useLayoutEffect = ReactHooks.useLayoutEffect,
+	useRef = ReactHooks.useRef,
+	useMemo = ReactHooks.useMemo,
+	useContext = ReactHooks.useContext,
+	createContext = ReactContext.createContext
 }

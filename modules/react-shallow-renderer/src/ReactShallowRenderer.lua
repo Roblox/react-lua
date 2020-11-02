@@ -198,7 +198,7 @@ function ReactShallowRenderer:_reset()
   self._rendering = false
   self._forcedUpdate = false
   self._updater = Updater.new(self)
-  self._dispatcher = self._createDispatcher()
+  self._dispatcher = self:_createDispatcher()
   self._workInProgressHook = nil
   self._firstWorkInProgressHook = nil
   self._isReRender = false
@@ -218,6 +218,8 @@ See https://fb.me/react-invalid-hook-call for tips about how to debug and fix se
 end
 
 function ReactShallowRenderer:_createDispatcher()
+  -- deviation: This function returns two values instead of an array. Lua does
+  -- not support destructuring, but _does_ support multiple return values
   local function useReducer(reducer, initialArg, init)
     self:_validateCurrentlyRenderingComponent()
     self:_createWorkInProgressHook()
@@ -233,7 +235,7 @@ function ReactShallowRenderer:_createDispatcher()
           -- Render phase updates are stored in a map of queue -> linked list
           local firstRenderPhaseUpdate = self._renderPhaseUpdates[queue]
           if firstRenderPhaseUpdate ~= nil then
-            table.remove(self._renderPhaseUpdates, queue)
+            self._renderPhaseUpdates[queue] = nil
             local newState = workInProgressHook.memoizedState
             local update = firstRenderPhaseUpdate
             repeat
@@ -242,10 +244,10 @@ function ReactShallowRenderer:_createDispatcher()
               update = update.next
             until update == nil
             workInProgressHook.memoizedState = newState
-            return { newState, dispatch }
+            return newState, dispatch
           end
         end
-        return { workInProgressHook.memoizedState, dispatch }
+        return workInProgressHook.memoizedState, dispatch
       end
       -- Process updates outside of render
       local newState = workInProgressHook.memoizedState
@@ -259,7 +261,7 @@ function ReactShallowRenderer:_createDispatcher()
         queue.first = nil
         workInProgressHook.memoizedState = newState
       end
-      return { newState, dispatch }
+      return newState, dispatch
     else
       local initialState
       if reducer == basicStateReducer then
@@ -286,7 +288,7 @@ function ReactShallowRenderer:_createDispatcher()
         self:_dispatchAction(queue, ...)
       end
       local dispatch = queue.dispatch
-      return { workInProgressHook.memoizedState, dispatch }
+      return workInProgressHook.memoizedState, dispatch
     end
   end
 
@@ -395,7 +397,7 @@ end
 
 function ReactShallowRenderer:_dispatchAction(queue, action)
   local numberOfRenders: number = self._numberOfReRenders
-  if not numberOfRenders < RE_RENDER_LIMIT then
+  if numberOfRenders > RE_RENDER_LIMIT then
     error(Error(
       "Too many re-renders. React limits the number of renders to prevent an infinite loop."
     ))
@@ -507,7 +509,7 @@ function ReactShallowRenderer:render(element, maybeContext)
   local context = maybeContext or emptyObject
   if not React.isValidElement(element) then
     local message = ""
-    if typeof(element) == 'function' or element.__componentName ~= nil then
+    if typeof(element) == 'function' or (typeof(element) == "table" and element.__componentName ~= nil) then
       message = " Instead of passing a component class, make sure to instantiate " ..
         "it by passing it to React.createElement."
     end
