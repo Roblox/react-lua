@@ -1,12 +1,13 @@
-# ReactReconciler
-A Roblox Lua port of the react-reconciler package from React.
+# react-reconciler
+A Roblox Lua port of the `react-reconciler` package from React, which contains the core reconciler logic that drives the various renderers that can be attached.
 
-Original source: https://github.com/facebook/react/tree/master/packages/react-reconciler
+Status: 🔨 Port in progress
 
-## Status
+Source: https://github.com/facebook/react/tree/master/packages/react-reconciler
 
-### Ported
+---
 
-### Not Ported
+### ✏️ Notes
 
-### Intentional Deviations
+
+### ❌ Excluded

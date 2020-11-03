@@ -1,12 +1,13 @@
-# React
-A Roblox Lua port of the React package from React.
+# react
+A Roblox Lua port of the `react` package from React. This is the main React package
 
-Original source: https://github.com/facebook/react/tree/master/packages/react
+Status: 🔨 Port in progress
 
-## Status
+Source: https://github.com/facebook/react/tree/master/packages/react
 
-### Ported
+---
 
-### Not Ported
+### ✏️ Notes
+* Includes some relatively significant deviations in `ReactBaseClasses.lua` to accommodate Lua idioms for objects, constructors, and inheritance.
 
-### Intentional Deviations
+### ❌ Excluded
