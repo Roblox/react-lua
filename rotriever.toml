@@ -6,6 +6,9 @@ author = "Paul Doyle <pdoyle@roblox.com>"
 # Optional fields and their definitions can be found at:
 # https://pages.github.rbx.com/pdoyle/rotriever-docs/reference/manifest-format/#manifest-fields
 
+[dependencies]
+Cryo = "github.com/roblox/cryo@1.0"
+
 [dev_dependencies]
 # Different kinds of dependencies are specified in different ways. See more details at:
 # https://pages.github.rbx.com/pdoyle/rotriever-docs/reference/manifest-format/#specifying-manifest-dependencies

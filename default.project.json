@@ -19,6 +19,9 @@
       "ReactReconciler": {
         "$path": "modules/react-reconciler/src"
       },
+      "ReactNoopRenderer": {
+        "$path": "modules/react-noop-renderer/src"
+      },
       "ReactShallowRenderer": {
         "$path": "modules/react-shallow-renderer/src"
       },

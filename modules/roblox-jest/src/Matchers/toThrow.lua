@@ -2,7 +2,9 @@ local function toThrow(fn: () -> any, errorString: string?)
 	local ok, result = pcall(fn)
 
 	if not ok then
-		if errorString ~= nil then
+		-- Luau isn't able to narrow the type here for some reason if we check
+		-- for ~= nil, so we just check that the type is string
+		if typeof(errorString) == "string" then
 			local resultErrorString = nil
 			if typeof(result) == "string" then
 				resultErrorString = result

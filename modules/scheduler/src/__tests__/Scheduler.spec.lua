@@ -46,11 +46,16 @@ return function()
 
 	beforeEach(function()
 		RobloxJest.resetModules()
+		-- deviation: In react, this mock is applied by replacing the
+		-- `SchedulerHostConfig.js` file during build scripts
 		RobloxJest.mock(script.Parent.Parent.SchedulerHostConfig, function()
 			return require(script.Parent.Parent.forks["SchedulerHostConfig.mock"])
 		end)
-		local HostConfig = require(script.Parent.Parent.SchedulerHostConfig)
-		Scheduler = require(script.Parent.Parent.Scheduler)
+		-- deviation: In react, jest mocks Scheduler -> unstable_mock; since
+		-- unstable_mock depends on the real Scheduler, and our mock
+		-- functionality isn't smart enough to prevent self-requires, we simply
+		-- require the mock entry point directly for use in tests
+		Scheduler = require(script.Parent.Parent.unstable_mock)
 
 		runWithPriority = Scheduler.unstable_runWithPriority
 		ImmediatePriority = Scheduler.unstable_ImmediatePriority
@@ -65,19 +70,6 @@ return function()
 		wrapCallback = Scheduler.unstable_wrapCallback
 		getCurrentPriorityLevel = Scheduler.unstable_getCurrentPriorityLevel
 		shouldYield = Scheduler.unstable_shouldYield
-
-		-- (align): To align more closely with the JS, we patch some
-		-- functions from the mock host config onto the Scheduler interface.
-		-- This mimics what we get from `unstable_mock.js` in
-		-- react/packages/scheduler
-		Scheduler.unstable_flushAllWithoutAsserting = HostConfig.unstable_flushAllWithoutAsserting
-		Scheduler.unstable_flushNumberOfYields = HostConfig.unstable_flushNumberOfYields
-		Scheduler.unstable_flushExpired = HostConfig.unstable_flushExpired
-		Scheduler.unstable_clearYields = HostConfig.unstable_clearYields
-		Scheduler.unstable_flushUntilNextPaint = HostConfig.unstable_flushUntilNextPaint
-		Scheduler.unstable_flushAll = HostConfig.unstable_flushAll
-		Scheduler.unstable_yieldValue = HostConfig.unstable_yieldValue
-		Scheduler.unstable_advanceTime = HostConfig.unstable_advanceTime
 	end)
 
 	it("flushes work incrementally", function()
