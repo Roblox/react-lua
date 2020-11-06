@@ -36,8 +36,9 @@ local function requireOverride(scriptInstance: ModuleScript): any
 	else
 		-- Narrowing this type here lets us appease the type checker while still
 		-- counting on types for the rest of this file
-		local loadmodule: (ModuleScript) -> any = debug["loadmodule"]
-		local moduleFunction = loadmodule(scriptInstance)
+		local loadmodule: (ModuleScript) -> (any, string) = debug["loadmodule"]
+		local moduleFunction, errorMessage = loadmodule(scriptInstance)
+		assert(moduleFunction ~= nil, errorMessage)
 
 		getfenv(moduleFunction).require = requireOverride
 		getfenv(moduleFunction).delay = FakeTimers.delayOverride
