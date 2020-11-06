@@ -96,7 +96,7 @@ exports.warnAboutSpreadingKeyToJSX = false
 
 exports.enableComponentStackLocations = true
 
-exports.enableNewReconciler = false
+exports.enableNewReconciler = true
 
 -- Errors that are thrown while unmounting (or after in the case of passive effects)
 -- should bypass any error boundaries that are also unmounting (or have unmounted)

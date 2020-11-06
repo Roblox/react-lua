@@ -926,7 +926,7 @@ local function createReactNoop(reconciler, useMutation: boolean)
 				rootID,
 				ConcurrentRoot
 			)
-			local root = roots.get(container.rootID)
+			local root = roots[container.rootID]
 			NoopRenderer.updateContainer(element, root, nil, callback)
 		end,
 

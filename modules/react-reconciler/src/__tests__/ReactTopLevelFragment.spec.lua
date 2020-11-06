@@ -33,7 +33,7 @@ return function()
   end)
 
   -- TODO: Enable when the reconciler is implemented
-  itSKIP("should render a simple fragment at the top of a component", function()
+  it("should render a simple fragment at the top of a component", function()
     -- FIXME: expect coercion
     local expect: any = expect
     local function Fragment()
@@ -50,134 +50,173 @@ return function()
     expect(Scheduler).toFlushWithoutYielding()
   end)
 
-  -- it("should preserve state when switching from a single child", function()
-  --   local instance = nil
+  itSKIP("should preserve state when switching from a single child", function()
+    -- FIXME: expect coercion
+    local expect: any = expect
+    local instance = nil
 
-  --   class Stateful extends React.Component {
-  --     render()
-  --       instance = this
-  --       return <div>Hello</div>
-  --     end
-  --   end
+    local Stateful = React.Component:extend("Stateful")
+    function Stateful:render()
+        instance = self
+        return React.createElement("TextLabel", {Text="Hello"})
+    end
 
-  --   function Fragment({condition})
-  --     return condition ? (
-  --       <Stateful key="a" />
-  --     ) : (
-  --       [<Stateful key="a" />, <div key="b">World</div>]
-  --     )
-  --   end
-  --   ReactNoop.render(<Fragment />)
-  --   expect(Scheduler).toFlushWithoutYielding()
+    local function Fragment(props)
+      if props.condition then
+        return React.createElement(Stateful, {key="a"})
+      else
+        return {
+          React.createElement(Stateful, {key="a"}),
+          React.createElement("Frame", {key="b"},
+            React.createElement("TextLabel", {Text="World"})
+          )
+        }
+      end
+    end
 
-  --   local instanceA = instance
+    ReactNoop.render(React.createElement(Fragment))
+    expect(Scheduler).toFlushWithoutYielding()
 
-  --   expect(instanceA).not.toBe(null)
+    local instanceA = instance
 
-  --   ReactNoop.render(<Fragment condition={true} />)
-  --   expect(Scheduler).toFlushWithoutYielding()
+    expect(instanceA).never.to.equal(nil)
 
-  --   local instanceB = instance
+    ReactNoop.render(React.createElement(Fragment, {condition = true}))
+    expect(Scheduler).toFlushWithoutYielding()
 
-  --   expect(instanceB).toBe(instanceA)
-  -- })
+    local instanceB = instance
 
-  -- it("should not preserve state when switching to a nested array", function()
-  --   local instance = nil
+    expect(instanceB).toBe(instanceA)
+  end)
 
-  --   class Stateful extends React.Component {
-  --     render()
-  --       instance = this
-  --       return <div>Hello</div>
-  --     end
-  --   end
+  itSKIP("should not preserve state when switching to a nested array", function()
+    -- FIXME: expect coercion
+    local expect: any = expect
+    local instance = nil
 
-  --   function Fragment({condition})
-  --     return condition ? (
-  --       <Stateful key="a" />
-  --     ) : (
-  --       [[<Stateful key="a" />, <div key="b">World</div>], <div key="c" />]
-  --     )
-  --   end
-  --   ReactNoop.render(<Fragment />)
-  --   expect(Scheduler).toFlushWithoutYielding()
+    local Stateful = React.Component:extend("Stateful")
+    function Stateful:render()
+        instance = self
+        return React.createElement("TextLabel", {Text="Hello"})
+    end
 
-  --   local instanceA = instance
+    local function Fragment(props)
+      if props.condition then
+        return React.createElement(Stateful, {key="a"})
+      else
+        return {{
+          React.createElement(Stateful, {key="a"}),
+          React.createElement("Frame", {key="b"},
+            React.createElement("TextLabel", {Text="World"})
+          )},
+          React.createElement("Frame", {key="c"})
+        }
+      end
+    end
 
-  --   expect(instanceA).not.toBe(null)
+    ReactNoop.render(React.createElement(Fragment))
+    expect(Scheduler).toFlushWithoutYielding()
 
-  --   ReactNoop.render(<Fragment condition={true} />)
-  --   expect(Scheduler).toFlushWithoutYielding()
+    local instanceA = instance
+    expect(instanceA).never.to.equal(nil)
 
-  --   local instanceB = instance
+    ReactNoop.render(React.createElement(Fragment, {condition = true}))
+    expect(Scheduler).toFlushWithoutYielding()
 
-  --   expect(instanceB).not.toBe(instanceA)
-  -- })
+    local instanceB = instance
 
-  -- it("preserves state if an implicit key slot switches from/to nil", function()
-  --   local instance = nil
+    expect(instanceB).never.toBe(instanceA)
+  end)
 
-  --   class Stateful extends React.Component {
-  --     render()
-  --       instance = this
-  --       return <div>World</div>
-  --     end
-  --   end
+  itSKIP("preserves state if an implicit key slot switches from/to nil", function()
+    -- FIXME: expect coercion
+    local expect: any = expect
+    local instance = nil
 
-  --   function Fragment({condition})
-  --     return condition
-  --       ? [null, <Stateful key="a" />]
-  --       : [<div key="b">Hello</div>, <Stateful key="a" />]
-  --   end
-  --   ReactNoop.render(<Fragment />)
-  --   expect(Scheduler).toFlushWithoutYielding()
+    local Stateful = React.Component:extend("Stateful")
+    function Stateful:render()
+        instance = self
+        return React.createElement("TextLabel", {Text="Wold"})
+    end
 
-  --   local instanceA = instance
+    local function Fragment(props)
+      if props.condition then
+        return {
+          nil,
+          React.createElement(Stateful, {key="a"})
+        }
+      else
+        return {
+          React.createElement("Frame", {key="b"},
+            React.createElement("TextLabel", {Text="Hello"})
+          ),
+          React.createElement(Stateful, {key="a"})
+        }
+      end
+    end
 
-  --   expect(instanceA).not.toBe(null)
+    ReactNoop.render(React.createElement(Fragment))
+    expect(Scheduler).toFlushWithoutYielding()
 
-  --   ReactNoop.render(<Fragment condition={true} />)
-  --   expect(Scheduler).toFlushWithoutYielding()
+    local instanceA = instance
+    expect(instanceA).never.to.equal(nil)
 
-  --   local instanceB = instance
+    ReactNoop.render(React.createElement(Fragment, {condition = true}))
+    expect(Scheduler).toFlushWithoutYielding()
 
-  --   expect(instanceB).toBe(instanceA)
+    local instanceB = instance
 
-  --   ReactNoop.render(<Fragment condition={false} />)
-  --   expect(Scheduler).toFlushWithoutYielding()
+    expect(instanceB).toBe(instanceA)
 
-  --   local instanceC = instance
+    ReactNoop.render(React.createElement(Fragment, {condition = false}))
+    expect(Scheduler).toFlushWithoutYielding()
 
-  --   expect(instanceC == instanceA).toBe(true)
-  -- })
+    local instanceC = instance
 
-  -- it("should preserve state in a reorder", function()
-  --   local instance = nil
+    expect(instanceC == instanceA).toBe(true)
+  end)
 
-  --   class Stateful extends React.Component {
-  --     render()
-  --       instance = this
-  --       return <div>Hello</div>
-  --     end
-  --   end
+  itSKIP("should preserve state in a reorder", function()
+    -- FIXME: expect coercion
+    local expect: any = expect
+    local instance = nil
 
-  --   function Fragment({condition})
-  --     return condition
-  --       ? [[<div key="b">World</div>, <Stateful key="a" />]]
-  --       : [[<Stateful key="a" />, <div key="b">World</div>], <div key="c" />]
-  --   end
-  --   ReactNoop.render(<Fragment />)
-  --   expect(Scheduler).toFlushWithoutYielding()
+    local Stateful = React.Component:extend("Stateful")
+    function Stateful:render()
+        instance = self
+        return React.createElement("TextLabel", {Text="Hello"})
+    end
 
-  --   local instanceA = instance
+    local function Fragment(props)
+      if props.condition then
+        return {{
+          React.createElement("Frame", {key="b"},
+            React.createElement("TextLabel", {Text="World"})
+          ),
+          React.createElement(Stateful, {key="a"})
+        }}
+      else
+        return {{
+          React.createElement(Stateful, {key="a"}),
+          React.createElement("Frame", {key="b"},
+            React.createElement("TextLabel", {Text="World"})
+          )},
+          React.createElement("Frame", {key="c"})
+        }
+      end
+    end
 
-  --   expect(instanceA).not.toBe(null)
+    ReactNoop.render(React.createElement(Fragment))
+    expect(Scheduler).toFlushWithoutYielding()
 
-  --   ReactNoop.render(<Fragment condition={true} />)
-  --   expect(Scheduler).toFlushWithoutYielding()
+    local instanceA = instance
+    expect(instanceA).never.to.equal(nil)
 
-  --   local instanceB = instance
+    ReactNoop.render(React.createElement(Fragment, {condition = true}))
+    expect(Scheduler).toFlushWithoutYielding()
 
-  --   expect(instanceB).toBe(instanceA)
-  -- })
+    local instanceB = instance
+
+    expect(instanceB).toBe(instanceA)
+  end)
 end

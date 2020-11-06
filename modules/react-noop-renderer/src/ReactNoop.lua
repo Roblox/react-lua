@@ -16,8 +16,9 @@
 ]]
 
 local Workspace = script.Parent.Parent
--- TODO (roblox): This is only a stub!
-local ReactFiberReconciler = require(Workspace.ReactReconciler.ReactFiberReconciler)
+-- deviation: upstream has jest.mock return a function via scripts/setupHostConfigs.js
+-- TODO (roblox): This is only a stub.
+local ReactFiberReconciler = function() return require(Workspace.ReactReconciler.ReactFiberReconciler) end
 local createReactNoop = require(script.Parent.createReactNoop)
 
 local NoopRenderer = createReactNoop(

@@ -6,7 +6,7 @@
 *]]
 
 local Scheduler = require(script.Parent.Scheduler)
-local HostConfig = require(script.Parent.SchedulerHostConfig)
+local HostConfig = require(script.Parent.forks["SchedulerHostConfig.mock"])
 
 local exports = {}
 for key, value in pairs(Scheduler) do
