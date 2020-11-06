@@ -1,3 +1,4 @@
+-- upstream: https://github.com/facebook/react/blob/702fad4b1b48ac8f626ed3f35e8f86f5ea728084/packages/react/src/__tests__/ReactElement-test.js
 -- FIXME: roblox-cli has special, hard-coded types for TestEZ that break when we
 --use custom matchers added via `expect.extend`
 --!nocheck
@@ -92,4 +93,3 @@ return function()
 		end)
 	end)
 end
-

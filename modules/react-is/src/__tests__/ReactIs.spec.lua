@@ -1,3 +1,4 @@
+-- upstream: https://github.com/facebook/react/blob/c57fe4a2c1402acdbf31ac48cfc6a6bf336c4067/react-is/src/__tests__/ReactIs-test.js
 -- FIXME: roblox-cli has special, hard-coded types for TestEZ that break when we
 --use custom matchers added via `expect.extend`
 --!nocheck
