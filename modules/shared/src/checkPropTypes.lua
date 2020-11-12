@@ -13,14 +13,14 @@ local Error = require(Workspace.RobloxJSPolyfill.Error)
 
 local loggedTypeFailures = {}
 
-local ReactComponentStackFrame = require(script.Parent["ReactComponentStackFrame.roblox"])
+local ReactComponentStackFrame = require(script.Parent.ReactComponentStackFrame)
 local describeUnknownElementTypeFrameInDEV = ReactComponentStackFrame.describeUnknownElementTypeFrameInDEV
 
 local ReactSharedInternals = require(script.Parent.ReactSharedInternals)
 
 local ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame
 
-function setCurrentlyValidatingElement(element)
+local function setCurrentlyValidatingElement(element)
 	if _G.__DEV__ then
 		if element then
 			local owner = element._owner

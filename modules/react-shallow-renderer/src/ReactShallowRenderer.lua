@@ -18,7 +18,7 @@ local isForwardRef = ReactIs.isForwardRef
 local isMemo = ReactIs.isMemo
 local ForwardRef = ReactIs.ForwardRef
 
-local ReactComponentStackFrame = require(Workspace.Shared["ReactComponentStackFrame.roblox"])
+local ReactComponentStackFrame = require(Workspace.Shared.ReactComponentStackFrame)
 local describeComponentFrame = ReactComponentStackFrame.describeComponentFrame
 local getComponentName = require(Workspace.Shared.getComponentName)
 local shallowEqual = require(Workspace.Shared.shallowEqual)
@@ -58,7 +58,7 @@ local function areHookInputsEqual(nextDeps, prevDeps)
     -- passed inline.
     if #nextDeps ~= #prevDeps then
       consoleWithStackDev.error(
-        'The final argument passed to %s changed size between renders. The ' .. 
+        'The final argument passed to %s changed size between renders. The ' ..
           'order and size of self array must remain constant.\n\n' ..
           'Previous: %s\n' ..
           'Incoming: %s',
@@ -306,7 +306,7 @@ function ReactShallowRenderer:_createDispatcher()
 
     local nextDeps = deps ~= nil and deps or nil
 
-    if 
+    if
       self._workInProgressHook ~= nil and
       self._workInProgressHook.memoizedState ~= nil
     then
@@ -528,7 +528,7 @@ function ReactShallowRenderer:render(element, maybeContext)
   end
   -- deviation: include check for isReactComponent since our "class" components
   -- aren't functions like React's are
-  if 
+  if
     not (
       isForwardRef(element) or
       typeof(element.type) == 'function' or
@@ -543,7 +543,7 @@ function ReactShallowRenderer:render(element, maybeContext)
       elementType = "array"
     end
     error(Error(string.format(
-      "ReactShallowRenderer render(): Shallow rendering works only with custom components, but the provided element type was `%s`.", 
+      "ReactShallowRenderer render(): Shallow rendering works only with custom components, but the provided element type was `%s`.",
       elementType
     )))
   end
@@ -748,7 +748,7 @@ function ReactShallowRenderer:_updateClassComponent(elementType, element, contex
   if oldProps ~= props then
     -- In order to support react-lifecycles-compat polyfilled components,
     -- Unsafe lifecycles should not be invoked for components using the new APIs.
-    if 
+    if
       typeof(elementType.getDerivedStateFromProps) ~= 'function' and
       typeof(self._instance.getSnapshotBeforeUpdate) ~= 'function'
     then
@@ -796,7 +796,7 @@ function ReactShallowRenderer:_updateClassComponent(elementType, element, contex
   if shouldUpdate then
     -- In order to support react-lifecycles-compat polyfilled components,
     -- Unsafe lifecycles should not be invoked for components using the new APIs.
-    if 
+    if
       typeof(elementType.getDerivedStateFromProps) ~= 'function' and
       typeof(self._instance.getSnapshotBeforeUpdate) ~= 'function'
     then
