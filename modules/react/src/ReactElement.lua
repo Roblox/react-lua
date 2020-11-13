@@ -426,7 +426,7 @@ exports.cloneElement = function(element, config, ...)
 
  -- Original props are copied
  local props = Object.assign({}, element.props)
- 
+
  -- Reserved names are extracted
  local key = element.key
  local ref = element.ref

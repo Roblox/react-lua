@@ -88,7 +88,7 @@ exports.createContext = function(defaultValue, calculateChangedBits)
         elseif key == "displayName" then
           if not hasWarnedAboutDisplayNameOnConsumer then
             console.warn('Setting `displayName` on Context.Consumer has no effect. ' ..
-              "You should set it directly on the context with Context.displayName = " .. 
+              "You should set it directly on the context with Context.displayName = " ..
               value .. "."
             )
             hasWarnedAboutDisplayNameOnConsumer = true

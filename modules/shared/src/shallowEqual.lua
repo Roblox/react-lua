@@ -14,7 +14,7 @@ local is = require(script.Parent.objectIs)
  * when any key has values which are not strictly equal between the arguments.
  * Returns true when the values of all keys are strictly equal.
 ]]
-function shallowEqual(objA, objB)
+local function shallowEqual(objA, objB)
 	if is(objA, objB) then
 		return true
 	end

@@ -11,7 +11,7 @@ local console = require(Workspace.RobloxJSPolyfill.console)
 
 local didWarnStateUpdateForUnmountedComponent = {}
 
-function warnNoop(publicInstance, callerName)
+local function warnNoop(publicInstance, callerName)
 	if _G.__DEV__ then
 		local constructor = publicInstance.constructor
 		local componentName = ((constructor and (constructor.displayName or constructor.name)) or 'ReactClass')

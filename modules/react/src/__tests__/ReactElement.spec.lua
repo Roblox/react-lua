@@ -77,7 +77,7 @@ return function()
 		it("a table of children and no props", function()
 			local child1 = ReactElement.createElement("IntValue")
 			local child2 = ReactElement.createElement("StringValue")
-		
+
 			element = ReactElement.createElement("StringValue", nil, {
 				Child1 = child1,
 				Child2 = child2,

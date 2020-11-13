@@ -4,7 +4,7 @@
 	https://github.com/facebook/react/blob/47ff31a77add22bef54aaed9d4fb62d5aa693afd/scripts/jest/matchers/schedulerTestMatchers.js
 ]]
 --!nolint LocalShadowPedantic
-function captureAssertion(fn)
+local function captureAssertion(fn)
 	-- Trick to use a TestEZ expectation matcher inside another Jest
 	-- matcher. `fn` contains an assertion; if it throws, we capture the
 	-- error and return it, so the stack trace presented to the user points
@@ -34,7 +34,7 @@ return function(expect)
 		assertYieldsWereCleared(scheduler)
 		scheduler.unstable_flushAllWithoutAsserting()
 		local actualYields = scheduler.unstable_clearYields()
-		
+
 		return captureAssertion(function()
 			expect(actualYields).toEqual(expectedYields)
 		end)
@@ -44,7 +44,7 @@ return function(expect)
 		assertYieldsWereCleared(scheduler)
 		scheduler.unstable_flushNumberOfYields(#expectedYields)
 		local actualYields = scheduler.unstable_clearYields()
-		
+
 		return captureAssertion(function()
 			expect(actualYields).toEqual(expectedYields)
 		end)
@@ -58,7 +58,7 @@ return function(expect)
 		assertYieldsWereCleared(scheduler)
 		scheduler.unstable_flushExpired()
 		local actualYields = scheduler.unstable_clearYields()
-		
+
 		return captureAssertion(function()
 			expect(actualYields).toEqual(expectedYields)
 		end)
@@ -66,7 +66,7 @@ return function(expect)
 
 	local function expectToHaveYielded(scheduler, expectedYields)
 		local actualYields = scheduler.unstable_clearYields()
-		
+
 		return captureAssertion(function()
 			expect(actualYields).toEqual(expectedYields)
 		end)

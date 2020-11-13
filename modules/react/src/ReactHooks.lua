@@ -16,7 +16,7 @@ local invariant = require(Workspace.Shared.invariant)
 
 local ReactCurrentDispatcher = require(script.Parent.ReactCurrentDispatcher)
 
-function resolveDispatcher()
+local function resolveDispatcher()
 	local dispatcher = ReactCurrentDispatcher.current
 	invariant(
 		dispatcher ~= nil,
