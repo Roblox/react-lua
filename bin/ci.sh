@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -ex
+
 rojo build --output model.rbxmx
 roblox-cli analyze default.project.json
 echo "Run tests in DEV"
