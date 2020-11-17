@@ -9,8 +9,10 @@
 ]]
 
 local Workspace = script.Parent.Parent
-local console = require(Workspace.RobloxJSPolyfill.console)
-local Array = require(Workspace.RobloxJSPolyfill.Array)
+local Packages = Workspace.Parent.Packages
+local LuauPolyfill = require(Packages.LuauPolyfill)
+local console = LuauPolyfill.console
+local Array = LuauPolyfill.Array
 
 local invariant = require(Workspace.Shared.invariant)
 

@@ -10,9 +10,11 @@
 
 return function()
 	local Workspace = script.Parent.Parent.Parent
+	local Packages = Workspace.Parent.Packages
+	local LuauPolyfill = require(Packages.LuauPolyfill)
+	local Error = LuauPolyfill.Error
+	
 	local RobloxJest = require(Workspace.RobloxJest)
-	local Error = require(Workspace.RobloxJSPolyfill.Error)
-
 	local ReactErrorUtils
 
 	-- deviation: FIXME: add arrays polyfill w/ push/pop/shift/etc.

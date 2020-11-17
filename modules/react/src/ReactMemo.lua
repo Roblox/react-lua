@@ -7,9 +7,12 @@
  ]]
 
 local Workspace = script.Parent.Parent
+local Packages = Workspace.Parent.Packages
+local LuauPolyfill = require(Packages.LuauPolyfill)
+local console = LuauPolyfill.console
+
 local REACT_MEMO_TYPE = require(Workspace.Shared.ReactSymbols).REACT_MEMO_TYPE
 local isValidElementType = require(Workspace.Shared.isValidElementType)
-local console = require(Workspace.RobloxJSPolyfill.console)
 
 local exports = {}
 

@@ -1,6 +1,8 @@
 return function()
 	local Workspace = script.Parent.Parent.Parent.Parent
-	local Error = require(Workspace.RobloxJSPolyfill.Error)
+	local Packages = Workspace.Parent.Packages
+	local LuauPolyfill = require(Packages.LuauPolyfill)
+	local Error = LuauPolyfill.Error
 
 	local toThrow = require(script.Parent.Parent.toThrow)
 

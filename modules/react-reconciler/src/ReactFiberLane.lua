@@ -9,9 +9,11 @@
  * @flow
 ]]
 local Workspace = script.Parent.Parent
+local Packages = Workspace.Parent.Packages
+local LuauPolyfill = require(Packages.LuauPolyfill)
 
-local console = require(Workspace.RobloxJSPolyfill.console)
-local clz32 = require(Workspace.RobloxJSPolyfill.Math).clz32
+local console = LuauPolyfill.console
+local clz32 = LuauPolyfill.Math.clz32
 local SchedulerWithReactIntegration = require(
 	script.Parent['SchedulerWithReactIntegration.new']
 )

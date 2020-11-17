@@ -11,8 +11,11 @@
 
 return function()
 	local Workspace = script.Parent.Parent.Parent
+	local Packages = Workspace.Parent.Packages
+	local LuauPolyfill = require(Packages.LuauPolyfill)
+	local Object = LuauPolyfill.Object
+
 	local RobloxJest = require(Workspace.RobloxJest)
-	local Object = require(Workspace.RobloxJSPolyfill.Object)
 
 	local SchedulerWithReactIntegration = require(script.Parent.Parent["SchedulerWithReactIntegration.new"])
 	local ImmediatePriority = SchedulerWithReactIntegration.ImmediatePriority

@@ -7,9 +7,11 @@
  *
  ]]
 local Workspace = script.Parent.Parent
-local Timers = require(Workspace.RobloxJSPolyfill.Timers)
+local Packages = Workspace.Parent.Packages
+local LuauPolyfill = require(Packages.LuauPolyfill)
+local setTimeout = LuauPolyfill.setTimeout
 
 return function(task)
 	-- deviation: Replace with setImmediate once we create an equivalent polyfill
-	return Timers.setTimeout(task, 0)
+	return setTimeout(task, 0)
 end

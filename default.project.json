@@ -7,9 +7,6 @@
     },
     "Modules": {
       "$className": "Folder",
-      "RobloxJSPolyfill": {
-        "$path": "modules/roblox-js-polyfill/src"
-      },
       "React": {
         "$path": "modules/react/src"
       },

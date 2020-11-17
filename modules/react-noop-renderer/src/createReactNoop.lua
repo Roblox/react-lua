@@ -21,12 +21,14 @@ local Workspace = script.Parent.Parent
 local Packages = Workspace.Parent.Packages
 local RobloxJest = require(Workspace.RobloxJest)
 local Cryo = require(Packages.Cryo)
+local LuauPolyfill = require(Packages.LuauPolyfill)
 
-local Array = require(Workspace.RobloxJSPolyfill.Array)
-local console = require(Workspace.RobloxJSPolyfill.console)
-local Error = require(Workspace.RobloxJSPolyfill.Error)
-local Object = require(Workspace.RobloxJSPolyfill.Object)
-local Timers = require(Workspace.RobloxJSPolyfill.Timers)
+local Array = LuauPolyfill.Array
+local console = LuauPolyfill.console
+local Error = LuauPolyfill.Error
+local Object = LuauPolyfill.Object
+local setTimeout = LuauPolyfill.setTimeout
+local clearTimeout = LuauPolyfill.clearTimeout
 
 local Scheduler = require(Workspace.Scheduler.unstable_mock)
 -- deviation: These are only used for the JSX logic that's currently omitted
@@ -383,8 +385,8 @@ local function createReactNoop(reconciler, useMutation: boolean)
 			return inst
 		end,
 
-		scheduleTimeout = Timers.setTimeout,
-		cancelTimeout = Timers.clearTimeout,
+		scheduleTimeout = setTimeout,
+		cancelTimeout = clearTimeout,
 		noTimeout = -1,
 
 		prepareForCommit = function(): nil | { [any]: any }
@@ -1162,7 +1164,7 @@ local function createReactNoop(reconciler, useMutation: boolean)
 				"This version of `act` requires a special mock build of Scheduler."
 			))
 		end
-		if Timers.setTimeout._isMockFunction ~= true then
+		if setTimeout._isMockFunction ~= true then
 			error(Error(
 				"This version of `act` requires Jest's timer mocks " ..
 					'(i.e. jest.useFakeTimers).'

@@ -8,6 +8,7 @@ author = "Paul Doyle <pdoyle@roblox.com>"
 
 [dependencies]
 Cryo = "github.com/roblox/cryo@1.0"
+LuauPolyfill = { git = "https://github.com/roblox/luau-polyfill", rev = "main" }
 
 [dev_dependencies]
 # Different kinds of dependencies are specified in different ways. See more details at:

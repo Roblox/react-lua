@@ -10,7 +10,9 @@
 -- deviation: stripped flow types
 
 local Workspace = script.Parent.Parent
-local Object = require(Workspace.RobloxJSPolyfill.Object)
+local Packages = Workspace.Parent.Packages
+local LuauPolyfill = require(Packages.LuauPolyfill)
+local Object = LuauPolyfill.Object
 
 local exports = {}
 -- an immutable object with a single mutable value

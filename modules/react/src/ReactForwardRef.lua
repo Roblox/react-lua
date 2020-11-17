@@ -7,10 +7,13 @@
 *]]
 
 local Workspace = script.Parent.Parent
+local Packages = Workspace.Parent.Packages
+local LuauPolyfill = require(Packages.LuauPolyfill)
+local console = LuauPolyfill.console
+
 local ReactSymbols = require(Workspace.Shared.ReactSymbols)
 local REACT_FORWARD_REF_TYPE = ReactSymbols.REACT_FORWARD_REF_TYPE
 local REACT_MEMO_TYPE = ReactSymbols.REACT_MEMO_TYPE
-local console = require(Workspace.RobloxJSPolyfill.console)
 
 -- deviation: strip flow types
 local exports = {}

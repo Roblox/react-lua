@@ -8,10 +8,13 @@
  *
 ]]
 local Workspace = script.Parent.Parent
+local Packages = Workspace.Parent.Packages
+local LuauPolyfill = require(Packages.LuauPolyfill)
+local console = LuauPolyfill.console
+
 local ReactSymbols = require(Workspace.Shared.ReactSymbols)
 local REACT_PROVIDER_TYPE = ReactSymbols.REACT_PROVIDER_TYPE
 local REACT_CONTEXT_TYPE = ReactSymbols.REACT_CONTEXT_TYPE
-local console = require(Workspace.RobloxJSPolyfill.console)
 
 
 local exports = {}

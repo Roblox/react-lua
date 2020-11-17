@@ -8,8 +8,10 @@
  * @flow
  ]]
 local Workspace = script.Parent.Parent
-local console = require(Workspace.RobloxJSPolyfill.console)
-local Error = require(Workspace.RobloxJSPolyfill.Error)
+local Packages = Workspace.Parent.Packages
+local LuauPolyfill = require(Packages.LuauPolyfill)
+local console = LuauPolyfill.console
+local Error = LuauPolyfill.Error
 
 local loggedTypeFailures = {}
 

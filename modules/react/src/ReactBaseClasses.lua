@@ -6,9 +6,12 @@
  * LICENSE file in the root directory of this source tree.
  ]]
 local Workspace = script.Parent.Parent
-local console = require(Workspace.RobloxJSPolyfill.console)
+local Packages = Workspace.Parent.Packages
+local LuauPolyfill = require(Packages.LuauPolyfill)
+local console = LuauPolyfill.console
+local Object = LuauPolyfill.Object
+
 local invariant = require(Workspace.Shared.invariant)
-local Object = require(Workspace.RobloxJSPolyfill.Object)
 local ReactNoopUpdateQueue = require(script.Parent.ReactNoopUpdateQueue)
 local emptyObject = {}
 

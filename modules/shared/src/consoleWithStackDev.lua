@@ -6,7 +6,9 @@
 * LICENSE file in the root directory of this source tree.
 ]]
 local Workspace = script.Parent.Parent
-local console = require(Workspace.RobloxJSPolyfill.console)
+local Packages = Workspace.Parent.Packages
+local LuauPolyfill = require(Packages.LuauPolyfill)
+local console = LuauPolyfill.console
 
 local ReactSharedInternals = require(script.Parent.ReactSharedInternals)
 -- In DEV, calls to console.warn and console.error get replaced

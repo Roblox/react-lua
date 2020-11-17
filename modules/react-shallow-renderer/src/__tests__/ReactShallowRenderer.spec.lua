@@ -10,8 +10,10 @@
 
 -- local Dependencies = script.Parent.Parent.Parent.Parent.Packages
 local Workspace = script.Parent.Parent.Parent
-local Array = require(Workspace.RobloxJSPolyfill.Array)
-local Error = require(Workspace.RobloxJSPolyfill.Error)
+local Packages = Workspace.Parent.Packages
+local LuauPolyfill = require(Packages.LuauPolyfill)
+local Array = LuauPolyfill.Array
+local Error = LuauPolyfill.Error
 -- local PropTypes = require(Dependencies.PropTypes)
 local React = require(Workspace.React)
 local ReactShallowRenderer = require(script.Parent.Parent.ReactShallowRenderer)

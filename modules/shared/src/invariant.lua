@@ -18,7 +18,9 @@
  * will remain to ensure logic does not differ in production.
 ]]
 local Workspace = script.Parent.Parent
-local Error = require(Workspace.RobloxJSPolyfill.Error)
+local Packages = Workspace.Parent.Packages
+local LuauPolyfill = require(Packages.LuauPolyfill)
+local Error = LuauPolyfill.Error
 
 local function invariant(condition, format, ...)
 	if not condition then

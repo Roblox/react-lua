@@ -7,7 +7,8 @@
 ]]
 
 local Workspace = script.Parent.Parent.Parent
-local Timers = require(Workspace.RobloxJSPolyfill.Timers)
+local Packages = Workspace.Parent.Packages
+local LuauPolyfill = require(Packages.LuauPolyfill)
 
 -- deviation: getCurrentTime will always map to `tick` in Luau
 local getCurrentTime = tick
@@ -18,8 +19,8 @@ local getCurrentTime = tick
 -- This is likely to be the implementation that React Native applications run
 -- with, and should be considered sufficiently sophisticated. More research
 -- needs to be done to verify this.
-local setTimeout = Timers.setTimeout
-local clearTimeout = Timers.clearTimeout
+local setTimeout = LuauPolyfill.setTimeout
+local clearTimeout = LuauPolyfill.clearTimeout
 
 local exports = {}
 exports.getCurrentTime = getCurrentTime

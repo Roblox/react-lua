@@ -9,8 +9,11 @@
 --!nolint LocalShadowPedantic
 
 local Workspace = script.Parent.Parent
-local Object = require(Workspace.RobloxJSPolyfill.Object)
-local Error = require(Workspace.RobloxJSPolyfill.Error)
+local Packages = Workspace.Parent.Packages
+local LuauPolyfill = require(Packages.LuauPolyfill)
+local Object = LuauPolyfill.Object
+local Error = LuauPolyfill.Error
+
 local React = require(Workspace.React)
 
 local ReactIs = require(Workspace.ReactIs.ReactIs)
