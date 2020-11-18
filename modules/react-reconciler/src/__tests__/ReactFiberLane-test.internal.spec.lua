@@ -17,11 +17,11 @@ return function()
 
 	local RobloxJest = require(Workspace.RobloxJest)
 
-	local SchedulerWithReactIntegration = require(script.Parent.Parent["SchedulerWithReactIntegration.new"])
-	local ImmediatePriority = SchedulerWithReactIntegration.ImmediatePriority
-	local NormalPriority = SchedulerWithReactIntegration.NormalPriority
-	local NoPriority = SchedulerWithReactIntegration.NoPriority
-	local UserBlockingPriority = SchedulerWithReactIntegration.UserBlockingPriority
+	local ReactFiberSchedulerPriorities = require(script.Parent.Parent["ReactFiberSchedulerPriorities.roblox"])
+	local ImmediatePriority = ReactFiberSchedulerPriorities.ImmediatePriority
+	local NormalPriority = ReactFiberSchedulerPriorities.NormalPriority
+	local NoPriority = ReactFiberSchedulerPriorities.NoPriority
+	local UserBlockingPriority = ReactFiberSchedulerPriorities.UserBlockingPriority
 
 	local ReactFiberLane
 

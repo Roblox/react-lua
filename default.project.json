@@ -22,6 +22,9 @@
       "ReactShallowRenderer": {
         "$path": "modules/react-shallow-renderer/src"
       },
+      "ReactTestRenderer": {
+        "$path": "modules/react-test-renderer/src"
+      },
       "RobloxJest": {
         "$path": "modules/roblox-jest/src"
       },

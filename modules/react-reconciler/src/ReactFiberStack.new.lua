@@ -1,5 +1,5 @@
---!strict
 -- upstream https://github.com/facebook/react/blob/17f582e0453b808860be59ed3437c6a426ae52de/packages/react-reconciler/src/ReactFiberStack.new.js
+--!strict
 --[[*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
@@ -13,15 +13,13 @@ local Packages = Workspace.Parent.Packages
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local console = LuauPolyfill.console
 
+local ReactInternalTypes = require(script.Parent.ReactInternalTypes)
+type Fiber = ReactInternalTypes.Fiber;
+
 type Array<T> = { [number]: T }
 -- deviation: use this table when pushing nil values
 type null = {}
 local NULL: null = {}
-
--- deviation: ReactInternalTypes not implemented. Instead of just dropping
--- the type, we are defining one so it'll be a minor refactor to switch to
--- the futur FiberRoot type.
-type Fiber = any
 
 export type StackCursor<T> = { current: T }
 
@@ -74,12 +72,12 @@ local function pop(cursor: StackCursor<any>, fiber: Fiber)
 		fiberStack[index] = nil
 	end
 
-	index = index - 1
+	index -= 1
 end
 
 -- local function push<T>(cursor: StackCursor<T>, value: T, fiber: Fiber)
 local function push(cursor: StackCursor<any>, value: any, fiber: Fiber)
-	index = index + 1
+	index += 1
 
 	local stackValue = cursor.current
 	if stackValue == nil then
@@ -112,6 +110,9 @@ end
 local function resetStackAfterFatalErrorInDev()
 	if _G.__DEV__ then
 		index = 0
+		-- deviation: FIXME: Original js simply sets `length`, we clear this
+		-- manually; would it be reasonable to just set them to new empty
+		-- tables? Does identity matter here?
 		for i = 1, #valueStack do
 			valueStack[i] = nil
 		end
@@ -126,7 +127,7 @@ return {
 	isEmpty = isEmpty,
 	pop = pop,
 	push = push,
-	-- // DEV only:
+	-- DEV only:
 	checkThatStackIsEmpty = checkThatStackIsEmpty,
 	resetStackAfterFatalErrorInDev = resetStackAfterFatalErrorInDev,
 }

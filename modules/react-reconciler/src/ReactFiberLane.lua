@@ -1,3 +1,4 @@
+-- upstream: https://github.com/facebook/react/blob/6f62abb58ae46d9c88525635f1790487285666e6/packages/react-reconciler/src/ReactFiberLane.js
 --!strict
 -- upstream https://github.com/facebook/react/blob/6f62abb58ae46d9c88525635f1790487285666e6/packages/react-reconciler/src/ReactFiberLane.js
 --[[
@@ -12,39 +13,29 @@ local Workspace = script.Parent.Parent
 local Packages = Workspace.Parent.Packages
 local LuauPolyfill = require(Packages.LuauPolyfill)
 
+local ReactInternalTypes = require(script.Parent.ReactInternalTypes)
+type FiberRoot = ReactInternalTypes.FiberRoot;
+type ReactPriorityLevel = ReactInternalTypes.ReactPriorityLevel;
 local console = LuauPolyfill.console
 local clz32 = LuauPolyfill.Math.clz32
-local SchedulerWithReactIntegration = require(
-	script.Parent['SchedulerWithReactIntegration.new']
-)
+local ReactFiberSchedulerPriorities = require(script.Parent["ReactFiberSchedulerPriorities.roblox"])
 
--- deviation: ReactInternalTypes not implemented. Instead of just dropping
--- the type, we are defining one so it'll be a minor refactor to switch to
--- the futur FiberRoot type.
-type FiberRoot = any
--- deviation: ReactInternalTypes not implemented, but ReactPriorityLevel
--- priority levels are defined in SchedulerWithReactIntegration so it makes
--- sense to move the type definition there
-
--- deviation: until roblox-cli is able to trace requires with index
--- expressions (CLI-31888), we can't import the type so we just copy it
--- type ReactPriorityLevel = SchedulerWithReactIntegration.ReactPriorityLevel
-type ReactPriorityLevel = number
-
--- deviation: Luau does not accept literals for type
-export type LanePriority = number
-export type Lanes = number
-export type Lane = number
-export type LaneMap<T> = { [number]: T }
+-- deviation: Instead of defining these here, and and re-exporting in
+-- `ReactInternalTypes`, we depend on and re-export them here to avoid cyclical
+-- require issues
+export type LanePriority = ReactInternalTypes.LanePriority;
+export type Lane = ReactInternalTypes.Lane;
+export type Lanes = ReactInternalTypes.Lanes;
+export type LaneMap<T> = ReactInternalTypes.LaneMap<T>;
 
 local invariant = require(Workspace.Shared.invariant)
 
-local ImmediateSchedulerPriority = SchedulerWithReactIntegration.ImmediatePriority
-local UserBlockingSchedulerPriority = SchedulerWithReactIntegration.UserBlockingPriority
-local NormalSchedulerPriority = SchedulerWithReactIntegration.NormalPriority
-local LowSchedulerPriority = SchedulerWithReactIntegration.LowPriority
-local IdleSchedulerPriority = SchedulerWithReactIntegration.IdlePriority
-local NoSchedulerPriority = SchedulerWithReactIntegration.NoPriority
+local ImmediateSchedulerPriority = ReactFiberSchedulerPriorities.ImmediatePriority
+local UserBlockingSchedulerPriority = ReactFiberSchedulerPriorities.UserBlockingPriority
+local NormalSchedulerPriority = ReactFiberSchedulerPriorities.NormalPriority
+local LowSchedulerPriority = ReactFiberSchedulerPriorities.LowPriority
+local IdleSchedulerPriority = ReactFiberSchedulerPriorities.IdlePriority
+local NoSchedulerPriority = ReactFiberSchedulerPriorities.NoPriority
 
 local exports = {}
 
@@ -590,6 +581,7 @@ local function findUpdateLane(
 	-- deviation: luau doesn't know that invariant throws, so we error
 	error('unreachable')
 end
+exports.findUpdateLane = findUpdateLane
 
 -- // To ensure consistency across multiple updates in the same event, this should
 -- // be pure function, so that it always returns the same lane for given inputs.
