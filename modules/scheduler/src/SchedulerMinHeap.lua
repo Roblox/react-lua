@@ -64,7 +64,7 @@ end
 
 siftDown = function(heap: Heap, node, index)
 	local length = #heap
-	while (index < length) do
+	while index < length do
 		local leftIndex = index * 2
 		local left = heap[leftIndex]
 		local rightIndex = leftIndex + 1

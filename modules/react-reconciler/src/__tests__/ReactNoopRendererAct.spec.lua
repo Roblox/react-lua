@@ -10,12 +10,28 @@
 
 -- sanity tests for ReactNoop.act()
 
-return function()
-	local React = require('react')
-	local ReactNoop = require('react-noop-renderer')
-	local Scheduler = require('scheduler')
+local Workspace = script.Parent.Parent.Parent
+local React
+local ReactNoop
+local Scheduler
 
-	it('can use act to flush effects', function()
+return function()
+	local RobloxJest = require(Workspace.RobloxJest)
+
+	beforeEach(function()
+		RobloxJest.resetModules()
+
+		React = require(Workspace.React)
+		ReactNoop = require(Workspace.ReactNoopRenderer)
+		-- deviation: In react, jest mocks Scheduler -> unstable_mock; since
+		-- unstable_mock depends on the real Scheduler, and our mock
+		-- functionality isn't smart enough to prevent self-requires, we simply
+		-- require the mock entry point directly for use in tests
+		Scheduler = require(Workspace.Scheduler.unstable_mock)
+	end)
+
+
+	itSKIP('can use act to flush effects', function()
 		local expect: any = expect
 		function App(props)
 			React.useEffect(props.callback)

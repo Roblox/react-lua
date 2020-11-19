@@ -395,7 +395,7 @@ local function getMostRecentEventTime(root: FiberRoot, lanes: Lanes): number
 		local lane = bit32.lshift(1, index)
 
 		local eventTime = eventTimes[index]
-		if (eventTime > mostRecentEventTime) then
+		if eventTime > mostRecentEventTime then
 			mostRecentEventTime = eventTime
 		end
 

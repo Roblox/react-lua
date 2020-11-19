@@ -628,7 +628,7 @@ end
 --   if alternate ~= nil)
 --     alternate.lanes = mergeLanes(alternate.lanes, lane)
 --   end
---   if __DEV__)
+--   if _G.__DEV__)
 --     if 
 --       alternate == nil and
 --       (sourceFiber.flags & (Placement | Hydrating)) ~= NoFlags
@@ -645,7 +645,7 @@ end
 --     if alternate ~= nil)
 --       alternate.childLanes = mergeLanes(alternate.childLanes, lane)
 --     } else {
---       if __DEV__)
+--       if _G.__DEV__)
 --         if (parent.flags & (Placement | Hydrating)) ~= NoFlags)
 --           warnAboutUpdateOnNotYetMountedFiberInDEV(sourceFiber)
 --         end
@@ -1062,7 +1062,7 @@ end
 --     (executionContext & (BatchedContext | RenderContext | CommitContext)) ~=
 --     NoContext
 --   )
---     if __DEV__)
+--     if _G.__DEV__)
 --       if (executionContext & RenderContext) ~= NoContext)
 --         console.error(
 --           'unstable_flushDiscreteUpdates: Cannot flush updates when React is ' +
@@ -1203,7 +1203,7 @@ end
 -- exports.flushSync<A, R>(fn: A => R, a: A): R {
 --   local prevExecutionContext = executionContext
 --   if (prevExecutionContext & (RenderContext | CommitContext)) ~= NoContext)
---     if __DEV__)
+--     if _G.__DEV__)
 --       console.error(
 --         'flushSync was called from inside a lifecycle method. React cannot ' +
 --           'flush when React is already rendering. Consider moving this call to ' +
@@ -1327,7 +1327,7 @@ end
 --     spawnedWorkDuringRender = nil
 --   end
 
---   if __DEV__)
+--   if _G.__DEV__)
 --     ReactStrictModeWarnings.discardPendingWarnings()
 --   end
 -- end
@@ -1497,7 +1497,7 @@ end
 
 --   local prevInteractions = pushInteractions(root)
 
---   if __DEV__)
+--   if _G.__DEV__)
 --     if enableDebugTracing)
 --       logRenderStarted(lanes)
 --     end
@@ -1532,7 +1532,7 @@ end
 --     )
 --   end
 
---   if __DEV__)
+--   if _G.__DEV__)
 --     if enableDebugTracing)
 --       logRenderStopped()
 --     end
@@ -1573,7 +1573,7 @@ end
 
 --   local prevInteractions = pushInteractions(root)
 
---   if __DEV__)
+--   if _G.__DEV__)
 --     if enableDebugTracing)
 --       logRenderStarted(lanes)
 --     end
@@ -1599,7 +1599,7 @@ end
 --   popDispatcher(prevDispatcher)
 --   executionContext = prevExecutionContext
 
---   if __DEV__)
+--   if _G.__DEV__)
 --     if enableDebugTracing)
 --       logRenderStopped()
 --     end
@@ -1786,7 +1786,7 @@ end
 --   local finishedWork = root.finishedWork
 --   local lanes = root.finishedLanes
 
---   if __DEV__)
+--   if _G.__DEV__)
 --     if enableDebugTracing)
 --       logCommitStarted(lanes)
 --     end
@@ -1797,7 +1797,7 @@ end
 --   end
 
 --   if finishedWork == nil)
---     if __DEV__)
+--     if _G.__DEV__)
 --       if enableDebugTracing)
 --         logCommitStopped()
 --       end
@@ -1930,7 +1930,7 @@ end
 --     -- the host tree after it's been mutated. The idiomatic use case for this is
 --     -- layout, but class component lifecycles also fire here for legacy reasons.
 
---     if __DEV__)
+--     if _G.__DEV__)
 --       if enableDebugTracing)
 --         logLayoutEffectsStarted(lanes)
 --       end
@@ -1941,7 +1941,7 @@ end
 
 --     commitLayoutEffects(finishedWork, root)
 
---     if __DEV__)
+--     if _G.__DEV__)
 --       if enableDebugTracing)
 --         logLayoutEffectsStopped()
 --       end
@@ -1999,7 +1999,7 @@ end
 --     legacyErrorBoundariesThatAlreadyFailed = nil
 --   end
 
---   if __DEV__ and enableDoubleInvokingEffects)
+--   if _G.__DEV__ and enableDoubleInvokingEffects)
 --     if !rootDoesHavePassiveEffects)
 --       commitDoubleInvokeEffectsInDEV(root.current, false)
 --     end
@@ -2030,7 +2030,7 @@ end
 
 --   onCommitRootDevTools(finishedWork.stateNode, renderPriorityLevel)
 
---   if __DEV__)
+--   if _G.__DEV__)
 --     onCommitRootTestSelector()
 --   end
 
@@ -2046,7 +2046,7 @@ end
 --   end
 
 --   if (executionContext & LegacyUnbatchedContext) ~= NoContext)
---     if __DEV__)
+--     if _G.__DEV__)
 --       if enableDebugTracing)
 --         logCommitStopped()
 --       end
@@ -2066,7 +2066,7 @@ end
 --   -- If layout work was scheduled, flush it now.
 --   flushSyncCallbackQueue()
 
---   if __DEV__)
+--   if _G.__DEV__)
 --     if enableDebugTracing)
 --       logCommitStopped()
 --     end
@@ -2119,7 +2119,7 @@ end
 --     'Cannot flush passive effects while already rendering.',
 --   )
 
---   if __DEV__)
+--   if _G.__DEV__)
 --     if enableDebugTracing)
 --       logPassiveEffectsStarted(lanes)
 --     end
@@ -2129,7 +2129,7 @@ end
 --     markPassiveEffectsStarted(lanes)
 --   end
 
---   if __DEV__)
+--   if _G.__DEV__)
 --     isFlushingPassiveEffects = true
 --   end
 
@@ -2146,7 +2146,7 @@ end
 --   commitPassiveUnmountEffects(root.current)
 --   commitPassiveMountEffects(root, root.current)
 
---   if __DEV__)
+--   if _G.__DEV__)
 --     if enableDebugTracing)
 --       logPassiveEffectsStopped()
 --     end
@@ -2156,11 +2156,11 @@ end
 --     markPassiveEffectsStopped()
 --   end
 
---   if __DEV__ and enableDoubleInvokingEffects)
+--   if _G.__DEV__ and enableDoubleInvokingEffects)
 --     commitDoubleInvokeEffectsInDEV(root.current, true)
 --   end
 
---   if __DEV__)
+--   if _G.__DEV__)
 --     isFlushingPassiveEffects = false
 --   end
 
@@ -2437,7 +2437,7 @@ checkForNestedUpdates = function()
 end
 
 -- function flushRenderPhaseStrictModeWarningsInDEV()
---   if __DEV__)
+--   if _G.__DEV__)
 --     ReactStrictModeWarnings.flushLegacyContextWarning()
 
 --     if warnAboutDeprecatedLifecycles)
@@ -2448,7 +2448,7 @@ end
 
 -- local didWarnStateUpdateForNotYetMountedComponent: Set<string> | nil = nil
 -- function warnAboutUpdateOnNotYetMountedFiberInDEV(fiber)
---   if __DEV__)
+--   if _G.__DEV__)
 --     if (executionContext & RenderContext) ~= NoContext)
 --       -- We local the other warning about render phase updates deal with this one.
 --       return
@@ -2505,7 +2505,7 @@ end
 
 -- local didWarnStateUpdateForUnmountedComponent: Set<string> | nil = nil
 -- function warnAboutUpdateOnUnmountedFiberInDEV(fiber)
---   if __DEV__)
+--   if _G.__DEV__)
 --     local tag = fiber.tag
 --     if 
 --       tag ~= HostRoot and
@@ -2589,7 +2589,7 @@ end
 -- end
 
 -- local beginWork
--- if __DEV__ and replayFailedUnitOfWorkWithInvokeGuardedCallback)
+-- if _G.__DEV__ and replayFailedUnitOfWorkWithInvokeGuardedCallback)
 --   local dummyFiber = nil
 --   beginWork = (current, unitOfWork, lanes) => {
 --     -- If a component throws an error, we replay it again in a synchronously
@@ -2712,7 +2712,7 @@ end
 -- export local IsThisRendererActing = {current: (false: boolean)}
 
 -- exports.warnIfNotScopedWithMatchingAct(fiber: Fiber): void {
---   if __DEV__)
+--   if _G.__DEV__)
 --     if 
 --       warnsIfNotActing == true and
 --       IsSomeRendererActing.current == true and
@@ -2750,7 +2750,7 @@ end
 -- end
 
 -- exports.warnIfNotCurrentlyActingEffectsInDEV(fiber: Fiber): void {
---   if __DEV__)
+--   if _G.__DEV__)
 --     if 
 --       warnsIfNotActing == true and
 --       (fiber.mode & StrictMode) ~= NoMode and
@@ -2775,7 +2775,7 @@ end
 -- end
 
 -- function warnIfNotCurrentlyActingUpdatesInDEV(fiber: Fiber): void {
---   if __DEV__)
+--   if _G.__DEV__)
 --     if 
 --       warnsIfNotActing == true and
 --       executionContext == NoContext and
@@ -2819,7 +2819,7 @@ end
 -- -- to get their tests right.
 
 -- exports.warnIfUnmockedScheduler(fiber: Fiber)
---   if __DEV__)
+--   if _G.__DEV__)
 --     if 
 --       didWarnAboutUnmockedScheduler == false and
 --       Scheduler.unstable_flushAllWithoutAsserting == undefined
@@ -3023,7 +3023,7 @@ end
 
 -- function shouldForceFlushFallbacksInDEV()
 --   -- Never force flush in production. This function should get stripped out.
---   return __DEV__ and actingUpdatesScopeDepth > 0
+--   return _G.__DEV__ and actingUpdatesScopeDepth > 0
 -- end
 
 -- local flushMockScheduler = Scheduler.unstable_flushAllWithoutAsserting
@@ -3104,7 +3104,7 @@ end
 --     IsSomeRendererActing.current = previousIsSomeRendererActing
 --     IsThisRendererActing.current = previousIsThisRendererActing
 --     isInsideThisAct = previousIsInsideThisAct
---     if __DEV__)
+--     if _G.__DEV__)
 --       if actingUpdatesScopeDepth > previousActingUpdatesScopeDepth)
 --         -- if it's _less than_ previousActingUpdatesScopeDepth, then we can assume the 'other' one has warned
 --         console.error(
@@ -3132,7 +3132,7 @@ end
 --     -- setup a boolean that gets set to true only
 --     -- once this act() call is await-ed
 --     local called = false
---     if __DEV__)
+--     if _G.__DEV__)
 --       if typeof Promise ~= 'undefined')
 --         --eslint-disable-next-line no-undef
 --         Promise.resolve()
@@ -3185,7 +3185,7 @@ end
 --       },
 --     end
 --   } else {
---     if __DEV__)
+--     if _G.__DEV__)
 --       if result ~= undefined)
 --         console.error(
 --           'The callback passed to act(...) function ' +
@@ -3214,7 +3214,7 @@ end
 --     -- in the sync case, the returned thenable only warns *if* await-ed
 --     return {
 --       then(resolve)
---         if __DEV__)
+--         if _G.__DEV__)
 --           console.error(
 --             'Do not await the result of calling act(...) with sync logic, it is not a Promise.',
 --           )

@@ -97,8 +97,11 @@ local function createReactNoop(reconciler, useMutation: boolean)
 	local hostUpdateCounter = 0
 	local hostCloneCounter = 0
 
+	-- ROBLOX TODO: there's an ordering issue means the `act = noopAct` line below assigns nil.
+	--              fix the ordering and remove the assignment below
+	local noopAct = function() end
 	-- deviation: Pre-declare so lua understands that these exist
-	local noopAct, flushActWork, shouldSetTextContent, computeText, cloneInstance
+	local flushActWork, shouldSetTextContent, computeText, cloneInstance
 
 	local function appendChildToContainerOrInstance(
 		parentInstance: Container | Instance,
@@ -698,7 +701,7 @@ local function createReactNoop(reconciler, useMutation: boolean)
 	-- 			ref: nil,
 	-- 			props: props,
 	-- 			_owner: nil,
-	-- 			_store: __DEV__ ? {} : undefined,
+	-- 			_store: _G.__DEV__ ? {} : undefined,
 	-- 		}
 	-- 	}
 	-- 	-- This is a text instance
@@ -742,7 +745,7 @@ local function createReactNoop(reconciler, useMutation: boolean)
 	-- 			ref: nil,
 	-- 			props: {children},
 	-- 			_owner: nil,
-	-- 			_store: __DEV__ ? {} : undefined,
+	-- 			_store: _G.__DEV__ ? {} : undefined,
 	-- 		}
 	-- 	}
 	-- 	return children
@@ -765,7 +768,7 @@ local function createReactNoop(reconciler, useMutation: boolean)
 	-- 			ref: nil,
 	-- 			props: {children},
 	-- 			_owner: nil,
-	-- 			_store: __DEV__ ? {} : undefined,
+	-- 			_store: _G.__DEV__ ? {} : undefined,
 	-- 		}
 	-- 	}
 	-- 	return children

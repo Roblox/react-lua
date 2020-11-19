@@ -20,7 +20,7 @@ return function()
 	local ImmediatePriority
 	local UserBlockingPriority
 	local NormalPriority
-	-- deviation: These are only used in a commented-out __DEV__-only test
+	-- deviation: These are only used in a commented-out _G.__DEV__-only test
 	-- (commented out to silence lints)
 	-- local LowPriority
 	-- local IdlePriority
@@ -61,7 +61,7 @@ return function()
 		ImmediatePriority = Scheduler.unstable_ImmediatePriority
 		UserBlockingPriority = Scheduler.unstable_UserBlockingPriority
 		NormalPriority = Scheduler.unstable_NormalPriority
-		-- deviation: These are only used in a commented-out __DEV__-only
+		-- deviation: These are only used in a commented-out _G.__DEV__-only
 		-- test (commented out to silence lints)
 		-- LowPriority = Scheduler.unstable_LowPriority
 		-- IdlePriority = Scheduler.unstable_IdlePriority
@@ -519,7 +519,7 @@ return function()
 		})
 	end)
 
-	-- if __DEV__ then
+	-- if _G.__DEV__ then
 		-- TODO(align): Re-enable this test if it's useful
 		--
 		-- Function names are minified in prod, though you could still infer the

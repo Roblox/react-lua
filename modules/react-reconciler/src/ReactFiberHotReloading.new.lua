@@ -69,7 +69,7 @@ local resolveFamily = nil
 local exports = {}
 
 -- export local setRefreshHandler = (handler: RefreshHandler | nil): void => {
--- 	if __DEV__)
+-- 	if _G.__DEV__)
 -- 		resolveFamily = handler
 -- 	end
 -- end
@@ -140,7 +140,7 @@ exports.resolveForwardRefForHotReloading = resolveForwardRefForHotReloading
 -- 	fiber: Fiber,
 -- 	element: ReactElement,
 -- ): boolean {
--- 	if __DEV__)
+-- 	if _G.__DEV__)
 -- 		if resolveFamily == nil)
 -- 			-- Hot reloading is disabled.
 -- 			return false
@@ -218,7 +218,7 @@ exports.resolveForwardRefForHotReloading = resolveForwardRefForHotReloading
 -- end
 
 -- exports.markFailedErrorBoundaryForHotReloading(fiber: Fiber)
--- 	if __DEV__)
+-- 	if _G.__DEV__)
 -- 		if resolveFamily == nil)
 -- 			-- Hot reloading is disabled.
 -- 			return
@@ -237,7 +237,7 @@ exports.resolveForwardRefForHotReloading = resolveForwardRefForHotReloading
 -- 	root: FiberRoot,
 -- 	update: RefreshUpdate,
 -- ): void => {
--- 	if __DEV__)
+-- 	if _G.__DEV__)
 -- 		if resolveFamily == nil)
 -- 			-- Hot reloading is disabled.
 -- 			return
@@ -258,7 +258,7 @@ exports.resolveForwardRefForHotReloading = resolveForwardRefForHotReloading
 -- 	root: FiberRoot,
 -- 	element: ReactNodeList,
 -- ): void => {
--- 	if __DEV__)
+-- 	if _G.__DEV__)
 -- 		if root.context ~= emptyContextObject)
 -- 			-- Super edge case: root has a legacy _renderSubtree context
 -- 			-- but we don't know the parentComponent so we can't pass it.
@@ -277,7 +277,7 @@ exports.resolveForwardRefForHotReloading = resolveForwardRefForHotReloading
 -- 	updatedFamilies: Set<Family>,
 -- 	staleFamilies: Set<Family>,
 -- )
--- 	if __DEV__)
+-- 	if _G.__DEV__)
 -- 		local {alternate, child, sibling, tag, type} = fiber
 
 -- 		local candidateType = nil
@@ -350,7 +350,7 @@ exports.resolveForwardRefForHotReloading = resolveForwardRefForHotReloading
 -- 	root: FiberRoot,
 -- 	families: Array<Family>,
 -- ): Set<Instance> => {
--- 	if __DEV__)
+-- 	if _G.__DEV__)
 -- 		local hostInstances = new Set()
 -- 		local types = new Set(families.map(family => family.current))
 -- 		findHostInstancesForMatchingFibersRecursively(
@@ -371,7 +371,7 @@ exports.resolveForwardRefForHotReloading = resolveForwardRefForHotReloading
 -- 	types: Set<any>,
 -- 	hostInstances: Set<Instance>,
 -- )
--- 	if __DEV__)
+-- 	if _G.__DEV__)
 -- 		local {child, sibling, tag, type} = fiber
 
 -- 		local candidateType = nil
@@ -425,7 +425,7 @@ exports.resolveForwardRefForHotReloading = resolveForwardRefForHotReloading
 -- 	fiber: Fiber,
 -- 	hostInstances: Set<Instance>,
 -- ): void {
--- 	if __DEV__)
+-- 	if _G.__DEV__)
 -- 		local foundHostInstances = findChildHostInstancesForFiberShallowly(
 -- 			fiber,
 -- 			hostInstances,
@@ -459,7 +459,7 @@ exports.resolveForwardRefForHotReloading = resolveForwardRefForHotReloading
 -- 	fiber: Fiber,
 -- 	hostInstances: Set<Instance>,
 -- ): boolean {
--- 	if __DEV__)
+-- 	if _G.__DEV__)
 -- 		local node: Fiber = fiber
 -- 		local foundHostInstances = false
 -- 		while (true)

@@ -23,35 +23,35 @@ exports.enableDebugTracing = false
 
 -- Adds user timing marks for e.g. state updates, suspense, and work loop stuff,
 -- for an experimental scheduling profiler tool.
-exports.enableSchedulingProfiler = __PROFILE__ and __EXPERIMENTAL__
+exports.enableSchedulingProfiler = _G.__PROFILE__ and _G.__EXPERIMENTAL__
 
 -- Helps identify side effects in render-phase lifecycle hooks and setState
 -- reducers by double invoking them in Strict Mode.
-exports.debugRenderPhaseSideEffectsForStrictMode = __DEV__
+exports.debugRenderPhaseSideEffectsForStrictMode = _G.__DEV__
 
 -- To preserve the "Pause on caught exceptions" behavior of the debugger, we
 -- replay the begin phase of a failed component inside invokeGuardedCallback.
-exports.replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__
+exports.replayFailedUnitOfWorkWithInvokeGuardedCallback = _G.__DEV__
 
 -- Warn about deprecated, async-unsafe lifecycles; relates to RFC #6:
 exports.warnAboutDeprecatedLifecycles = true
 
 -- Gather advanced timing metrics for Profiler subtrees.
-exports.enableProfilerTimer = __PROFILE__
+exports.enableProfilerTimer = _G.__PROFILE__
 
 -- Record durations for commit and passive effects phases.
 exports.enableProfilerCommitHooks = false
 
 -- Trace which interactions trigger each commit.
-exports.enableSchedulerTracing = __PROFILE__
+exports.enableSchedulerTracing = _G.__PROFILE__
 
 -- SSR experiments
-exports.enableSuspenseServerRenderer = __EXPERIMENTAL__
-exports.enableSelectiveHydration = __EXPERIMENTAL__
+exports.enableSuspenseServerRenderer = _G.__EXPERIMENTAL__
+exports.enableSelectiveHydration = _G.__EXPERIMENTAL__
 
 -- Flight experiments
-exports.enableBlocksAPI = __EXPERIMENTAL__
-exports.enableLazyElements = __EXPERIMENTAL__
+exports.enableBlocksAPI = _G.__EXPERIMENTAL__
+exports.enableLazyElements = _G.__EXPERIMENTAL__
 
 -- Only used in www builds.
 exports.enableSchedulerDebugging = false

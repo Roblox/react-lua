@@ -150,7 +150,7 @@ local exports = {}
 -- local didWarnUpdateInsideUpdate
 -- local currentlyProcessingQueue
 -- export local resetCurrentlyProcessingQueue
--- if __DEV__)
+-- if _G.__DEV__)
 -- 	didWarnUpdateInsideUpdate = false
 -- 	currentlyProcessingQueue = nil
 -- 	resetCurrentlyProcessingQueue = () => {
@@ -225,7 +225,7 @@ exports.initializeUpdateQueue = initializeUpdateQueue
 -- 	end
 -- 	sharedQueue.pending = update
 
--- 	if __DEV__)
+-- 	if _G.__DEV__)
 -- 		if 
 -- 			currentlyProcessingQueue == sharedQueue and
 -- 			!didWarnUpdateInsideUpdate
@@ -333,11 +333,11 @@ exports.initializeUpdateQueue = initializeUpdateQueue
 -- 			local payload = update.payload
 -- 			if typeof payload == 'function')
 -- 				-- Updater function
--- 				if __DEV__)
+-- 				if _G.__DEV__)
 -- 					enterDisallowedContextReadInDEV()
 -- 				end
 -- 				local nextState = payload.call(instance, prevState, nextProps)
--- 				if __DEV__)
+-- 				if _G.__DEV__)
 -- 					if 
 -- 						debugRenderPhaseSideEffectsForStrictMode and
 -- 						workInProgress.mode & StrictMode
@@ -366,11 +366,11 @@ exports.initializeUpdateQueue = initializeUpdateQueue
 -- 			local partialState
 -- 			if typeof payload == 'function')
 -- 				-- Updater function
--- 				if __DEV__)
+-- 				if _G.__DEV__)
 -- 					enterDisallowedContextReadInDEV()
 -- 				end
 -- 				partialState = payload.call(instance, prevState, nextProps)
--- 				if __DEV__)
+-- 				if _G.__DEV__)
 -- 					if 
 -- 						debugRenderPhaseSideEffectsForStrictMode and
 -- 						workInProgress.mode & StrictMode
@@ -414,7 +414,7 @@ exports.initializeUpdateQueue = initializeUpdateQueue
 
 -- 	hasForceUpdate = false
 
--- 	if __DEV__)
+-- 	if _G.__DEV__)
 -- 		currentlyProcessingQueue = queue.shared
 -- 	end
 
@@ -578,7 +578,7 @@ exports.initializeUpdateQueue = initializeUpdateQueue
 -- 		workInProgress.memoizedState = newState
 -- 	end
 
--- 	if __DEV__)
+-- 	if _G.__DEV__)
 -- 		currentlyProcessingQueue = nil
 -- 	end
 -- end

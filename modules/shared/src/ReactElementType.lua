@@ -24,7 +24,7 @@ export type ReactElement = {
 	-- ReactFiber
 	_owner: any,
 
-	-- __DEV__
+	-- _G.__DEV__
 	_store: {validated: boolean, [any]: any },
 	-- deviation: No built in element flow types
 	-- _self: React$Element<any>,
