@@ -10,9 +10,16 @@
 return function()
 	local Workspace = script.Parent.Parent.Parent
 	local React = require(Workspace.React)
-	local ReactShallowRenderer = require(script.Parent.Parent.ReactShallowRenderer)
+	local ReactShallowRenderer = require(script.Parent.Parent)
 
 	local createRenderer = ReactShallowRenderer.createRenderer
+
+	local function validateElement(element)
+		if _G.__DEV__ then
+			element._store.validated = true
+		end
+		return element
+	end
 
 	describe('ReactShallowRenderer with hooks', function()
 		it('should work with useState', function()
@@ -435,33 +442,41 @@ return function()
 			local element = React.createElement(SomeComponent, {defaultName='Dominic'})
 			local result = shallowRenderer:render(element)
 			expect(result.props.children).toEqual(
-				React.createElement("TextLabel", {
-					Text = "Your name is: Dominic (0)"
-				})
+				validateElement(
+					React.createElement("TextLabel", {
+						Text = "Your name is: Dominic (0)"
+					})
+				)
 			)
 
 			result.props.onClick()
 			local updated = shallowRenderer:render(element)
 			expect(updated.props.children).toEqual(
-				React.createElement("TextLabel", {
-					Text = "Your name is: Dan (0)"
-				})
+				validateElement(
+					React.createElement("TextLabel", {
+						Text = "Your name is: Dan (0)"
+					})
+				)
 			)
 
 			_dispatch('foo')
 			updated = shallowRenderer:render(element)
 			expect(updated.props.children).toEqual(
-				React.createElement("TextLabel", {
-					Text = "Your name is: Dan (1)"
-				})
+				validateElement(
+					React.createElement("TextLabel", {
+						Text = "Your name is: Dan (1)"
+					})
+				)
 			)
 
 			_dispatch('inc')
 			updated = shallowRenderer:render(element)
 			expect(updated.props.children).toEqual(
-				React.createElement("TextLabel", {
-					Text = "Your name is: Dan (2)"
-				})
+				validateElement(
+					React.createElement("TextLabel", {
+						Text = "Your name is: Dan (2)"
+					})
+				)
 			)
 		end)
 

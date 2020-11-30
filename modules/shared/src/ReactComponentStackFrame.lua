@@ -33,7 +33,7 @@ local ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher
 
 -- deviation: the prefix is constant because the console prints the stack frames
 -- the same way on every platform.
-local prefix = ("00:00:00.000 - "):gsub("%S", " ")
+local prefix = "    in "
 
 -- deviation: declare these now because of scoping differences between in Lua and JS
 local describeComponentFrame
@@ -73,10 +73,10 @@ if _G.__DEV__ then
 	componentFrameCache = setmetatable({}, { __mode = "k" })
 end
 
-local function describeNativeComponentFrame(fn: (any) -> any, _construct: boolean): string
+local function describeNativeComponentFrame(fn: (any) -> any, construct: boolean): string
 	-- // If something asked for a stack inside a fake render, it should get ignored.
 	if not fn or reentry then
-		return ''
+		return ""
 	end
 
 	if _G.__DEV__ then
@@ -107,15 +107,22 @@ local function describeNativeComponentFrame(fn: (any) -> any, _construct: boolea
 	-- deviation: Lua does not have stack traces with errors, so we
 	-- use xpcall to convert the error and append a stack trace.
 	-- This will change the theorical stack trace we want, because of
-	-- the function where we call 'debug.traceback()', but
+	-- the function where we call 'debug.traceback()', but the control
+	-- stack will have the same added frame.
 	local _, sample = xpcall(function()
-		local _, x = pcall(function()
-			error({
-				stack = debug.traceback(),
-			})
-		end)
-		control = x
-		fn()
+		if construct then
+			-- deviation: since we can't have a meaningful stack trace when
+			-- constructing from a component class (because it does not locate
+			-- component definition), we skip this case.
+		else
+			local _, x = pcall(function()
+				error({
+					stack = debug.traceback(),
+				})
+			end)
+			control = x
+			fn()
+		end
 	end, function(message)
 		return {
 			message = message,
@@ -174,7 +181,9 @@ local function describeNativeComponentFrame(fn: (any) -> any, _construct: boolea
 						if controlIndex < 0
 							or sampleLines[sampleIndex] ~= controlLines[controlIndex]
 						then
-							local frame = '\n' .. sampleLines[sampleIndex]
+							-- deviation: add the '    in ' prefix to format the component stack
+							-- similar to React
+							local frame = '\n' .. prefix .. sampleLines[sampleIndex]
 
 							if _G.__DEV__ then
 								if typeof(fn) == 'function' then
@@ -209,8 +218,11 @@ local function describeNativeComponentFrame(fn: (any) -> any, _construct: boolea
 	end
 
 	-- // Fallback to just using the name if we couldn't make it throw.
-	-- deviation: since functions cannot be indexed, we default to empty
 	local name = ""
+	-- deviation: since fn can be a class, we can get the class name here
+	if typeof(fn) == "table" then
+		name = tostring(fn)
+	end
 
 	local syntheticFrame = ""
 	if name ~= nil and name ~= "" then
@@ -296,12 +308,13 @@ function describeFunctionComponentFrame(
 	end
 end
 
-local function shouldConstruct(Component)
-	-- deviation: FIXME: This will probably need to be implemented differently!
-	-- local prototype = Component.prototype
-	-- return not not (prototype and prototype.isReactComponent)
-	return false
-end
+-- deviation: because of deviations in other functions, this function
+-- is not needed. If we need to bring it, it should return true if
+-- Component is a class component, and false if a function component
+-- local function shouldConstruct(Component)
+-- 	local prototype = Component.prototype
+-- 	return not not (prototype and prototype.isReactComponent)
+-- end
 
 local function describeUnknownElementTypeFrameInDEV(type, source, ownerFn)
 	if not _G.__DEV__ then
@@ -311,9 +324,21 @@ local function describeUnknownElementTypeFrameInDEV(type, source, ownerFn)
 		return ""
 	end
 
+	-- deviation: in JavaScript, if `type` contains a class, typeof will return
+	-- "function". We need to specifically check for the class.
+	if typeof(type) == "table" and typeof(type.__ctor) == "function" then
+		if enableComponentStackLocations then
+			return describeNativeComponentFrame(type, true)
+		else
+			return describeFunctionComponentFrame(type, source, ownerFn)
+		end
+	end
+
 	if typeof(type) == "function" then
 		if enableComponentStackLocations then
-			return describeNativeComponentFrame(type, shouldConstruct(type))
+			-- deviation: since functions and classes have different types in Lua,
+			-- we already know that shouldConstruct would return false
+			return describeNativeComponentFrame(type, false)
 		else
 			return describeFunctionComponentFrame(type, source, ownerFn)
 		end

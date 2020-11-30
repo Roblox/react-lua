@@ -67,16 +67,28 @@ exports.REACT_LEGACY_HIDDEN_TYPE = 0xeae3
 --local MAYBE_ITERATOR_SYMBOL = false -- devation: typeof(Symbol) == 'function' and Symbol.iterator
 --local FAUX_ITERATOR_SYMBOL = '@@iterator'
 
-exports.getIteratorFn = function(maybeIterable)
---  if (maybeIterable == nil or typeof(maybeIterable) ~= 'object') then
---    return nil
---  end
---  local maybeIterator =
---    (MAYBE_ITERATOR_SYMBOL and maybeIterable[MAYBE_ITERATOR_SYMBOL]) or
---    maybeIterable[FAUX_ITERATOR_SYMBOL]
---  if (typeof(maybeIterator) == 'function') then
---    return maybeIterator
---  end
+type Iterator<T> = {
+	next: () -> {
+		value: T,
+		done: boolean,
+	},
+}
+exports.getIteratorFn = function(maybeIterable): nil | () -> Iterator<any>
+	if typeof(maybeIterable) == "table" then
+		return function()
+			local currentKey: any, currentValue: any
+			return {
+				next = function()
+					currentKey, currentValue = next(maybeIterable, currentKey)
+					return {
+						done = currentValue == nil,
+						value = currentValue,
+					}
+				end,
+			}
+		end
+	end
+
 	return nil
 end
 

@@ -9,6 +9,7 @@ local Workspace = script.Parent.Parent
 local Packages = Workspace.Parent.Packages
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local console = LuauPolyfill.console
+local Array = LuauPolyfill.Array
 
 local ReactSharedInternals = require(script.Parent.ReactSharedInternals)
 -- In DEV, calls to console.warn and console.error get replaced
@@ -24,58 +25,35 @@ local printWarning
 local exports = {}
 exports.warn = function(format, ...)
 	if _G.__DEV__ then
-		-- deviation: varargs works differently in lua
-		local argsLength = select("#", ...)
-		local args = {}
-		for _key = 2, argsLength do
-			args[_key - 1] = select(_key, ...)
-		end
-
-		printWarning('warn', format, args)
+		printWarning('warn', format, {...})
 	end
 end
 exports.error = function(format, ...)
 	if _G.__DEV__ then
-		-- deviation: varargs works differently in lua
-		local argsLength = select("#", ...)
-		local args = {}
-		for _key = 2, argsLength do
-			args[_key - 1] = select(_key, ...)
-		end
-
-		printWarning('error', format, args)
+		printWarning('error', format, {...})
 	end
 end
 
-printWarning = function(level, format, args)
+function printWarning(level, format, args)
 	-- When changing this logic, you might want to also
 	-- update consoleWithStackDev.www.js as well.
 	if _G.__DEV__ then
 		local ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame
 		local stack = ReactDebugCurrentFrame.getStackAddendum()
 
-		if stack ~= '' then
-			format = format .. '%s'
+		if stack ~= "" then
+			format ..= "%s"
 			-- deviation: no array `concat` function in lua
-			for _, stackValue in ipairs(args) do
-				table.insert(args, stackValue)
-			end
+			args = Array.slice(args, 1)
+			table.insert(args, stack)
 		end
 
-		-- deviation: no array `map` or `unshift` function in lua
-		local argsWithFormat = {}
+		local argsWithFormat = Array.map(args, tostring)
 		-- Careful: RN currently depends on this prefix
-		table.insert(argsWithFormat, 'Warning: ' .. format)
-		for _, arg in ipairs(args) do
-			table.insert(argsWithFormat, tostring(arg))
-		end
-
+		table.insert(argsWithFormat, 1, "Warning: " .. format)
 		-- We intentionally don't use spread (or .apply) directly because it
 		-- breaks IE9: https:--github.com/facebook/react/issues/13610
 		-- eslint-disable-next-line react-internal/no-production-logging
-
-		-- deviation: TODO: verify that this behavior maps correctly to:
-		-- Function.prototype.apply.call(console[level], console, argsWithFormat)
 		console[level](unpack(argsWithFormat))
 	end
 end

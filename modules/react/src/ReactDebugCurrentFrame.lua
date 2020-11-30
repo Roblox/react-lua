@@ -12,24 +12,25 @@ local ReactDebugCurrentFrame = {}
 
 local currentExtraStackFrame = nil
 
-ReactDebugCurrentFrame.setExtraStackFrame = function (stack: string?)
+function ReactDebugCurrentFrame.setExtraStackFrame(stack: string?)
 	if _G.__DEV__ then
 		currentExtraStackFrame = stack
 	end
 end
 
 if _G.__DEV__ then
-	ReactDebugCurrentFrame.setExtraStackFrame = function(stack: string?)
-		if _G.__DEV__ then
-			currentExtraStackFrame = stack
-		end
-	end
+	-- deviation: in Lua, the implementation is duplicated
+	-- function ReactDebugCurrentFrame.setExtraStackFrame(stack: string?)
+	-- 	if _G.__DEV__ then
+	-- 		currentExtraStackFrame = stack
+	-- 	end
+	-- end
 
 	-- Stack implementation injected by the current renderer.
 	ReactDebugCurrentFrame.getCurrentStack = nil
 
-	ReactDebugCurrentFrame.getStackAddendum = function()
-		local stack = ''
+	function ReactDebugCurrentFrame.getStackAddendum(): string
+		local stack = ""
 
 		-- Add an extra top frame while an element is being validated
 		if currentExtraStackFrame then
@@ -39,7 +40,7 @@ if _G.__DEV__ then
 		-- Delegate to the injected renderer-specific implementation
 		local impl = ReactDebugCurrentFrame.getCurrentStack
 		if impl then
-			stack = stack .. (impl() or '')
+			stack = stack .. (impl() or "")
 		end
 
 		return stack

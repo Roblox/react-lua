@@ -5,10 +5,10 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * 
+ *
  ]]
 
-local Workspace = script.Parent.Parent
+local Workspace = script.Parent
 local Packages = Workspace.Parent.Packages
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local console = LuauPolyfill.console
@@ -25,7 +25,7 @@ exports.typeOf = function(object)
 		if __typeof == ReactSymbols.REACT_ELEMENT_TYPE then
 			local __type = object.type
 
-			if 
+			if
 				__type == ReactSymbols.REACT_FRAGMENT_TYPE or
 				__type == ReactSymbols.REACT_PROFILER_TYPE or
 				__type == ReactSymbols.REACT_STRICT_MODE_TYPE or

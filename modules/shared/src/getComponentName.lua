@@ -8,6 +8,7 @@
 * @flow
 ]]
 --!nolint LocalShadowPedantic
+local console = require(script.Parent.console)
 local ReactSymbols = require(script.Parent.ReactSymbols)
 local REACT_CONTEXT_TYPE = ReactSymbols.REACT_CONTEXT_TYPE
 local REACT_FORWARD_REF_TYPE = ReactSymbols.REACT_FORWARD_REF_TYPE
@@ -38,21 +39,23 @@ local function getComponentName(type)
 		-- Host root, text node or just invalid type.
 		return nil
 	end
+	local typeofType = typeof(type)
 
 	if _G.__DEV__ then
-		if typeof(type.tag) == 'number' then
-			warn(
-				'Received an unexpected object in getComponentName(). ' ..
-				'This is likely a bug in React. Please file an issue.'
+		if typeofType == "table" and typeof(type.tag) == "number" then
+			console.warn(
+				"Received an unexpected object in getComponentName(). " ..
+					"This is likely a bug in React. Please file an issue."
 			)
 		end
 	end
 
-	if typeof(type) == 'function' then
-		return type.displayName or type.name or nil
+	if typeofType == "function" then
+		-- return type.displayName or type.name or nil
+		return nil
 	end
 
-	if typeof(type) == 'string' then
+	if typeofType == "string" then
 		return type
 	end
 
@@ -75,7 +78,7 @@ local function getComponentName(type)
 		return 'SuspenseList'
 	end
 
-	if typeof(type) == 'table' then
+	if typeofType == "table" then
 		local typeProp = type["$$typeof"]
 		if typeProp == REACT_CONTEXT_TYPE then
 			local context = type

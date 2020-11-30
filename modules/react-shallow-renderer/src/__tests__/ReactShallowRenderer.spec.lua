@@ -8,19 +8,36 @@
  * @jest-environment node
 ]]
 
--- local Dependencies = script.Parent.Parent.Parent.Parent.Packages
-local Workspace = script.Parent.Parent.Parent
-local Packages = Workspace.Parent.Packages
-local LuauPolyfill = require(Packages.LuauPolyfill)
-local Array = LuauPolyfill.Array
-local Error = LuauPolyfill.Error
--- local PropTypes = require(Dependencies.PropTypes)
-local React = require(Workspace.React)
-local ReactShallowRenderer = require(script.Parent.Parent.ReactShallowRenderer)
-
-local createRenderer = ReactShallowRenderer.createRenderer
 
 return function()
+	-- local Dependencies = script.Parent.Parent.Parent.Parent.Packages
+	local Workspace = script.Parent.Parent.Parent
+	local Packages = Workspace.Parent.Packages
+	local LuauPolyfill = require(Packages.LuauPolyfill)
+	local Array = LuauPolyfill.Array
+	local Error = LuauPolyfill.Error
+	-- local PropTypes = require(Dependencies.PropTypes)
+	local React = require(Workspace.React)
+	local ReactShallowRenderer = require(Workspace.ReactShallowRenderer)
+
+	local createRenderer = ReactShallowRenderer.createRenderer
+
+	local function validateElement(element)
+		if _G.__DEV__ then
+			element._store.validated = true
+		end
+		return element
+	end
+
+	local function validate(list)
+		if _G.__DEV__ then
+			for _, element in pairs(list) do
+				validateElement(element)
+			end
+		end
+		return list
+	end
+
   it('should call all of the legacy lifecycle hooks', function()
     -- FIXME: Remove this local redeclaration and disable typechecking
     local expect: any = expect
@@ -225,10 +242,10 @@ return function()
     local result = shallowRenderer:render(React.createElement(SomeComponent))
 
     expect(result.type).to.equal("Frame")
-    expect(result.props.children).toEqual({
+    expect(result.props.children).toEqual(validate({
       React.createElement("TextLabel", { Text = "child1" }),
       React.createElement("TextLabel", { Text = "child2" }),
-    })
+    }))
   end)
 
   it('should handle ForwardRef', function()
@@ -249,10 +266,10 @@ return function()
     }))
 
     expect(result.type).to.equal("Frame")
-    expect(result.props.children).toEqual({
+    expect(result.props.children).toEqual(validate({
       React.createElement("TextLabel", { Text = "child1" }),
       React.createElement("TextLabel", { Text = "child2" }),
-    })
+    }))
   end)
 
   it('should handle Profiler', function()
@@ -272,12 +289,12 @@ return function()
     local result = shallowRenderer:render(React.createElement(SomeComponent))
 
     expect(result.type).toEqual(React.Profiler)
-    expect(result.props.children).toEqual(
+    expect(result.props.children).toEqual(validateElement(
       React.createElement("Text", nil, {
         React.createElement("Frame", {className="child1"}),
         React.createElement("Frame", {className="child2"})
       })
-    )
+    ))
   end)
 
   it('should enable shouldComponentUpdate to prevent a re-render', function()
@@ -418,12 +435,12 @@ return function()
        React.createElement(SomeComponent, {foo='FOO'}), {bar = 'BAR'})
 
      expect(result.type).toEqual('Frame')
-     expect(result.props.children).toEqual({
+     expect(result.props.children).toEqual(validate({
          ChildFoo = React.createElement("TextLabel", { Text = 'FOO' }),
          ChildBar = React.createElement("TextLabel", { Text = 'BAR' }),
          Child1 = React.createElement("Frame", { Value = 'child1' }),
          Child2 = React.createElement("Frame", { Value = 'child2' })
-       })
+       }))
    end)
 
    it('should shallow render a component returning strings directly from render', function()
@@ -498,14 +515,18 @@ return function()
     local result = shallowRenderer:render(React.createElement(Fragment))
     expect(result.type).toEqual(React.Fragment)
 
-    expect(#result.props.children).toEqual(3)
-    expect(result.props.children[1]).toEqual(React.createElement("Text"))
-    expect(result.props.children[2]).toEqual(React.createElement("Frame"))
-      -- React.createElement(React.Fragment, nil, {
-      --   React.createElement("Text"),
-      --   React.createElement("Frame"),
-      --   React.createElement(SomeComponent)
-      -- }))
+	expect(#result.props.children).toEqual(3)
+	expect(result.props.children[1]).toEqual(
+		validateElement(React.createElement("Text"))
+	)
+	expect(result.props.children[2]).toEqual(
+		validateElement(React.createElement("Frame"))
+	)
+	-- React.createElement(React.Fragment, nil, {
+	-- 	React.createElement("Text"),
+	-- 	React.createElement("Frame"),
+	-- 	React.createElement(SomeComponent)
+	-- })
   end)
 
    it('should throw for invalid elements', function()
@@ -611,10 +632,10 @@ return function()
     local shallowRenderer = createRenderer()
     local result = shallowRenderer:render(React.createElement(SomeComponent))
     expect(result.type).toEqual('TextLabel')
-    expect(result.props.children).toEqual({
+    expect(result.props.children).toEqual(validate({
       React.createElement("Frame", { className = "child1" }),
       React.createElement("Frame", { className = "child2" })
-    })
+    }))
 
     local updatedResult = shallowRenderer:render(React.createElement(SomeComponent, { aNew = "prop" }))
     expect(updatedResult.type).toEqual('Button')
@@ -1072,7 +1093,7 @@ return function()
         return nextState.value ~= self.state.value
       end
 
-      function SimpleComponent:render() 
+      function SimpleComponent:render()
         return React.createElement("TextLabel", {Text = "value:" .. self.state.value})
       end
 
@@ -1115,7 +1136,7 @@ return function()
     )
     expect(result.props.children).toEqual(0)
 
-    instance:setState(function (state, props) 
+    instance:setState(function (state, props)
       return {counter = instance.props.defaultCount + 1}
     end)
 
@@ -1144,7 +1165,7 @@ return function()
 
     local updaterWasCalled = false
     instance:setState(function(state, props)
-      -- ROBLOX: we deviate here. legacy Roact doesn't support this, and is moot with useState() hook 
+      -- ROBLOX: we deviate here. legacy Roact doesn't support this, and is moot with useState() hook
       -- expect(self).to.equal(instance)
       expect(state).toEqual({something = 'here'})
       expect(props).toEqual({myProp = 31337})
@@ -1188,7 +1209,7 @@ return function()
 
   it('can replaceState with a callback', function()
      -- FIXME: Remove this local redeclaration and disable typechecking
-     local expect: any = expect 
+     local expect: any = expect
      local instance
 
     local SimpleComponent = React.Component:extend("SimpleComponent")
@@ -1316,7 +1337,7 @@ return function()
     SimpleComponent.contextTypes = {
       foo = 'string',
     }
-    function SimpleComponent:render() 
+    function SimpleComponent:render()
       return React.createElement("Text", nil, self.context.foo .. ':' .. tostring(self.context.bar))
     end
 
@@ -1670,8 +1691,8 @@ return function()
     end
     local Foo = React.memo(function(props)
       renderCount += 1
-      return 
-        React.createElement("Text", nil, 
+      return
+        React.createElement("Text", nil,
           tostring(props.foo) .. tostring(props.bar))
     end, areEqual)
 
@@ -1708,7 +1729,7 @@ return function()
     local testRef = React.createRef()
     local SomeComponent = React.forwardRef(function(props, ref)
       expect(ref).toEqual(testRef)
-      return 
+      return
         React.createElement("Frame", nil, {
           React.createElement("Text", {className="child1"}),
           React.createElement("Text", {className="child2"}),
@@ -1722,10 +1743,10 @@ return function()
       React.createElement(SomeMemoComponent, {ref=testRef}))
 
     expect(result.type).toEqual("Frame")
-    expect(result.props.children).toEqual({
+    expect(result.props.children).toEqual(validate({
       React.createElement("Text", {className="child1"}),
       React.createElement("Text", {className="child2"}),
-    })
+    }))
   end)
 
   it('should warn for forwardRef(memo())', function()
@@ -1774,12 +1795,12 @@ return function()
     -- FIXME: Remove this local redeclaration and disable typechecking
     local expect: any = expect
     local Foo = React.Component:extend("Component")
-    function Foo:render() 
+    function Foo:render()
       return React.createElement("Text", nil, 'Foo ' .. self.props.prop)
     end
 
     local Bar = React.Component:extend("Component")
-    function Bar:render() 
+    function Bar:render()
       return React.createElement("Text", nil, 'Bar ' .. self.props.prop)
     end
 

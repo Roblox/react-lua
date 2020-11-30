@@ -5,7 +5,7 @@
 
 return function()
 	local Workspace = script.Parent.Parent.Parent
-	local ReactIs = require(Workspace.ReactIs.ReactIs)
+	local ReactIs = require(Workspace.ReactIs)
 	local React = require(Workspace.React.React)
 	local ReactBaseClasses = require(Workspace.React.ReactBaseClasses)
 	local Component = ReactBaseClasses.Component

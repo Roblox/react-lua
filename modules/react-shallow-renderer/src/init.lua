@@ -8,7 +8,7 @@
  ]]
 --!nolint LocalShadowPedantic
 
-local Workspace = script.Parent.Parent
+local Workspace = script.Parent
 local Packages = Workspace.Parent.Packages
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local Object = LuauPolyfill.Object
@@ -16,7 +16,7 @@ local Error = LuauPolyfill.Error
 
 local React = require(Workspace.React)
 
-local ReactIs = require(Workspace.ReactIs.ReactIs)
+local ReactIs = require(Workspace.ReactIs)
 local isForwardRef = ReactIs.isForwardRef
 local isMemo = ReactIs.isMemo
 local ForwardRef = ReactIs.ForwardRef

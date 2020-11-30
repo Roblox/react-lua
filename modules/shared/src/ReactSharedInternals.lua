@@ -8,7 +8,9 @@
  * @flow
 ]]
 local Workspace = script.Parent.Parent
-local React = require(Workspace.React)
-local ReactSharedInternals = React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+-- deviation: to prevent cyclic imports, require directly the sub-module
+-- local React = require(Workspace.React)
+-- local ReactSharedInternals = React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+local ReactSharedInternals = require(Workspace.React.ReactSharedInternals)
 
 return ReactSharedInternals

@@ -1,22 +1,31 @@
 -- upstream: https://github.com/facebook/react/blob/56e9feead0f91075ba0a4f725c9e4e343bca1c67/packages/react/src/React.js
 -- deviation: TODO: This is currently just a stub!
-local Workspace = script.Parent.Parent
-local ReactSharedInternals = require(script.Parent.ReactSharedInternals)
-local ReactBaseClasses = require(script.Parent.ReactBaseClasses)
-local ReactElement = require(script.Parent.ReactElement)
-local ReactCreateRef = require(script.Parent.ReactCreateRef)
-local ReactForwardRef = require(script.Parent.ReactForwardRef)
-local ReactHooks = require(script.Parent.ReactHooks)
-local ReactMemo = require(script.Parent.ReactMemo)
-local ReactContext = require(script.Parent.ReactContext)
+local React = script.Parent
+local Workspace = React.Parent
+local ReactSharedInternals = require(React.ReactSharedInternals)
+local ReactBaseClasses = require(React.ReactBaseClasses)
+local ReactElementValidator = require(React.ReactElementValidator)
+local ReactElement = require(React.ReactElement)
+local ReactCreateRef = require(React.ReactCreateRef)
+local ReactForwardRef = require(React.ReactForwardRef)
+local ReactHooks = require(React.ReactHooks)
+local ReactMemo = require(React.ReactMemo)
+local ReactContext = require(React.ReactContext)
 local ReactSymbols = require(Workspace.Shared.ReactSymbols)
+
+local createElement = _G.__DEV__ and
+	ReactElementValidator.createElementWithValidation or
+	ReactElement.createElement
+local cloneElement = _G.__DEV__ and
+	ReactElementValidator.cloneElementWithValidation or
+	ReactElement.cloneElement
 
 return {
 	__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = ReactSharedInternals,
 	Component = ReactBaseClasses.Component,
 	PureComponent = ReactBaseClasses.PureComponent,
-	createElement = ReactElement.createElement,
-	cloneElement = ReactElement.cloneElement,
+	createElement = createElement,
+	cloneElement = cloneElement,
 	isValidElement = ReactElement.isValidElement,
 	createRef = ReactCreateRef.createRef,
 	forwardRef = ReactForwardRef.forwardRef,

@@ -60,17 +60,22 @@ local function hasValidKey(config)
 end
 
 local function defineKeyPropWarningGetter(props, displayName)
-	local warnAboutAccessingKey = function()
-		if _G.__DEV__ then
-			if not specialPropKeyWarningShown then
-				specialPropKeyWarningShown = true
-				console.error(
-					'%s: `key` is not a prop. Trying to access it will result ' .. 'in `nil` being returned. If you need to access the same ' .. 'value within the child component, you should pass it as a different ' .. 'prop. (https://reactjs.org/link/special-props)',
-					displayName
-				)
+	local warnAboutAccessingKey = setmetatable({}, {
+		__call = function()
+			if _G.__DEV__ then
+				if not specialPropKeyWarningShown then
+					specialPropKeyWarningShown = true
+					console.error(
+						"%s: `key` is not a prop. Trying to access it will result " ..
+							"in `nil` being returned. If you need to access the same " ..
+							"value within the child component, you should pass it as a different " ..
+							"prop. (https://reactjs.org/link/special-props)",
+						displayName
+					)
+				end
 			end
-		end
-	end
+		end,
+	})
 
 	warnAboutAccessingKey.isReactWarning = true
 	props.key = warnAboutAccessingKey
@@ -85,7 +90,10 @@ local function defineRefPropWarningGetter(props, displayName)
 				if not specialPropRefWarningShown then
 					specialPropRefWarningShown = true
 					console.error(
-						'%s: `ref` is not a prop. Trying to access it will result ' .. 'in `nil` being returned. If you need to access the same ' .. 'value within the child component, you should pass it as a different ' .. 'prop. (https://reactjs.org/link/special-props)',
+						"%s: `ref` is not a prop. Trying to access it will result " ..
+							"in `nil` being returned. If you need to access the same " ..
+							"value within the child component, you should pass it as a different " ..
+							"prop. (https://reactjs.org/link/special-props)",
 						displayName
 					)
 				end
@@ -100,7 +108,7 @@ end
 local function warnIfStringRefCannotBeAutoConverted(config)
 	if _G.__DEV__ then
 		if
-			typeof(config.ref) == 'string' and
+			typeof(config.ref) == "string" and
 			ReactCurrentOwner.current and
 			config.__self and
 			ReactCurrentOwner.current.stateNode ~= config.__self
@@ -109,7 +117,12 @@ local function warnIfStringRefCannotBeAutoConverted(config)
 
 			if not didWarnAboutStringRefs[componentName] then
 				console.error(
-					'Component "%s" contains the string ref "%s". ' .. 'Support for string refs will be removed in a future major release. ' .. 'This case cannot be automatically converted to an arrow function. ' .. 'We ask you to manually fix this case by using useRef() or createRef() instead. ' .. 'Learn more about using refs safely here: ' .. 'https://reactjs.org/link/strict-mode-string-ref',
+					'Component "%s" contains the string ref "%s". ' ..
+						"Support for string refs will be removed in a future major release. " ..
+						"This case cannot be automatically converted to an arrow function. " ..
+						"We ask you to manually fix this case by using useRef() or createRef() instead. " ..
+						"Learn more about using refs safely here: " ..
+						"https://reactjs.org/link/strict-mode-string-ref",
 					componentName,
 					config.ref
 				)
@@ -140,7 +153,7 @@ end
  * @internal
  ]]
 
-local ReactElement = function(_type, key, ref, self, source, owner, props)
+local function ReactElement(_type, key, ref, self, source, owner, props)
 	local element = {
 		-- Built-in properties that belong on the element
 		type = _type,
@@ -152,20 +165,22 @@ local ReactElement = function(_type, key, ref, self, source, owner, props)
 	}
 
 	-- This tag allows us to uniquely identify this as a React Element
-	element['$$typeof'] = REACT_ELEMENT_TYPE
+	element["$$typeof"] = REACT_ELEMENT_TYPE
 
 	if _G.__DEV__ then
 		-- The validation flag is currently mutative. We put it on
 		-- an external backing store so that we can freeze the whole object.
 		-- This can be replaced with a WeakMap once they are implemented in
 		-- commonly used development environments.
-		element._store = {} -- To make comparing ReactElements easier for testing purposes, we make
+		element._store = {}
+		-- To make comparing ReactElements easier for testing purposes, we make
 		-- the validation flag non-enumerable (where possible, which should
 		-- include every environment we run tests in), so the test framework
 		-- ignores it.
-
-		element._store.validated = false -- self and source are DEV only properties.
-		element._store._self = self -- Two elements created in two different places should be considered
+		element._store.validated = false
+		-- self and source are DEV only properties.
+		element._store._self = self
+		-- Two elements created in two different places should be considered
 		-- equal for testing purposes and therefore we hide it from enumeration.
 		element._store._source = source
 	end
@@ -342,7 +357,7 @@ exports.createElement = function(_type, config, ...)
 
 	-- Children can be more than one argument, and those are transferred onto
 	-- the newly allocated props object.
-	local childrenLength = select('#', ...)
+	local childrenLength = select("#", ...)
 
 	if childrenLength == 1 then
 		props.children = select(1, ...)
@@ -366,7 +381,7 @@ exports.createElement = function(_type, config, ...)
 
 	-- Resolve default props
 	-- deviation: Lua can't index defaultProps on a function
-	if typeof(_type) == 'table' and _type.defaultProps then
+	if typeof(_type) == "table" and _type.defaultProps then
 		local defaultProps = _type.defaultProps
 
 		for propName, _ in pairs(defaultProps) do
@@ -380,8 +395,8 @@ exports.createElement = function(_type, config, ...)
 		if key or ref then
 			local displayName
 
-			if typeof(type) == 'function' then
-				displayName = (_type.displayName or _type.name) or 'Unknown'
+			if typeof(type) == "function" then
+				displayName = (_type.displayName or _type.name) or "Unknown"
 			else
 				displayName = _type
 			end
@@ -425,7 +440,7 @@ end
 ]]
 
 exports.cloneElement = function(element, config, ...)
- invariant(not (element == nil or element == nil), 'React.cloneElement(...): The argument must be a React element, but you passed ' .. tostring(element))
+ invariant(not (element == nil or element == nil), "React.cloneElement(...): The argument must be a React element, but you passed " .. tostring(element))
 
  -- Original props are copied
  local props = Object.assign({}, element.props)
@@ -453,7 +468,7 @@ exports.cloneElement = function(element, config, ...)
    end
 
    if hasValidKey(config) then
-     key = '' .. config.key
+     key = "" .. config.key
    end
   end
 
@@ -477,7 +492,7 @@ exports.cloneElement = function(element, config, ...)
 
  -- Children can be more than one argument, and those are transferred onto
  -- the newly allocated props object.
- local childrenLength = select('#', ...)
+ local childrenLength = select("#", ...)
 
  if childrenLength == 1 then
 	 props.children = select(1, ...)
@@ -501,7 +516,7 @@ end
  ]]
 
 exports.isValidElement = function(object)
-	return typeof(object) == 'table' and object['$$typeof'] == REACT_ELEMENT_TYPE
+	return typeof(object) == "table" and object["$$typeof"] == REACT_ELEMENT_TYPE
 end
 
 return exports

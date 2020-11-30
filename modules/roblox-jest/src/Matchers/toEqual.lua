@@ -33,7 +33,7 @@ local function deepEqual(a: any, b: any)
 
 		for key, value in pairs(b) do
 			if not visitedKeys[key] then
-				local success, innerMessage = deepEqual(value, a[key])
+				local success, innerMessage = deepEqual(a[key], value)
 
 				if not success then
 					local message = innerMessage

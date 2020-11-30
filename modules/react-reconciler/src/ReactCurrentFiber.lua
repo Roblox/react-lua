@@ -46,7 +46,7 @@ exports.getCurrentFiberOwnerNameInDevOrNull = function(): string?
 	return nil
 end
 
-function getCurrentFiberStackInDev(): string
+local function getCurrentFiberStackInDev(): string
 	if _G.__DEV__ then
 		if exports.current == nil then
 			return ""

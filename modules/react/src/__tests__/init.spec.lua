@@ -9,6 +9,8 @@ return function()
 		expect.extend({
 			toEqual = RobloxJest.Matchers.toEqual,
 			toThrow = RobloxJest.Matchers.toThrow,
+			toErrorDev = RobloxJest.Matchers.toErrorDev,
+			toWarnDev = RobloxJest.Matchers.toWarnDev,
 		})
 	end)
 end
