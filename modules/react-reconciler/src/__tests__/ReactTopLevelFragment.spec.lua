@@ -33,7 +33,7 @@ return function()
   end)
 
   -- TODO: Enable when the reconciler is implemented
-  it("should render a simple fragment at the top of a component", function()
+  itSKIP("should render a simple fragment at the top of a component", function()
     -- FIXME: expect coercion
     local expect: any = expect
     local function Fragment()

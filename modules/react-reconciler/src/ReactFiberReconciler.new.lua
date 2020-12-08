@@ -54,11 +54,11 @@ local findCurrentHostFiberWithNoPortals = ReactFiberTreeReflection.findCurrentHo
 local getInstance = require(Workspace.Shared.ReactInstanceMap).get
 local HostComponent = ReactWorkTags.HostComponent
 local ClassComponent = ReactWorkTags.ClassComponent
--- local HostRoot = ReactWorkTags.HostRoot
+local HostRoot = ReactWorkTags.HostRoot
 local SuspenseComponent = ReactWorkTags.SuspenseComponent
 local getComponentName = require(Workspace.Shared.getComponentName)
 local invariant = require(Workspace.Shared.invariant)
--- local enableSchedulingProfiler = require(Workspace.Shared.ReactFeatureFlags).enableSchedulingProfiler
+local enableSchedulingProfiler = require(Workspace.Shared.ReactFeatureFlags).enableSchedulingProfiler
 local ReactSharedInternals = require(Workspace.Shared.ReactSharedInternals)
 local getPublicInstance = require(script.Parent.ReactFiberHostConfig).getPublicInstance
 local ReactFiberContext = require(script.Parent["ReactFiberContext.new"])
@@ -75,35 +75,35 @@ local ReactFiberWorkLoop = require(script.Parent["ReactFiberWorkLoop.new"])
 local requestEventTime = ReactFiberWorkLoop.requestEventTime
 local requestUpdateLane = ReactFiberWorkLoop.requestUpdateLane
 local scheduleUpdateOnFiber = ReactFiberWorkLoop.scheduleUpdateOnFiber
--- local flushRoot = ReactFiberWorkLoop.flushRoot
--- local batchedEventUpdates = ReactFiberWorkLoop.batchedEventUpdates
--- local batchedUpdates = ReactFiberWorkLoop.batchedUpdates
--- local unbatchedUpdates = ReactFiberWorkLoop.unbatchedUpdates
--- local flushSync = ReactFiberWorkLoop.flushSync
--- local flushControlled = ReactFiberWorkLoop.flushControlled
--- local deferredUpdates = ReactFiberWorkLoop.deferredUpdates
--- local discreteUpdates = ReactFiberWorkLoop.discreteUpdates
--- local flushDiscreteUpdates = ReactFiberWorkLoop.flushDiscreteUpdates
--- local flushPassiveEffects = ReactFiberWorkLoop.flushPassiveEffects
--- local warnIfNotScopedWithMatchingAct = ReactFiberWorkLoop.warnIfNotScopedWithMatchingAct
--- local warnIfUnmockedScheduler = ReactFiberWorkLoop.warnIfUnmockedScheduler
--- local IsThisRendererActing = ReactFiberWorkLoop.IsThisRendererActing
--- local act = ReactFiberWorkLoop.act
--- local ReactUpdateQueue = require(script.Parent["ReactUpdateQueue.new"])
--- local createUpdate = ReactUpdateQueue.createUpdate
--- local enqueueUpdate = ReactUpdateQueue.enqueueUpdate
+local flushRoot = ReactFiberWorkLoop.flushRoot
+local batchedEventUpdates = ReactFiberWorkLoop.batchedEventUpdates
+local batchedUpdates = ReactFiberWorkLoop.batchedUpdates
+local unbatchedUpdates = ReactFiberWorkLoop.unbatchedUpdates
+local flushSync = ReactFiberWorkLoop.flushSync
+local flushControlled = ReactFiberWorkLoop.flushControlled
+local deferredUpdates = ReactFiberWorkLoop.deferredUpdates
+local discreteUpdates = ReactFiberWorkLoop.discreteUpdates
+local flushDiscreteUpdates = ReactFiberWorkLoop.flushDiscreteUpdates
+local flushPassiveEffects = ReactFiberWorkLoop.flushPassiveEffects
+local warnIfNotScopedWithMatchingAct = ReactFiberWorkLoop.warnIfNotScopedWithMatchingAct
+local warnIfUnmockedScheduler = ReactFiberWorkLoop.warnIfUnmockedScheduler
+local IsThisRendererActing = ReactFiberWorkLoop.IsThisRendererActing
+local act = ReactFiberWorkLoop.act
+local ReactUpdateQueue = require(script.Parent["ReactUpdateQueue.new"])
+local createUpdate = ReactUpdateQueue.createUpdate
+local enqueueUpdate = ReactUpdateQueue.enqueueUpdate
 local ReactCurrentFiber = require(script.Parent.ReactCurrentFiber)
 local ReactCurrentFiberIsRendering = ReactCurrentFiber.isRendering
 local ReactCurrentFiberCurrent = ReactCurrentFiber.current
 local resetCurrentDebugFiberInDEV = ReactCurrentFiber.resetCurrentFiber
 local setCurrentDebugFiberInDEV = ReactCurrentFiber.setCurrentFiber
-local ReactTypeOfMode = require(script.Parent.ReactTypeOfMode).StrictMode
+local ReactTypeOfMode = require(script.Parent.ReactTypeOfMode)
 local StrictMode = ReactTypeOfMode.StrictMode
 local SyncLane = ReactFiberLane.SyncLane
 local InputDiscreteHydrationLane = ReactFiberLane.InputDiscreteHydrationLane
 local SelectiveHydrationLane = ReactFiberLane.SelectiveHydrationLane
 local NoTimestamp = ReactFiberLane.NoTimestamp
--- local getHighestPriorityPendingLanes = ReactFiberLane.getHighestPriorityPendingLanes
+local getHighestPriorityPendingLanes = ReactFiberLane.getHighestPriorityPendingLanes
 local higherPriorityLane = ReactFiberLane.higherPriorityLane
 local getCurrentUpdateLanePriority = ReactFiberLane.getCurrentUpdateLanePriority
 local setCurrentUpdateLanePriority = ReactFiberLane.setCurrentUpdateLanePriority
@@ -116,8 +116,8 @@ local setCurrentUpdateLanePriority = ReactFiberLane.setCurrentUpdateLanePriority
 
 local exports = {}
 
-exports.registerMutableSourceForHydration = require(script.Parent["ReactMutableSource.new"]).registerMutableSourceForHydration
-exports.createPortal = require(script.Parent.ReactPortal).createPortal
+-- exports.registerMutableSourceForHydration = require(script.Parent["ReactMutableSource.new"]).registerMutableSourceForHydration
+-- exports.createPortal = require(script.Parent.ReactPortal).createPortal
 -- local ReactTestSelectors = require(script.Parent.ReactTestSelectors)
 -- exports.createComponentSelector = ReactTestSelectors.createComponentSelector
 -- -- FIXME (roblox): Should we deviate and fix this typo?
@@ -286,21 +286,21 @@ exports.updateContainer = function(
 		onScheduleRoot(container, element)
 	end
 	local current = container.current
-	-- FIXME: WIP
-	-- local eventTime = requestEventTime()
-	-- if _G.__DEV__ then
-	-- 	-- deviation: use TestEZ's __TESTEZ_RUNNING_TEST__ (no jest global)
-	-- 	-- $FlowExpectedError - jest isn't a global, and isn't recognized outside of tests
-	-- 	if _G.__TESTEZ_RUNNING_TEST__ then
-	-- 		warnIfUnmockedScheduler(current)
-	-- 		warnIfNotScopedWithMatchingAct(current)
-	-- 	end
-	-- end
+	local eventTime = requestEventTime()
+	if _G.__DEV__ then
+		-- deviation: use TestEZ's __TESTEZ_RUNNING_TEST__ (no jest global)
+		-- $FlowExpectedError - jest isn't a global, and isn't recognized outside of tests
+		if _G.__TESTEZ_RUNNING_TEST__ then
+			warnIfUnmockedScheduler(current)
+			warnIfNotScopedWithMatchingAct(current)
+		end
+	end
 	local lane = requestUpdateLane(current)
 
-	-- if enableSchedulingProfiler then
-	-- 	markRenderScheduled(lane)
-	-- end
+	if enableSchedulingProfiler then
+		-- FIXME (roblox): enable scheduling profiler logic
+		-- markRenderScheduled(lane)
+	end
 
 	local context = getContextForSubtree(parentComponent)
 	if container.context == nil then
@@ -326,47 +326,46 @@ exports.updateContainer = function(
 		end
 	end
 
-	-- FIXME: WIP
-	-- local update = createUpdate(eventTime, lane)
-	-- -- Caution: React DevTools currently depends on this property
-	-- -- being called "element".
-	-- update.payload = {
-	-- 	element = element,
-	-- }
+	local update = createUpdate(eventTime, lane)
+	-- Caution: React DevTools currently depends on this property
+	-- being called "element".
+	update.payload = {
+		element = element,
+	}
 
-	-- -- deviation: no undefined, so not needed
-	-- -- callback = callback == undefined ? nil : callback
-	-- if callback ~= nil then
-	-- 	if _G.__DEV__ then
-	-- 		if typeof(callback) ~= "function" then
-	-- 			console.error(
-	-- 				"render(...): Expected the last optional `callback` argument to be a " ..
-	-- 					"function. Instead received: %s.",
-	-- 				callback
-	-- 			)
-	-- 		end
-	-- 	end
-	-- 	update.callback = callback
-	-- end
+	-- deviation: no undefined, so not needed
+	-- callback = callback == undefined ? nil : callback
+	if callback ~= nil then
+		if _G.__DEV__ then
+			if typeof(callback) ~= "function" then
+				console.error(
+					"render(...): Expected the last optional `callback` argument to be a " ..
+						"function. Instead received: %s.",
+					callback
+				)
+			end
+		end
+		update.callback = callback
+	end
 
-	-- enqueueUpdate(current, update)
-	-- scheduleUpdateOnFiber(current, lane, eventTime)
+	enqueueUpdate(current, update)
+	scheduleUpdateOnFiber(current, lane, eventTime)
 
 	return lane
 end
 
 -- FIXME: WIP
--- exports.batchedEventUpdates = batchedEventUpdates
--- exports.batchedUpdates = batchedUpdates
--- exports.unbatchedUpdates = unbatchedUpdates
--- exports.deferredUpdates = deferredUpdates
--- exports.discreteUpdates = discreteUpdates
--- exports.flushDiscreteUpdates = flushDiscreteUpdates
--- exports.flushControlled = flushControlled
+exports.batchedEventUpdates = batchedEventUpdates
+exports.batchedUpdates = batchedUpdates
+exports.unbatchedUpdates = unbatchedUpdates
+exports.deferredUpdates = deferredUpdates
+exports.discreteUpdates = discreteUpdates
+exports.flushDiscreteUpdates = flushDiscreteUpdates
+exports.flushControlled = flushControlled
 -- exports.flushSync = flushSync
--- exports.flushPassiveEffects = flushPassiveEffects
--- exports.IsThisRendererActing = IsThisRendererActing
--- exports.act = act
+exports.flushPassiveEffects = flushPassiveEffects
+exports.IsThisRendererActing = IsThisRendererActing
+exports.act = act
 
 exports.getPublicRootInstance = function(
 	container: OpaqueRoot
@@ -387,25 +386,24 @@ end
 local markRetryLaneIfNotHydrated
 
 exports.attemptSynchronousHydration = function(fiber: Fiber)
-	-- FIXME: WIP
-	-- if fiber.tag == HostRoot then
-	-- 	local root: FiberRoot = fiber.stateNode
-	-- 	if root.hydrate then
-	-- 		-- Flush the first scheduled "update".
-	-- 		local lanes = getHighestPriorityPendingLanes(root)
-	-- 		flushRoot(root, lanes)
-	-- 	end
-	-- elseif fiber.tag == SuspenseComponent then
-	-- 	local eventTime = requestEventTime()
-	-- 	flushSync(function()
-	-- 		return scheduleUpdateOnFiber(fiber, SyncLane, eventTime)
-	-- 	end)
-	-- 	-- If we're still blocked after this, we need to increase
-	-- 	-- the priority of any promises resolving within this
-	-- 	-- boundary so that they next attempt also has higher pri.
-	-- 	local retryLane = InputDiscreteHydrationLane
-	-- 	markRetryLaneIfNotHydrated(fiber, retryLane)
-	-- end
+	if fiber.tag == HostRoot then
+		local root: FiberRoot = fiber.stateNode
+		if root.hydrate then
+			-- Flush the first scheduled "update".
+			local lanes = getHighestPriorityPendingLanes(root)
+			flushRoot(root, lanes)
+		end
+	elseif fiber.tag == SuspenseComponent then
+		local eventTime = requestEventTime()
+		flushSync(function()
+			return scheduleUpdateOnFiber(fiber, SyncLane, eventTime)
+		end)
+		-- If we're still blocked after this, we need to increase
+		-- the priority of any promises resolving within this
+		-- boundary so that they next attempt also has higher pri.
+		local retryLane = InputDiscreteHydrationLane
+		markRetryLaneIfNotHydrated(fiber, retryLane)
+	end
 end
 
 local function markRetryLaneImpl(fiber: Fiber, retryLane: Lane)

@@ -197,7 +197,8 @@ end
 -- ]]
 --
 --
---export function jsx(type, config, maybeKey)
+exports.jsx = function(type, config, maybeKey)
+	error("JSX is currently unsupported")
 --  local propName; -- Reserved names are extracted
 --
 --  local props = }
@@ -237,7 +238,7 @@ end
 --        props[propName] = defaultProps[propName]
 --      end
 --    end
---  end
+end
 --
 --  return ReactElement(type, key, ref, nil, nil, ReactCurrentOwner.current, props)
 --end
@@ -248,7 +249,8 @@ end
 -- * @param string} key
 -- ]]
 --
---export function jsxDEV(type, config, maybeKey, source, self)
+exports.jsxDEV = function(type, config, maybeKey, source, self)
+	error("JSX is currently unsupported")
 --  local propName; -- Reserved names are extracted
 --
 --  local props = }
@@ -307,7 +309,7 @@ end
 --    if ref)
 --      defineRefPropWarningGetter(props, displayName)
 --    end
---  end
+end
 --
 --  return ReactElement(type, key, ref, self, source, ReactCurrentOwner.current, props)
 --end

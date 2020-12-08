@@ -387,6 +387,12 @@ local function describeUnknownElementTypeFrameInDEV(type, source, ownerFn)
 end
 
 return {
+	-- deviation: ReactShallowRenderer depends on this, but the upstream `react`
+	-- repo doesn't expose it; instead, the shallow-renderer's copies of shared
+	-- modules do so. Since we opted to reuse the shared modules in this repo
+	-- instead of duplicating, we need to have them include this field
+	describeComponentFrame = describeComponentFrame,
+
 	describeBuiltInComponentFrame = describeBuiltInComponentFrame,
 	describeNativeComponentFrame = describeNativeComponentFrame,
 	describeClassComponentFrame = describeClassComponentFrame,

@@ -30,5 +30,15 @@ export type Container = any;
 export type PublicInstance = any;
 export type RendererInspectionConfig = any;
 export type SuspenseInstance = any;
+export type HostContext = any;
+export type Type = any;
+export type Props = any;
+export type ChildSet = any;
 
 invariant(false, 'This module must be shimmed by a specific renderer.')
+
+-- deviation: roblox-cli doesn't have any way of understanding that this file is
+-- expected to be mocked/replaced, and we don't yet have "build" scripts that
+-- simulate react's handling of this stub
+local exports: {[any]: any} = {}
+return exports

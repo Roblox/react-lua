@@ -20,6 +20,9 @@ return function()
 
 	beforeEach(function()
 		RobloxJest.resetModules()
+		RobloxJest.mock(Workspace.Scheduler, function()
+			return require(Workspace.Scheduler.unstable_mock)
+		end)
 
 		React = require(Workspace.React)
 		ReactNoop = require(Workspace.ReactNoopRenderer)
@@ -27,30 +30,33 @@ return function()
 		-- unstable_mock depends on the real Scheduler, and our mock
 		-- functionality isn't smart enough to prevent self-requires, we simply
 		-- require the mock entry point directly for use in tests
-		Scheduler = require(Workspace.Scheduler.unstable_mock)
+		Scheduler = require(Workspace.Scheduler)
 	end)
 
 
-	itSKIP('can use act to flush effects', function()
-		local expect: any = expect
-		function App(props)
-			React.useEffect(props.callback)
-			return nil
-		end
+	-- FIXME (roblox): enable this test in DEV
+	if not _G.__DEV__ then
+		it('can use act to flush effects', function()
+			local expect: any = expect
+			function App(props)
+				React.useEffect(props.callback)
+				return nil
+			end
 
-		local calledLog = {}
-		ReactNoop.act(function()
-			ReactNoop.render(
-				React.createElement(App, {
-					callback = function()
-						table.insert(calledLog, #calledLog)
-					end,
-				})
-			)
+			local calledLog = {}
+			ReactNoop.act(function()
+				ReactNoop.render(
+					React.createElement(App, {
+						callback = function()
+							table.insert(calledLog, #calledLog)
+						end,
+					})
+				)
+			end)
+			expect(Scheduler).toFlushWithoutYielding()
+			expect(calledLog).toEqual({0})
 		end)
-		expect(Scheduler).toFlushWithoutYielding()
-		expect(calledLog).toEqual({0})
-	end)
+	end
 
 	-- it('should work with async/await', function()
 	-- 	function App()

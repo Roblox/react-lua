@@ -10,20 +10,22 @@
 
 local Workspace = script.Parent.Parent
 
--- local type {ReactElement} = require(Workspace.shared/ReactElementType'
--- local type {Fiber} = require(Workspace../ReactInternalTypes'
--- local type {FiberRoot} = require(Workspace../ReactInternalTypes'
--- local type {Instance} = require(Workspace../ReactFiberHostConfig'
--- local type {ReactNodeList} = require(Workspace.shared/ReactTypes'
+local ReactElementType = require(Workspace.Shared.ReactElementType)
+type ReactElement = ReactElementType.ReactElement;
+local ReactInternalTypes = require(script.Parent.ReactInternalTypes)
+type Fiber = ReactInternalTypes.Fiber;
+-- local type {FiberRoot} = require(script.Parent.ReactInternalTypes)
+-- local type {Instance} = require(script.Parent.ReactFiberHostConfig)
+-- local type {ReactNodeList} = require(Workspace.Shared.ReactTypes)
 
 -- local {
 -- 	flushSync,
 -- 	scheduleUpdateOnFiber,
 -- 	flushPassiveEffects,
--- } = require(Workspace../ReactFiberWorkLoop.new'
--- local {updateContainer} = require(Workspace../ReactFiberReconciler.new'
--- local {emptyContextObject} = require(Workspace../ReactFiberContext.new'
--- local {SyncLane, NoTimestamp} = require(Workspace../ReactFiberLane'
+-- } = require(script.Parent.ReactFiberWorkLoop.new)
+-- local {updateContainer} = require(script.Parent.ReactFiberReconciler.new)
+-- local {emptyContextObject} = require(script.Parent.ReactFiberContext.new)
+-- local {SyncLane, NoTimestamp} = require(script.Parent.ReactFiberLane)
 -- local {
 -- 	ClassComponent,
 -- 	FunctionComponent,
@@ -33,7 +35,7 @@ local Workspace = script.Parent.Parent
 -- 	HostRoot,
 -- 	MemoComponent,
 -- 	SimpleMemoComponent,
--- } = require(Workspace../ReactWorkTags'
+-- } = require(script.Parent.ReactWorkTags)
 local ReactSymbols = require(Workspace.Shared.ReactSymbols)
 local REACT_FORWARD_REF_TYPE = ReactSymbols.REACT_FORWARD_REF_TYPE
 -- 	REACT_MEMO_TYPE,
@@ -136,86 +138,88 @@ local function resolveForwardRefForHotReloading(type: any): any
 end
 exports.resolveForwardRefForHotReloading = resolveForwardRefForHotReloading
 
--- exports.isCompatibleFamilyForHotReloading(
--- 	fiber: Fiber,
--- 	element: ReactElement,
--- ): boolean {
--- 	if _G.__DEV__)
--- 		if resolveFamily == nil)
--- 			-- Hot reloading is disabled.
--- 			return false
--- 		end
+exports.isCompatibleFamilyForHotReloading = function(
+	fiber: Fiber,
+	element: ReactElement
+): boolean
+	warn("isCompatibleFamilyForHotReloading is stubbed (returns false)")
+	return false
+	-- if _G.__DEV__ then
+	-- 	if resolveFamily == nil then
+	-- 		-- Hot reloading is disabled.
+	-- 		return false
+	-- 	end
 
--- 		local prevType = fiber.elementType
--- 		local nextType = element.type
+	-- 	local prevType = fiber.elementType
+	-- 	local nextType = element.type
 
--- 		-- If we got here, we know types aren't == equal.
--- 		local needsCompareFamilies = false
+	-- 	-- If we got here, we know types aren't == equal.
+	-- 	local needsCompareFamilies = false
 
--- 		local $$typeofNextType =
--- 			typeof nextType == 'table’' and nextType ~= nil
--- 				? nextType.$$typeof
--- 				: nil
+	-- 	local $$typeofNextType =
+	-- 		typeof nextType == 'table’' and nextType ~= nil
+	-- 			? nextType.$$typeof
+	-- 			: nil
 
--- 		switch (fiber.tag)
--- 			case ClassComponent: {
--- 				if typeof nextType == 'function')
--- 					needsCompareFamilies = true
--- 				end
--- 				break
--- 			end
--- 			case FunctionComponent: {
--- 				if typeof nextType == 'function')
--- 					needsCompareFamilies = true
--- 				} else if $$typeofNextType == REACT_LAZY_TYPE)
--- 					-- We don't know the inner type yet.
--- 					-- We're going to assume that the lazy inner type is stable,
--- 					-- and so it is sufficient to avoid reconciling it away.
--- 					-- We're not going to unwrap or actually use the new lazy type.
--- 					needsCompareFamilies = true
--- 				end
--- 				break
--- 			end
--- 			case ForwardRef: {
--- 				if $$typeofNextType == REACT_FORWARD_REF_TYPE)
--- 					needsCompareFamilies = true
--- 				} else if $$typeofNextType == REACT_LAZY_TYPE)
--- 					needsCompareFamilies = true
--- 				end
--- 				break
--- 			end
--- 			case MemoComponent:
--- 			case SimpleMemoComponent: {
--- 				if $$typeofNextType == REACT_MEMO_TYPE)
--- 					-- TODO: if it was but can no longer be simple,
--- 					-- we shouldn't set this.
--- 					needsCompareFamilies = true
--- 				} else if $$typeofNextType == REACT_LAZY_TYPE)
--- 					needsCompareFamilies = true
--- 				end
--- 				break
--- 			end
--- 			default:
--- 				return false
--- 		end
+	-- 	switch (fiber.tag)
+	-- 		case ClassComponent: {
+	-- 			if typeof nextType == 'function')
+	-- 				needsCompareFamilies = true
+	-- 			end
+	-- 			break
+	-- 		end
+	-- 		case FunctionComponent: {
+	-- 			if typeof nextType == 'function')
+	-- 				needsCompareFamilies = true
+	-- 			} else if $$typeofNextType == REACT_LAZY_TYPE)
+	-- 				-- We don't know the inner type yet.
+	-- 				-- We're going to assume that the lazy inner type is stable,
+	-- 				-- and so it is sufficient to avoid reconciling it away.
+	-- 				-- We're not going to unwrap or actually use the new lazy type.
+	-- 				needsCompareFamilies = true
+	-- 			end
+	-- 			break
+	-- 		end
+	-- 		case ForwardRef: {
+	-- 			if $$typeofNextType == REACT_FORWARD_REF_TYPE)
+	-- 				needsCompareFamilies = true
+	-- 			} else if $$typeofNextType == REACT_LAZY_TYPE)
+	-- 				needsCompareFamilies = true
+	-- 			end
+	-- 			break
+	-- 		end
+	-- 		case MemoComponent:
+	-- 		case SimpleMemoComponent: {
+	-- 			if $$typeofNextType == REACT_MEMO_TYPE)
+	-- 				-- TODO: if it was but can no longer be simple,
+	-- 				-- we shouldn't set this.
+	-- 				needsCompareFamilies = true
+	-- 			} else if $$typeofNextType == REACT_LAZY_TYPE)
+	-- 				needsCompareFamilies = true
+	-- 			end
+	-- 			break
+	-- 		end
+	-- 		default:
+	-- 			return false
+	-- 	end
 
--- 		-- Check if both types have a family and it's the same one.
--- 		if needsCompareFamilies)
--- 			-- Note: memo() and forwardRef() we'll compare outer rather than inner type.
--- 			-- This means both of them need to be registered to preserve state.
--- 			-- If we unwrapped and compared the inner types for wrappers instead,
--- 			-- then we would risk falsely saying two separate memo(Foo)
--- 			-- calls are equivalent because they wrap the same Foo function.
--- 			local prevFamily = resolveFamily(prevType)
--- 			if prevFamily ~= undefined and prevFamily == resolveFamily(nextType))
--- 				return true
--- 			end
--- 		end
--- 		return false
--- 	} else {
--- 		return false
--- 	end
--- end
+	-- 	-- Check if both types have a family and it's the same one.
+	-- 	if needsCompareFamilies)
+	-- 		-- Note: memo() and forwardRef() we'll compare outer rather than inner type.
+	-- 		-- This means both of them need to be registered to preserve state.
+	-- 		-- If we unwrapped and compared the inner types for wrappers instead,
+	-- 		-- then we would risk falsely saying two separate memo(Foo)
+	-- 		-- calls are equivalent because they wrap the same Foo function.
+	-- 		local prevFamily = resolveFamily(prevType)
+	-- 		if prevFamily ~= undefined and prevFamily == resolveFamily(nextType))
+	-- 			return true
+	-- 		end
+	-- 	end
+	-- 	return false
+	-- } else {
+	-- 	return false
+	-- end
+end
 
 -- exports.markFailedErrorBoundaryForHotReloading(fiber: Fiber)
 -- 	if _G.__DEV__)

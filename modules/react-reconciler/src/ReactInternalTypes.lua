@@ -39,11 +39,23 @@ type TypeOfMode = ReactTypeOfMode.TypeOfMode;
 -- type Flags = ReactFiberFlags.Flags;
 type Flags = any; -- FIXME (roblox)
 
--- deviation: FiberLane types defined below
-
--- local ReactFiberHooks = require(script.Parent["ReactFiberHooks.old"])
--- type HookType = ReactFiberHooks.HookType;
-type HookType = any; -- FIXME (roblox): type
+ -- FIXME (roblox): no support for type literals
+-- export type HookType =
+--  | 'useState'
+--  | 'useReducer'
+--  | 'useContext'
+--  | 'useRef'
+--  | 'useEffect'
+--  | 'useLayoutEffect'
+--  | 'useCallback'
+--  | 'useMemo'
+--  | 'useImperativeHandle'
+--  | 'useDebugValue'
+--  | 'useDeferredValue'
+--  | 'useTransition'
+--  | 'useMutableSource'
+--  | 'useOpaqueIdentifier';
+export type HookType = string;
 local ReactRootTags = require(script.Parent.ReactRootTags)
 type RootTag = ReactRootTags.RootTag;
 -- local ReactTypes = require(Workspace.shared.ReactTypes)

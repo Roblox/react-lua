@@ -64,32 +64,35 @@ export type ReactNodeList = ReactEmpty | React_Node;
 --   ...
 -- };
 
--- export type ReactContext<T> = {
---   $$typeof: Symbol | number,
---   Consumer: ReactContext<T>,
---   Provider: ReactProviderType<T>,
---   _calculateChangedBits: ((a: T, b: T) => number) | null,
---   _currentValue: T,
---   _currentValue2: T,
---   _threadCount: number,
---   // DEV only
---   _currentRenderer?: Object | null,
---   _currentRenderer2?: Object | null,
---   // This value may be added by application code
---   // to improve DEV tooling display names
---   displayName?: string,
---   ...
--- };
+export type ReactContext<T> = {
+  -- $$typeof: Symbol | number,
+  -- Consumer: ReactContext<T>,
+  Consumer: any,
+  -- Provider: ReactProviderType<T>,
+  Provider: any,
+  _calculateChangedBits: ((T, T) -> number)?,
+  _currentValue: T,
+  _currentValue2: T,
+  _threadCount: number,
+  -- DEV only
+  _currentRenderer: Object?,
+  _currentRenderer2: Object?,
+  -- This value may be added by application code
+  -- to improve DEV tooling display names
+  displayName: string?,
+  -- ...
+  [any]: any,
+};
 
 export type ReactPortal = {
-	-- $$typeof: Symbol | number,
-	key: string?,
-	containerInfo: any,
-	children: ReactNodeList,
-	-- TODO: figure out the API for cross-renderer implementation.
-	implementation: any,
-	-- ...
-	[any]: any
+    -- $$typeof: Symbol | number,
+    key: string?,
+    containerInfo: any,
+    children: ReactNodeList,
+    -- TODO: figure out the API for cross-renderer implementation.
+    implementation: any,
+    -- ...
+    [any]: any
 };
 
 -- export type RefObject = {|
@@ -115,31 +118,31 @@ exports.ContinuousEvent = 2
 -- |};
 
 export type ReactFundamentalImpl<C, H> = {
-	displayName: string,
-	reconcileChildren: boolean,
-	getInitialState: nil | (Object) -> (Object),
-	getInstance: (C, Object, Object) -> (H),
-	getServerSideString: nil | (C, Object) -> (string),
-	getServerSideStringClose: nil | (C, Object) -> (string),
-	onMount: (C, any, Object, Object) -> (),
-	shouldUpdate: nil | (C, Object?, Object, Object) -> (boolean),
-	onUpdate: nil | (C, any, Object?, Object, Object) -> (),
-	onUnmount: nil | (C, any, Object, Object) -> (),
-	onHydrate: nil | (C, Object, Object) -> boolean,
-	onFocus: nil | (C, Object, Object) -> boolean,
-	-- ...
-	[any]: any,
+    displayName: string,
+    reconcileChildren: boolean,
+    getInitialState: nil | (Object) -> (Object),
+    getInstance: (C, Object, Object) -> (H),
+    getServerSideString: nil | (C, Object) -> (string),
+    getServerSideStringClose: nil | (C, Object) -> (string),
+    onMount: (C, any, Object, Object) -> (),
+    shouldUpdate: nil | (C, Object?, Object, Object) -> (boolean),
+    onUpdate: nil | (C, any, Object?, Object, Object) -> (),
+    onUnmount: nil | (C, any, Object, Object) -> (),
+    onHydrate: nil | (C, Object, Object) -> boolean,
+    onFocus: nil | (C, Object, Object) -> boolean,
+    -- ...
+    [any]: any,
 };
 
 export type ReactFundamentalComponent<C, H> = {
-	-- $$typeof: Symbol | number,
-	[string]: any, -- FIXME (roblox): types
-	impl: ReactFundamentalImpl<C, H>,
+    -- $$typeof: Symbol | number,
+    [string]: any, -- FIXME (roblox): types
+    impl: ReactFundamentalImpl<C, H>,
 };
 
 export type ReactScope = {
-	-- $$typeof: Symbol | number,
-	[string]: any, -- FIXME (roblox): types
+    -- $$typeof: Symbol | number,
+    [string]: any, -- FIXME (roblox): types
 };
 
 -- export type ReactScopeQuery = (
@@ -202,12 +205,14 @@ export type ReactScope = {
 -- // The subset of a Thenable required by things thrown by Suspense.
 -- // This doesn't require a value to be passed to either handler.
 export type Wakeable = {
-	andThen: (() -> any, () -> any) -> (Wakeable?),
-	-- Special flag to opt out of tracing interactions across a Suspense boundary.
-	__reactDoNotTraceInteractions: boolean?,
-	[any]: any,
+    then_: (() -> any, () -> any) -> (Wakeable?),
+    -- Special flag to opt out of tracing interactions across a Suspense boundary.
+    __reactDoNotTraceInteractions: boolean?,
+    [any]: any,
 };
 
+-- deviation: This declaration uses a number of features not present in Luau's
+-- type system
 -- // The subset of a Promise that React APIs rely on. This resolves a value.
 -- // This doesn't require a return value neither from the handler nor the
 -- // then function.
@@ -217,5 +222,11 @@ export type Wakeable = {
 -- 	onReject: (error: mixed) => void | Thenable<U> | U,
 --   ): void | Thenable<U>;
 -- }
+export type Thenable<R, U> = {
+    then_: (
+        (R) -> Thenable | U | nil,
+        (any) -> Thenable | U | nil
+    ) -> Thenable
+};
 
 return exports

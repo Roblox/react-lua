@@ -9,10 +9,10 @@
  * @flow
  ]]
 
-export type HookEffectTag = number
+export type HookFlags = number
 
 return {
-    NoEffect = --[[  ]] 0b000,
+    NoFlags = --[[  ]] 0b000,
 
     -- Represents whether effect should fire.
     HasEffect = --[[ ]] 0b001,

@@ -86,3 +86,5 @@ exports.getIsRendering = function()
 	end
 	return nil
 end
+
+return exports

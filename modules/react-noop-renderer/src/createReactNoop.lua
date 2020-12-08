@@ -97,9 +97,6 @@ local function createReactNoop(reconciler, useMutation: boolean)
 	local hostUpdateCounter = 0
 	local hostCloneCounter = 0
 
-	-- ROBLOX TODO: there's an ordering issue means the `act = noopAct` line below assigns nil.
-	--              fix the ordering and remove the assignment below
-	local noopAct = function() end
 	-- deviation: Pre-declare so lua understands that these exist
 	local flushActWork, shouldSetTextContent, computeText, cloneInstance
 
@@ -1022,7 +1019,9 @@ local function createReactNoop(reconciler, useMutation: boolean)
 
 		flushPassiveEffects = NoopRenderer.flushPassiveEffects,
 
-		act = noopAct,
+		-- deviation: can't assign this now, since even if it's pre-declared,
+		-- the current value will be nil
+		-- act = noopAct,
 
 		-- Logs the current state of the tree.
 		dumpTree = function(rootID: string?)
@@ -1161,13 +1160,13 @@ local function createReactNoop(reconciler, useMutation: boolean)
 	local IsThisRendererActing = NoopRenderer.IsThisRendererActing
 	local actingUpdatesScopeDepth = 0
 
-	noopAct = function(scope)
+	local function noopAct(scope)
 		if Scheduler.unstable_flushAllWithoutAsserting == nil then
 			error(Error(
 				"This version of `act` requires a special mock build of Scheduler."
 			))
 		end
-		if setTimeout._isMockFunction ~= true then
+		if typeof(setTimeout) == "table" and setTimeout._isMockFunction ~= true then
 			error(Error(
 				"This version of `act` requires Jest's timer mocks " ..
 					'(i.e. jest.useFakeTimers).'
@@ -1202,18 +1201,18 @@ local function createReactNoop(reconciler, useMutation: boolean)
 		-- returned and 2) we could use async/await. Since it's only our used in
 		-- our test suite, we should be able to.
 		local ok, result = pcall(function()
-			-- deviation: FIXME: I'm using `andThen` instead of `then`, since
+			-- deviation: FIXME: I'm using `then_` instead of `then`, since
 			-- then is a reserved keyword for Lua. Need to revisit this in the
 			-- future when we figure out what promises and other async
 			-- primitives look like
 			local thenable = batchedUpdates(scope)
 			if
 				typeof(thenable) == "table" and
-				typeof(thenable.andThen) == "function"
+				typeof(thenable.then_) == "function"
 			then
 				return {
-					andThen = function(resolve: () -> (), reject: (any) -> ())
-						thenable.andThen(
+					then_ = function(resolve: () -> (), reject: (any) -> ())
+						thenable.then_(
 							function()
 								flushActWork(
 									function()
@@ -1278,6 +1277,9 @@ local function createReactNoop(reconciler, useMutation: boolean)
 			end
 		end)
 	end
+
+	-- deviation: assign this at the end once it's non-nil
+	ReactNoop.act = noopAct
 
 	return ReactNoop
 end

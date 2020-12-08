@@ -105,6 +105,12 @@ local function getMaskedContext(
 		return emptyContextObject
 	else
 		local type = workInProgress.type
+		-- deviation: For function components, we can't support `contextTypes`;
+		-- instead, just return unmaskedContext
+		if typeof(type) == "function" then
+			return unmaskedContext
+		end
+
 		local contextTypes = type.contextTypes
 		if not contextTypes then
 			return emptyContextObject

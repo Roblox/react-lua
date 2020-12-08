@@ -251,7 +251,7 @@ end
 function shouldConstruct(Component)
 	-- deviation: With Lua metatables, members of the "prototype" can be
 	-- accessed directly. so we don't need to check for a prototype separately
-	return not not (Component.isReactComponent)
+	return typeof(Component) ~= "function" and (not not Component.isReactComponent)
 end
 
 local function isSimpleFunctionComponent(type: any)
