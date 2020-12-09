@@ -2,6 +2,7 @@
 name = "roact"
 version = "0.1.0"
 author = "Paul Doyle <pdoyle@roblox.com>"
+content_root = "modules"
 
 # Optional fields and their definitions can be found at:
 # https://pages.github.rbx.com/pdoyle/rotriever-docs/reference/manifest-format/#manifest-fields
