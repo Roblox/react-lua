@@ -11,7 +11,10 @@ local Packages = Workspace.Parent.Packages
 local LuauPolyfill = require(Packages.LuauPolyfill)
 
 -- deviation: getCurrentTime will always map to `tick` in Luau
-local getCurrentTime = tick
+local getCurrentTime = function()
+	-- Return a result in milliseconds
+	return tick() * 1000
+end
 
 -- deviation: This implementation is converted from the "naive" implementation that
 -- the React scheduler falls bak on in the absence of certain DOM APIs.

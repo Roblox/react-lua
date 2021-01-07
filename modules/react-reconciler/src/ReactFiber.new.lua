@@ -150,7 +150,7 @@ function FiberNode(
 	node.return_ = nil
 	node.child = nil
 	node.sibling = nil
-	node.index = 0
+	node.index = 1
 
 	node.ref = nil
 

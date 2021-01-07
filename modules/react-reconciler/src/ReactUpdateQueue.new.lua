@@ -118,7 +118,7 @@ local debugRenderPhaseSideEffectsForStrictMode = ReactFeatureFlags.debugRenderPh
 local ReactTypeOfMode = require(script.Parent.ReactTypeOfMode)
 local StrictMode = ReactTypeOfMode.StrictMode
 -- local ReactFiberWorkLoop = require(script.Parent["ReactFiberWorkLoop.new"])
--- local markSkippedUpdateLanes = ReactFiberWorkLoop.markSkippedUpdateLanes
+local markSkippedUpdateLanes = require(script.Parent.ReactFiberWorkInProgress).markSkippedUpdateLanes
 
 local invariant = require(Workspace.Shared.invariant)
 
@@ -641,8 +641,7 @@ exports.processUpdateQueue = function(
 		-- dealt with the props. Context in components that specify
 		-- shouldComponentUpdate is tricky; but we'll have to account for
 		-- that regardless.
-		warn("Skip cycle: markSkippedUpdateLanes")
-		-- markSkippedUpdateLanes(newLanes)
+		markSkippedUpdateLanes(newLanes)
 		workInProgress.lanes = newLanes
 		workInProgress.memoizedState = newState
 	end

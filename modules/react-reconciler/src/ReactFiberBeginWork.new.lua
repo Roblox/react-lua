@@ -6,6 +6,7 @@
  *
  * @flow
 ]]
+--!nolint LocalShadowPedantic
 -- FIXME (roblox): remove this when our unimplemented
 local function unimplemented(message)
   error("FIXME (roblox): " .. message .. " is unimplemented", 2)
@@ -36,7 +37,7 @@ type Lanes = ReactFiberLane.Lanes;
 --   OffscreenState,
 -- } = require(script.Parent.ReactFiberOffscreenComponent)
 
--- local checkPropTypes = require(Workspace.Shared.checkPropTypes)
+local checkPropTypes = require(Workspace.Shared.checkPropTypes)
 
 local ReactWorkTags = require(script.Parent.ReactWorkTags)
 local IndeterminateComponent = ReactWorkTags.IndeterminateComponent
@@ -67,10 +68,10 @@ local NoFlags = ReactFiberFlags.NoFlags
 local PerformedWork = ReactFiberFlags.PerformedWork
 local Placement = ReactFiberFlags.Placement
 -- local Hydrating = ReactFiberFlags.Hydrating
--- local ContentReset = ReactFiberFlags.ContentReset
+local ContentReset = ReactFiberFlags.ContentReset
 -- local DidCapture = ReactFiberFlags.DidCapture
 -- local Update = ReactFiberFlags.Update
--- local Ref = ReactFiberFlags.Ref
+local Ref = ReactFiberFlags.Ref
 -- local Deletion = ReactFiberFlags.Deletion
 local ForceUpdateForLegacySuspense = ReactFiberFlags.ForceUpdateForLegacySuspense
 local ReactSharedInternals = require(Workspace.Shared.ReactSharedInternals)
@@ -124,17 +125,16 @@ local ReactTypeOfMode = require(script.Parent.ReactTypeOfMode)
 -- local ProfileMode = ReactTypeOfMode.ProfileMode
 local StrictMode = ReactTypeOfMode.StrictMode
 -- local BlockingMode = ReactTypeOfMode.BlockingMode
--- local {
---   shouldSetTextContent,
---   isSuspenseInstancePending,
---   isSuspenseInstanceFallback,
---   registerSuspenseInstanceRetry,
---   supportsHydration,
--- } = require(script.Parent.ReactFiberHostConfig)
+local ReactFiberHostConfig = require(script.Parent.ReactFiberHostConfig)
+local shouldSetTextContent = ReactFiberHostConfig.shouldSetTextContent
+-- local isSuspenseInstancePending = ReactFiberHostConfig.isSuspenseInstancePending
+-- local isSuspenseInstanceFallback = ReactFiberHostConfig.isSuspenseInstanceFallback
+-- local registerSuspenseInstanceRetry = ReactFiberHostConfig.registerSuspenseInstanceRetry
+-- local supportsHydration = ReactFiberHostConfig.supportsHydration
 -- local type {SuspenseInstance} = require(script.Parent.ReactFiberHostConfig)
 -- local {shouldSuspend} = require(script.Parent.ReactFiberReconciler)
 local ReactFiberHostContext = require(script.Parent["ReactFiberHostContext.new"])
--- local pushHostContext = ReactFiberHostContext.pushHostContext
+local pushHostContext = ReactFiberHostContext.pushHostContext
 local pushHostContainer = ReactFiberHostContext.pushHostContainer
 -- local {
 --   suspenseStackCursor,
@@ -155,9 +155,11 @@ local pushHostContainer = ReactFiberHostContext.pushHostContainer
 --   calculateChangedBits,
 --   scheduleWorkOnParentPath,
 -- } = require(script.Parent.ReactFiberNewContext.new)
+local ReactFiberNewContext = require(script.Parent["ReactFiberNewContext.new"])
+local prepareToReadContext = ReactFiberNewContext.prepareToReadContext
 local ReactFiberHooks = require(script.Parent["ReactFiberHooks.new"])
 local renderWithHooks = ReactFiberHooks.renderWithHooks
--- local bailoutHooks = ReactFiberHooks.bailoutHooks
+local bailoutHooks = ReactFiberHooks.bailoutHooks
 -- local {stopProfilerTimerIfRunning} = require(script.Parent.ReactProfilerTimer.new)
 local ReactFiberContext = require(script.Parent["ReactFiberContext.new"])
 local getMaskedContext = ReactFiberContext.getMaskedContext
@@ -206,7 +208,7 @@ local pushTopLevelContextObject = ReactFiberContext.pushTopLevelContextObject
 -- } = require(script.Parent.ReactFiberWorkLoop.new)
 -- local {unstable_wrap as Schedule_tracing_wrap} = require(Workspace.scheduler/tracing'
 -- local {setWorkInProgressVersion} = require(script.Parent.ReactMutableSource.new)
-
+local markSkippedUpdateLanes = require(script.Parent.ReactFiberWorkInProgress).markSkippedUpdateLanes
 local ConsolePatchingDev = require(Workspace.Shared["ConsolePatchingDev.roblox"])
 local disableLogs = ConsolePatchingDev.disableLogs
 local reenableLogs = ConsolePatchingDev.reenableLogs
@@ -214,14 +216,14 @@ local reenableLogs = ConsolePatchingDev.reenableLogs
 local ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner
 
 -- deviation: Pre-declare functions
-local bailoutOnAlreadyFinishedWork
+local bailoutOnAlreadyFinishedWork, updateFunctionComponent
 
-local _didReceiveUpdate: boolean = false
+local didReceiveUpdate: boolean = false
 
 local didWarnAboutBadClass
 local didWarnAboutModulePatternComponent
 -- local didWarnAboutContextTypeOnFunctionComponent
--- local didWarnAboutGetDerivedStateOnFunctionComponent
+-- local didWarnAboutGetDerivedStateOnFunctionComponentq
 -- local didWarnAboutFunctionRefs
 -- export local didWarnAboutReassigningProps
 -- local didWarnAboutRevealOrder
@@ -351,7 +353,7 @@ end
 --       ref,
 --       renderLanes,
 --     )
---     if 
+--     if
 --       debugRenderPhaseSideEffectsForStrictMode and
 --       workInProgress.mode & StrictMode
 --     )
@@ -402,7 +404,7 @@ end
 -- ): nil | Fiber {
 --   if current == nil)
 --     local type = Component.type
---     if 
+--     if
 --       isSimpleFunctionComponent(type) and
 --       Component.compare == nil and
 --       -- SimpleMemoComponent codepath doesn't resolve outer props either.
@@ -534,7 +536,7 @@ end
 --   end
 --   if current ~= nil)
 --     local prevProps = current.memoizedProps
---     if 
+--     if
 --       shallowEqual(prevProps, nextProps) and
 --       current.ref == workInProgress.ref and
 --       -- Prevent bailout if the implementation changed due to hot reload.
@@ -588,7 +590,7 @@ end
 --   local prevState: OffscreenState | nil =
 --     current ~= nil ? current.memoizedState : nil
 
---   if 
+--   if
 --     nextProps.mode == 'hidden' or
 --     nextProps.mode == 'unstable-defer-without-hiding'
 --   )
@@ -697,99 +699,104 @@ end
 --   return workInProgress.child
 -- end
 
--- function markRef(current: Fiber | nil, workInProgress: Fiber)
---   local ref = workInProgress.ref
---   if 
---     (current == nil and ref ~= nil) or
---     (current ~= nil and current.ref ~= ref)
---   )
---     -- Schedule a Ref effect
---     workInProgress.flags |= Ref
---   end
--- end
+-- FIXME (roblox): type refinement
+-- local function markRef(current: Fiber | nil, workInProgress: Fiber)
+local function markRef(current: any, workInProgress: Fiber)
+  local ref = workInProgress.ref
+  if
+    (current == nil and ref ~= nil) or
+    (current ~= nil and current.ref ~= ref)
+  then
+    -- Schedule a Ref effect
+    workInProgress.flags = bit32.bor(workInProgress.flags, Ref)
+  end
+end
 
--- function updateFunctionComponent(
---   current,
---   workInProgress,
---   Component,
---   nextProps: any,
---   renderLanes,
--- )
---   if __DEV__)
---     if workInProgress.type ~= workInProgress.elementType)
---       -- Lazy component props can't be validated in createElement
---       -- because they're only guaranteed to be resolved here.
---       local innerPropTypes = Component.propTypes
---       if innerPropTypes)
---         checkPropTypes(
---           innerPropTypes,
---           nextProps, -- Resolved props
---           'prop',
---           getComponentName(Component),
---         )
---       end
---     end
---   end
+updateFunctionComponent = function(
+  current,
+  workInProgress,
+  Component,
+  nextProps: any,
+  renderLanes
+)
+  if _G.__DEV__ then
+    if workInProgress.type ~= workInProgress.elementType then
+      -- Lazy component props can't be validated in createElement
+      -- because they're only guaranteed to be resolved here.
+      local innerPropTypes = Component.propTypes
+      if innerPropTypes then
+        checkPropTypes(
+          innerPropTypes,
+          nextProps, -- Resolved props
+          'prop',
+          getComponentName(Component)
+        )
+      end
+    end
+  end
 
---   local context
---   if !disableLegacyContext)
---     local unmaskedContext = getUnmaskedContext(workInProgress, Component, true)
---     context = getMaskedContext(workInProgress, unmaskedContext)
---   end
+  local context
+  if not disableLegacyContext then
+    local unmaskedContext = getUnmaskedContext(workInProgress, Component, true)
+    context = getMaskedContext(workInProgress, unmaskedContext)
+  end
 
---   local nextChildren
---   prepareToReadContext(workInProgress, renderLanes)
---   if __DEV__)
---     ReactCurrentOwner.current = workInProgress
---     setIsRendering(true)
---     nextChildren = renderWithHooks(
---       current,
---       workInProgress,
---       Component,
---       nextProps,
---       context,
---       renderLanes,
---     )
---     if 
---       debugRenderPhaseSideEffectsForStrictMode and
---       workInProgress.mode & StrictMode
---     )
---       disableLogs()
---       try {
---         nextChildren = renderWithHooks(
---           current,
---           workInProgress,
---           Component,
---           nextProps,
---           context,
---           renderLanes,
---         )
---       } finally {
---         reenableLogs()
---       end
---     end
---     setIsRendering(false)
---   } else {
---     nextChildren = renderWithHooks(
---       current,
---       workInProgress,
---       Component,
---       nextProps,
---       context,
---       renderLanes,
---     )
---   end
+  local nextChildren
+  prepareToReadContext(workInProgress, renderLanes)
+  if _G.__DEV__ then
+    ReactCurrentOwner.current = workInProgress
+    setIsRendering(true)
+    nextChildren = renderWithHooks(
+      current,
+      workInProgress,
+      Component,
+      nextProps,
+      context,
+      renderLanes
+    )
+    if
+      debugRenderPhaseSideEffectsForStrictMode and
+      bit32.band(workInProgress.mode, StrictMode)
+    then
+      disableLogs()
+      local ok, result = pcall(function()
+        nextChildren = renderWithHooks(
+          current,
+          workInProgress,
+          Component,
+          nextProps,
+          context,
+          renderLanes
+        )
+      end)
+      -- finally
+      reenableLogs()
+      if not ok then
+        error(result)
+      end
+    end
+    setIsRendering(false)
+  else
+    nextChildren = renderWithHooks(
+      current,
+      workInProgress,
+      Component,
+      nextProps,
+      context,
+      renderLanes
+    )
+  end
 
---   if current ~= nil and !didReceiveUpdate)
---     bailoutHooks(current, workInProgress, renderLanes)
---     return bailoutOnAlreadyFinishedWork(current, workInProgress, renderLanes)
---   end
+  if current ~= nil and not didReceiveUpdate then
+    bailoutHooks(current, workInProgress, renderLanes)
+    return bailoutOnAlreadyFinishedWork(current, workInProgress, renderLanes)
+  end
 
---   -- React DevTools reads this flag.
---   workInProgress.flags |= PerformedWork
---   reconcileChildren(current, workInProgress, nextChildren, renderLanes)
---   return workInProgress.child
--- end
+  -- React DevTools reads this flag.
+  workInProgress.flags = bit32.bor(workInProgress.flags, PerformedWork)
+  reconcileChildren(current, workInProgress, nextChildren, renderLanes)
+  return workInProgress.child
+end
 
 -- function updateBlock<Props, Data>(
 --   current: Fiber | nil,
@@ -819,7 +826,7 @@ end
 --       data,
 --       renderLanes,
 --     )
---     if 
+--     if
 --       debugRenderPhaseSideEffectsForStrictMode and
 --       workInProgress.mode & StrictMode
 --     )
@@ -980,7 +987,7 @@ end
 --   -- Rerender
 --   ReactCurrentOwner.current = workInProgress
 --   local nextChildren
---   if 
+--   if
 --     didCaptureError and
 --     typeof Component.getDerivedStateFromError ~= 'function'
 --   )
@@ -998,7 +1005,7 @@ end
 --     if __DEV__)
 --       setIsRendering(true)
 --       nextChildren = instance.render()
---       if 
+--       if
 --         debugRenderPhaseSideEffectsForStrictMode and
 --         workInProgress.mode & StrictMode
 --       )
@@ -1080,7 +1087,7 @@ local function updateHostRoot(current, workInProgress, renderLanes)
   local nextChildren = nextState.element
   if nextChildren == prevChildren then
     warn("skipping unimplemented `resetHydrationState`")
-      -- resetHydrationState()
+    -- resetHydrationState()
     return bailoutOnAlreadyFinishedWork(current, workInProgress, renderLanes)
   end
   local root: FiberRoot = workInProgress.stateNode
@@ -1138,43 +1145,50 @@ local function updateHostRoot(current, workInProgress, renderLanes)
   return workInProgress.child
 end
 
--- function updateHostComponent(
+-- FIXME (roblox): type refinement
+-- local function updateHostComponent(
 --   current: Fiber | nil,
 --   workInProgress: Fiber,
---   renderLanes: Lanes,
+--   renderLanes: Lanes
 -- )
---   pushHostContext(workInProgress)
+local function updateHostComponent(
+  current: any,
+  workInProgress: Fiber,
+  renderLanes: Lanes
+)
+  pushHostContext(workInProgress)
 
---   if current == nil)
---     tryToClaimNextHydratableInstance(workInProgress)
---   end
+  if current == nil then
+    warn("Skip unimplemented: hydration logic")
+    -- tryToClaimNextHydratableInstance(workInProgress)
+  end
 
---   local type = workInProgress.type
---   local nextProps = workInProgress.pendingProps
---   local prevProps = current ~= nil ? current.memoizedProps : nil
+  local type = workInProgress.type
+  local nextProps = workInProgress.pendingProps
+  local prevProps = current ~= nil and current.memoizedProps or nil
 
---   local nextChildren = nextProps.children
---   local isDirectTextChild = shouldSetTextContent(type, nextProps)
+  local nextChildren = nextProps.children
+  local isDirectTextChild = shouldSetTextContent(type, nextProps)
 
---   if isDirectTextChild)
---     -- We special case a direct text child of a host node. This is a common
---     -- case. We won't handle it as a reified child. We will instead handle
---     -- this in the host environment that also has access to this prop. That
---     -- avoids allocating another HostText fiber and traversing it.
---     nextChildren = nil
---   } else if prevProps ~= nil and shouldSetTextContent(type, prevProps))
---     -- If we're switching from a direct text child to a normal child, or to
---     -- empty, we need to schedule the text content to be reset.
---     workInProgress.flags |= ContentReset
---   end
+  if isDirectTextChild then
+    -- We special case a direct text child of a host node. This is a common
+    -- case. We won't handle it as a reified child. We will instead handle
+    -- this in the host environment that also has access to this prop. That
+    -- avoids allocating another HostText fiber and traversing it.
+    nextChildren = nil
+  elseif prevProps ~= nil and shouldSetTextContent(type, prevProps) then
+    -- If we're switching from a direct text child to a normal child, or to
+    -- empty, we need to schedule the text content to be reset.
+    workInProgress.flags = bit32.bor(workInProgress.flags, ContentReset)
+  end
 
---   -- React DevTools reads this flag.
---   workInProgress.flags |= PerformedWork
+  -- React DevTools reads this flag.
+  workInProgress.flags = bit32.bor(workInProgress.flags, PerformedWork)
 
---   markRef(current, workInProgress)
---   reconcileChildren(current, workInProgress, nextChildren, renderLanes)
---   return workInProgress.child
--- end
+  markRef(current, workInProgress)
+  reconcileChildren(current, workInProgress, nextChildren, renderLanes)
+  return workInProgress.child
+end
 
 -- function updateHostText(current, workInProgress)
 --   if current == nil)
@@ -1301,7 +1315,7 @@ end
 --   end
 --   local hint = ''
 --   if __DEV__)
---     if 
+--     if
 --       Component ~= nil and
 --       typeof Component == 'table’' and
 --       Component.$$typeof == REACT_LAZY_TYPE
@@ -1370,17 +1384,17 @@ end
 -- end
 
 local function mountIndeterminateComponent(
-  _current,
+  current,
   workInProgress,
   Component,
   renderLanes
 )
-  if _current ~= nil then
+  if current ~= nil then
     -- An indeterminate component only mounts if it suspended inside a non-
     -- concurrent tree, in an inconsistent state. We want to treat it like
     -- a new mount, even though an empty version of it already committed.
     -- Disconnect the alternate pointers.
-    _current.alternate = nil
+    current.alternate = nil
     workInProgress.alternate = nil
     -- Since this is conceptually a new fiber, schedule a Placement effect
     workInProgress.flags = bit32.bor(workInProgress.flags, Placement)
@@ -1397,14 +1411,15 @@ local function mountIndeterminateComponent(
     context = getMaskedContext(workInProgress, unmaskedContext)
   end
 
-  warn("Skip unimplemented: prepareToReadContext")
-  -- prepareToReadContext(workInProgress, renderLanes)
+  prepareToReadContext(workInProgress, renderLanes)
   local value
 
   if _G.__DEV__ then
     if
-      Component.prototype and
-      typeof(Component.prototype.render) == "function"
+      -- deviation: Instead of checking for the prototype, see if Component is a
+      -- table with a render function
+      typeof(Component) == "table" and
+      typeof(Component.render) == "function"
     then
       local componentName = getComponentName(Component) or "Unknown"
 
@@ -1420,7 +1435,7 @@ local function mountIndeterminateComponent(
     end
 
     if bit32.band(workInProgress.mode, StrictMode) then
-      unimplemented("strict mode")
+      warn("Skip unimplemented: strict mode warnings for legacy context")
       -- ReactStrictModeWarnings.recordLegacyContextWarning(workInProgress, nil)
     end
 
@@ -1451,7 +1466,7 @@ local function mountIndeterminateComponent(
   if _G.__DEV__ then
     -- Support for module components is deprecated and is removed behind a flag.
     -- Whether or not it would crash later, we want to show a good message in DEV first.
-    if 
+    if
       typeof(value) == "table" and
       value ~= nil and
       typeof(value.render) == "function" and
@@ -1580,7 +1595,7 @@ local function mountIndeterminateComponent(
     end
     reconcileChildren(nil, workInProgress, value, renderLanes)
     if _G.__DEV__ then
-      unimplemented("beginWork: validateFunctionComponentInDev")
+      warn("Skip unimplemented: beginWork - validateFunctionComponentInDev")
       -- validateFunctionComponentInDev(workInProgress, Component)
     end
     return workInProgress.child
@@ -1620,7 +1635,7 @@ end
 --       end
 --     end
 
---     if 
+--     if
 --       warnAboutDefaultPropsOnFunctionComponents and
 --       Component.defaultProps ~= undefined
 --     )
@@ -1648,7 +1663,7 @@ end
 --       end
 --     end
 
---     if 
+--     if
 --       typeof Component.contextType == 'table’' and
 --       Component.contextType ~= nil
 --     )
@@ -1733,7 +1748,7 @@ end
 --   local showFallback = false
 --   local didSuspend = (workInProgress.flags & DidCapture) ~= NoFlags
 
---   if 
+--   if
 --     didSuspend or
 --     shouldRemainOnFallback(
 --       suspenseContext,
@@ -1748,7 +1763,7 @@ end
 --     workInProgress.flags &= ~DidCapture
 --   } else {
 --     -- Attempting the main content
---     if 
+--     if
 --       current == nil or
 --       (current.memoizedState: nil | SuspenseState) ~= nil
 --     )
@@ -1757,7 +1772,7 @@ end
 --       -- handle the fallback state.
 --       -- Boundaries without fallbacks or should be avoided are not considered since
 --       -- they cannot handle preferred fallback states.
---       if 
+--       if
 --         nextProps.fallback ~= undefined and
 --         nextProps.unstable_avoidThisFallback ~= true
 --       )
@@ -1890,7 +1905,7 @@ end
 --               prevState,
 --               renderLanes,
 --             )
---           } else if 
+--           } else if
 --             (workInProgress.memoizedState: nil | SuspenseState) ~= nil
 --           )
 --             -- Something suspended and we should still be in dehydrated mode.
@@ -2149,7 +2164,7 @@ end
 --   end
 
 --   local primaryChildFragment
---   if 
+--   if
 --     -- In legacy mode, we commit the primary tree as if it successfully
 --     -- completed, even though it's in an inconsistent state.
 --     (mode & BlockingMode) == NoMode and
@@ -2378,7 +2393,7 @@ end
 --         root,
 --         renderLanes,
 --       )
---       if 
+--       if
 --         attemptHydrationAtLane ~= NoLane and
 --         attemptHydrationAtLane ~= suspenseState.retryLane
 --       )
@@ -2529,7 +2544,7 @@ end
 
 -- function validateRevealOrder(revealOrder: SuspenseListRevealOrder)
 --   if __DEV__)
---     if 
+--     if
 --       revealOrder ~= undefined and
 --       revealOrder ~= 'forwards' and
 --       revealOrder ~= 'backwards' and
@@ -2633,7 +2648,7 @@ end
 --   revealOrder: SuspenseListRevealOrder,
 -- )
 --   if __DEV__)
---     if 
+--     if
 --       (revealOrder == 'forwards' or revealOrder == 'backwards') and
 --       children ~= undefined and
 --       children ~= nil and
@@ -2896,7 +2911,7 @@ end
 --     local changedBits = calculateChangedBits(context, newValue, oldValue)
 --     if changedBits == 0)
 --       -- No change. Bailout early if children are the same.
---       if 
+--       if
 --         oldProps.children == newProps.children and
 --         !hasLegacyContextChanged()
 --       )
@@ -3012,7 +3027,6 @@ bailoutOnAlreadyFinishedWork = function(
   workInProgress: Fiber,
   renderLanes: Lanes
 ): Fiber | nil
-  unimplemented("beginWork: bailoutOnAlreadyFinishedWork")
   if current then
     -- Reuse previous dependencies
     workInProgress.dependencies = current.dependencies
@@ -3024,8 +3038,7 @@ bailoutOnAlreadyFinishedWork = function(
     -- stopProfilerTimerIfRunning(workInProgress)
   end
 
-  warn("Skip marking skipped update lanes to avoid a cycle for now")
-  -- markSkippedUpdateLanes(workInProgress.lanes)
+  markSkippedUpdateLanes(workInProgress.lanes)
 
   -- Check if the children have any pending work.
   if not includesSomeLane(renderLanes, workInProgress.childLanes) then
@@ -3149,15 +3162,15 @@ local function beginWork(
     then
       -- If props or context changed, mark the fiber as having performed work.
       -- This may be unset if the props are determined to be equal later (memo).
-      _didReceiveUpdate = true
+      didReceiveUpdate = true
     elseif not includesSomeLane(renderLanes, updateLanes) then
-      _didReceiveUpdate = false
+      didReceiveUpdate = false
       -- This fiber does not have any pending work. Bailout without entering
       -- the begin phase. There's still some bookkeeping we that needs to be done
       -- in this optimized path, mostly pushing stuff onto the stack.
       if workInProgress.tag == HostRoot then
-        unimplemented("beginWork: HostRoot")
-        -- pushHostRootContext(workInProgress)
+        pushHostRootContext(workInProgress)
+        warn("Skip unimplemented: resetHydrationState")
         -- resetHydrationState()
       elseif workInProgress.tag == HostComponent then
         unimplemented("beginWork: HostComponent")
@@ -3316,17 +3329,17 @@ local function beginWork(
       if bit32.band(current.flags, ForceUpdateForLegacySuspense) ~= NoFlags then
         -- This is a special case that only exists for legacy mode.
         -- See https:--github.com/facebook/react/pull/19216.
-        _didReceiveUpdate = true
+        didReceiveUpdate = true
       else
         -- An update was scheduled on this fiber, but there are no new props
         -- nor legacy context. Set this to false. If an update queue or context
         -- consumer produces a changed value, it will set this to true. Otherwise,
         -- the component will assume the children have not changed and bail out.
-        _didReceiveUpdate = false
+        didReceiveUpdate = false
       end
     end
   else
-    _didReceiveUpdate = false
+    didReceiveUpdate = false
   end
 
   -- Before entering the begin phase, clear pending update priority.
@@ -3354,20 +3367,22 @@ local function beginWork(
     --   renderLanes
     -- )
   elseif workInProgress.tag == FunctionComponent then
-    unimplemented("beginWork: FunctionComponent")
-    -- local Component = workInProgress.type
-    -- local unresolvedProps = workInProgress.pendingProps
-    -- local resolvedProps =
-    --   workInProgress.elementType == Component
-    --     and unresolvedProps
-    --     or resolveDefaultProps(Component, unresolvedProps)
-    -- return updateFunctionComponent(
-    --   current,
-    --   workInProgress,
-    --   Component,
-    --   resolvedProps,
-    --   renderLanes
-    -- )
+    local Component = workInProgress.type
+    local unresolvedProps = workInProgress.pendingProps
+    local resolvedProps
+    if workInProgress.elementType == Component then
+      resolvedProps = unresolvedProps
+    else
+      unimplemented("Lazy resolve default props")
+      -- resolvedProps = resolveDefaultProps(Component, unresolvedProps)
+    end
+    return updateFunctionComponent(
+      current,
+      workInProgress,
+      Component,
+      resolvedProps,
+      renderLanes
+    )
   elseif workInProgress.tag == ClassComponent then
     unimplemented("beginWork: ClassComponent")
     -- local Component = workInProgress.type
@@ -3386,8 +3401,7 @@ local function beginWork(
   elseif workInProgress.tag == HostRoot then
     return updateHostRoot(current, workInProgress, renderLanes)
   elseif workInProgress.tag == HostComponent then
-    unimplemented("beginWork: HostComponent")
-    -- return updateHostComponent(current, workInProgress, renderLanes)
+    return updateHostComponent(current, workInProgress, renderLanes)
   elseif workInProgress.tag == HostText then
     unimplemented("beginWork: HostText")
     -- return updateHostText(current, workInProgress)

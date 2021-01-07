@@ -51,7 +51,23 @@ return function()
 	end)
 
 	it('should call the callback the passed arguments', function()
+		-- deviation: In Lua, calling a function with `self` (which is the
+		-- equivalent of the `context` argument used in
+		-- invokeGuardedCallbackImpl) is explicit; if the context argument is
+		-- nil, the function is presumed to not rely on `self` and is called
+		-- without the `context` argument. For this test, we validate both
+		-- cases.
 		local callback = RobloxJest.createSpy()
+		local context = {}
+		ReactErrorUtils.invokeGuardedCallback(
+			'foo',
+			callback.value,
+			context,
+			'arg1',
+			'arg2'
+		)
+
+		callback:assertCalledWith(context, 'arg1', 'arg2')
 		ReactErrorUtils.invokeGuardedCallback(
 			'foo',
 			callback.value,
@@ -59,12 +75,7 @@ return function()
 			'arg1',
 			'arg2'
 		)
-		-- deviation: In Lua, calling a function with `self` (which is the
-		-- equivalent of the `context` argument used in
-		-- invokeGuardedCallbackImpl) includes `self` as the first argument;
-		-- we have to account for this by expecting the `nil` in addition to
-		-- the two args
-		callback:assertCalledWith(nil, 'arg1', 'arg2')
+		callback:assertCalledWith('arg1', 'arg2')
 	end)
 
 	it('should call the callback with the provided context', function()

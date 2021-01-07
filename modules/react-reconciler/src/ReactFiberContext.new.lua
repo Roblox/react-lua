@@ -160,6 +160,10 @@ isContextProvider = function(type): boolean
 	if disableLegacyContext then
 		return false
 	else
+		-- deviation: context types only valid for class components
+		if typeof(type) == "function" then
+			return false
+		end
 		local childContextTypes = type.childContextTypes
 		return childContextTypes ~= nil
 	end

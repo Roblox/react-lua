@@ -72,7 +72,7 @@ local NoMode = ReactTypeOfMode.NoMode
 local ProfileMode = ReactTypeOfMode.ProfileMode
 
 local ReactFiberFlags = require(script.Parent.ReactFiberFlags)
--- local Ref = ReactFiberFlags.Ref
+local Ref = ReactFiberFlags.Ref
 local Update = ReactFiberFlags.Update
 -- local Callback = ReactFiberFlags.Callback
 -- local Passive = ReactFiberFlags.Passive
@@ -88,11 +88,11 @@ local StaticMask = ReactFiberFlags.StaticMask
 
 local invariant = require(Workspace.Shared.invariant)
 
--- local createInstance = ReactFiberHostConfig.createInstance
+local createInstance = ReactFiberHostConfig.createInstance
 -- local createTextInstance = ReactFiberHostConfig.createTextInstance
--- local appendInitialChild = ReactFiberHostConfig.appendInitialChild
--- local finalizeInitialChildren = ReactFiberHostConfig.finalizeInitialChildren
--- local prepareUpdate = ReactFiberHostConfig.prepareUpdate
+local appendInitialChild = ReactFiberHostConfig.appendInitialChild
+local finalizeInitialChildren = ReactFiberHostConfig.finalizeInitialChildren
+local prepareUpdate = ReactFiberHostConfig.prepareUpdate
 local supportsMutation = ReactFiberHostConfig.supportsMutation
 local supportsPersistence = ReactFiberHostConfig.supportsPersistence
 -- local cloneInstance = ReactFiberHostConfig.cloneInstance
@@ -108,9 +108,9 @@ local finalizeContainerChildren = ReactFiberHostConfig.finalizeContainerChildren
 -- local preparePortalMount = ReactFiberHostConfig.preparePortalMount
 -- local prepareScopeUpdate = ReactFiberHostConfig.prepareScopeUpdate
 local ReactFiberHostContext = require(script.Parent["ReactFiberHostContext.new"])
--- local getRootHostContainer = ReactFiberHostContext.getRootHostContainer
--- local popHostContext = ReactFiberHostContext.popHostContext
--- local getHostContext = ReactFiberHostContext.getHostContext
+local getRootHostContainer = ReactFiberHostContext.getRootHostContainer
+local popHostContext = ReactFiberHostContext.popHostContext
+local getHostContext = ReactFiberHostContext.getHostContext
 local popHostContainer = ReactFiberHostContext.popHostContainer
 -- local {
 --   suspenseStackCursor,
@@ -140,7 +140,7 @@ local ReactFeatureFlags = require(Workspace.Shared.ReactFeatureFlags)
 -- local enableSchedulerTracing = ReactFeatureFlags.enableSchedulerTracing
 -- local enableSuspenseCallback = ReactFeatureFlags.enableSuspenseCallback
 -- local enableSuspenseServerRenderer = ReactFeatureFlags.enableSuspenseServerRenderer
--- local enableFundamentalAPI = ReactFeatureFlags.enableFundamentalAPI
+local enableFundamentalAPI = ReactFeatureFlags.enableFundamentalAPI
 -- local enableScopeAPI = ReactFeatureFlags.enableScopeAPI
 local enableProfilerTimer = ReactFeatureFlags.enableProfilerTimer
 -- local {
@@ -168,9 +168,9 @@ local function markUpdate(workInProgress: Fiber)
   workInProgress.flags = bit32.bor(workInProgress.flags, Update)
 end
 
--- function markRef(workInProgress: Fiber)
---   workInProgress.flags |= Ref
--- end
+local function markRef(workInProgress: Fiber)
+  workInProgress.flags = bit32.bor(workInProgress.flags, Ref)
+end
 
 -- function hadNoMutationsEffects(current: nil | Fiber, completedWork: Fiber)
 --   local didBailout = current ~= nil and current.child == completedWork.child
@@ -191,94 +191,94 @@ end
 --   return true
 -- end
 
--- local appendAllChildren
+local appendAllChildren
 local updateHostContainer
--- local updateHostComponent
+local updateHostComponent
 -- local updateHostText
 if supportsMutation then
   -- Mutation mode
 
---   appendAllChildren = function(
---     parent: Instance,
---     workInProgress: Fiber,
---     needsVisibilityToggle: boolean,
---     isHidden: boolean,
---   )
---     -- We only have the top Fiber that was created but we need recurse down its
---     -- children to find all the terminal nodes.
---     local node = workInProgress.child
---     while (node ~= nil)
---       if node.tag == HostComponent or node.tag == HostText)
---         appendInitialChild(parent, node.stateNode)
---       } else if enableFundamentalAPI and node.tag == FundamentalComponent)
---         appendInitialChild(parent, node.stateNode.instance)
---       } else if node.tag == HostPortal)
---         -- If we have a portal child, then we don't want to traverse
---         -- down its children. Instead, we'll get insertions from each child in
---         -- the portal directly.
---       } else if node.child ~= nil)
---         node.child.return = node
---         node = node.child
---         continue
---       end
---       if node == workInProgress)
---         return
---       end
---       while (node.sibling == nil)
---         if node.return == nil or node.return == workInProgress)
---           return
---         end
---         node = node.return
---       end
---       node.sibling.return = node.return
---       node = node.sibling
---     end
---   end
+  appendAllChildren = function(
+    parent: Instance,
+    workInProgress: Fiber,
+    needsVisibilityToggle: boolean,
+    isHidden: boolean
+  )
+    -- We only have the top Fiber that was created but we need recurse down its
+    -- children to find all the terminal nodes.
+    local node = workInProgress.child
+    while node ~= nil do
+      if node.tag == HostComponent or node.tag == HostText then
+        appendInitialChild(parent, node.stateNode)
+      elseif enableFundamentalAPI and node.tag == FundamentalComponent then
+        appendInitialChild(parent, node.stateNode.instance)
+      elseif node.tag == HostPortal then
+        -- If we have a portal child, then we don't want to traverse
+        -- down its children. Instead, we'll get insertions from each child in
+        -- the portal directly.
+      elseif node.child ~= nil then
+        node.child.return_ = node
+        node = node.child
+        continue
+      end
+      if node == workInProgress then
+        return
+      end
+      while node.sibling == nil do
+        if node.return_ == nil or node.return_ == workInProgress then
+          return
+        end
+        node = node.return_
+      end
+      node.sibling.return_ = node.return_
+      node = node.sibling
+    end
+  end
 
   updateHostContainer = function(workInProgress: Fiber)
     -- Noop
   end
---   updateHostComponent = function(
---     current: Fiber,
---     workInProgress: Fiber,
---     type: Type,
---     newProps: Props,
---     rootContainerInstance: Container,
---   )
---     -- If we have an alternate, that means this is an update and we need to
---     -- schedule a side-effect to do the updates.
---     local oldProps = current.memoizedProps
---     if oldProps == newProps)
---       -- In mutation mode, this is sufficient for a bailout because
---       -- we won't touch this node even if children changed.
---       return
---     end
+  updateHostComponent = function(
+    current: Fiber,
+    workInProgress: Fiber,
+    type: Type,
+    newProps: Props,
+    rootContainerInstance: Container
+  )
+    -- If we have an alternate, that means this is an update and we need to
+    -- schedule a side-effect to do the updates.
+    local oldProps = current.memoizedProps
+    if oldProps == newProps then
+      -- In mutation mode, this is sufficient for a bailout because
+      -- we won't touch this node even if children changed.
+      return
+    end
 
---     -- If we get updated because one of our children updated, we don't
---     -- have newProps so we'll have to reuse them.
---     -- TODO: Split the update API as separate for the props vs. children.
---     -- Even better would be if children weren't special cased at all tho.
---     local instance: Instance = workInProgress.stateNode
---     local currentHostContext = getHostContext()
---     -- TODO: Experiencing an error where oldProps is nil. Suggests a host
---     -- component is hitting the resume path. Figure out why. Possibly
---     -- related to `hidden`.
---     local updatePayload = prepareUpdate(
---       instance,
---       type,
---       oldProps,
---       newProps,
---       rootContainerInstance,
---       currentHostContext,
---     )
---     -- TODO: Type this specific to this type of component.
---     workInProgress.updateQueue = (updatePayload: any)
---     -- If the update payload indicates that there is a change or if there
---     -- is a new ref we mark this as an update. All the work is done in commitWork.
---     if updatePayload)
---       markUpdate(workInProgress)
---     end
---   end
+    -- If we get updated because one of our children updated, we don't
+    -- have newProps so we'll have to reuse them.
+    -- TODO: Split the update API as separate for the props vs. children.
+    -- Even better would be if children weren't special cased at all tho.
+    local instance: Instance = workInProgress.stateNode
+    local currentHostContext = getHostContext()
+    -- TODO: Experiencing an error where oldProps is nil. Suggests a host
+    -- component is hitting the resume path. Figure out why. Possibly
+    -- related to `hidden`.
+    local updatePayload = prepareUpdate(
+      instance,
+      type,
+      oldProps,
+      newProps,
+      rootContainerInstance,
+      currentHostContext
+    )
+    -- TODO: Type this specific to this type of component.
+    workInProgress.updateQueue = updatePayload
+    -- If the update payload indicates that there is a change or if there
+    -- is a new ref we mark this as an update. All the work is done in commitWork.
+    if updatePayload then
+      markUpdate(workInProgress)
+    end
+  end
 --   updateHostText = function(
 --     current: Fiber,
 --     workInProgress: Fiber,
@@ -293,12 +293,13 @@ if supportsMutation then
 elseif supportsPersistence then
 --   -- Persistent host tree mode
 
---   appendAllChildren = function(
---     parent: Instance,
---     workInProgress: Fiber,
---     needsVisibilityToggle: boolean,
---     isHidden: boolean,
---   )
+  appendAllChildren = function(
+    parent: Instance,
+    workInProgress: Fiber,
+    needsVisibilityToggle: boolean,
+    isHidden: boolean
+  )
+    unimplemented("appendAllChildren")
 --     -- We only have the top Fiber that was created but we need recurse down its
 --     -- children to find all the terminal nodes.
 --     local node = workInProgress.child
@@ -384,7 +385,7 @@ elseif supportsPersistence then
 --       node.sibling.return = node.return
 --       node = node.sibling
 --     end
---   end
+  end
 
   -- An unfortunate fork of appendAllChildren because we have two different parent types.
   local function appendAllChildrenToContainer(
@@ -814,7 +815,7 @@ local function completeWork(
   workInProgress: Fiber,
   renderLanes: Lanes
 ): Fiber | nil
-  local _newProps = workInProgress.pendingProps
+  local newProps = workInProgress.pendingProps
 
   if
     workInProgress.tag == IndeterminateComponent or
@@ -873,88 +874,89 @@ local function completeWork(
     bubbleProperties(workInProgress)
     return nil
   elseif workInProgress.tag == HostComponent then
-    unimplemented("HostComponent")
-    -- popHostContext(workInProgress)
-    -- local rootContainerInstance = getRootHostContainer()
-    -- local type = workInProgress.type
-    -- if current ~= nil and workInProgress.stateNode ~= nil)
-    --   updateHostComponent(
-    --     current,
-    --     workInProgress,
-    --     type,
-    --     newProps,
-    --     rootContainerInstance,
-    --   )
+    popHostContext(workInProgress)
+    local rootContainerInstance = getRootHostContainer()
+    local type = workInProgress.type
+    if current ~= nil and workInProgress.stateNode ~= nil then
+      updateHostComponent(
+        current,
+        workInProgress,
+        type,
+        newProps,
+        rootContainerInstance
+      )
 
-    --   if current.ref ~= workInProgress.ref)
-    --     markRef(workInProgress)
-    --   end
-    -- } else {
-    --   if !newProps)
-    --     invariant(
-    --       workInProgress.stateNode ~= nil,
-    --       'We must have new props for new mounts. This error is likely ' +
-    --         'caused by a bug in React. Please file an issue.',
-    --     )
-    --     -- This can happen when we abort work.
-    --     return nil
-    --   end
+      if current.ref ~= workInProgress.ref then
+        markRef(workInProgress)
+      end
+    else
+      if not newProps then
+        invariant(
+          workInProgress.stateNode ~= nil,
+          "We must have new props for new mounts. This error is likely " ..
+            "caused by a bug in React. Please file an issue."
+        )
+        -- This can happen when we abort work.
+        return nil
+      end
 
-    --   local currentHostContext = getHostContext()
-    --   -- TODO: Move createInstance to beginWork and keep it on a context
-    --   -- "stack" as the parent. Then append children as we go in beginWork
-    --   -- or completeWork depending on whether we want to add them top->down or
-    --   -- bottom->up. Top->down is faster in IE11.
-    --   local wasHydrated = popHydrationState(workInProgress)
-    --   if wasHydrated)
-    --     -- TODO: Move this and createInstance step into the beginPhase
-    --     -- to consolidate.
-    --     if 
-    --       prepareToHydrateHostInstance(
-    --         workInProgress,
-    --         rootContainerInstance,
-    --         currentHostContext,
-    --       )
-    --     )
-    --       -- If changes to the hydrated node need to be applied at the
-    --       -- commit-phase we mark this as such.
-    --       markUpdate(workInProgress)
-    --     end
-    --   } else {
-    --     local instance = createInstance(
-    --       type,
-    --       newProps,
-    --       rootContainerInstance,
-    --       currentHostContext,
-    --       workInProgress,
-    --     )
+      local currentHostContext = getHostContext()
+      -- TODO: Move createInstance to beginWork and keep it on a context
+      -- "stack" as the parent. Then append children as we go in beginWork
+      -- or completeWork depending on whether we want to add them top->down or
+      -- bottom->up. Top->down is faster in IE11.
+      warn("Skip unimplemented: hydration-related")
+      -- local wasHydrated = popHydrationState(workInProgress)
+      -- if wasHydrated then
+      --   -- TODO: Move this and createInstance step into the beginPhase
+      --   -- to consolidate.
+      --   if
+      --     prepareToHydrateHostInstance(
+      --       workInProgress,
+      --       rootContainerInstance,
+      --       currentHostContext
+      --     )
+      --   then
+      --     -- If changes to the hydrated node need to be applied at the
+      --     -- commit-phase we mark this as such.
+      --     markUpdate(workInProgress)
+      --   end
+      -- else
+        
+        local instance = createInstance(
+          type,
+          newProps,
+          rootContainerInstance,
+          currentHostContext,
+          workInProgress
+        )
 
-    --     appendAllChildren(instance, workInProgress, false, false)
+        appendAllChildren(instance, workInProgress, false, false)
 
-    --     workInProgress.stateNode = instance
+        workInProgress.stateNode = instance
 
-    --     -- Certain renderers require commit-time effects for initial mount.
-    --     -- (eg DOM renderer supports auto-focus for certain elements).
-    --     -- Make sure such renderers get scheduled for later work.
-    --     if 
-    --       finalizeInitialChildren(
-    --         instance,
-    --         type,
-    --         newProps,
-    --         rootContainerInstance,
-    --         currentHostContext,
-    --       )
-    --     )
-    --       markUpdate(workInProgress)
-    --     end
-    --   end
+        -- Certain renderers require commit-time effects for initial mount.
+        -- (eg DOM renderer supports auto-focus for certain elements).
+        -- Make sure such renderers get scheduled for later work.
+        if
+          finalizeInitialChildren(
+            instance,
+            type,
+            newProps,
+            rootContainerInstance,
+            currentHostContext
+          )
+        then
+          markUpdate(workInProgress)
+        end
+      -- end
 
-    --   if workInProgress.ref ~= nil)
-    --     -- If there is a ref on a host node we need to schedule a callback
-    --     markRef(workInProgress)
-    --   end
-    -- end
-    -- return nil
+      if workInProgress.ref ~= nil then
+        -- If there is a ref on a host node we need to schedule a callback
+        markRef(workInProgress)
+      end
+    end
+    return nil
   elseif workInProgress.tag == HostText then
     unimplemented("HostText")
     -- local newText = newProps

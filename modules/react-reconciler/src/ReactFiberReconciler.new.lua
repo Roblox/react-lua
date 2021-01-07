@@ -94,7 +94,8 @@ local createUpdate = ReactUpdateQueue.createUpdate
 local enqueueUpdate = ReactUpdateQueue.enqueueUpdate
 local ReactCurrentFiber = require(script.Parent.ReactCurrentFiber)
 local ReactCurrentFiberIsRendering = ReactCurrentFiber.isRendering
-local ReactCurrentFiberCurrent = ReactCurrentFiber.current
+-- deviation: this property would be captured as values instead of bound
+-- local ReactCurrentFiber.current = ReactCurrentFiber.current
 local resetCurrentDebugFiberInDEV = ReactCurrentFiber.resetCurrentFiber
 local setCurrentDebugFiberInDEV = ReactCurrentFiber.setCurrentFiber
 local ReactTypeOfMode = require(script.Parent.ReactTypeOfMode)
@@ -221,7 +222,7 @@ local function findHostInstanceWithWarning(
 			if not didWarnAboutFindNodeInStrictMode[componentName] then
 				didWarnAboutFindNodeInStrictMode[componentName] = true
 
-				local previousFiber = ReactCurrentFiberCurrent
+				local previousFiber = ReactCurrentFiber.current
 				local ok, result = pcall(function()
 					setCurrentDebugFiberInDEV(hostFiber)
 					if bit32.band(fiber.mode, StrictMode) then
@@ -312,7 +313,7 @@ exports.updateContainer = function(
 	if _G.__DEV__ then
 		if
 			ReactCurrentFiberIsRendering and
-			ReactCurrentFiberCurrent ~= nil and
+			ReactCurrentFiber.current ~= nil and
 			not didWarnAboutNestedUpdates
 		then
 			didWarnAboutNestedUpdates = true
@@ -321,7 +322,7 @@ exports.updateContainer = function(
 					"triggering nested component updates from render is not allowed. " ..
 					"If necessary, trigger nested updates in componentDidUpdate.\n\n" ..
 					"Check the render method of %s.",
-				getComponentName(ReactCurrentFiberCurrent.type) or "Unknown"
+				getComponentName(ReactCurrentFiber.current.type) or "Unknown"
 			)
 		end
 	end
@@ -763,7 +764,7 @@ function emptyFindFiberByHostInstance(
 end
 
 function getCurrentFiberForDevTools()
-	return ReactCurrentFiberCurrent
+	return ReactCurrentFiber.current
 end
 
 exports.injectIntoDevTools = function(devToolsConfig: DevToolsConfig): boolean

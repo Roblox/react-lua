@@ -707,7 +707,7 @@ local function createLaneMap(initial)
 	-- // Intentionally pushing one by one.
 	-- // https://v8.dev/blog/elements-kinds#avoid-creating-holes
 	local laneMap = {}
-	for i = 1, TotalLanes do
+	for i = 0, TotalLanes do
 		laneMap[i] = initial
 	end
 	return laneMap

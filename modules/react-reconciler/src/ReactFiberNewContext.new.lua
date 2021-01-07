@@ -12,17 +12,21 @@ local function unimplemented(message)
 end
 
 local Workspace = script.Parent.Parent
+local Packages = Workspace.Parent.Packages
+local LuauPolyfill = require(Packages.LuauPolyfill)
+local console = LuauPolyfill.console
+local Number = LuauPolyfill.Number
+
 
 local ReactTypes = require(Workspace.Shared.ReactTypes)
-type ReactContext<T> = ReactTypes.ReactContext<T>;
+type ReactContext<T> = ReactTypes.ReactContext<T>
 local ReactInternalTypes = require(script.Parent.ReactInternalTypes)
-type Fiber = ReactInternalTypes.Fiber;
-type ContextDependency = ReactInternalTypes.ContextDependency;
+type Fiber = ReactInternalTypes.Fiber
+type ContextDependency = ReactInternalTypes.ContextDependency
 -- local type {StackCursor} = require(Workspace../ReactFiberStack.new'
--- local type {Lanes} = require(Workspace../ReactFiberLane'
 
--- local ReactFiberHostConfig = require(script.Parent.ReactFiberHostConfig)
--- local isPrimaryRenderer = ReactFiberHostConfig.isPrimaryRenderer
+local ReactFiberHostConfig = require(script.Parent.ReactFiberHostConfig)
+local isPrimaryRenderer = ReactFiberHostConfig.isPrimaryRenderer
 -- local {createCursor, push, pop} = require(Workspace../ReactFiberStack.new'
 -- local {MAX_SIGNED_31_BIT_INT} = require(Workspace../MaxInts'
 -- local {
@@ -30,6 +34,7 @@ type ContextDependency = ReactInternalTypes.ContextDependency;
 --   ClassComponent,
 --   DehydratedFragment,
 -- } = require(Workspace../ReactWorkTags'
+local includesSomeLane = require(script.Parent.ReactFiberLane).includesSomeLane
 -- local {
 --   NoLanes,
 --   NoTimestamp,
@@ -38,11 +43,14 @@ type ContextDependency = ReactInternalTypes.ContextDependency;
 --   mergeLanes,
 --   pickArbitraryLane,
 -- } = require(Workspace../ReactFiberLane'
+local ReactFiberLane = require(script.Parent.ReactFiberLane)
+type Lanes = ReactFiberLane.Lanes
+local NoLanes = ReactFiberLane.NoLanes
 
--- local invariant = require(Workspace.shared/invariant'
+local invariant = require(Workspace.Shared.invariant)
 -- local is = require(Workspace.shared/objectIs'
 -- local {createUpdate, enqueueUpdate, ForceUpdate} = require(Workspace../ReactUpdateQueue.new'
--- local {markWorkInProgressReceivedUpdate} = require(Workspace../ReactFiberBeginWork.new'
+-- local markWorkInProgressReceivedUpdate = require(script.Parent["ReactFiberBeginWork.new"]).markWorkInProgressReceivedUpdate
 -- local {enableSuspenseServerRenderer} = require(Workspace.shared/ReactFeatureFlags'
 
 local exports = {}
@@ -55,10 +63,10 @@ local exports = {}
 --   rendererSigil = {}
 -- end
 
-local _currentlyRenderingFiber: Fiber | nil = nil
+local _currentlyRenderingFiber = nil
 -- FIXME (roblox): change to `ContextDependency<any>` when ContextDependency
 -- type can be better aligned
-local _lastContextDependency: ContextDependency | nil = nil
+local _lastContextDependency = nil
 local _lastContextWithAllBitsObserved: ReactContext<any> | nil = nil
 
 local _isDisallowedContextReadInDEV: boolean = false
@@ -94,7 +102,7 @@ end
 
 --     context._currentValue = nextValue
 --     if __DEV__)
---       if 
+--       if
 --         context._currentRenderer ~= undefined and
 --         context._currentRenderer ~= nil and
 --         context._currentRenderer ~= rendererSigil
@@ -111,7 +119,7 @@ end
 
 --     context._currentValue2 = nextValue
 --     if __DEV__)
---       if 
+--       if
 --         context._currentRenderer2 ~= undefined and
 --         context._currentRenderer2 ~= nil and
 --         context._currentRenderer2 ~= rendererSigil
@@ -179,7 +187,7 @@ end
 --       if alternate ~= nil)
 --         alternate.childLanes = mergeLanes(alternate.childLanes, renderLanes)
 --       end
---     } else if 
+--     } else if
 --       alternate ~= nil and
 --       !isSubsetOfLanes(alternate.childLanes, renderLanes)
 --     )
@@ -215,7 +223,7 @@ end
 --       local dependency = list.firstContext
 --       while (dependency ~= nil)
 --         -- Check if the context matches.
---         if 
+--         if
 --           dependency.context == context and
 --           (dependency.observedBits & changedBits) ~= 0
 --         )
@@ -253,7 +261,7 @@ end
 --     } else if fiber.tag == ContextProvider)
 --       -- Don't scan deeper if this is a matching provider
 --       nextFiber = fiber.type == workInProgress.type ? nil : fiber.child
---     } else if 
+--     } else if
 --       enableSuspenseServerRenderer and
 --       fiber.tag == DehydratedFragment
 --     )
@@ -308,27 +316,27 @@ end
 --   end
 -- end
 
--- exports.prepareToReadContext(
---   workInProgress: Fiber,
---   renderLanes: Lanes,
--- ): void {
---   currentlyRenderingFiber = workInProgress
---   lastContextDependency = nil
---   lastContextWithAllBitsObserved = nil
+exports.prepareToReadContext = function(
+  workInProgress: Fiber,
+  renderLanes: Lanes
+)
+  _currentlyRenderingFiber = workInProgress
+  _lastContextDependency = nil
+  _lastContextWithAllBitsObserved = nil
 
---   local dependencies = workInProgress.dependencies
---   if dependencies ~= nil)
---     local firstContext = dependencies.firstContext
---     if firstContext ~= nil)
---       if includesSomeLane(dependencies.lanes, renderLanes))
---         -- Context list has a pending update. Mark that this fiber performed work.
---         markWorkInProgressReceivedUpdate()
---       end
---       -- Reset the work-in-progress list
---       dependencies.firstContext = nil
---     end
---   end
--- end
+  local dependencies = workInProgress.dependencies
+  if dependencies ~= nil then
+    local firstContext = dependencies.firstContext
+    if firstContext ~= nil then
+      if includesSomeLane(dependencies.lanes, renderLanes) then
+        -- Context list has a pending update. Mark that this fiber performed work.
+				unimplemented("cycle markWorkInProgressReceivedUpdate")
+      end
+      -- Reset the work-in-progress list
+      dependencies.firstContext = nil
+    end
+  end
+end
 
 -- FIXME (roblox): introduce generic function signatures
 -- exports.readContext<T>(
@@ -339,68 +347,67 @@ exports.readContext = function(
   context: ReactContext<any>,
   observedBits: nil | number | boolean
 ): any
-  unimplemented("readContext")
-  return nil
-  -- if _G.__DEV__ then
-  --   -- This warning would fire if you read context inside a Hook like useMemo.
-  --   -- Unlike the class check below, it's not enforced in production for perf.
-  --   if _isDisallowedContextReadInDEV then
-  --     console.error(
-  --       "Context can only be read while React is rendering. " ..
-  --         "In classes, you can read it in the render method or getDerivedStateFromProps. " ..
-  --         "In function components, you can read it directly in the function body, but not " ..
-  --         "inside Hooks like useReducer() or useMemo()."
-  --     )
-  --   end
-  -- end
+  if _G.__DEV__ then
+    -- This warning would fire if you read context inside a Hook like useMemo.
+    -- Unlike the class check below, it's not enforced in production for perf.
+    if _isDisallowedContextReadInDEV then
+      console.error(
+        "Context can only be read while React is rendering. " ..
+          "In classes, you can read it in the render method or getDerivedStateFromProps. " ..
+          "In function components, you can read it directly in the function body, but not " ..
+          "inside Hooks like useReducer() or useMemo()."
+      )
+    end
+  end
 
-  -- if lastContextWithAllBitsObserved == context then
-  --   -- Nothing to do. We already observe everything in this context.
-  -- elseif observedBits == false or observedBits == 0 then
-  --   -- Do not observe any updates.
-  -- else
-  --   local resolvedObservedBits; -- Avoid deopting on observable arguments or heterogeneous types.
-  --   if
-  --     typeof(observedBits) ~= "number" or
-  --     observedBits == MAX_SIGNED_31_BIT_INT
-  --   then
-  --     -- Observe all updates.
-  --     -- lastContextWithAllBitsObserved = ((context: any): ReactContext<mixed>)
-  --     lastContextWithAllBitsObserved = context
-  --     resolvedObservedBits = MAX_SIGNED_31_BIT_INT
-  --   else
-  --     resolvedObservedBits = observedBits
-  --   end
+  if _lastContextWithAllBitsObserved == context then
+    -- Nothing to do. We already observe everything in this context.
+  elseif observedBits == false or observedBits == 0 then
+    -- Do not observe any updates.
+  else
+    local resolvedObservedBits -- Avoid deopting on observable arguments or heterogeneous types.
+    if
+      typeof(observedBits) ~= "number" or
+      observedBits == Number.MAX_SAFE_INTEGER
+    then
+      -- Observe all updates.
+      -- lastContextWithAllBitsObserved = ((context: any): ReactContext<mixed>)
+      _lastContextWithAllBitsObserved = context
+      resolvedObservedBits = Number.MAX_SAFE_INTEGER
+    else
+      resolvedObservedBits = observedBits
+    end
 
-  --   local contextItem = {
-  --     -- context: ((context: any): ReactContext<mixed>),
-  --     context = context,
-  --     observedBits = resolvedObservedBits,
-  --     next = nil,
-  --   }
+    local contextItem = {
+      -- context: ((context: any): ReactContext<mixed>),
+      context = context,
+      observedBits = resolvedObservedBits,
+      next = nil,
+    }
 
-  --   if lastContextDependency == nil then
-  --     invariant(
-  --       currentlyRenderingFiber ~= nil,
-  --       "Context can only be read while React is rendering. " ..
-  --         "In classes, you can read it in the render method or getDerivedStateFromProps. " ..
-  --         "In function components, you can read it directly in the function body, but not " ..
-  --         "inside Hooks like useReducer() or useMemo()."
-  --     )
+    if _lastContextDependency == nil then
+      invariant(
+        _currentlyRenderingFiber ~= nil,
+        "Context can only be read while React is rendering. " ..
+          "In classes, you can read it in the render method or getDerivedStateFromProps. " ..
+          "In function components, you can read it directly in the function body, but not " ..
+          "inside Hooks like useReducer() or useMemo()."
+      )
 
-  --     -- This is the first dependency for this component. Create a new list.
-  --     lastContextDependency = contextItem
-  --     currentlyRenderingFiber.dependencies = {
-  --       lanes = NoLanes,
-  --       firstContext = contextItem,
-  --       responders = nil,
-  --     }
-  --   else
-  --     -- Append a new context item.
-  --     lastContextDependency = contextItem
-  --     lastContextDependency.next = contextItem
-  -- end
-  -- return isPrimaryRenderer and context._currentValue or context._currentValue2
+      -- This is the first dependency for this component. Create a new list.
+      _lastContextDependency = contextItem
+      _currentlyRenderingFiber.dependencies = {
+        lanes = NoLanes,
+        firstContext = contextItem,
+        responders = nil,
+      }
+    else
+      -- Append a new context item.
+      _lastContextDependency = contextItem
+      _lastContextDependency.next = contextItem
+		end
+  end
+  return isPrimaryRenderer and context._currentValue or context._currentValue2
 end
 
 return exports

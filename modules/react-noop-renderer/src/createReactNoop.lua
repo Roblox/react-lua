@@ -357,7 +357,7 @@ local function createReactNoop(reconciler, useMutation: boolean)
 			return UPDATE_SIGNAL
 		end,
 
-		shouldSetTextContent = nil,
+		shouldSetTextContent = shouldSetTextContent,
 
 		-- deviation: FIXME: this might not make any sense in Roblox, which has
 		-- no notion of non-styled text nodes

@@ -94,19 +94,25 @@ local immediateQueueCallbackNode: any? = nil
 local isFlushingSyncQueue: boolean = false
 local initialTimeMs: number = Scheduler_now()
 
--- If the initial timestamp is reasonably small, use Scheduler's `now` directly.
--- This will be the case for modern browsers that support `performance.now`. In
--- older browsers, Scheduler falls back to `Date.now`, which returns a Unix
--- timestamp. In that case, subtract the module initialization time to simulate
--- the behavior of performance.now and keep our times small enough to fit
--- within 32 bits.
--- TODO: Consider lifting this into Scheduler.
--- FIXME (roblox): properly account for ms vs s from tick
-local now = initialTimeMs < 10000
-  and Scheduler_now 
-  or function()
-    return Scheduler_now() - initialTimeMs
-  end
+-- -- If the initial timestamp is reasonably small, use Scheduler's `now` directly.
+-- -- This will be the case for modern browsers that support `performance.now`. In
+-- -- older browsers, Scheduler falls back to `Date.now`, which returns a Unix
+-- -- timestamp. In that case, subtract the module initialization time to simulate
+-- -- the behavior of performance.now and keep our times small enough to fit
+-- -- within 32 bits.
+-- -- TODO: Consider lifting this into Scheduler.
+-- -- FIXME (roblox): properly account for ms vs s from tick
+-- local now = initialTimeMs < 10000
+--   and Scheduler_now 
+--   or function()
+--     return Scheduler_now() - initialTimeMs
+--   end
+
+-- deviation: Roblox uses `tick` under the hood, which is more like the unix
+-- timestamp behavior referenced above
+local function now()
+  return Scheduler_now() - initialTimeMs
+end
 
 local function getCurrentPriorityLevel(): ReactPriorityLevel
   local currentPriorityLevel = Scheduler_getCurrentPriorityLevel()

@@ -20,16 +20,15 @@ return function()
 
 	beforeEach(function()
 		RobloxJest.resetModules()
+		-- deviation: In react, jest _always_ mocks Scheduler -> unstable_mock;
+		-- in our case, we need to do it anywhere we want to use the scheduler,
+		-- until we have some form of bundling logic
 		RobloxJest.mock(Workspace.Scheduler, function()
 			return require(Workspace.Scheduler.unstable_mock)
 		end)
 
 		React = require(Workspace.React)
 		ReactNoop = require(Workspace.ReactNoopRenderer)
-		-- deviation: In react, jest mocks Scheduler -> unstable_mock; since
-		-- unstable_mock depends on the real Scheduler, and our mock
-		-- functionality isn't smart enough to prevent self-requires, we simply
-		-- require the mock entry point directly for use in tests
 		Scheduler = require(Workspace.Scheduler)
 	end)
 

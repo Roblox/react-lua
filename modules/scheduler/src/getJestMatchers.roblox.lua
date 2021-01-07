@@ -12,9 +12,14 @@ local function captureAssertion(fn)
 	local ok, result = pcall(fn)
 
 	if not ok then
+		-- deviation: The message here will be a string with some extra info
+		-- that's not helpful, so we trim it down a bit
+		local subMessageIndex = string.find(result, " ")
+		local message = string.sub(result, subMessageIndex + 1)
+
 		return {
 			pass = false,
-			message = result.message,
+			message = message,
 		}
 	end
 

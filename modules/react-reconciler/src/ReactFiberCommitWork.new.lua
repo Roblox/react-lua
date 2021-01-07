@@ -6,6 +6,7 @@
  *
  * @flow
 ]]
+--!nolint LocalShadowPedantic
 -- FIXME (roblox): remove this when our unimplemented
 local function unimplemented(message)
   error("FIXME (roblox): " .. message .. " is unimplemented", 2)
@@ -31,7 +32,7 @@ type FiberRoot = ReactInternalTypes.FiberRoot;
 -- local type {UpdateQueue} = require(script.Parent.ReactUpdateQueue.new)
 -- local type {FunctionComponentUpdateQueue} = require(script.Parent.ReactFiberHooks.new)
 -- local type {Wakeable} = require(Workspace.Shared.ReactTypes)
--- local type {ReactPriorityLevel} = require(script.Parent.ReactInternalTypes)
+type ReactPriorityLevel = ReactInternalTypes.ReactPriorityLevel
 -- local type {OffscreenState} = require(script.Parent.ReactFiberOffscreenComponent)
 local ReactHookEffectTags = require(script.Parent.ReactHookEffectTags)
 type HookFlags = ReactHookEffectTags.HookFlags;
@@ -41,7 +42,7 @@ local ReactFeatureFlags = require(Workspace.Shared.ReactFeatureFlags)
 -- local enableSchedulerTracing = ReactFeatureFlags.enableSchedulerTracing
 local enableProfilerTimer = ReactFeatureFlags.enableProfilerTimer
 local enableProfilerCommitHooks = ReactFeatureFlags.enableProfilerCommitHooks
--- local enableSuspenseServerRenderer = ReactFeatureFlags.enableSuspenseServerRenderer
+local enableSuspenseServerRenderer = ReactFeatureFlags.enableSuspenseServerRenderer
 local enableFundamentalAPI = ReactFeatureFlags.enableFundamentalAPI
 -- local enableSuspenseCallback = ReactFeatureFlags.enableSuspenseCallback
 local enableScopeAPI = ReactFeatureFlags.enableScopeAPI
@@ -58,7 +59,7 @@ local Profiler = ReactWorkTags.Profiler
 local SuspenseComponent = ReactWorkTags.SuspenseComponent
 local DehydratedFragment = ReactWorkTags.DehydratedFragment
 local IncompleteClassComponent = ReactWorkTags.IncompleteClassComponent
--- local MemoComponent = ReactWorkTags.MemoComponent
+local MemoComponent = ReactWorkTags.MemoComponent
 local SimpleMemoComponent = ReactWorkTags.SimpleMemoComponent
 local SuspenseListComponent = ReactWorkTags.SuspenseListComponent
 local FundamentalComponent = ReactWorkTags.FundamentalComponent
@@ -83,10 +84,11 @@ local Ref = ReactFiberFlags.Ref
 -- local getComponentName = require(Workspace.Shared.getComponentName)
 local invariant = require(Workspace.Shared.invariant)
 local ReactCurrentFiber = require(script.Parent.ReactCurrentFiber)
-local currentDebugFiberInDEV = ReactCurrentFiber.current
+-- deviation: this property would be captured as values instead of bound
+-- local currentDebugFiberInDEV = ReactCurrentFiber.current
 local resetCurrentDebugFiberInDEV = ReactCurrentFiber.resetCurrentFiber
 local setCurrentDebugFiberInDEV = ReactCurrentFiber.setCurrentFiber
--- local {onCommitUnmount} = require(script.Parent.ReactFiberDevToolsHook.new)
+local onCommitUnmount = require(script.Parent["ReactFiberDevToolsHook.new"]).onCommitUnmount
 -- local {resolveDefaultProps} = require(script.Parent.ReactFiberLazyComponent.new)
 -- local {
 --   getCommitTime,
@@ -96,21 +98,21 @@ local setCurrentDebugFiberInDEV = ReactCurrentFiber.setCurrentFiber
 --   startPassiveEffectTimer,
 -- } = require(script.Parent.ReactProfilerTimer.new)
 local ProfileMode = require(script.Parent.ReactTypeOfMode).ProfileMode
--- local {commitUpdateQueue} = require(script.Parent.ReactUpdateQueue.new)
--- local getPublicInstance = ReactFiberHostConfig.getPublicInstance
+local commitUpdateQueue = require(script.Parent["ReactUpdateQueue.new"]).commitUpdateQueue
+local getPublicInstance = ReactFiberHostConfig.getPublicInstance
 local supportsMutation = ReactFiberHostConfig.supportsMutation
 -- local supportsPersistence = ReactFiberHostConfig.supportsPersistence
 -- local supportsHydration = ReactFiberHostConfig.supportsHydration
--- local commitMount = ReactFiberHostConfig.commitMount
--- local commitUpdate = ReactFiberHostConfig.commitUpdate
+local commitMount = ReactFiberHostConfig.commitMount
+local commitUpdate = ReactFiberHostConfig.commitUpdate
 local resetTextContent = ReactFiberHostConfig.resetTextContent
 -- local commitTextUpdate = ReactFiberHostConfig.commitTextUpdate
 local appendChild = ReactFiberHostConfig.appendChild
 local appendChildToContainer = ReactFiberHostConfig.appendChildToContainer
 local insertBefore = ReactFiberHostConfig.insertBefore
 local insertInContainerBefore = ReactFiberHostConfig.insertInContainerBefore
--- local removeChild = ReactFiberHostConfig.removeChild
--- local removeChildFromContainer = ReactFiberHostConfig.removeChildFromContainer
+local removeChild = ReactFiberHostConfig.removeChild
+local removeChildFromContainer = ReactFiberHostConfig.removeChildFromContainer
 -- local clearSuspenseBoundary = ReactFiberHostConfig.clearSuspenseBoundary
 -- local clearSuspenseBoundaryFromContainer = ReactFiberHostConfig.clearSuspenseBoundaryFromContainer
 -- local replaceContainerChildren = ReactFiberHostConfig.replaceContainerChildren
@@ -131,16 +133,17 @@ local clearContainer = ReactFiberHostConfig.clearContainer
 --   markCommitTimeOfFallback,
 --   schedulePassiveEffectCallback,
 -- } = require(script.Parent.ReactFiberWorkLoop.new)
--- local NoHookEffect = ReactHookEffectTags.NoFlags
+local NoHookEffect = ReactHookEffectTags.NoFlags
 local HookHasEffect = ReactHookEffectTags.HasEffect
--- local HookLayout = ReactHookEffectTags.Layout
+local HookLayout = ReactHookEffectTags.Layout
 local HookPassive = ReactHookEffectTags.Passive
 -- }
 -- local {didWarnAboutReassigningProps} = require(script.Parent.ReactFiberBeginWork.new)
 
 -- deviation: pre-declare functions when necessary
 local isHostParent, getHostSibling, insertOrAppendPlacementNode,
-  insertOrAppendPlacementNodeIntoContainer
+  insertOrAppendPlacementNodeIntoContainer, commitLayoutEffectsForHostRoot,
+  commitLayoutEffectsForHostComponent
 
 -- -- Used to avoid traversing the return path to find the nearest Profiler ancestor during commit.
 -- local nearestProfilerOnStack: Fiber | nil = nil
@@ -155,7 +158,7 @@ local isHostParent, getHostSibling, insertOrAppendPlacementNode,
 -- local callComponentWillUnmountWithTimer = function(current, instance)
 --   instance.props = current.memoizedProps
 --   instance.state = current.memoizedState
---   if 
+--   if
 --     enableProfilerTimer and
 --     enableProfilerCommitHooks and
 --     current.mode & ProfileMode
@@ -198,28 +201,31 @@ local isHostParent, getHostSibling, insertOrAppendPlacementNode,
 --   end
 -- end
 
--- function safelyDetachRef(current: Fiber, nearestMountedAncestor: Fiber)
---   local ref = current.ref
---   if ref ~= nil)
---     if typeof ref == 'function')
---       if __DEV__)
---         invokeGuardedCallback(null, ref, nil, nil)
---         if hasCaughtError())
---           local refError = clearCaughtError()
---           captureCommitPhaseError(current, nearestMountedAncestor, refError)
---         end
---       } else {
---         try {
---           ref(null)
---         } catch (refError)
---           captureCommitPhaseError(current, nearestMountedAncestor, refError)
---         end
---       end
---     } else {
---       ref.current = nil
---     end
---   end
--- end
+local function safelyDetachRef(current: Fiber, nearestMountedAncestor: Fiber)
+  local ref = current.ref
+  if ref ~= nil then
+    if typeof(ref) == "function" then
+      if _G.__DEV__ then
+        invokeGuardedCallback(nil, ref, nil, nil)
+        if hasCaughtError() then
+          unimplemented("captureCommitPhaseError")
+          -- local refError = clearCaughtError()
+          -- captureCommitPhaseError(current, nearestMountedAncestor, refError)
+        end
+      else
+        local ok, _refError = pcall(function()
+          ref(nil)
+        end)
+        if not ok then
+          unimplemented("captureCommitPhaseError")
+          -- captureCommitPhaseError(current, nearestMountedAncestor, refError)
+        end
+      end
+    else
+      ref.current = nil
+    end
+  end
+end
 
 local function safelyCallDestroy(
   current: Fiber,
@@ -266,7 +272,7 @@ local function commitBeforeMutationLifeCycles(
     --     -- but instead we rely on them being set during last render.
     --     -- TODO: revisit this when we implement resuming.
     --     if __DEV__)
-    --       if 
+    --       if
     --         finishedWork.type == finishedWork.elementType and
     --         !didWarnAboutReassigningProps
     --       )
@@ -556,7 +562,7 @@ local function recursivelyCommitLayoutEffects(
       local primarySubtreeFlags = bit32.band(finishedWork.subtreeFlags, LayoutMask)
       if primarySubtreeFlags ~= NoFlags then
         if _G.__DEV__ then
-          local prevCurrentFiberInDEV = currentDebugFiberInDEV
+          local prevCurrentFiberInDEV = ReactCurrentFiber.current
           setCurrentDebugFiberInDEV(child)
           invokeGuardedCallback(
             nil,
@@ -576,12 +582,12 @@ local function recursivelyCommitLayoutEffects(
             resetCurrentDebugFiberInDEV()
           end
         else
-          local ok, _result = pcall(function()
+          local ok, result = pcall(function()
             recursivelyCommitLayoutEffects(child, finishedRoot)
           end)
 
           if not ok then
-            unimplemented("captureCommitPhaseError")
+            unimplemented("captureCommitPhaseError (" .. result .. ")")
             -- captureCommitPhaseError(child, finishedWork, error)
           end
         end
@@ -613,11 +619,10 @@ local function recursivelyCommitLayoutEffects(
           --   recordLayoutEffectDuration(finishedWork)
           -- end
         else
-          unimplemented("commitHookEffectListMount")
-          -- commitHookEffectListMount(
-          --   bit32.bor(HookLayout, HookHasEffect),
-          --   finishedWork
-          -- )
+          commitHookEffectListMount(
+            bit32.bor(HookLayout, HookHasEffect),
+            finishedWork
+          )
         end
 
         if bit32.band(finishedWork.subtreeFlags, PassiveMask) ~= NoFlags then
@@ -629,11 +634,9 @@ local function recursivelyCommitLayoutEffects(
         unimplemented("commitLayoutEffectsForClassComponent")
         -- commitLayoutEffectsForClassComponent(finishedWork)
       elseif tag == HostRoot then
-        unimplemented("commitLayoutEffectsForHostRoot")
-        -- commitLayoutEffectsForHostRoot(finishedWork)
+        commitLayoutEffectsForHostRoot(finishedWork)
       elseif tag == HostComponent then
-        unimplemented("commitLayoutEffectsForHostComponent")
-        -- commitLayoutEffectsForHostComponent(finishedWork)
+        commitLayoutEffectsForHostComponent(finishedWork)
       elseif tag == SuspenseComponent then
         unimplemented("commitSuspenseHydrationCallbacks")
         -- commitSuspenseHydrationCallbacks(finishedRoot, finishedWork)
@@ -712,7 +715,7 @@ end
 --     end
 
 --     if enableProfilerCommitHooks)
---       if 
+--       if
 --         (flags & OnCommitFlag) ~= NoFlags and
 --         typeof onCommit == 'function'
 --       )
@@ -746,7 +749,7 @@ end
 --       -- but instead we rely on them being set during last render.
 --       -- TODO: revisit this when we implement resuming.
 --       if __DEV__)
---         if 
+--         if
 --           finishedWork.type == finishedWork.elementType and
 --           !didWarnAboutReassigningProps
 --         )
@@ -772,7 +775,7 @@ end
 --           end
 --         end
 --       end
---       if 
+--       if
 --         enableProfilerTimer and
 --         enableProfilerCommitHooks and
 --         finishedWork.mode & ProfileMode
@@ -796,7 +799,7 @@ end
 --       -- but instead we rely on them being set during last render.
 --       -- TODO: revisit this when we implement resuming.
 --       if __DEV__)
---         if 
+--         if
 --           finishedWork.type == finishedWork.elementType and
 --           !didWarnAboutReassigningProps
 --         )
@@ -822,7 +825,7 @@ end
 --           end
 --         end
 --       end
---       if 
+--       if
 --         enableProfilerTimer and
 --         enableProfilerCommitHooks and
 --         finishedWork.mode & ProfileMode
@@ -852,7 +855,7 @@ end
 --   local updateQueue: UpdateQueue<*> | nil = (finishedWork.updateQueue: any)
 --   if updateQueue ~= nil)
 --     if __DEV__)
---       if 
+--       if
 --         finishedWork.type == finishedWork.elementType and
 --         !didWarnAboutReassigningProps
 --       )
@@ -885,40 +888,41 @@ end
 --   end
 -- end
 
--- function commitLayoutEffectsForHostRoot(finishedWork: Fiber)
---   -- TODO: I think this is now always non-null by the time it reaches the
---   -- commit phase. Consider removing the type check.
---   local updateQueue: UpdateQueue<*> | nil = (finishedWork.updateQueue: any)
---   if updateQueue ~= nil)
---     local instance = nil
---     if finishedWork.child ~= nil)
---       switch (finishedWork.child.tag)
---         case HostComponent:
---           instance = getPublicInstance(finishedWork.child.stateNode)
---           break
---         case ClassComponent:
---           instance = finishedWork.child.stateNode
---           break
---       end
---     end
---     commitUpdateQueue(finishedWork, updateQueue, instance)
---   end
--- end
+commitLayoutEffectsForHostRoot = function(finishedWork: Fiber)
+  -- TODO: I think this is now always non-null by the time it reaches the
+  -- commit phase. Consider removing the type check.
+  -- FIXME (roblox): type coercion
+  -- local updateQueue: UpdateQueue<*> | nil = (finishedWork.updateQueue: any)
+  local updateQueue = finishedWork.updateQueue
+  if updateQueue ~= nil then
+    local instance = nil
+    if finishedWork.child ~= nil then
+      -- deviation: localize child, workaround luau type refinement shortcomings
+      local child = finishedWork.child
+      if child.tag == HostComponent then
+        instance = getPublicInstance(child.stateNode)
+      elseif child.tag == ClassComponent then
+        instance = child.stateNode
+      end
+    end
+    commitUpdateQueue(finishedWork, updateQueue, instance)
+  end
+end
 
--- function commitLayoutEffectsForHostComponent(finishedWork: Fiber)
---   local instance: Instance = finishedWork.stateNode
---   local current = finishedWork.alternate
+commitLayoutEffectsForHostComponent = function(finishedWork: Fiber)
+  local instance: Instance = finishedWork.stateNode
+  local current = finishedWork.alternate
 
---   -- Renderers may schedule work to be done after host components are mounted
---   -- (eg DOM renderer may schedule auto-focus for inputs and form controls).
---   -- These effects should only be committed when components are first mounted,
---   -- aka when there is no current/alternate.
---   if current == nil and finishedWork.flags & Update)
---     local type = finishedWork.type
---     local props = finishedWork.memoizedProps
---     commitMount(instance, type, props, finishedWork)
---   end
--- end
+  -- Renderers may schedule work to be done after host components are mounted
+  -- (eg DOM renderer may schedule auto-focus for inputs and form controls).
+  -- These effects should only be committed when components are first mounted,
+  -- aka when there is no current/alternate.
+  if current == nil and bit32.band(finishedWork.flags, Update) then
+    local type = finishedWork.type
+    local props = finishedWork.memoizedProps
+    commitMount(instance, type, props, finishedWork)
+  end
+end
 
 -- function hideOrUnhideAllChildren(finishedWork, isHidden)
 --   if supportsMutation)
@@ -940,7 +944,7 @@ end
 --         } else {
 --           unhideTextInstance(instance, node.memoizedProps)
 --         end
---       } else if 
+--       } else if
 --         (node.tag == OffscreenComponent or
 --           node.tag == LegacyHiddenComponent) and
 --         (node.memoizedState: OffscreenState) ~= nil and
@@ -1013,181 +1017,183 @@ end
 --   end
 -- end
 
--- -- User-originating errors (lifecycles and refs) should not interrupt
--- -- deletion, so don't local them throw. Host-originating errors should
--- -- interrupt deletion, so it's okay
--- function commitUnmount(
---   finishedRoot: FiberRoot,
---   current: Fiber,
---   nearestMountedAncestor: Fiber,
---   renderPriorityLevel: ReactPriorityLevel,
--- ): void {
---   onCommitUnmount(current)
+-- User-originating errors (lifecycles and refs) should not interrupt
+-- deletion, so don't local them throw. Host-originating errors should
+-- interrupt deletion, so it's okay
+local function commitUnmount(
+  finishedRoot: FiberRoot,
+  current: Fiber,
+  nearestMountedAncestor: Fiber,
+  renderPriorityLevel: ReactPriorityLevel
+)
+  onCommitUnmount(current)
 
---   switch (current.tag)
---     case FunctionComponent:
---     case ForwardRef:
---     case MemoComponent:
---     case SimpleMemoComponent:
---     case Block: {
---       local updateQueue: FunctionComponentUpdateQueue | nil = (current.updateQueue: any)
---       if updateQueue ~= nil)
---         local lastEffect = updateQueue.lastEffect
---         if lastEffect ~= nil)
---           local firstEffect = lastEffect.next
+  if
+    current.tag == FunctionComponent or
+    current.tag == ForwardRef or
+    current.tag == MemoComponent or
+    current.tag == SimpleMemoComponent or
+    current.tag == Block
+  then
+    -- ROBLOX FIXME: type refinement
+    -- local updateQueue: FunctionComponentUpdateQueue | nil = (current.updateQueue: any)
+    local updateQueue = current.updateQueue
+    if updateQueue ~= nil then
+      local lastEffect = updateQueue.lastEffect
+      if lastEffect ~= nil then
+        local firstEffect = lastEffect.next
 
---           local effect = firstEffect
---           do {
---             local {destroy, tag} = effect
---             if destroy ~= undefined)
---               if (tag & HookLayout) ~= NoHookEffect)
---                 if 
---                   enableProfilerTimer and
---                   enableProfilerCommitHooks and
---                   current.mode & ProfileMode
---                 )
---                   startLayoutEffectTimer()
---                   safelyCallDestroy(current, nearestMountedAncestor, destroy)
---                   recordLayoutEffectDuration(current)
---                 } else {
---                   safelyCallDestroy(current, nearestMountedAncestor, destroy)
---                 end
---               end
---             end
---             effect = effect.next
---           } while (effect ~= firstEffect)
---         end
---       end
---       return
---     end
---     case ClassComponent: {
---       safelyDetachRef(current, nearestMountedAncestor)
---       local instance = current.stateNode
---       if typeof instance.componentWillUnmount == 'function')
---         safelyCallComponentWillUnmount(
---           current,
---           instance,
---           nearestMountedAncestor,
---         )
---       end
---       return
---     end
---     case HostComponent: {
---       safelyDetachRef(current, nearestMountedAncestor)
---       return
---     end
---     case HostPortal: {
---       -- TODO: this is recursive.
---       -- We are also not using this parent because
---       -- the portal will get pushed immediately.
---       if supportsMutation)
---         unmountHostComponents(
---           finishedRoot,
---           current,
---           nearestMountedAncestor,
---           renderPriorityLevel,
---         )
---       } else if supportsPersistence)
---         emptyPortalContainer(current)
---       end
---       return
---     end
---     case FundamentalComponent: {
---       if enableFundamentalAPI)
---         local fundamentalInstance = current.stateNode
---         if fundamentalInstance ~= nil)
---           unmountFundamentalComponent(fundamentalInstance)
---           current.stateNode = nil
---         end
---       end
---       return
---     end
---     case DehydratedFragment: {
---       if enableSuspenseCallback)
---         local hydrationCallbacks = finishedRoot.hydrationCallbacks
---         if hydrationCallbacks ~= nil)
---           local onDeleted = hydrationCallbacks.onDeleted
---           if onDeleted)
---             onDeleted((current.stateNode: SuspenseInstance))
---           end
---         end
---       end
---       return
---     end
---     case ScopeComponent: {
---       if enableScopeAPI)
---         safelyDetachRef(current, nearestMountedAncestor)
---       end
---       return
---     end
---   end
--- end
+        local effect = firstEffect
+        repeat
+          if effect.destroy ~= nil then
+            if bit32.band(effect.tag, HookLayout) ~= NoHookEffect then
+              if
+                enableProfilerTimer and
+                enableProfilerCommitHooks and
+                bit32.band(current.mode, ProfileMode)
+              then
+                unimplemented("profiler timer logic")
+                -- startLayoutEffectTimer()
+                safelyCallDestroy(current, nearestMountedAncestor, effect.destroy)
+                -- recordLayoutEffectDuration(current)
+              else
+                safelyCallDestroy(current, nearestMountedAncestor, effect.destroy)
+              end
+            end
+          end
+          effect = effect.next
+        until effect == firstEffect
+      end
+    end
+    return
+  elseif current.tag == ClassComponent then
+    unimplemented("commitUnmount - ClassComponent")
+    -- safelyDetachRef(current, nearestMountedAncestor)
+    -- local instance = current.stateNode
+    -- if typeof instance.componentWillUnmount == 'function')
+    --   safelyCallComponentWillUnmount(
+    --     current,
+    --     instance,
+    --     nearestMountedAncestor,
+    --   )
+    -- end
+    -- return
+  elseif current.tag == HostComponent then
+    safelyDetachRef(current, nearestMountedAncestor)
+    return
+  elseif HostPortal then
+    unimplemented("commitUnmount - HostPortal")
+    -- -- TODO: this is recursive.
+    -- -- We are also not using this parent because
+    -- -- the portal will get pushed immediately.
+    -- if supportsMutation then
+    --   unmountHostComponents(
+    --     finishedRoot,
+    --     current,
+    --     nearestMountedAncestor,
+    --     renderPriorityLevel
+    --   )
+    -- elseif supportsPersistence then
+    --   emptyPortalContainer(current)
+    -- end
+    -- return
+  elseif current.tag == FundamentalComponent then
+    unimplemented("commitUnmount - FundamentalComponent")
+    -- if enableFundamentalAPI then
+    --   local fundamentalInstance = current.stateNode
+    --   if fundamentalInstance ~= nil then
+    --     unmountFundamentalComponent(fundamentalInstance)
+    --     current.stateNode = nil
+    --   end
+    -- end
+    -- return
+  elseif current.tag == DehydratedFragment then
+    unimplemented("commitUnmount - DehydratedFragment")
+    -- if enableSuspenseCallback then
+    --   local hydrationCallbacks = finishedRoot.hydrationCallbacks
+    --   if hydrationCallbacks ~= nil then
+    --     local onDeleted = hydrationCallbacks.onDeleted
+    --     if onDeleted then
+    --       onDeleted((current.stateNode: SuspenseInstance))
+    --     end
+    --   end
+    -- end
+    -- return
+  elseif current.tag == ScopeComponent then
+    if enableScopeAPI then
+      safelyDetachRef(current, nearestMountedAncestor)
+    end
+    return
+  end
+end
 
--- function commitNestedUnmounts(
---   finishedRoot: FiberRoot,
---   root: Fiber,
---   nearestMountedAncestor: Fiber,
---   renderPriorityLevel: ReactPriorityLevel,
--- ): void {
---   -- While we're inside a removed host node we don't want to call
---   -- removeChild on the inner nodes because they're removed by the top
---   -- call anyway. We also want to call componentWillUnmount on all
---   -- composites before this host node is removed from the tree. Therefore
---   -- we do an inner loop while we're still inside the host node.
---   local node: Fiber = root
---   while (true)
---     commitUnmount(
---       finishedRoot,
---       node,
---       nearestMountedAncestor,
---       renderPriorityLevel,
---     )
---     -- Visit children because they may contain more composite or host nodes.
---     -- Skip portals because commitUnmount() currently visits them recursively.
---     if 
---       node.child ~= nil and
---       -- If we use mutation we drill down into portals using commitUnmount above.
---       -- If we don't use mutation we drill down into portals here instead.
---       (!supportsMutation or node.tag ~= HostPortal)
---     )
---       node.child.return = node
---       node = node.child
---       continue
---     end
---     if node == root)
---       return
---     end
---     while (node.sibling == nil)
---       if node.return == nil or node.return == root)
---         return
---       end
---       node = node.return
---     end
---     node.sibling.return = node.return
---     node = node.sibling
---   end
--- end
+local function commitNestedUnmounts(
+  finishedRoot: FiberRoot,
+  root: Fiber,
+  nearestMountedAncestor: Fiber,
+  renderPriorityLevel: ReactPriorityLevel
+)
+  -- While we're inside a removed host node we don't want to call
+  -- removeChild on the inner nodes because they're removed by the top
+  -- call anyway. We also want to call componentWillUnmount on all
+  -- composites before this host node is removed from the tree. Therefore
+  -- we do an inner loop while we're still inside the host node.
+  -- ROBLOX FIXME: type coercion
+  local node = root
+  -- local node: Fiber = root
+  while true do
+    commitUnmount(
+      finishedRoot,
+      node,
+      nearestMountedAncestor,
+      renderPriorityLevel
+    )
+    -- Visit children because they may contain more composite or host nodes.
+    -- Skip portals because commitUnmount() currently visits them recursively.
+    if
+      node.child ~= nil and
+      -- If we use mutation we drill down into portals using commitUnmount above.
+      -- If we don't use mutation we drill down into portals here instead.
+      (not supportsMutation or node.tag ~= HostPortal)
+    then
+      node.child.return_ = node
+      node = node.child
+      continue
+    end
+    if node == root then
+      return
+    end
+    while node.sibling == nil do
+      if node.return_ == nil or node.return_ == root then
+        return
+      end
+      node = node.return_
+    end
+    node.sibling.return_ = node.return_
+    node = node.sibling
+  end
+end
 
--- function detachFiberMutation(fiber: Fiber)
---   -- Cut off the return pointer to disconnect it from the tree.
---   -- This enables us to detect and warn against state updates on an unmounted component.
---   -- It also prevents events from bubbling from within disconnected components.
---   --
---   -- Ideally, we should also clear the child pointer of the parent alternate to local this
---   -- get GC:ed but we don't know which for sure which parent is the current
---   -- one so we'll settle for GC:ing the subtree of this child.
---   -- This child itself will be GC:ed when the parent updates the next time.
---   --
---   -- Note that we can't clear child or sibling pointers yet.
---   -- They're needed for passive effects and for findDOMNode.
---   -- We defer those fields, and all other cleanup, to the passive phase (see detachFiberAfterEffects).
---   local alternate = fiber.alternate
---   if alternate ~= nil)
---     alternate.return = nil
---     fiber.alternate = nil
---   end
---   fiber.return = nil
--- end
+local function detachFiberMutation(fiber: Fiber)
+  -- Cut off the return pointer to disconnect it from the tree.
+  -- This enables us to detect and warn against state updates on an unmounted component.
+  -- It also prevents events from bubbling from within disconnected components.
+  --
+  -- Ideally, we should also clear the child pointer of the parent alternate to local this
+  -- get GC:ed but we don't know which for sure which parent is the current
+  -- one so we'll settle for GC:ing the subtree of this child.
+  -- This child itself will be GC:ed when the parent updates the next time.
+  --
+  -- Note that we can't clear child or sibling pointers yet.
+  -- They're needed for passive effects and for findDOMNode.
+  -- We defer those fields, and all other cleanup, to the passive phase (see detachFiberAfterEffects).
+  local alternate = fiber.alternate
+  if alternate ~= nil then
+    alternate.return_ = nil
+    fiber.alternate = nil
+  end
+  fiber.return_ = nil
+end
 
 -- function emptyPortalContainer(current: Fiber)
 --   if !supportsPersistence)
@@ -1431,407 +1437,427 @@ insertOrAppendPlacementNode = function(
   end
 end
 
--- function unmountHostComponents(
---   finishedRoot: FiberRoot,
---   current: Fiber,
---   nearestMountedAncestor: Fiber,
---   renderPriorityLevel: ReactPriorityLevel,
--- ): void {
---   -- We only have the top Fiber that was deleted but we need to recurse down its
---   -- children to find all the terminal nodes.
---   local node: Fiber = current
+local function unmountHostComponents(
+  finishedRoot: FiberRoot,
+  current: Fiber,
+  nearestMountedAncestor: Fiber,
+  renderPriorityLevel: ReactPriorityLevel
+)
+  -- We only have the top Fiber that was deleted but we need to recurse down its
+  -- children to find all the terminal nodes.
+  -- deviation: type refinement
+  -- local node: Fiber = current
+  local node = current
 
---   -- Each iteration, currentParent is populated with node's host parent if not
---   -- currentParentIsValid.
---   local currentParentIsValid = false
+  -- Each iteration, currentParent is populated with node's host parent if not
+  -- currentParentIsValid.
+  local currentParentIsValid = false
 
---   -- Note: these two variables *must* always be updated together.
---   local currentParent
---   local currentParentIsContainer
+  -- Note: these two variables *must* always be updated together.
+  local currentParent
+  local currentParentIsContainer
 
---   while (true)
---     if !currentParentIsValid)
---       local parent = node.return
---       findParent: while (true)
---         invariant(
---           parent ~= nil,
---           'Expected to find a host parent. This error is likely caused by ' +
---             'a bug in React. Please file an issue.',
---         )
---         local parentStateNode = parent.stateNode
---         switch (parent.tag)
---           case HostComponent:
---             currentParent = parentStateNode
---             currentParentIsContainer = false
---             break findParent
---           case HostRoot:
---             currentParent = parentStateNode.containerInfo
---             currentParentIsContainer = true
---             break findParent
---           case HostPortal:
---             currentParent = parentStateNode.containerInfo
---             currentParentIsContainer = true
---             break findParent
---           case FundamentalComponent:
---             if enableFundamentalAPI)
---               currentParent = parentStateNode.instance
---               currentParentIsContainer = false
---             end
---         end
---         parent = parent.return
---       end
---       currentParentIsValid = true
---     end
+  while true do
+    if not currentParentIsValid then
+      local parent = node.return_
+      while true do
+        invariant(
+          parent ~= nil,
+          "Expected to find a host parent. This error is likely caused by " ..
+            "a bug in React. Please file an issue."
+        )
+        local parentStateNode = parent.stateNode
+        if parent.tag == HostComponent then
+          currentParent = parentStateNode
+          currentParentIsContainer = false
+          break
+        elseif parent.tag == HostRoot then
+          currentParent = parentStateNode.containerInfo
+          currentParentIsContainer = true
+          break
+        elseif parent.tag == HostPortal then
+          currentParent = parentStateNode.containerInfo
+          currentParentIsContainer = true
+          break
+        elseif parent.tag == FundamentalComponent then
+          if enableFundamentalAPI then
+            currentParent = parentStateNode.instance
+            currentParentIsContainer = false
+          end
+        end
+        parent = parent.return_
+      end
+      currentParentIsValid = true
+    end
 
---     if node.tag == HostComponent or node.tag == HostText)
---       commitNestedUnmounts(
---         finishedRoot,
---         node,
---         nearestMountedAncestor,
---         renderPriorityLevel,
---       )
---       -- After all the children have unmounted, it is now safe to remove the
---       -- node from the tree.
---       if currentParentIsContainer)
---         removeChildFromContainer(
---           ((currentParent: any): Container),
---           (node.stateNode: Instance | TextInstance),
---         )
---       } else {
---         removeChild(
---           ((currentParent: any): Instance),
---           (node.stateNode: Instance | TextInstance),
---         )
---       end
---       -- Don't visit children because we already visited them.
---     } else if enableFundamentalAPI and node.tag == FundamentalComponent)
---       local fundamentalNode = node.stateNode.instance
---       commitNestedUnmounts(
---         finishedRoot,
---         node,
---         nearestMountedAncestor,
---         renderPriorityLevel,
---       )
---       -- After all the children have unmounted, it is now safe to remove the
---       -- node from the tree.
---       if currentParentIsContainer)
---         removeChildFromContainer(
---           ((currentParent: any): Container),
---           (fundamentalNode: Instance),
---         )
---       } else {
---         removeChild(
---           ((currentParent: any): Instance),
---           (fundamentalNode: Instance),
---         )
---       end
---     } else if 
---       enableSuspenseServerRenderer and
---       node.tag == DehydratedFragment
---     )
---       if enableSuspenseCallback)
---         local hydrationCallbacks = finishedRoot.hydrationCallbacks
---         if hydrationCallbacks ~= nil)
---           local onDeleted = hydrationCallbacks.onDeleted
---           if onDeleted)
---             onDeleted((node.stateNode: SuspenseInstance))
---           end
---         end
---       end
+    if node.tag == HostComponent or node.tag == HostText then
+      commitNestedUnmounts(
+        finishedRoot,
+        node,
+        nearestMountedAncestor,
+        renderPriorityLevel
+      )
+      -- After all the children have unmounted, it is now safe to remove the
+      -- node from the tree.
+      if currentParentIsContainer then
+        -- removeChildFromContainer(
+        --   ((currentParent: any): Container),
+        --   (fundamentalNode: Instance),
+        -- )
+        -- ROBLOX FIXME: type coercion
+        removeChildFromContainer(currentParent, node.stateNode)
+      else
+        -- removeChild(
+        --   ((currentParent: any): Instance),
+        --   (fundamentalNode: Instance),
+        -- )
+        -- ROBLOX FIXME: type coercion
+        removeChild(currentParent, node.stateNode)
+      end
+      -- Don't visit children because we already visited them.
+    elseif enableFundamentalAPI and node.tag == FundamentalComponent then
+      local fundamentalNode = node.stateNode.instance
+      commitNestedUnmounts(
+        finishedRoot,
+        node,
+        nearestMountedAncestor,
+        renderPriorityLevel
+      )
+      -- After all the children have unmounted, it is now safe to remove the
+      -- node from the tree.
+      if currentParentIsContainer then
+        -- removeChildFromContainer(
+        --   ((currentParent: any): Container),
+        --   (fundamentalNode: Instance),
+        -- )
+        -- ROBLOX FIXME: type coercion
+        removeChildFromContainer(currentParent, fundamentalNode)
+      else
+        -- removeChild(
+        --   ((currentParent: any): Instance),
+        --   (fundamentalNode: Instance),
+        -- )
+        -- ROBLOX FIXME: type coercion
+        removeChild(currentParent, fundamentalNode)
+      end
+    elseif
+      enableSuspenseServerRenderer and
+      node.tag == DehydratedFragment
+    then
+      unimplemented("clearSuspenseBoundary")
+      -- if enableSuspenseCallback then
+      --   local hydrationCallbacks = finishedRoot.hydrationCallbacks
+      --   if hydrationCallbacks ~= nil)
+      --     local onDeleted = hydrationCallbacks.onDeleted
+      --     if onDeleted)
+      --       onDeleted((node.stateNode: SuspenseInstance))
+      --     end
+      --   end
+      -- end
 
---       -- Delete the dehydrated suspense boundary and all of its content.
---       if currentParentIsContainer)
---         clearSuspenseBoundaryFromContainer(
---           ((currentParent: any): Container),
---           (node.stateNode: SuspenseInstance),
---         )
---       } else {
---         clearSuspenseBoundary(
---           ((currentParent: any): Instance),
---           (node.stateNode: SuspenseInstance),
---         )
---       end
---     } else if node.tag == HostPortal)
---       if node.child ~= nil)
---         -- When we go into a portal, it becomes the parent to remove from.
---         -- We will reassign it back when we pop the portal on the way up.
---         currentParent = node.stateNode.containerInfo
---         currentParentIsContainer = true
---         -- Visit children because portals might contain host components.
---         node.child.return = node
---         node = node.child
---         continue
---       end
---     } else {
---       commitUnmount(
---         finishedRoot,
---         node,
---         nearestMountedAncestor,
---         renderPriorityLevel,
---       )
---       -- Visit children because we may find more host components below.
---       if node.child ~= nil)
---         node.child.return = node
---         node = node.child
---         continue
---       end
---     end
---     if node == current)
---       return
---     end
---     while (node.sibling == nil)
---       if node.return == nil or node.return == current)
---         return
---       end
---       node = node.return
---       if node.tag == HostPortal)
---         -- When we go out of the portal, we need to restore the parent.
---         -- Since we don't keep a stack of them, we will search for it.
---         currentParentIsValid = false
---       end
---     end
---     node.sibling.return = node.return
---     node = node.sibling
---   end
--- end
+      -- -- Delete the dehydrated suspense boundary and all of its content.
+      -- if currentParentIsContainer)
+      --   clearSuspenseBoundaryFromContainer(
+      --     ((currentParent: any): Container),
+      --     (node.stateNode: SuspenseInstance),
+      --   )
+      -- } else {
+      --   clearSuspenseBoundary(
+      --     ((currentParent: any): Instance),
+      --     (node.stateNode: SuspenseInstance),
+      --   )
+      -- end
+    elseif node.tag == HostPortal then
+      if node.child ~= nil then
+        -- When we go into a portal, it becomes the parent to remove from.
+        -- We will reassign it back when we pop the portal on the way up.
+        currentParent = node.stateNode.containerInfo
+        currentParentIsContainer = true
+        -- Visit children because portals might contain host components.
+        node.child.return_ = node
+        node = node.child
+        continue
+      end
+    else
+      commitUnmount(
+        finishedRoot,
+        node,
+        nearestMountedAncestor,
+        renderPriorityLevel
+      )
+      -- Visit children because we may find more host components below.
+      if node.child ~= nil then
+        node.child.return_ = node
+        node = node.child
+        continue
+      end
+    end
+    if node == current then
+      return
+    end
+    while node.sibling == nil do
+      if node.return_ == nil or node.return_ == current then
+        return
+      end
+      node = node.return_
+      if node.tag == HostPortal then
+        -- When we go out of the portal, we need to restore the parent.
+        -- Since we don't keep a stack of them, we will search for it.
+        currentParentIsValid = false
+      end
+    end
+    node.sibling.return_ = node.return_
+    node = node.sibling
+  end
+end
 
--- function commitDeletion(
---   finishedRoot: FiberRoot,
---   current: Fiber,
---   nearestMountedAncestor: Fiber,
---   renderPriorityLevel: ReactPriorityLevel,
--- ): void {
---   if supportsMutation)
---     -- Recursively delete all host nodes from the parent.
---     -- Detach refs and call componentWillUnmount() on the whole subtree.
---     unmountHostComponents(
---       finishedRoot,
---       current,
---       nearestMountedAncestor,
---       renderPriorityLevel,
---     )
---   } else {
---     -- Detach refs and call componentWillUnmount() on the whole subtree.
---     commitNestedUnmounts(
---       finishedRoot,
---       current,
---       nearestMountedAncestor,
---       renderPriorityLevel,
---     )
---   end
---   local alternate = current.alternate
---   detachFiberMutation(current)
---   if alternate ~= nil)
---     detachFiberMutation(alternate)
---   end
--- end
+local function commitDeletion(
+  finishedRoot: FiberRoot,
+  current: Fiber,
+  nearestMountedAncestor: Fiber,
+  renderPriorityLevel: ReactPriorityLevel
+)
+  if supportsMutation then
+    -- Recursively delete all host nodes from the parent.
+    -- Detach refs and call componentWillUnmount() on the whole subtree.
+    unmountHostComponents(
+      finishedRoot,
+      current,
+      nearestMountedAncestor,
+      renderPriorityLevel
+    )
+  else
+    -- Detach refs and call componentWillUnmount() on the whole subtree.
+    commitNestedUnmounts(
+      finishedRoot,
+      current,
+      nearestMountedAncestor,
+      renderPriorityLevel
+    )
+  end
+  local alternate = current.alternate
+  detachFiberMutation(current)
+  if alternate ~= nil then
+    detachFiberMutation(alternate)
+  end
+end
 
--- function commitWork(current: Fiber | nil, finishedWork: Fiber): void {
---   if !supportsMutation)
---     switch (finishedWork.tag)
---       case FunctionComponent:
---       case ForwardRef:
---       case MemoComponent:
---       case SimpleMemoComponent:
---       case Block: {
---         -- Layout effects are destroyed during the mutation phase so that all
---         -- destroy functions for all fibers are called before any create functions.
---         -- This prevents sibling component effects from interfering with each other,
---         -- e.g. a destroy function in one component should never override a ref set
---         -- by a create function in another component during the same commit.
---         if 
---           enableProfilerTimer and
---           enableProfilerCommitHooks and
---           finishedWork.mode & ProfileMode
---         )
---           try {
---             startLayoutEffectTimer()
---             commitHookEffectListUnmount(
---               HookLayout | HookHasEffect,
---               finishedWork,
---               finishedWork.return,
---             )
---           } finally {
---             recordLayoutEffectDuration(finishedWork)
---           end
---         } else {
---           commitHookEffectListUnmount(
---             HookLayout | HookHasEffect,
---             finishedWork,
---             finishedWork.return,
---           )
---         end
---         return
---       end
---       case Profiler: {
---         return
---       end
---       case SuspenseComponent: {
---         commitSuspenseComponent(finishedWork)
---         attachSuspenseRetryListeners(finishedWork)
---         return
---       end
---       case SuspenseListComponent: {
---         attachSuspenseRetryListeners(finishedWork)
---         return
---       end
---       case HostRoot: {
---         if supportsHydration)
---           local root: FiberRoot = finishedWork.stateNode
---           if root.hydrate)
---             -- We've just hydrated. No need to hydrate again.
---             root.hydrate = false
---             commitHydratedContainer(root.containerInfo)
---           end
---         end
---         break
---       end
---       case OffscreenComponent:
---       case LegacyHiddenComponent: {
---         return
---       end
---     end
+local function commitWork(current: Fiber | nil, finishedWork: Fiber)
+  if not supportsMutation then
+    unimplemented("non-mutation branch")
+    -- switch (finishedWork.tag)
+    --   case FunctionComponent:
+    --   case ForwardRef:
+    --   case MemoComponent:
+    --   case SimpleMemoComponent:
+    --   case Block: {
+    --     -- Layout effects are destroyed during the mutation phase so that all
+    --     -- destroy functions for all fibers are called before any create functions.
+    --     -- This prevents sibling component effects from interfering with each other,
+    --     -- e.g. a destroy function in one component should never override a ref set
+    --     -- by a create function in another component during the same commit.
+    --     if
+    --       enableProfilerTimer and
+    --       enableProfilerCommitHooks and
+    --       finishedWork.mode & ProfileMode
+    --     )
+    --       try {
+    --         startLayoutEffectTimer()
+    --         commitHookEffectListUnmount(
+    --           HookLayout | HookHasEffect,
+    --           finishedWork,
+    --           finishedWork.return,
+    --         )
+    --       } finally {
+    --         recordLayoutEffectDuration(finishedWork)
+    --       end
+    --     } else {
+    --       commitHookEffectListUnmount(
+    --         HookLayout | HookHasEffect,
+    --         finishedWork,
+    --         finishedWork.return,
+    --       )
+    --     end
+    --     return
+    --   end
+    --   case Profiler: {
+    --     return
+    --   end
+    --   case SuspenseComponent: {
+    --     commitSuspenseComponent(finishedWork)
+    --     attachSuspenseRetryListeners(finishedWork)
+    --     return
+    --   end
+    --   case SuspenseListComponent: {
+    --     attachSuspenseRetryListeners(finishedWork)
+    --     return
+    --   end
+    --   case HostRoot: {
+    --     if supportsHydration)
+    --       local root: FiberRoot = finishedWork.stateNode
+    --       if root.hydrate)
+    --         -- We've just hydrated. No need to hydrate again.
+    --         root.hydrate = false
+    --         commitHydratedContainer(root.containerInfo)
+    --       end
+    --     end
+    --     break
+    --   end
+    --   case OffscreenComponent:
+    --   case LegacyHiddenComponent: {
+    --     return
+    --   end
+    -- end
 
---     commitContainer(finishedWork)
---     return
---   end
+    -- commitContainer(finishedWork)
+    -- return
+  end
 
---   switch (finishedWork.tag)
---     case FunctionComponent:
---     case ForwardRef:
---     case MemoComponent:
---     case SimpleMemoComponent:
---     case Block: {
---       -- Layout effects are destroyed during the mutation phase so that all
---       -- destroy functions for all fibers are called before any create functions.
---       -- This prevents sibling component effects from interfering with each other,
---       -- e.g. a destroy function in one component should never override a ref set
---       -- by a create function in another component during the same commit.
---       if 
---         enableProfilerTimer and
---         enableProfilerCommitHooks and
---         finishedWork.mode & ProfileMode
---       )
---         try {
---           startLayoutEffectTimer()
---           commitHookEffectListUnmount(
---             HookLayout | HookHasEffect,
---             finishedWork,
---             finishedWork.return,
---           )
---         } finally {
---           recordLayoutEffectDuration(finishedWork)
---         end
---       } else {
---         commitHookEffectListUnmount(
---           HookLayout | HookHasEffect,
---           finishedWork,
---           finishedWork.return,
---         )
---       end
---       return
---     end
---     case ClassComponent: {
---       return
---     end
---     case HostComponent: {
---       local instance: Instance = finishedWork.stateNode
---       if instance ~= nil)
---         -- Commit the work prepared earlier.
---         local newProps = finishedWork.memoizedProps
---         -- For hydration we reuse the update path but we treat the oldProps
---         -- as the newProps. The updatePayload will contain the real change in
---         -- this case.
---         local oldProps = current ~= nil ? current.memoizedProps : newProps
---         local type = finishedWork.type
---         -- TODO: Type the updateQueue to be specific to host components.
---         local updatePayload: nil | UpdatePayload = (finishedWork.updateQueue: any)
---         finishedWork.updateQueue = nil
---         if updatePayload ~= nil)
---           commitUpdate(
---             instance,
---             updatePayload,
---             type,
---             oldProps,
---             newProps,
---             finishedWork,
---           )
---         end
---       end
---       return
---     end
---     case HostText: {
---       invariant(
---         finishedWork.stateNode ~= nil,
---         'This should have a text node initialized. This error is likely ' +
---           'caused by a bug in React. Please file an issue.',
---       )
---       local textInstance: TextInstance = finishedWork.stateNode
---       local newText: string = finishedWork.memoizedProps
---       -- For hydration we reuse the update path but we treat the oldProps
---       -- as the newProps. The updatePayload will contain the real change in
---       -- this case.
---       local oldText: string =
---         current ~= nil ? current.memoizedProps : newText
---       commitTextUpdate(textInstance, oldText, newText)
---       return
---     end
---     case HostRoot: {
---       if supportsHydration)
---         local root: FiberRoot = finishedWork.stateNode
---         if root.hydrate)
---           -- We've just hydrated. No need to hydrate again.
---           root.hydrate = false
---           commitHydratedContainer(root.containerInfo)
---         end
---       end
---       return
---     end
---     case Profiler: {
---       return
---     end
---     case SuspenseComponent: {
---       commitSuspenseComponent(finishedWork)
---       attachSuspenseRetryListeners(finishedWork)
---       return
---     end
---     case SuspenseListComponent: {
---       attachSuspenseRetryListeners(finishedWork)
---       return
---     end
---     case IncompleteClassComponent: {
---       return
---     end
---     case FundamentalComponent: {
---       if enableFundamentalAPI)
---         local fundamentalInstance = finishedWork.stateNode
---         updateFundamentalComponent(fundamentalInstance)
---         return
---       end
---       break
---     end
---     case ScopeComponent: {
---       if enableScopeAPI)
---         local scopeInstance = finishedWork.stateNode
---         prepareScopeUpdate(scopeInstance, finishedWork)
---         return
---       end
---       break
---     end
---     case OffscreenComponent:
---     case LegacyHiddenComponent: {
---       local newState: OffscreenState | nil = finishedWork.memoizedState
---       local isHidden = newState ~= nil
---       hideOrUnhideAllChildren(finishedWork, isHidden)
---       return
---     end
---   end
---   invariant(
---     false,
---     'This unit of work tag should not have side-effects. This error is ' +
---       'likely caused by a bug in React. Please file an issue.',
---   )
--- end
+  if
+    finishedWork.tag == FunctionComponent or
+    finishedWork.tag == ForwardRef or
+    finishedWork.tag == MemoComponent or
+    finishedWork.tag == SimpleMemoComponent or
+    finishedWork.tag == Block
+  then
+    -- Layout effects are destroyed during the mutation phase so that all
+    -- destroy functions for all fibers are called before any create functions.
+    -- This prevents sibling component effects from interfering with each other,
+    -- e.g. a destroy function in one component should never override a ref set
+    -- by a create function in another component during the same commit.
+    if
+      enableProfilerTimer and
+      enableProfilerCommitHooks and
+      bit32.band(finishedWork.mode, ProfileMode)
+    then
+      unimplemented("profiler timer logic")
+      -- local ok, result = pcall(function()
+      --   startLayoutEffectTimer()
+      --   commitHookEffectListUnmount(
+      --     bit32.bor(HookLayout, HookHasEffect),
+      --     finishedWork,
+      --     finishedWork.return_
+      --   )
+      -- end)
+      -- -- finally
+      -- recordLayoutEffectDuration(finishedWork)
+      -- if not ok then
+      --   error(result)
+      -- end
+    else
+      commitHookEffectListUnmount(
+        bit32.bor(HookLayout, HookHasEffect),
+        finishedWork,
+        finishedWork.return_
+      )
+    end
+    return
+  elseif finishedWork.tag == ClassComponent then
+    return
+  elseif finishedWork.tag == HostComponent then
+    local instance: Instance = finishedWork.stateNode
+    if instance ~= nil then
+      -- Commit the work prepared earlier.
+      local newProps = finishedWork.memoizedProps
+      -- For hydration we reuse the update path but we treat the oldProps
+      -- as the newProps. The updatePayload will contain the real change in
+      -- this case.
+      local oldProps
+      if current then
+        oldProps = current.memoizedProps
+      else
+        oldProps = newProps
+      end
+      local type = finishedWork.type
+      -- TODO: Type the updateQueue to be specific to host components.
+      -- FIXME (roblox): type coercion
+      -- local updatePayload: nil | UpdatePayload = (finishedWork.updateQueue: any)
+      local updatePayload = finishedWork.updateQueue
+      finishedWork.updateQueue = nil
+      if updatePayload ~= nil then
+        commitUpdate(
+          instance,
+          updatePayload,
+          type,
+          oldProps,
+          newProps,
+          finishedWork
+        )
+      end
+    end
+    return
+  elseif finishedWork.tag == HostText then
+    unimplemented("commitWork: HostText")
+    -- invariant(
+    --   finishedWork.stateNode ~= nil,
+    --   'This should have a text node initialized. This error is likely ' +
+    --     'caused by a bug in React. Please file an issue.',
+    -- )
+    -- local textInstance: TextInstance = finishedWork.stateNode
+    -- local newText: string = finishedWork.memoizedProps
+    -- -- For hydration we reuse the update path but we treat the oldProps
+    -- -- as the newProps. The updatePayload will contain the real change in
+    -- -- this case.
+    -- local oldText: string =
+    --   current ~= nil ? current.memoizedProps : newText
+    -- commitTextUpdate(textInstance, oldText, newText)
+    -- return
+  elseif finishedWork.tag == HostRoot then
+    unimplemented("commitWork: HostText")
+      -- if supportsHydration)
+      --   local root: FiberRoot = finishedWork.stateNode
+      --   if root.hydrate)
+      --     -- We've just hydrated. No need to hydrate again.
+      --     root.hydrate = false
+      --     commitHydratedContainer(root.containerInfo)
+      --   end
+      -- end
+      -- return
+  elseif finishedWork.tag == Profiler then
+    return
+  elseif finishedWork.tag == SuspenseComponent then
+    unimplemented("commitWork: SuspenseComponent")
+    -- commitSuspenseComponent(finishedWork)
+    -- attachSuspenseRetryListeners(finishedWork)
+    -- return
+  elseif finishedWork.tag == SuspenseListComponent then
+    unimplemented("commitWork: SuspenseListComponent")
+    -- attachSuspenseRetryListeners(finishedWork)
+    -- return
+  elseif finishedWork.tag == IncompleteClassComponent then
+    return
+  elseif finishedWork.tag == FundamentalComponent then
+    unimplemented("commitWork: FundamentalComponent")
+    -- if enableFundamentalAPI)
+    --   local fundamentalInstance = finishedWork.stateNode
+    --   updateFundamentalComponent(fundamentalInstance)
+    --   return
+    -- end
+    -- break
+  elseif finishedWork.tag == ScopeComponent then
+    unimplemented("commitWork: ScopeComponent")
+    -- if enableScopeAPI)
+    --   local scopeInstance = finishedWork.stateNode
+    --   prepareScopeUpdate(scopeInstance, finishedWork)
+    --   return
+    -- end
+    -- break
+  elseif
+    finishedWork.tag == OffscreenComponent or
+    finishedWork.tag == LegacyHiddenComponent
+  then
+    unimplemented("commitWork: OffscreenComponent / LegacyHiddenComponent")
+    -- local newState: OffscreenState | nil = finishedWork.memoizedState
+    -- local isHidden = newState ~= nil
+    -- hideOrUnhideAllChildren(finishedWork, isHidden)
+    -- return
+  end
+  invariant(
+    false,
+    "This unit of work tag should not have side-effects. This error is " ..
+      "likely caused by a bug in React. Please file an issue."
+  )
+end
 
 -- function commitSuspenseComponent(finishedWork: Fiber)
 --   local newState: SuspenseState | nil = finishedWork.memoizedState
@@ -1981,38 +2007,38 @@ local function commitPassiveUnmount(finishedWork: Fiber)
   end
 end
 
--- function commitPassiveUnmountInsideDeletedTree(
---   current: Fiber,
---   nearestMountedAncestor: Fiber | nil,
--- ): void {
---   switch (current.tag)
---     case FunctionComponent:
---     case ForwardRef:
---     case SimpleMemoComponent:
---     case Block: {
---       if 
---         enableProfilerTimer and
---         enableProfilerCommitHooks and
---         current.mode & ProfileMode
---       )
---         startPassiveEffectTimer()
---         commitHookEffectListUnmount(
---           HookPassive,
---           current,
---           nearestMountedAncestor,
---         )
---         recordPassiveEffectDuration(current)
---       } else {
---         commitHookEffectListUnmount(
---           HookPassive,
---           current,
---           nearestMountedAncestor,
---         )
---       end
---       break
---     end
---   end
--- end
+local function commitPassiveUnmountInsideDeletedTree(
+  current: Fiber,
+  nearestMountedAncestor: Fiber | nil
+)
+  if
+    current.tag == FunctionComponent or
+    current.tag == ForwardRef or
+    current.tag == SimpleMemoComponent or
+    current.tag == Block
+  then
+    if
+      enableProfilerTimer and
+      enableProfilerCommitHooks and
+      bit32.band(current.mode, ProfileMode)
+    then
+      unimplemented("profiler timer logic")
+      -- startPassiveEffectTimer()
+      commitHookEffectListUnmount(
+        HookPassive,
+        current,
+        nearestMountedAncestor
+      )
+      -- recordPassiveEffectDuration(current)
+    else
+      commitHookEffectListUnmount(
+        HookPassive,
+        current,
+        nearestMountedAncestor
+      )
+    end
+  end
+end
 
 local function commitPassiveMount(
   finishedRoot: FiberRoot,
@@ -2165,12 +2191,12 @@ return {
   commitBeforeMutationLifeCycles = commitBeforeMutationLifeCycles,
   -- commitResetTextContent = commitResetTextContent,
   commitPlacement = commitPlacement,
-  -- commitDeletion = commitDeletion,
-  -- commitWork = commitWork,
+  commitDeletion = commitDeletion,
+  commitWork = commitWork,
   -- commitAttachRef = commitAttachRef,
   -- commitDetachRef = commitDetachRef,
   commitPassiveUnmount = commitPassiveUnmount,
-  -- commitPassiveUnmountInsideDeletedTree = commitPassiveUnmountInsideDeletedTree,
+  commitPassiveUnmountInsideDeletedTree = commitPassiveUnmountInsideDeletedTree,
   commitPassiveMount = commitPassiveMount,
   -- invokeLayoutEffectMountInDEV = invokeLayoutEffectMountInDEV,
   -- invokeLayoutEffectUnmountInDEV = invokeLayoutEffectUnmountInDEV,
