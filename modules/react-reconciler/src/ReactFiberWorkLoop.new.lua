@@ -34,7 +34,7 @@ type StackCursor<T> = ReactFiberStack.StackCursor<T>;
 
 local ReactFeatureFlags = require(Workspace.Shared.ReactFeatureFlags)
 -- deviation: Use some properties directly instead of localizing to avoid 200 limit
--- local warnAboutDeprecatedLifecycles = ReactFeatureFlags.warnAboutDeprecatedLifecycles
+local warnAboutDeprecatedLifecycles = ReactFeatureFlags.warnAboutDeprecatedLifecycles
 -- local enableSuspenseServerRenderer = ReactFeatureFlags.enableSuspenseServerRenderer
 -- local replayFailedUnitOfWorkWithInvokeGuardedCallback = ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback
 local enableProfilerTimer = ReactFeatureFlags.enableProfilerTimer
@@ -45,7 +45,7 @@ local deferRenderPhaseUpdateToNextBatch = ReactFeatureFlags.deferRenderPhaseUpda
 local decoupleUpdatePriorityFromScheduler = ReactFeatureFlags.decoupleUpdatePriorityFromScheduler
 local enableDebugTracing = ReactFeatureFlags.enableDebugTracing
 local enableSchedulingProfiler = ReactFeatureFlags.enableSchedulingProfiler
--- local skipUnmountedBoundaries = ReactFeatureFlags.skipUnmountedBoundaries
+local skipUnmountedBoundaries = ReactFeatureFlags.skipUnmountedBoundaries
 local enableDoubleInvokingEffects = ReactFeatureFlags.enableDoubleInvokingEffects
 local ReactSharedInternals = require(Workspace.Shared.ReactSharedInternals)
 local invariant = require(Workspace.Shared.invariant)
@@ -150,24 +150,24 @@ local findUpdateLane = ReactFiberLane.findUpdateLane
 local findTransitionLane = ReactFiberLane.findTransitionLane
 -- local findRetryLane = ReactFiberLane.findRetryLane
 local includesSomeLane = ReactFiberLane.includesSomeLane
--- local isSubsetOfLanes = ReactFiberLane.isSubsetOfLanes
+local isSubsetOfLanes = ReactFiberLane.isSubsetOfLanes
 local mergeLanes = ReactFiberLane.mergeLanes
 local removeLanes = ReactFiberLane.removeLanes
 local pickArbitraryLane = ReactFiberLane.pickArbitraryLane
 local hasDiscreteLanes = ReactFiberLane.hasDiscreteLanes
--- local includesNonIdleWork = ReactFiberLane.includesNonIdleWork
--- local includesOnlyRetries = ReactFiberLane.includesOnlyRetries
--- local includesOnlyTransitions = ReactFiberLane.includesOnlyTransitions
+local includesNonIdleWork = ReactFiberLane.includesNonIdleWork
+local includesOnlyRetries = ReactFiberLane.includesOnlyRetries
+local includesOnlyTransitions = ReactFiberLane.includesOnlyTransitions
 local getNextLanes = ReactFiberLane.getNextLanes
 local returnNextLanesPriority = ReactFiberLane.returnNextLanesPriority
 local setCurrentUpdateLanePriority = ReactFiberLane.setCurrentUpdateLanePriority
 local getCurrentUpdateLanePriority = ReactFiberLane.getCurrentUpdateLanePriority
 local markStarvedLanesAsExpired = ReactFiberLane.markStarvedLanesAsExpired
 local getLanesToRetrySynchronouslyOnError = ReactFiberLane.getLanesToRetrySynchronouslyOnError
--- local getMostRecentEventTime = ReactFiberLane.getMostRecentEventTime
+local getMostRecentEventTime = ReactFiberLane.getMostRecentEventTime
 local markRootUpdated = ReactFiberLane.markRootUpdated
 local markRootSuspended_dontCallThisOneDirectly = ReactFiberLane.markRootSuspended
--- local markRootPinged = ReactFiberLane.markRootPinged
+local markRootPinged = ReactFiberLane.markRootPinged
 local markRootExpired = ReactFiberLane.markRootExpired
 local markDiscreteUpdatesExpired = ReactFiberLane.markDiscreteUpdatesExpired
 local markRootFinished = ReactFiberLane.markRootFinished
@@ -182,11 +182,10 @@ local completeWork = require(script.Parent["ReactFiberCompleteWork.new"]).comple
 local ReactFiberUnwindWork = require(script.Parent["ReactFiberUnwindWork.new"])
 local unwindWork = ReactFiberUnwindWork.unwindWork
 local unwindInterruptedWork = ReactFiberUnwindWork.unwindInterruptedWork
--- local {
---   throwException,
---   createRootErrorUpdate,
---   createClassErrorUpdate,
--- } = require(script.Parent.ReactFiberThrow.new)
+local ReactFiberThrow = require(script.Parent["ReactFiberThrow.new"])
+local _throwException = ReactFiberThrow.throwException
+local createRootErrorUpdate = ReactFiberThrow.createRootErrorUpdate
+local _createClassErrorUpdate = ReactFiberThrow.createClassErrorUpdate
 local ReactFiberCommitWork = require(script.Parent["ReactFiberCommitWork.new"])
 local commitBeforeMutationEffectOnFiber = ReactFiberCommitWork.commitBeforeMutationLifeCycles
 local commitPlacement = ReactFiberCommitWork.commitPlacement
@@ -199,11 +198,13 @@ local commitPassiveMountOnFiber = ReactFiberCommitWork.commitPassiveMount
 -- local commitAttachRef = ReactFiberCommitWork.commitAttachRef
 -- local commitResetTextContent = ReactFiberCommitWork.commitResetTextContent
 -- local isSuspenseBoundaryBeingHidden = ReactFiberCommitWork.isSuspenseBoundaryBeingHidden
--- local invokeLayoutEffectMountInDEV = ReactFiberCommitWork.invokeLayoutEffectMountInDEV
--- local invokePassiveEffectMountInDEV = ReactFiberCommitWork.invokePassiveEffectMountInDEV
--- local invokeLayoutEffectUnmountInDEV = ReactFiberCommitWork.invokeLayoutEffectUnmountInDEV
--- local invokePassiveEffectUnmountInDEV = ReactFiberCommitWork.invokePassiveEffectUnmountInDEV
+local invokeLayoutEffectMountInDEV = ReactFiberCommitWork.invokeLayoutEffectMountInDEV
+local invokePassiveEffectMountInDEV = ReactFiberCommitWork.invokePassiveEffectMountInDEV
+local invokeLayoutEffectUnmountInDEV = ReactFiberCommitWork.invokeLayoutEffectUnmountInDEV
+local invokePassiveEffectUnmountInDEV = ReactFiberCommitWork.invokePassiveEffectUnmountInDEV
 local recursivelyCommitLayoutEffects = ReactFiberCommitWork.recursivelyCommitLayoutEffects
+
+local enqueueUpdate = require(script.Parent["ReactUpdateQueue.new"]).enqueueUpdate
 
 local resetContextDependencies = require(script.Parent["ReactFiberNewContext.new"]).resetContextDependencies
 local ReactFiberHooks = require(script.Parent["ReactFiberHooks.new"])
@@ -211,7 +212,7 @@ local resetHooksAfterThrow = ReactFiberHooks.resetHooksAfterThrow
 local ContextOnlyDispatcher = ReactFiberHooks.ContextOnlyDispatcher
 local getIsUpdatingOpaqueValueInRenderPhaseInDEV = ReactFiberHooks.getIsUpdatingOpaqueValueInRenderPhaseInDEV
 -- } = require(script.Parent.ReactFiberHooks.new)
--- local {createCapturedValue} = require(script.Parent.ReactCapturedValue)
+local createCapturedValue = require(script.Parent.ReactCapturedValue).createCapturedValue
 local pushToStack = ReactFiberStack.push
 local popFromStack = ReactFiberStack.pop
 local createCursor = ReactFiberStack.createCursor
@@ -224,7 +225,7 @@ local createCursor = ReactFiberStack.createCursor
 
 -- -- DEV stuff
 local getComponentName = require(Workspace.Shared.getComponentName)
--- local ReactStrictModeWarnings = require(script.Parent.ReactStrictModeWarnings.new)
+local ReactStrictModeWarnings = require(script.Parent["ReactStrictModeWarnings.new"])
 local ReactCurrentFiber = require(script.Parent.ReactCurrentFiber)
 -- deviation: these two properties would be captured as values instead of bound
 -- local ReactCurrentDebugFiberIsRenderingInDEV = ReactCurrentFiber.isRendering
@@ -235,8 +236,8 @@ local ReactErrorUtils = require(Workspace.Shared.ReactErrorUtils)
 local invokeGuardedCallback = ReactErrorUtils.invokeGuardedCallback
 local hasCaughtError = ReactErrorUtils.hasCaughtError
 local clearCaughtError = ReactErrorUtils.clearCaughtError
--- local {onCommitRoot as onCommitRootDevTools} = require(script.Parent.ReactFiberDevToolsHook.new)
--- local {onCommitRoot as onCommitRootTestSelector} = require(script.Parent.ReactTestSelectors)
+local onCommitRootDevTools = require(script.Parent["ReactFiberDevToolsHook.new"]).onCommitRoot
+local onCommitRootTestSelector = require(script.Parent.ReactTestSelectors).onCommitRoot
 
 -- Used by `act`
 local enqueueTask = require(Workspace.Shared["enqueueTask.roblox"])
@@ -245,7 +246,7 @@ local doesFiberContain = require(script.Parent.ReactFiberTreeReflection).doesFib
 local ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher
 local ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner
 local IsSomeRendererActing = ReactSharedInternals.IsSomeRendererActing
-
+local  captureCommitPhaseErrorOnRoot, flushPassiveMountEffects
 -- deviation: Common types
 type Set<T> = { [T]: boolean };
 type Array<T> = { [number]: T };
@@ -324,14 +325,14 @@ local workInProgressRootPingedLanes: Lanes = ReactFiberLane.NoLanes
 
 local mostRecentlyUpdatedRoot: ReactInternalTypes.FiberRoot | nil = nil
 
--- -- The most recent time we committed a fallback. This lets us ensure a train
--- -- model where we don't commit new loading states in too quick succession.
--- local globalMostRecentFallbackTime: number = 0
--- local FALLBACK_THROTTLE_MS: number = 500
+-- The most recent time we committed a fallback. This lets us ensure a train
+-- model where we don't commit new loading states in too quick succession.
+local globalMostRecentFallbackTime: number = 0
+local FALLBACK_THROTTLE_MS: number = 500
 
 -- The absolute time for when we should start giving up on rendering
 -- more and prefer CPU suspense heuristics instead.
-local _workInProgressRootRenderTargetTime: number = math.huge
+local workInProgressRootRenderTargetTime: number = math.huge
 -- How long a render is supposed to take before we start following CPU
 -- suspense heuristics and opt out of rendering more content.
 local RENDER_TIMEOUT_MS = 500
@@ -340,16 +341,16 @@ local RENDER_TIMEOUT_MS = 500
 local nearestProfilerOnStack: Fiber | nil = nil
 
 local function resetRenderTimer()
-  _workInProgressRootRenderTargetTime = now() + RENDER_TIMEOUT_MS
+  workInProgressRootRenderTargetTime = now() + RENDER_TIMEOUT_MS
 end
 
--- exports.getRenderTargetTime(): number {
---   return workInProgressRootRenderTargetTime
--- end
+exports.getRenderTargetTime = function(): number
+  return workInProgressRootRenderTargetTime
+end
 
 local hasUncaughtError = false
 local firstUncaughtError = nil
-local _legacyErrorBoundariesThatAlreadyFailed: Set<any> | nil = nil
+local legacyErrorBoundariesThatAlreadyFailed
 
 local rootDoesHavePassiveEffects: boolean = false
 local rootWithPendingPassiveEffects: ReactInternalTypes.FiberRoot? = nil
@@ -359,7 +360,7 @@ local pendingPassiveEffectsLanes: Lanes = ReactFiberLane.NoLanes
 -- deviation: FIXME restore type Set<ReactInternalTypes.FiberRoot>?, has trouble with narrowing
 local rootsWithPendingDiscreteUpdates: any = nil
 
--- -- Use these to prevent an infinite loop of nested updates
+-- Use these to prevent an infinite loop of nested updates
 local NESTED_UPDATE_LIMIT = 50
 local nestedUpdateCount: number = 0
 local rootWithNestedUpdates: ReactInternalTypes.FiberRoot | nil = nil
@@ -381,8 +382,8 @@ local currentEventTime: number = NoTimestamp
 local currentEventWipLanes: Lanes = ReactFiberLane.NoLanes
 local currentEventPendingLanes: Lanes = ReactFiberLane.NoLanes
 
--- -- Dev only flag that tracks if passive effects are currently being flushed.
--- -- We warn about state updates for unmounted components differently in this case.
+-- Dev only flag that tracks if passive effects are currently being flushed.
+-- We warn about state updates for unmounted components differently in this case.
 local isFlushingPassiveEffects = false
 
 local focusedInstanceHandle: nil | Fiber = nil
@@ -844,10 +845,9 @@ mod.performConcurrentWorkOnRoot = function(root)
 
     if exitStatus == RootExitStatus.FatalErrored then
       local fatalError = workInProgressRootFatalError
-      unimplemented("error recovery logic, error: " .. tostring(fatalError))
-      -- mod.prepareFreshStack(root, ReactFiberLane.NoLanes)
-      -- mod.markRootSuspended(root, lanes)
-      -- ensureRootIsScheduled(root, now())
+      mod.prepareFreshStack(root, ReactFiberLane.NoLanes)
+      mod.markRootSuspended(root, lanes)
+      ensureRootIsScheduled(root, now())
       error(fatalError)
     end
 
@@ -872,6 +872,16 @@ mod.performConcurrentWorkOnRoot = function(root)
   return nil
 end
 
+-- we track the 'depth' of the act() calls with this counter,
+-- so we can tell if any async act() calls try to run in parallel.
+local actingUpdatesScopeDepth = 0
+local didWarnAboutUsingActInProd = false
+
+function shouldForceFlushFallbacksInDEV()
+  -- Never force flush in production. This function should get stripped out.
+  return _G.__DEV__ and actingUpdatesScopeDepth > 0
+end
+
 mod.finishConcurrentRender = function(root, exitStatus, lanes)
   if
     exitStatus == RootExitStatus.Incomplete or
@@ -886,91 +896,86 @@ mod.finishConcurrentRender = function(root, exitStatus, lanes)
     -- this point, it errored again. Commit it.
     mod.commitRoot(root)
   elseif exitStatus == RootExitStatus.Suspended then
-    unimplemented("exitStatus == RootSuspended")
-    -- mod.markRootSuspended(root, lanes)
+    mod.markRootSuspended(root, lanes)
 
-    -- -- We have an acceptable loading state. We need to figure out if we
-    -- -- should immediately commit it or wait a bit.
+    -- We have an acceptable loading state. We need to figure out if we
+    -- should immediately commit it or wait a bit.
+    if
+      includesOnlyRetries(lanes) and
+      -- do not delay if we're inside an act() scope
+      not shouldForceFlushFallbacksInDEV() then
+      -- This render only included retries, no updates. Throttle committing
+      -- retries so that we don't show too many loading states too quickly.
+      local msUntilTimeout =
+        globalMostRecentFallbackTime + FALLBACK_THROTTLE_MS - now()
+      -- Don't bother with a very short suspense time.
+      if msUntilTimeout > 10 then
+        local nextLanes = getNextLanes(root, ReactFiberLane.NoLanes)
+        if nextLanes ~= ReactFiberLane.NoLanes then
+          -- There's additional work on this root.
+          return
+        end
+        local suspendedLanes = root.suspendedLanes
+        if not isSubsetOfLanes(suspendedLanes, lanes) then
+          -- We should prefer to render the fallback of at the last
+          -- suspended level. Ping the last suspended level to try
+          -- rendering it again.
+          -- FIXME: What if the suspended lanes are Idle? Should not restart.
+          local eventTime = exports.requestEventTime()
+          markRootPinged(root, suspendedLanes, eventTime)
+          return
+        end
 
-    -- if
-    --   includesOnlyRetries(lanes) and
-    --   -- do not delay if we're inside an act() scope
-    --   !shouldForceFlushFallbacksInDEV()
-    -- )
-    --   -- This render only included retries, no updates. Throttle committing
-    --   -- retries so that we don't show too many loading states too quickly.
-    --   local msUntilTimeout =
-    --     globalMostRecentFallbackTime + FALLBACK_THROTTLE_MS - now()
-    --   -- Don't bother with a very short suspense time.
-    --   if msUntilTimeout > 10)
-    --     local nextLanes = getNextLanes(root, ReactFiberLane.NoLanes)
-    --     if nextLanes ~= ReactFiberLane.NoLanes)
-    --       -- There's additional work on this root.
-    --       break
-    --     end
-    --     local suspendedLanes = root.suspendedLanes
-    --     if !isSubsetOfLanes(suspendedLanes, lanes))
-    --       -- We should prefer to render the fallback of at the last
-    --       -- suspended level. Ping the last suspended level to try
-    --       -- rendering it again.
-    --       -- FIXME: What if the suspended lanes are Idle? Should not restart.
-    --       local eventTime = requestEventTime()
-    --       markRootPinged(root, suspendedLanes, eventTime)
-    --       break
-    --     end
-
-    --     -- The render is suspended, it hasn't timed out, and there's no
-    --     -- lower priority work to do. Instead of committing the fallback
-    --     -- immediately, wait for more data to arrive.
-    --     root.timeoutHandle = scheduleTimeout(
-    --       mod.commitRoot.bind(null, root),
-    --       msUntilTimeout,
-    --     )
-    --     break
-    --   end
-    -- end
-    -- -- The work expired. Commit immediately.
-    -- mod.commitRoot(root)
-    -- break
+        -- The render is suspended, it hasn't timed out, and there's no
+        -- lower priority work to do. Instead of committing the fallback
+        -- immediately, wait for more data to arrive.
+        unimplemented("scheduleTimeout")
+        -- root.timeoutHandle = scheduleTimeout(
+        --   mod.commitRoot.bind(null, root),
+        --   msUntilTimeout
+        -- )
+        return
+      end
+    end
+    -- The work expired. Commit immediately.
+    mod.commitRoot(root)
   elseif exitStatus == RootExitStatus.SuspendedWithDelay then
-    unimplemented("exitStatus == RootSuspendedWithDelay")
-    -- mod.markRootSuspended(root, lanes)
+    mod.markRootSuspended(root, lanes)
 
-    -- if includesOnlyTransitions(lanes))
-    --   -- This is a transition, so we should exit without committing a
-    --   -- placeholder and without scheduling a timeout. Delay indefinitely
-    --   -- until we receive more data.
-    --   break
-    -- end
+    if includesOnlyTransitions(lanes) then
+      -- This is a transition, so we should exit without committing a
+      -- placeholder and without scheduling a timeout. Delay indefinitely
+      -- until we receive more data.
+      return
+    end
 
-    -- if !shouldForceFlushFallbacksInDEV())
-    --   -- This is not a transition, but we did trigger an avoided state.
-    --   -- Schedule a placeholder to display after a short delay, using the Just
-    --   -- Noticeable Difference.
-    --   -- TODO: Is the JND optimization worth the added complexity? If this is
-    --   -- the only reason we track the event time, then probably not.
-    --   -- Consider removing.
+    if not shouldForceFlushFallbacksInDEV() then
+      -- This is not a transition, but we did trigger an avoided state.
+      -- Schedule a placeholder to display after a short delay, using the Just
+      -- Noticeable Difference.
+      -- TODO: Is the JND optimization worth the added complexity? If this is
+      -- the only reason we track the event time, then probably not.
+      -- Consider removing.
 
-    --   local mostRecentEventTime = getMostRecentEventTime(root, lanes)
-    --   local eventTimeMs = mostRecentEventTime
-    --   local timeElapsedMs = now() - eventTimeMs
-    --   local msUntilTimeout = jnd(timeElapsedMs) - timeElapsedMs
+      local mostRecentEventTime = getMostRecentEventTime(root, lanes)
+      local eventTimeMs = mostRecentEventTime
+      local timeElapsedMs = now() - eventTimeMs
+      local msUntilTimeout = jnd(timeElapsedMs) - timeElapsedMs
 
-    --   -- Don't bother with a very short suspense time.
-    --   if msUntilTimeout > 10)
-    --     -- Instead of committing the fallback immediately, wait for more data
-    --     -- to arrive.
-    --     root.timeoutHandle = scheduleTimeout(
-    --       mod.commitRoot.bind(null, root),
-    --       msUntilTimeout,
-    --     )
-    --     break
-    --   end
-    -- end
-
-    -- -- Commit the placeholder.
-    -- mod.commitRoot(root)
-    -- break
+      -- Don't bother with a very short suspense time.
+      if msUntilTimeout > 10 then
+        -- Instead of committing the fallback immediately, wait for more data
+        -- to arrive.
+        unimplemented("scheduleTimeout")
+        -- root.timeoutHandle = scheduleTimeout(
+        --   mod.commitRoot.bind(null, root),
+        --   msUntilTimeout
+        -- )
+        return
+      end
+    end
+    -- Commit the placeholder.
+    mod.commitRoot(root)
   elseif exitStatus == RootExitStatus.Completed then
     -- The work completed. Ready to commit.
     mod.commitRoot(root)
@@ -1084,9 +1089,9 @@ exports.flushRoot = function(root: ReactInternalTypes.FiberRoot, lanes: Lanes)
   end
 end
 
--- exports.getExecutionContext(): ExecutionContext {
---   return executionContext
--- end
+exports.getExecutionContext = function(): ExecutionContext
+  return executionContext
+end
 
 exports.flushDiscreteUpdates = function()
   -- TODO: Should be able to flush inside batchedUpdates, but not inside `act`.
@@ -1434,15 +1439,14 @@ mod.prepareFreshStack = function(root: ReactInternalTypes.FiberRoot, lanes: Lane
   end
 
   if _G.__DEV__ then
-    warn("Skip unimplemented: ReactStrictModeWarnings")
-    -- ReactStrictModeWarnings.discardPendingWarnings()
+    ReactStrictModeWarnings.discardPendingWarnings()
   end
 end
 
 mod.handleError = function(root, thrownValue)
   while true do
     local erroredWork = workInProgress
-		local ok, yetAnotherThrownValue = pcall(function()
+    local ok, yetAnotherThrownValue = pcall(function()
       -- Reset module-level state that was set during the render phase.
       resetContextDependencies()
       resetHooksAfterThrow()
@@ -1471,13 +1475,13 @@ mod.handleError = function(root, thrownValue)
       if enableProfilerTimer and bit32.band(erroredWork.mode, ReactTypeOfMode.ProfileMode) then
         -- Record the time spent rendering before an error was thrown. This
         -- avoids inaccurate Profiler durations in the case of a
-				-- suspended render.
-				unimplemented("scheduler tracing logic")
+        -- suspended render.
+        unimplemented("scheduler tracing logic")
         -- stopProfilerTimerIfRunningAndRecordDelta(erroredWork, true)
       end
 
-			unimplemented("throwException, thrownValue: " .. tostring(thrownValue))
-			-- throwException(
+      unimplemented("throwException, thrownValue: " .. tostring(thrownValue))
+      -- throwException(
       --   root,
       --   erroredWork.return_,
       --   erroredWork,
@@ -1485,8 +1489,8 @@ mod.handleError = function(root, thrownValue)
       --   workInProgressRootRenderLanes
       -- )
       mod.completeUnitOfWork(erroredWork)
-		end)
-		if not ok then
+    end)
+    if not ok then
       -- Something in the return path also threw.
       thrownValue = yetAnotherThrownValue
       if workInProgress == erroredWork and erroredWork ~= nil then
@@ -1538,63 +1542,63 @@ mod.popInteractions = function(prevInteractions)
   end
 end
 
--- exports.markCommitTimeOfFallback()
---   globalMostRecentFallbackTime = now()
--- end
-
-exports.markSkippedUpdateLanes = function(lane: Lane | Lanes)
-	ReactFiberWorkInProgress.markSkippedUpdateLanes(lane)
-  -- workInProgressRootSkippedLanes = mergeLanes(
-  --   lane,
-  --   workInProgressRootSkippedLanes
-  -- )
+exports.markCommitTimeOfFallback = function()
+  globalMostRecentFallbackTime = now()
 end
 
--- exports.renderDidSuspend(): void {
---   if workInProgressRootExitStatus == RootExitStatus.Incomplete)
---     workInProgressRootExitStatus = RootExitStatus.Suspended
---   end
--- end
+exports.markSkippedUpdateLanes = function(lane: Lane | Lanes)
+  ReactFiberWorkInProgress.markSkippedUpdateLanes(lane)
+  workInProgressRootSkippedLanes = mergeLanes(
+    lane,
+    workInProgressRootSkippedLanes
+  )
+end
 
--- exports.renderDidSuspendDelayIfPossible(): void {
---   if
---     workInProgressRootExitStatus == RootExitStatus.Incomplete or
---     workInProgressRootExitStatus == RootExitStatus.Suspended
---   )
---     workInProgressRootExitStatus = RootExitStatus.SuspendedWithDelay
---   end
+exports.renderDidSuspend = function()
+  if workInProgressRootExitStatus == RootExitStatus.Incomplete then
+    workInProgressRootExitStatus = RootExitStatus.Suspended
+  end
+end
 
---   -- Check if there are updates that we skipped tree that might have unblocked
---   -- this render.
---   if
---     workInProgressRoot ~= nil and
---     (includesNonIdleWork(workInProgressRootSkippedLanes()) or
---       includesNonIdleWork(workInProgressRootUpdatedLanes))
---   )
---     -- Mark the current render as suspended so that we switch to working on
---     -- the updates that were skipped. Usually we only suspend at the end of
---     -- the render phase.
---     -- TODO: We should probably always mark the root as suspended immediately
---     -- (inside this function), since by suspending at the end of the render
---     -- phase introduces a potential mistake where we suspend lanes that were
---     -- pinged or updated while we were rendering.
---     mod.markRootSuspended(workInProgressRoot, workInProgressRootRenderLanes)
---   end
--- end
+exports.renderDidSuspendDelayIfPossible = function()
+  if
+    workInProgressRootExitStatus == RootExitStatus.Incomplete or
+    workInProgressRootExitStatus == RootExitStatus.Suspended
+  then
+    workInProgressRootExitStatus = RootExitStatus.SuspendedWithDelay
+  end
 
--- exports.renderDidError()
---   if workInProgressRootExitStatus ~= RootExitStatus.Completed)
---     workInProgressRootExitStatus = RootExitStatus.Errored
---   end
--- end
+  -- Check if there are updates that we skipped tree that might have unblocked
+  -- this render.
+  if
+    workInProgressRoot ~= nil and
+    (includesNonIdleWork(workInProgressRootSkippedLanes()) or
+      includesNonIdleWork(workInProgressRootUpdatedLanes))
+  then
+    -- Mark the current render as suspended so that we switch to working on
+    -- the updates that were skipped. Usually we only suspend at the end of
+    -- the render phase.
+    -- TODO: We should probably always mark the root as suspended immediately
+    -- (inside this function), since by suspending at the end of the render
+    -- phase introduces a potential mistake where we suspend lanes that were
+    -- pinged or updated while we were rendering.
+    mod.markRootSuspended(workInProgressRoot, workInProgressRootRenderLanes)
+  end
+end
 
--- -- Called during render to determine if anything has suspended.
--- -- Returns false if we're not sure.
--- exports.renderHasNotSuspendedYet(): boolean {
---   -- If something errored or completed, we can't really be sure,
---   -- so those are false.
---   return workInProgressRootExitStatus == RootExitStatus.Incomplete
--- end
+exports.renderDidError = function()
+  if workInProgressRootExitStatus ~= RootExitStatus.Completed then
+    workInProgressRootExitStatus = RootExitStatus.Errored
+  end
+end
+
+-- Called during render to determine if anything has suspended.
+-- Returns false if we're not sure.
+exports.renderHasNotSuspendedYet = function(): boolean
+  -- If something errored or completed, we can't really be sure,
+  -- so those are false.
+  return workInProgressRootExitStatus == RootExitStatus.Incomplete
+end
 
 mod.renderRootSync = function(root: ReactInternalTypes.FiberRoot, lanes: Lanes)
   local prevExecutionContext = executionContext
@@ -1608,6 +1612,7 @@ mod.renderRootSync = function(root: ReactInternalTypes.FiberRoot, lanes: Lanes)
     mod.startWorkOnPendingInteractions(root, lanes)
   end
 
+  -- ROBLOX FIXME: commented out until scheduler tracing is implemented
   -- local prevInteractions = mod.pushInteractions(root)
 
   if _G.__DEV__ then
@@ -1692,7 +1697,8 @@ mod.renderRootConcurrent = function(root: ReactInternalTypes.FiberRoot, lanes: L
     mod.startWorkOnPendingInteractions(root, lanes)
   end
 
-  local _prevInteractions = mod.pushInteractions(root)
+  -- ROBLOX TODO: uncomment during scheduler tracing impl pass
+  -- local _prevInteractions = mod.pushInteractions(root)
 
   if _G.__DEV__ then
     if enableDebugTracing then
@@ -1914,8 +1920,7 @@ mod.commitRootImpl = function(root, renderPriorityLevel)
     -- flush synchronous work at the end, to avoid factoring hazards like this.
     exports.flushPassiveEffects()
   until rootWithPendingPassiveEffects == nil
-  warn("Skip unimplemented: flushRenderPhaseStrictModeWarningsInDEV")
-  -- flushRenderPhaseStrictModeWarningsInDEV()
+  flushRenderPhaseStrictModeWarningsInDEV()
 
   invariant(
     bit32.band(executionContext, bit32.bor(RenderContext, CommitContext)) == NoContext,
@@ -2024,7 +2029,8 @@ mod.commitRootImpl = function(root, renderPriorityLevel)
 
     local prevExecutionContext = executionContext
     executionContext = bit32.bor(executionContext, CommitContext)
-    local _prevInteractions = mod.pushInteractions(root)
+  -- ROBLOX TODO: uncomment during scheduler tracing impl pass
+  -- local _prevInteractions = mod.pushInteractions(root)
 
     -- Reset this to nil before calling lifecycles
     ReactCurrentOwner.current = nil
@@ -2089,9 +2095,8 @@ mod.commitRootImpl = function(root, renderPriorityLevel)
         root
       )
       if hasCaughtError() then
-        unimplemented("captureCommitPhaseErrorOnRoot")
-        -- local err = clearCaughtError()
-        -- captureCommitPhaseErrorOnRoot(finishedWork, finishedWork, err)
+        local err = clearCaughtError()
+        captureCommitPhaseErrorOnRoot(finishedWork, finishedWork, err)
       end
       resetCurrentDebugFiberInDEV()
     else
@@ -2100,8 +2105,7 @@ mod.commitRootImpl = function(root, renderPriorityLevel)
       end)
 
       if not ok then
-        unimplemented("captureCommitPhaseErrorOnRoot (" .. tostring(result) .. ")")
-        -- captureCommitPhaseErrorOnRoot(finishedWork, finishedWork, result)
+        captureCommitPhaseErrorOnRoot(finishedWork, finishedWork, result)
       end
     end
 
@@ -2156,7 +2160,7 @@ mod.commitRootImpl = function(root, renderPriorityLevel)
     end
   end
 
-  local _rootDidHavePassiveEffects = rootDoesHavePassiveEffects
+  local rootDidHavePassiveEffects = rootDoesHavePassiveEffects
 
   if rootDoesHavePassiveEffects then
     -- This commit has passive effects. Stash a reference to them. But don't
@@ -2190,14 +2194,13 @@ mod.commitRootImpl = function(root, renderPriorityLevel)
   else
     -- If there's no remaining work, we can clear the set of already failed
     -- error boundaries.
-    _legacyErrorBoundariesThatAlreadyFailed = nil
+    legacyErrorBoundariesThatAlreadyFailed = nil
   end
 
   if _G.__DEV__ and enableDoubleInvokingEffects then
-    unimplemented("commitDoubleInvokeEffectsInDEV")
-    -- if not rootDidHavePassiveEffects then
-    --   commitDoubleInvokeEffectsInDEV(root.current, false)
-    -- end
+    if not rootDidHavePassiveEffects then
+      commitDoubleInvokeEffectsInDEV(root.current, false)
+    end
   end
 
   if enableSchedulerTracing then
@@ -2224,12 +2227,10 @@ mod.commitRootImpl = function(root, renderPriorityLevel)
     nestedUpdateCount = 0
   end
 
-  warn("Skip unimplemented: onCommitRootDevTools")
-  -- onCommitRootDevTools(finishedWork.stateNode, renderPriorityLevel)
+  onCommitRootDevTools(finishedWork.stateNode, renderPriorityLevel)
 
   if _G.__DEV__ then
-    warn("Skip unimplemented: onCommitRootTestSelector")
-    -- onCommitRootTestSelector()
+    onCommitRootTestSelector()
   end
 
   -- Always call this before exiting `commitRoot`, to ensure that any
@@ -2299,18 +2300,16 @@ mod.commitBeforeMutationEffects = function(firstChild: Fiber)
       setCurrentDebugFiberInDEV(fiber)
       invokeGuardedCallback(nil, mod.commitBeforeMutationEffectsImpl, nil, fiber)
       if hasCaughtError() then
-        unimplemented("captureCommitPhaseError")
-        -- local error_ = clearCaughtError()
-        -- captureCommitPhaseError(fiber, fiber.return_, error_)
+        local error_ = clearCaughtError()
+        exports.captureCommitPhaseError(fiber, fiber.return_, error_)
       end
       resetCurrentDebugFiberInDEV()
     else
-      local ok, _result = pcall(function()
+      local ok, error_ = pcall(function()
         mod.commitBeforeMutationEffectsImpl(fiber)
       end)
       if not ok then
-        unimplemented("captureCommitPhaseError")
-        -- captureCommitPhaseError(fiber, fiber.return_, result)
+        exports.captureCommitPhaseError(fiber, fiber.return_, error_)
       end
     end
     fiber = fiber.sibling
@@ -2405,19 +2404,17 @@ mod.commitMutationEffects = function(
         renderPriorityLevel
       )
       if hasCaughtError() then
-        unimplemented("captureCommitPhaseError")
-        -- local error_ = clearCaughtError()
-        -- captureCommitPhaseError(fiber, fiber.return_, error_)
+        local error_ = clearCaughtError()
+        exports.captureCommitPhaseError(fiber, fiber.return_, error_)
       end
       resetCurrentDebugFiberInDEV()
     else
-      -- local ok, _result = pcall(function()
+      local ok, result = pcall(function()
         mod.commitMutationEffectsImpl(fiber, root, renderPriorityLevel)
-      -- end)
-      -- if not ok then
-      --   unimplemented("captureCommitPhaseError")
-      --   -- captureCommitPhaseError(fiber, fiber.return_, result)
-      -- end
+      end)
+      if not ok then
+        exports.captureCommitPhaseError(fiber, fiber.return_, result)
+      end
     end
     fiber = fiber.sibling
   end
@@ -2507,12 +2504,11 @@ mod.commitMutationEffectsDeletions = function(
         renderPriorityLevel
       )
       if hasCaughtError() then
-        unimplemented("captureCommitPhaseError")
-        -- local error = clearCaughtError()
-        -- captureCommitPhaseError(childToDelete, nearestMountedAncestor, error)
+        local error_ = clearCaughtError()
+        exports.captureCommitPhaseError(childToDelete, nearestMountedAncestor, error_)
       end
     else
-      local ok, _result = pcall(function()
+      local ok, error_ = pcall(function()
         commitDeletion(
           root,
           childToDelete,
@@ -2521,8 +2517,7 @@ mod.commitMutationEffectsDeletions = function(
         )
       end)
       if not ok then
-        unimplemented("captureCommitPhaseError")
-        -- captureCommitPhaseError(childToDelete, nearestMountedAncestor, error)
+        exports.captureCommitPhaseError(childToDelete, nearestMountedAncestor, error_)
       end
     end
   end
@@ -2572,7 +2567,7 @@ exports.flushPassiveEffects = function(): boolean
   return false
 end
 
-local function flushPassiveMountEffects(root, firstChild: Fiber)
+flushPassiveMountEffects = function(root, firstChild: Fiber)
   local fiber = firstChild
   while fiber ~= nil do
     local prevProfilerOnStack = nil
@@ -2600,18 +2595,16 @@ local function flushPassiveMountEffects(root, firstChild: Fiber)
           fiber
         )
         if hasCaughtError() then
-          unimplemented("captureCommitPhaseError")
-          -- local error_ = clearCaughtError()
-          -- captureCommitPhaseError(fiber, fiber.return_, error_)
+          local error_ = clearCaughtError()
+          exports.captureCommitPhaseError(fiber, fiber.return_, error_)
         end
         resetCurrentDebugFiberInDEV()
       else
-        local ok, _result = pcall(function()
+        local ok, error_ = pcall(function()
           commitPassiveMountOnFiber(root, fiber)
         end)
         if not ok then
-          unimplemented("captureCommitPhaseError")
-          -- captureCommitPhaseError(fiber, fiber.return_, result)
+          exports.captureCommitPhaseError(fiber, fiber.return_, error_)
         end
       end
     end
@@ -2705,7 +2698,7 @@ flushPassiveEffectsImpl = function()
   end
 
   local root = rootWithPendingPassiveEffects
-  local lanes = pendingPassiveEffectsLanes
+  local _lanes = pendingPassiveEffectsLanes
   rootWithPendingPassiveEffects = nil
   pendingPassiveEffectsLanes = ReactFiberLane.NoLanes
 
@@ -2716,12 +2709,14 @@ flushPassiveEffectsImpl = function()
 
   if _G.__DEV__ then
     if enableDebugTracing then
+      unimplemented("debug tracing")
       -- FIXME (roblox): enable tracing logic
       -- logPassiveEffectsStarted(lanes)
     end
   end
 
   if enableSchedulingProfiler then
+    unimplemented("scheduling profiler")
     -- FIXME (roblox): enable scheduling profiler logic
     -- markPassiveEffectsStarted(lanes)
   end
@@ -2732,7 +2727,8 @@ flushPassiveEffectsImpl = function()
 
   local prevExecutionContext = executionContext
   executionContext = bit32.bor(executionContext, CommitContext)
-  local prevInteractions = mod.pushInteractions(root)
+  -- ROBLOX TODO: uncomment during scheduler tracing impl pass
+  -- local prevInteractions = mod.pushInteractions(root)
 
   -- It's important that ALL pending passive effect destroy functions are called
   -- before ANY passive effect create functions are called.
@@ -2756,8 +2752,7 @@ flushPassiveEffectsImpl = function()
   end
 
   if _G.__DEV__ and enableDoubleInvokingEffects then
-    unimplemented("CommitWork")
-    -- commitDoubleInvokeEffectsInDEV(root.current, true)
+    commitDoubleInvokeEffectsInDEV(root.current, true)
   end
 
   if _G.__DEV__ then
@@ -2765,10 +2760,11 @@ flushPassiveEffectsImpl = function()
   end
 
   if enableSchedulerTracing then
+    unimplemented("scheduler tracing")
     -- deviation: Luau can't do all this weird type coercion
     -- mod.popInteractions(((prevInteractions: any): Set<Interaction>))
-    mod.popInteractions(prevInteractions)
-    mod.finishPendingInteractions(root, lanes)
+    -- mod.popInteractions(prevInteractions)
+    -- mod.finishPendingInteractions(root, lanes)
   end
 
   executionContext = prevExecutionContext
@@ -2783,97 +2779,106 @@ flushPassiveEffectsImpl = function()
   return true
 end
 
--- exports.isAlreadyFailedLegacyErrorBoundary(instance: mixed): boolean {
---   return (
---     legacyErrorBoundariesThatAlreadyFailed ~= nil and
---     legacyErrorBoundariesThatAlreadyFailed.has(instance)
---   )
--- end
+exports.isAlreadyFailedLegacyErrorBoundary = function(instance): boolean
+  return
+    legacyErrorBoundariesThatAlreadyFailed ~= nil and
+    -- deviation: instead of has
+    -- legacyErrorBoundariesThatAlreadyFailed.has(instance)
+    legacyErrorBoundariesThatAlreadyFailed[instance]
+end
 
--- exports.markLegacyErrorBoundaryAsFailed(instance: mixed)
---   if legacyErrorBoundariesThatAlreadyFailed == nil)
---     legacyErrorBoundariesThatAlreadyFailed = new Set([instance])
---   } else {
---     legacyErrorBoundariesThatAlreadyFailed.add(instance)
---   end
--- end
+exports.markLegacyErrorBoundaryAsFailed = function(instance)
+  if legacyErrorBoundariesThatAlreadyFailed == nil then
+    legacyErrorBoundariesThatAlreadyFailed = {instance = true}
+  else
+    legacyErrorBoundariesThatAlreadyFailed[instance] = true
+  end
+end
 
--- function prepareToThrowUncaughtError(error: mixed)
---   if !hasUncaughtError)
---     hasUncaughtError = true
---     firstUncaughtError = error
---   end
--- end
--- export local onUncaughtError = prepareToThrowUncaughtError
+-- ROBLOX TODO: this function and the related fields should be extracted/relocated to break a cycle
+local function prepareToThrowUncaughtError(error_)
+  if not hasUncaughtError then
+    hasUncaughtError = true
+    firstUncaughtError = error_
+  end
+end
+exports.onUncaughtError = prepareToThrowUncaughtError
 
--- function captureCommitPhaseErrorOnRoot(
---   rootFiber: Fiber,
---   sourceFiber: Fiber,
---   error: mixed,
--- )
---   local errorInfo = createCapturedValue(error, sourceFiber)
---   local update = createRootErrorUpdate(rootFiber, errorInfo, (SyncLane: Lane))
---   enqueueUpdate(rootFiber, update)
---   local eventTime = requestEventTime()
---   local root = mod.markUpdateLaneFromFiberToRoot(rootFiber, (SyncLane: Lane))
---   if root ~= nil)
---     markRootUpdated(root, SyncLane, eventTime)
---     ensureRootIsScheduled(root, eventTime)
---     mod.schedulePendingInteractions(root, SyncLane)
---   end
--- end
+captureCommitPhaseErrorOnRoot = function(
+  rootFiber: Fiber,
+  sourceFiber: Fiber,
+  error_
+)
+  local errorInfo = createCapturedValue(error_, sourceFiber)
+ local update = createRootErrorUpdate(rootFiber, errorInfo, SyncLane)
+  enqueueUpdate(rootFiber, update)
+  local eventTime = exports.requestEventTime()
+  local root = mod.markUpdateLaneFromFiberToRoot(rootFiber, SyncLane)
+  if root ~= nil then
+    markRootUpdated(root, SyncLane, eventTime)
+    ensureRootIsScheduled(root, eventTime)
+    mod.schedulePendingInteractions(root, SyncLane)
+  end
+end
 
 -- exports.captureCommitPhaseError(
 --   sourceFiber: Fiber,
 --   nearestMountedAncestor: Fiber | nil,
---   error: mixed,
+--   error: mixed
 -- )
---   if sourceFiber.tag == HostRoot)
---     -- Error was thrown at the root. There is no parent, so the root
---     -- itself should capture it.
---     captureCommitPhaseErrorOnRoot(sourceFiber, sourceFiber, error)
---     return
---   end
+exports.captureCommitPhaseError = function(
+  sourceFiber: Fiber,
+  nearestMountedAncestor,
+  error_
+)
+  if sourceFiber.tag == ReactWorkTags.HostRoot then
+    -- Error was thrown at the root. There is no parent, so the root
+    -- itself should capture it.
+    captureCommitPhaseErrorOnRoot(sourceFiber, sourceFiber, error_)
+    return
+  end
 
---   local fiber = nil
---   if skipUnmountedBoundaries)
---     fiber = nearestMountedAncestor
---   } else {
---     fiber = sourceFiber.return_
---   end
+  local fiber = nil
+  if skipUnmountedBoundaries then
+    fiber = nearestMountedAncestor
+  else
+    fiber = sourceFiber.return_
+  end
 
---   while (fiber ~= nil)
---     if fiber.tag == HostRoot)
---       captureCommitPhaseErrorOnRoot(fiber, sourceFiber, error)
---       return
---     } else if fiber.tag == ClassComponent)
---       local ctor = fiber.type
---       local instance = fiber.stateNode
---       if
---         typeof ctor.getDerivedStateFromError == 'function' or
---         (typeof instance.componentDidCatch == 'function' and
---           !isAlreadyFailedLegacyErrorBoundary(instance))
---       )
---         local errorInfo = createCapturedValue(error, sourceFiber)
---         local update = createClassErrorUpdate(
---           fiber,
---           errorInfo,
---           (SyncLane: Lane),
---         )
---         enqueueUpdate(fiber, update)
---         local eventTime = requestEventTime()
---         local root = mod.markUpdateLaneFromFiberToRoot(fiber, (SyncLane: Lane))
---         if root ~= nil)
---           markRootUpdated(root, SyncLane, eventTime)
---           ensureRootIsScheduled(root, eventTime)
---           mod.schedulePendingInteractions(root, SyncLane)
---         end
---         return
---       end
---     end
---     fiber = fiber.return_
---   end
--- end
+  while fiber ~= nil do
+    if fiber.tag == ReactWorkTags.HostRoot then
+      captureCommitPhaseErrorOnRoot(fiber, sourceFiber, error)
+      return
+    else if fiber.tag == ReactWorkTags.ClassComponent then
+      local ctor = fiber.type
+      local instance = fiber.stateNode
+      if
+        typeof(ctor.getDerivedStateFromError) == 'function' or
+        (typeof(instance.componentDidCatch) == 'function' and
+          not exports.isAlreadyFailedLegacyErrorBoundary(instance))
+      then
+        local _errorInfo = createCapturedValue(error_, sourceFiber)
+        unimplemented("createClassErrorUpdate")
+        -- local update = createClassErrorUpdate(
+        --   fiber,
+        --   errorInfo,
+        --   SyncLane
+        -- )
+        -- enqueueUpdate(fiber, update)
+        -- local eventTime = requestEventTime()
+        local _root = mod.markUpdateLaneFromFiberToRoot(fiber, SyncLane)
+        -- if root ~= nil then
+        --   markRootUpdated(root, SyncLane, eventTime)
+        --   ensureRootIsScheduled(root, eventTime)
+        --   mod.schedulePendingInteractions(root, SyncLane)
+        -- end
+        return
+      end
+    end
+    fiber = fiber.return_
+  end
+end
+end
 
 -- exports.pingSuspendedRoot(
 --   root: ReactInternalTypes.FiberRoot,
@@ -2987,30 +2992,32 @@ end
 --   retryTimedOutBoundary(boundaryFiber, retryLane)
 -- end
 
--- -- Computes the next Just Noticeable Difference (JND) boundary.
--- -- The theory is that a person can't tell the difference between small differences in time.
--- -- Therefore, if we wait a bit longer than necessary that won't translate to a noticeable
--- -- difference in the experience. However, waiting for longer might mean that we can avoid
--- -- showing an intermediate loading state. The longer we have already waited, the harder it
--- -- is to tell small differences in time. Therefore, the longer we've already waited,
--- -- the longer we can wait additionally. At some point we have to give up though.
--- -- We pick a train model where the next boundary commits at a consistent schedule.
--- -- These particular numbers are vague estimates. We expect to adjust them based on research.
--- function jnd(timeElapsed: number)
---   return timeElapsed < 120
---     ? 120
---     : timeElapsed < 480
---     ? 480
---     : timeElapsed < 1080
---     ? 1080
---     : timeElapsed < 1920
---     ? 1920
---     : timeElapsed < 3000
---     ? 3000
---     : timeElapsed < 4320
---     ? 4320
---     : ceil(timeElapsed / 1960) * 1960
--- end
+-- Computes the next Just Noticeable Difference (JND) boundary.
+-- The theory is that a person can't tell the difference between small differences in time.
+-- Therefore, if we wait a bit longer than necessary that won't translate to a noticeable
+-- difference in the experience. However, waiting for longer might mean that we can avoid
+-- showing an intermediate loading state. The longer we have already waited, the harder it
+-- is to tell small differences in time. Therefore, the longer we've already waited,
+-- the longer we can wait additionally. At some point we have to give up though.
+-- We pick a train model where the next boundary commits at a consistent schedule.
+-- These particular numbers are vague estimates. We expect to adjust them based on research.
+function jnd(timeElapsed: number)
+  if timeElapsed < 120 then
+    return 120
+  elseif timeElapsed < 480 then
+    return 480
+  elseif timeElapsed < 1080 then
+    return 1080
+  elseif timeElapsed < 1920 then
+    return 1920
+  elseif timeElapsed < 3000 then
+    return 3000
+  elseif timeElapsed < 4320 then
+    return 4320
+  else
+    return math.ceil(timeElapsed / 1960) * 1960
+  end
+end
 
 mod.checkForNestedUpdates = function()
   if nestedUpdateCount > NESTED_UPDATE_LIMIT then
@@ -3038,61 +3045,63 @@ mod.checkForNestedUpdates = function()
   end
 end
 
--- function flushRenderPhaseStrictModeWarningsInDEV()
---   if _G.__DEV__)
---     ReactStrictModeWarnings.flushLegacyContextWarning()
+function flushRenderPhaseStrictModeWarningsInDEV()
+  if _G.__DEV__ then
+    ReactStrictModeWarnings.flushLegacyContextWarning()
 
---     if warnAboutDeprecatedLifecycles)
---       ReactStrictModeWarnings.flushPendingUnsafeLifecycleWarnings()
---     end
---   end
--- end
+    if warnAboutDeprecatedLifecycles then
+      ReactStrictModeWarnings.flushPendingUnsafeLifecycleWarnings()
+    end
+  end
+end
 
--- function commitDoubleInvokeEffectsInDEV(
---   fiber: Fiber,
---   hasPassiveEffects: boolean,
--- )
---   if __DEV__ and enableDoubleInvokingEffects)
---     setCurrentDebugFiberInDEV(fiber)
---     invokeEffectsInDev(fiber, MountLayoutDev, invokeLayoutEffectUnmountInDEV)
---     if hasPassiveEffects)
---       invokeEffectsInDev(
---         fiber,
---         MountPassiveDev,
---         invokePassiveEffectUnmountInDEV,
---       )
---     end
+function commitDoubleInvokeEffectsInDEV(
+  fiber: Fiber,
+  hasPassiveEffects: boolean
+)
+  if _G.__DEV__ and enableDoubleInvokingEffects then
+    setCurrentDebugFiberInDEV(fiber)
+    invokeEffectsInDev(fiber, ReactFiberFlags.MountLayoutDev, invokeLayoutEffectUnmountInDEV)
+    if hasPassiveEffects then
+      invokeEffectsInDev(
+        fiber,
+        ReactFiberFlags.MountPassiveDev,
+        invokePassiveEffectUnmountInDEV
+      )
+    end
 
---     invokeEffectsInDev(fiber, MountLayoutDev, invokeLayoutEffectMountInDEV)
---     if hasPassiveEffects)
---       invokeEffectsInDev(fiber, MountPassiveDev, invokePassiveEffectMountInDEV)
---     end
---     resetCurrentDebugFiberInDEV()
---   end
--- end
+    invokeEffectsInDev(fiber, ReactFiberFlags.MountLayoutDev, invokeLayoutEffectMountInDEV)
+    if hasPassiveEffects then
+      invokeEffectsInDev(fiber, ReactFiberFlags.MountPassiveDev, invokePassiveEffectMountInDEV)
+    end
+    resetCurrentDebugFiberInDEV()
+  end
+end
 
--- function invokeEffectsInDev(
---   firstChild: Fiber,
---   fiberFlags: Flags,
---   invokeEffectFn: (fiber: Fiber) => void,
--- ): void {
---   if __DEV__ and enableDoubleInvokingEffects)
---     local fiber = firstChild
---     while (fiber ~= nil)
---       if fiber.child ~= nil)
---         local primarySubtreeFlag = fiber.subtreeFlags & fiberFlags
---         if primarySubtreeFlag ~= NoFlags)
---           invokeEffectsInDev(fiber.child, fiberFlags, invokeEffectFn)
---         end
---       end
+function invokeEffectsInDev(
+  firstChild,
+  fiberFlags,
+  invokeEffectFn
+)
+  -- ROBLOX TODO: Luau functional types
+  -- invokeEffectFn: (fiber: Fiber) => void,
+  if _G.__DEV__ and enableDoubleInvokingEffects then
+    local fiber = firstChild
+    while fiber ~= nil do
+      if fiber.child ~= nil then
+        local primarySubtreeFlag = bit32.band(fiber.subtreeFlags, fiberFlags)
+        if primarySubtreeFlag ~= ReactFiberFlags.NoFlags then
+          invokeEffectsInDev(fiber.child, fiberFlags, invokeEffectFn)
+        end
+      end
 
---       if (fiber.flags & fiberFlags) ~= NoFlags)
---         invokeEffectFn(fiber)
---       end
---       fiber = fiber.sibling
---     end
---   end
--- end
+      if bit32.band(fiber.flags, fiberFlags) ~= ReactFiberFlags.NoFlags then
+        invokeEffectFn(fiber)
+      end
+      fiber = fiber.sibling
+    end
+  end
+end
 
 -- deviation: FIXME restore type Set<string>?, has trouble with narrowing
 local didWarnStateUpdateForNotYetMountedComponent: any = nil
@@ -3266,10 +3275,6 @@ if _G.__DEV__ and ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallb
       dummyFiber,
       unitOfWork
     )
-    -- console.log("_______ begin work (%d):", unitOfWork._debugID)
-    -- console.log("\t%s", tostring(unitOfWork.tag))
-    -- console.log("\t%s", tostring(unitOfWork.elementType))
-    -- console.log("\t%s", tostring(unitOfWork.flags))
     local ok, result = pcall(function()
       return originalBeginWork(current, unitOfWork, lanes)
     end)
@@ -3331,11 +3336,11 @@ else
   mod.beginWork = originalBeginWork
 end
 
--- local didWarnAboutUpdateInRender = false
--- local didWarnAboutUpdateInRenderForAnotherComponent
--- if _G.__DEV__ then
---   didWarnAboutUpdateInRenderForAnotherComponent = {}
--- end
+local didWarnAboutUpdateInRender = false
+local didWarnAboutUpdateInRenderForAnotherComponent
+if _G.__DEV__ then
+  didWarnAboutUpdateInRenderForAnotherComponent = {}
+end
 
 mod.warnAboutRenderPhaseUpdatesInDEV = function(fiber)
   if _G.__DEV__ then
@@ -3344,40 +3349,43 @@ mod.warnAboutRenderPhaseUpdatesInDEV = function(fiber)
       bit32.band(executionContext, RenderContext) ~= NoContext and
       not getIsUpdatingOpaqueValueInRenderPhaseInDEV()
     then
-      unimplemented("mod.warnAboutRenderPhaseUpdatesInDEV")
-    --   if fiber.tag == FunctionComponent or
-    --     fiber.tag == ForwardRef or
-    --     fiber.tag == SimpleMemoComponent
-    --   then
-    --     local renderingComponentName =
-    --       (workInProgress and getComponentName(workInProgress.type)) or
-    --       "Unknown"
-    --     -- Dedupe by the rendering component because it's the one that needs to be fixed.
-    --     local dedupeKey = renderingComponentName
-    --     -- deviation:
-    --     -- if !didWarnAboutUpdateInRenderForAnotherComponent.has(dedupeKey))
-    --     if didWarnAboutUpdateInRenderForAnotherComponent[dedupeKey] == nil then
-    --       didWarnAboutUpdateInRenderForAnotherComponent[dedupeKey] = true
-    --       local setStateComponentName = getComponentName(fiber.type) or "Unknown"
-    --       console.error(
-    --         "Cannot update a component (`%s`) while rendering a " ..
-    --           "different component (`%s`). To locate the bad setState() call inside `%s`, " ..
-    --           "follow the stack trace as described in https://reactjs.org/link/setstate-in-render",
-    --         setStateComponentName,
-    --         renderingComponentName,
-    --         renderingComponentName
-    --       )
-    --     end
-    --   elseif fiber.tag == ClassComponent then
-    --     if not didWarnAboutUpdateInRender then
-    --       console.error(
-    --         "Cannot update during an existing state transition (such as " ..
-    --           "within `render`). Render methods should be a pure " ..
-    --           "function of props and state."
-    --       )
-    --       didWarnAboutUpdateInRender = true
-    --     end
-    --   end
+      if fiber.tag == ReactWorkTags.FunctionComponent or
+        fiber.tag == ReactWorkTags.ForwardRef or
+        fiber.tag == ReactWorkTags.SimpleMemoComponent
+      then
+        local renderingComponentName
+        if workInProgress ~= nil then
+          -- ROBLOX FIXME: Luau type analsis fails, saying 'type' key doesn't exist even though it does
+          renderingComponentName = "UNHAPPY MKNAM" -- getComponentName(workInProgress.type)
+        else
+          renderingComponentName = "Unknown"
+        end
+        -- Dedupe by the rendering component because it's the one that needs to be fixed.
+        local dedupeKey = renderingComponentName
+        -- deviation:
+        -- if !didWarnAboutUpdateInRenderForAnotherComponent.has(dedupeKey))
+        if didWarnAboutUpdateInRenderForAnotherComponent[dedupeKey] == nil then
+          didWarnAboutUpdateInRenderForAnotherComponent[dedupeKey] = true
+          local setStateComponentName = getComponentName(fiber.type) or "Unknown"
+          console.error(
+            "Cannot update a component (`%s`) while rendering a " ..
+              "different component (`%s`). To locate the bad setState() call inside `%s`, " ..
+              "follow the stack trace as described in https://reactjs.org/link/setstate-in-render",
+            setStateComponentName,
+            renderingComponentName,
+            renderingComponentName
+          )
+        end
+      elseif fiber.tag == ReactWorkTags.ClassComponent then
+        if not didWarnAboutUpdateInRender then
+          console.error(
+            "Cannot update during an existing state transition (such as " ..
+              "within `render`). Render methods should be a pure " ..
+              "function of props and state."
+          )
+          didWarnAboutUpdateInRender = true
+        end
+      end
     end
   end
 end
@@ -3702,19 +3710,13 @@ mod.finishPendingInteractions = function(root, committedLanes)
   -- end
 end
 
--- -- `act` testing API
--- --
--- -- TODO: This is mostly a copy-paste from the legacy `act`, which does not have
--- -- access to the same internals that we do here. Some trade offs in the
--- -- implementation no longer make sense.
-
+-- `act` testing API
+--
+-- TODO: This is mostly a copy-paste from the legacy `act`, which does not have
+-- access to the same internals that we do here. Some trade offs in the
+-- implementation no longer make sense.
 local isFlushingAct = false
 local isInsideThisAct = false
-
--- function shouldForceFlushFallbacksInDEV()
---   -- Never force flush in production. This function should get stripped out.
---   return _G.__DEV__ and actingUpdatesScopeDepth > 0
--- end
 
 local flushMockScheduler = Scheduler.unstable_flushAllWithoutAsserting
 local isSchedulerMocked = typeof(flushMockScheduler) == "function"
@@ -3777,12 +3779,6 @@ local function flushWorkAndMicroTasks(onDone: (any?) -> ())
     onDone(result)
   end
 end
-
--- we track the 'depth' of the act() calls with this counter,
--- so we can tell if any async act() calls try to run in parallel.
-
-local actingUpdatesScopeDepth = 0
-local didWarnAboutUsingActInProd = false
 
 -- deviation: FIXME stub of Promise that we should fill in later
 local Promise = {

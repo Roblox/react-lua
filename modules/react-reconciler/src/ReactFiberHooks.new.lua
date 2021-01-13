@@ -46,6 +46,7 @@ local enableNewReconciler = ReactFeatureFlags.enableNewReconciler
 -- local decoupleUpdatePriorityFromScheduler = ReactFeatureFlags.decoupleUpdatePriorityFromScheduler
 local enableDoubleInvokingEffects = ReactFeatureFlags.enableDoubleInvokingEffects
 
+-- local ReactTypeOfMode = require(script.Parent.ReactTypeOfMode)
 -- local {NoMode, BlockingMode, DebugTracingMode} = require(script.Parent.ReactTypeOfMode)
 -- local NoLane = ReactFiberLane.NoLane
 local NoLanes = ReactFiberLane.NoLanes
@@ -82,7 +83,7 @@ local HookPassive = ReactHookEffectTags.Passive
 -- } = require(script.Parent.ReactFiberWorkLoop.new)
 
 local invariant = require(Workspace.Shared.invariant)
--- local getComponentName = require(Workspace.Shared.getComponentName)
+local getComponentName = require(Workspace.Shared.getComponentName)
 local is = require(Workspace.Shared.objectIs)
 -- local {markWorkInProgressReceivedUpdate} = require(script.Parent.ReactFiberBeginWork.new)
 -- local {
@@ -96,14 +97,17 @@ local is = require(Workspace.Shared.objectIs)
 --   makeClientId,
 --   makeClientIdInDEV,
 --   makeOpaqueHydratingObject,
--- } = require(script.Parent.ReactFiberHostConfig)
+local ReactFiberHostConfig = require(script.Parent.ReactFiberHostConfig)
+local makeClientId = ReactFiberHostConfig.makeClientId
+-- local makeOpaqueHydratingObject = ReactFiberHostConfig.makeOpaqueHydratingObject
+-- local makeClientIdInDEV = ReactFiberHostConfig.makeClientIdInDEV
 -- local {
 --   getWorkInProgressVersion,
 --   markSourceAsDirty,
 --   setWorkInProgressVersion,
 --   warnAboutMultipleRenderersDEV,
 -- } = require(script.Parent.ReactMutableSource.new)
--- local {getIsRendering} = require(script.Parent.ReactCurrentFiber)
+-- local getIsRendering = require(script.Parent.ReactCurrentFiber).getIsRendering
 -- local {logStateUpdateScheduled} = require(script.Parent.DebugTracing)
 -- local {markStateUpdateScheduled} = require(script.Parent.SchedulingProfiler)
 
@@ -129,12 +133,12 @@ type UpdateQueue<S, A> = {
   lastRenderedState: S | nil,
 };
 
--- local didWarnAboutMismatchedHooksForComponent
--- local didWarnAboutUseOpaqueIdentifier
--- if __DEV__)
---   didWarnAboutUseOpaqueIdentifier = {}
---   didWarnAboutMismatchedHooksForComponent = new Set()
--- end
+local didWarnAboutMismatchedHooksForComponent
+local _didWarnAboutUseOpaqueIdentifier
+if _G.__DEV__ then
+  _didWarnAboutUseOpaqueIdentifier = {}
+  didWarnAboutMismatchedHooksForComponent = {}
+end
 
 export type Hook = {
   memoizedState: any,
@@ -202,7 +206,7 @@ local currentHookNameInDev: HookType? = nil
 -- FIXME (roblox): type refinement
 -- local hookTypesDev: Array<HookType> | nil = nil
 local hookTypesDev: any = nil
-local _hookTypesUpdateIndexDev: number = -1
+local hookTypesUpdateIndexDev: number = 0
 
 -- In DEV, this tracks whether currently rendering component needs to ignore
 -- the dependencies for Hooks that need them (e.g. useEffect or useMemo).
@@ -223,18 +227,18 @@ local function mountHookTypesDev()
   end
 end
 
--- function updateHookTypesDev()
---   if __DEV__)
---     local hookName = ((currentHookNameInDev: any): HookType)
+function updateHookTypesDev()
+  if _G.__DEV__ then
+    local hookName = currentHookNameInDev
 
---     if hookTypesDev ~= nil)
---       hookTypesUpdateIndexDev++
---       if hookTypesDev[hookTypesUpdateIndexDev] ~= hookName)
---         warnOnHookMismatchInDev(hookName)
---       end
---     end
---   end
--- end
+    if hookTypesDev ~= nil then
+      hookTypesUpdateIndexDev += 1
+      if hookTypesDev[hookTypesUpdateIndexDev] ~= hookName then
+        warnOnHookMismatchInDev(hookName)
+      end
+    end
+  end
+end
 
 local function checkDepsAreArrayDev(deps: any)
   if _G.__DEV__ then
@@ -251,52 +255,55 @@ local function checkDepsAreArrayDev(deps: any)
   end
 end
 
--- function warnOnHookMismatchInDev(currentHookName: HookType)
---   if __DEV__)
---     local componentName = getComponentName(currentlyRenderingFiber.type)
---     if !didWarnAboutMismatchedHooksForComponent.has(componentName))
---       didWarnAboutMismatchedHooksForComponent.add(componentName)
+function warnOnHookMismatchInDev(currentHookName: HookType)
+  if _G.__DEV__ then
+    -- ROBLOX deviation: getComponentName will return nil in most Hook cases, use same fallback as elsewhere
+    local componentName = getComponentName(currentlyRenderingFiber.type) or "Component"
+    if not didWarnAboutMismatchedHooksForComponent[componentName] then
+      didWarnAboutMismatchedHooksForComponent[componentName] = true
 
---       if hookTypesDev ~= nil)
---         local table = ''
+      if hookTypesDev ~= nil then
+        local table_ = ''
 
---         local secondColumnStart = 30
+        local secondColumnStart = 30
 
---         for (local i = 0; i <= ((hookTypesUpdateIndexDev: any): number); i++)
---           local oldHookName = hookTypesDev[i]
---           local newHookName =
---             i == ((hookTypesUpdateIndexDev: any): number)
---               ? currentHookName
---               : oldHookName
+        for i = 1, hookTypesUpdateIndexDev do
+          local oldHookName = hookTypesDev[i]
+          local newHookName
+          if i == hookTypesUpdateIndexDev then
+            newHookName = currentHookName
+          else
+            newHookName = oldHookName
+          end
 
---           local row = `${i + 1}. ${oldHookName}`
+          local row = tostring(i) .. ". " .. oldHookName
 
---           -- Extra space so second column lines up
---           -- lol @ IE not supporting String#repeat
---           while (row.length < secondColumnStart)
---             row += ' '
---           end
+          -- Extra space so second column lines up
+          -- lol @ IE not supporting String#repeat
+          while row.length < secondColumnStart do
+            row ..= ' '
+          end
 
---           row += newHookName + '\n'
+          row ..= newHookName + '\n'
 
---           table += row
---         end
+          table_ ..= row
+        end
 
---         console.error(
---           'React has detected a change in the order of Hooks called by %s. ' +
---             'This will lead to bugs and errors if not fixed. ' +
---             'For more information, read the Rules of Hooks: https:--reactjs.org/link/rules-of-hooks\n\n' +
---             '   Previous render            Next render\n' +
---             '   ------------------------------------------------------\n' +
---             '%s' +
---             '   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n',
---           componentName,
---           table,
---         )
---       end
---     end
---   end
--- end
+        console.error(
+          'React has detected a change in the order of Hooks called by %s. ' ..
+            'This will lead to bugs and errors if not fixed. ' ..
+            'For more information, read the Rules of Hooks: https://reactjs.org/link/rules-of-hooks\n\n' ..
+            '   Previous render            Next render\n' ..
+            '   ------------------------------------------------------\n' ..
+            '%s' ..
+            '   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n',
+          componentName,
+          table_
+        )
+      end
+    end
+  end
+end
 
 local function throwInvalidHookError()
   invariant(
@@ -420,7 +427,7 @@ exports.resetHooksAfterThrow = function()
 
   if _G.__DEV__ then
     hookTypesDev = nil
-    _hookTypesUpdateIndexDev = -1
+    hookTypesUpdateIndexDev = 0
 
     currentHookNameInDev = nil
 
@@ -530,10 +537,10 @@ end
 function basicStateReducer(state, action)
   -- $FlowFixMe: Flow doesn't like mixed types
   if typeof(action) == 'function' then
-		return action(state)
-	else
-		return action
-	end
+    return action(state)
+  else
+    return action
+  end
 end
 
 -- function mountReducer<S, I, A>(
@@ -573,7 +580,7 @@ function updateReducer(
   initialArg,
   init
 )
-	unimplemented('updateReducer')
+  unimplemented('updateReducer')
 --   local hook = updateWorkInProgressHook()
 --   local queue = hook.queue
 --   invariant(
@@ -600,7 +607,7 @@ function updateReducer(
 --       baseQueue.next = pendingFirst
 --       pendingQueue.next = baseFirst
 --     end
---     if __DEV__)
+--     if _G.__DEV__ then
 --       if current.baseQueue ~= baseQueue)
 --         -- Internal invariant that should never happen, but feasibly could in
 --         -- the future if we implement resuming, or some form of that.
@@ -713,7 +720,7 @@ function rerenderReducer(
   initialArg,
   init
 )
-	unimplemented("rerenderReducer")
+  unimplemented("rerenderReducer")
 --   local hook = updateWorkInProgressHook()
 --   local queue = hook.queue
 --   invariant(
@@ -777,7 +784,7 @@ end
 --   source: MutableSource<Source>,
 --   getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
 -- ): Snapshot {
---   if __DEV__)
+--   if _G.__DEV__ then
 --     warnAboutMultipleRenderersDEV(source)
 --   end
 
@@ -825,7 +832,7 @@ end
 
 --   if isSafeToReadFromSource)
 --     local snapshot = getSnapshot(source._source)
---     if __DEV__)
+--     if _G.__DEV__ then
 --       if typeof snapshot == 'function')
 --         console.error(
 --           'Mutable source should not return a function as the snapshot value. ' +
@@ -911,7 +918,7 @@ end
 --     local maybeNewVersion = getVersion(source._source)
 --     if !is(version, maybeNewVersion))
 --       local maybeNewSnapshot = getSnapshot(source._source)
---       if __DEV__)
+--       if _G.__DEV__ then
 --         if typeof maybeNewSnapshot == 'function')
 --           console.error(
 --             'Mutable source should not return a function as the snapshot value. ' +
@@ -960,7 +967,7 @@ end
 --     end
 
 --     local unsubscribe = subscribe(source._source, handleChange)
---     if __DEV__)
+--     if _G.__DEV__ then
 --       if typeof unsubscribe ~= 'function')
 --         console.error(
 --           'Mutable source subscribe function must return an unsubscribe function.',
@@ -1043,22 +1050,22 @@ end
 function mountState(
   initialState
 )
-	unimplemented("mountState")
+  unimplemented("mountState")
 -- local hook = mountWorkInProgressHook()
   -- if typeof(initialState) == 'function' then
   --   -- $FlowFixMe: Flow doesn't like mixed types
   --   initialState = initialState()
-	-- end
-	-- hook.baseState = initialState
+  -- end
+  -- hook.baseState = initialState
   -- hook.memoizedState = hook.baseState
-	-- hook.queue = {
+  -- hook.queue = {
   --   pending = nil,
   --   dispatch = nil,
   --   lastRenderedReducer = basicStateReducer,
   --   lastRenderedState = initialState
   -- }
-	-- local queue = hook.queue
-	-- queue.dispatch = dispatchAction.bind(
+  -- local queue = hook.queue
+  -- queue.dispatch = dispatchAction.bind(
   --   nil,
   --   currentlyRenderingFiber,
   --   queue
@@ -1073,7 +1080,7 @@ end
 function updateState(
   initialState: (() -> any) | any
 )
-	unimplemented("updateState")
+  unimplemented("updateState")
   return updateReducer(basicStateReducer, initialState)
 end
 
@@ -1081,10 +1088,10 @@ end
 --   initialState: (() => S) | S,
 -- ): [S, Dispatch<BasicStateAction<S>>] {
 function rerenderState(
-	initialState: (() -> any) | any
+  initialState: (() -> any) | any
 )
-	unimplemented("rerenderState")
-	return rerenderReducer(basicStateReducer, initialState)
+  unimplemented("rerenderState")
+  return rerenderReducer(basicStateReducer, initialState)
 end
 
 local function pushEffect(tag, create, destroy, deps)
@@ -1149,7 +1156,7 @@ function updateEffectImpl(fiberFlags, hookFlags, create, deps)
       if areHookInputsEqual(nextDeps, prevDeps) then
         pushEffect(hookFlags, create, destroy, nextDeps)
         return
-			end
+      end
     end
   end
 
@@ -1249,7 +1256,7 @@ end
 --     end
 --   } else if ref ~= nil and ref ~= undefined)
 --     local refObject = ref
---     if __DEV__)
+--     if _G.__DEV__ then
 --       if !refObject.hasOwnProperty('current'))
 --         console.error(
 --           'Expected useImperativeHandle() first argument to either be a ' +
@@ -1271,7 +1278,7 @@ end
 --   create: () => T,
 --   deps: Array<mixed> | void | nil,
 -- ): void {
---   if __DEV__)
+--   if _G.__DEV__ then
 --     if typeof create ~= 'function')
 --       console.error(
 --         'Expected useImperativeHandle() second argument to be a function ' +
@@ -1285,7 +1292,7 @@ end
 --   local effectDeps =
 --     deps ~= nil and deps ~= undefined ? deps.concat([ref]) : nil
 
---   if __DEV__ and enableDoubleInvokingEffects)
+--   if _G.__DEV__ and enableDoubleInvokingEffects)
 --     return mountEffectImpl(
 --       MountLayoutDevEffect | UpdateEffect,
 --       HookLayout,
@@ -1307,7 +1314,7 @@ end
 --   create: () => T,
 --   deps: Array<mixed> | void | nil,
 -- ): void {
---   if __DEV__)
+--   if _G.__DEV__ then
 --     if typeof create ~= 'function')
 --       console.error(
 --         'Expected useImperativeHandle() second argument to be a function ' +
@@ -1530,79 +1537,85 @@ exports.getIsUpdatingOpaqueValueInRenderPhaseInDEV = function(): boolean?
 end
 
 -- function warnOnOpaqueIdentifierAccessInDEV(fiber)
---   if __DEV__)
+--   if _G.__DEV__ then
 --     -- TODO: Should warn in effects and callbacks, too
 --     local name = getComponentName(fiber.type) or 'Unknown'
---     if getIsRendering() and !didWarnAboutUseOpaqueIdentifier[name])
+--     if getIsRendering() and not didWarnAboutUseOpaqueIdentifier[name] then
 --       console.error(
---         'The object passed back from useOpaqueIdentifier is meant to be ' +
---           'passed through to attributes only. Do not read the ' +
---           'value directly.',
+--         'The object passed back from useOpaqueIdentifier is meant to be ' ..
+--           'passed through to attributes only. Do not read the ' ..
+--           'value directly.'
 --       )
 --       didWarnAboutUseOpaqueIdentifier[name] = true
 --     end
 --   end
 -- end
 
--- function mountOpaqueIdentifier(): OpaqueIDType | void {
---   local makeId = __DEV__
---     ? makeClientIdInDEV.bind(
---         nil,
---         warnOnOpaqueIdentifierAccessInDEV.bind(null, currentlyRenderingFiber),
---       )
---     : makeClientId
+function mountOpaqueIdentifier()
+  local makeId
+  if _G.__DEV__ then
+    unimplemented("mountOpauqeIdentigier")
+    -- makeId = makeClientIdInDEV.bind(
+    --     nil,
+    --     warnOnOpaqueIdentifierAccessInDEV.bind(null, currentlyRenderingFiber),
+    --   )
+  else
+    makeId = makeClientId
+  end
 
---   if getIsHydrating())
---     local didUpgrade = false
---     local fiber = currentlyRenderingFiber
---     local readValue = () => {
---       if !didUpgrade)
---         -- Only upgrade once. This works even inside the render phase because
---         -- the update is added to a shared queue, which outlasts the
---         -- in-progress render.
---         didUpgrade = true
---         if __DEV__)
---           isUpdatingOpaqueValueInRenderPhase = true
---           setId(makeId())
---           isUpdatingOpaqueValueInRenderPhase = false
---           warnOnOpaqueIdentifierAccessInDEV(fiber)
---         } else {
---           setId(makeId())
---         end
---       end
---       invariant(
---         false,
---         'The object passed back from useOpaqueIdentifier is meant to be ' +
---           'passed through to attributes only. Do not read the value directly.',
---       )
---     end
---     local id = makeOpaqueHydratingObject(readValue)
+  unimplemented("getIsHydrating")
+  -- if getIsHydrating() then
+  --   local didUpgrade = false
+  --   local fiber = currentlyRenderingFiber
+  --   local readValue = function()
+  --     if not didUpgrade then
+  --       -- Only upgrade once. This works even inside the render phase because
+  --       -- the update is added to a shared queue, which outlasts the
+  --       -- in-progress render.
+  --       didUpgrade = true
+  --       if _G.__DEV__ then
+  --         isUpdatingOpaqueValueInRenderPhase = true
+  --         setId(makeId())
+  --         isUpdatingOpaqueValueInRenderPhase = false
+  --         warnOnOpaqueIdentifierAccessInDEV(fiber)
+  --       else
+  --         setId(makeId())
+  --       end
+  --     end
+  --     invariant(
+  --       false,
+  --       'The object passed back from useOpaqueIdentifier is meant to be ' ..
+  --         'passed through to attributes only. Do not read the value directly.'
+  --     )
+  --   end
+  --   local id = makeOpaqueHydratingObject(readValue)
 
---     local setId = mountState(id)[1]
+  --   local setId = mountState(id)[1]
 
---     if (currentlyRenderingFiber.mode & BlockingMode) == NoMode)
---       if __DEV__ and enableDoubleInvokingEffects)
---         currentlyRenderingFiber.flags |=
---           MountPassiveDevEffect | PassiveEffect | PassiveStaticEffect
---       } else {
---         currentlyRenderingFiber.flags |= PassiveEffect | PassiveStaticEffect
---       end
---       pushEffect(
---         HookHasEffect | HookPassive,
---         () => {
---           setId(makeId())
---         },
---         undefined,
---         nil,
---       )
---     end
---     return id
---   } else {
---     local id = makeId()
---     mountState(id)
---     return id
---   end
--- end
+  --   if bit32.band(currentlyRenderingFiber.mode, ReactTypeOfMode.BlockingMode) == ReactTypeOfMode.NoMode then
+  --     if _G.__DEV__ and enableDoubleInvokingEffects then
+  --       currentlyRenderingFiber.flags = bit32.bor(currentlyRenderingFiber.flags,
+  --         MountPassiveDevEffect, PassiveEffect, PassiveStaticEffect)
+  --     else
+  --       currentlyRenderingFiber.flags = bit32.bor(currentlyRenderingFiber.flags,
+  -- 				PassiveEffect, PassiveStaticEffect)
+  --     end
+  --     pushEffect(
+  --       bit32.bor(HookHasEffect, HookPassive),
+  --       function()
+  --         setId(makeId())
+  -- 			end,
+  --       nil,
+  --       nil
+  --     )
+  --   end
+  --   return id
+  -- else
+    local id = makeId()
+    mountState(id)
+    return id
+  -- end
+end
 
 -- function updateOpaqueIdentifier(): OpaqueIDType | void {
 --   local id = updateState(undefined)[0]
@@ -1677,7 +1690,7 @@ end
 --       local lastRenderedReducer = queue.lastRenderedReducer
 --       if lastRenderedReducer ~= nil)
 --         local prevDispatcher
---         if __DEV__)
+--         if _G.__DEV__ then
 --           prevDispatcher = ReactCurrentDispatcher.current
 --           ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV
 --         end
@@ -1700,13 +1713,13 @@ end
 --         } catch (error)
 --           -- Suppress the error. It will throw again in the render phase.
 --         } finally {
---           if __DEV__)
+--           if _G.__DEV__ then
 --             ReactCurrentDispatcher.current = prevDispatcher
 --           end
 --         end
 --       end
 --     end
---     if __DEV__)
+--     if _G.__DEV__ then
 --       -- $FlowExpectedError - jest isn't a global, and isn't recognized outside of tests
 --       if typeof jest ~= 'undefined')
 --         warnIfNotScopedWithMatchingAct(fiber)
@@ -1716,7 +1729,7 @@ end
 --     scheduleUpdateOnFiber(fiber, lane, eventTime)
 --   end
 
---   if __DEV__)
+--   if _G.__DEV__ then
 --     if enableDebugTracing)
 --       if fiber.mode & DebugTracingMode)
 --         local name = getComponentName(fiber.type) or 'Unknown'
@@ -1769,7 +1782,7 @@ local HooksDispatcherOnMount: Dispatcher = {
   -- useDeferredValue = mountDeferredValue,
   -- useTransition = mountTransition,
   -- useMutableSource = mountMutableSource,
-  -- useOpaqueIdentifier = mountOpaqueIdentifier,
+  useOpaqueIdentifier = mountOpaqueIdentifier,
 
   unstable_isNewReconciler = enableNewReconciler,
 }
@@ -1868,7 +1881,6 @@ if _G.__DEV__ then
       create: () -> (() -> ())?,
       deps: Array<any>?
     )
-      console.log("______ useEffect (HooksDispatcherOnMountInDEV)")
       currentHookNameInDev = "useEffect"
       mountHookTypesDev()
       checkDepsAreArrayDev(deps)
@@ -1884,15 +1896,15 @@ if _G.__DEV__ then
 --       checkDepsAreArrayDev(deps)
 --       return mountImperativeHandle(ref, create, deps)
 --     },
---     useLayoutEffect(
---       create: () => (() => void) | void,
---       deps: Array<mixed> | void | nil,
---     ): void {
---       currentHookNameInDev = 'useLayoutEffect'
---       mountHookTypesDev()
---       checkDepsAreArrayDev(deps)
---       return mountLayoutEffect(create, deps)
---     },
+    useLayoutEffect = function(
+      create: () -> (() -> ())?,
+      deps: Array<any>?
+    )
+      currentHookNameInDev = 'useLayoutEffect'
+      mountHookTypesDev()
+      checkDepsAreArrayDev(deps)
+      return mountLayoutEffect(create, deps)
+  end,
 --     useMemo<T>(create: () => T, deps: Array<mixed> | void | nil): T {
 --       currentHookNameInDev = 'useMemo'
 --       mountHookTypesDev()
@@ -1962,16 +1974,16 @@ if _G.__DEV__ then
 --       mountHookTypesDev()
 --       return mountMutableSource(source, getSnapshot, subscribe)
 --     },
---     useOpaqueIdentifier(): OpaqueIDType | void {
---       currentHookNameInDev = 'useOpaqueIdentifier'
---       mountHookTypesDev()
---       return mountOpaqueIdentifier()
---     },
+    useOpaqueIdentifier = function()
+      currentHookNameInDev = 'useOpaqueIdentifier'
+      mountHookTypesDev()
+      return mountOpaqueIdentifier()
+    end,
 
     unstable_isNewReconciler = enableNewReconciler,
   }
 
---   HooksDispatcherOnMountWithHookTypesInDEV = {
+  HooksDispatcherOnMountWithHookTypesInDEV = {
 --     readContext<T>(
 --       context: ReactContext<T>,
 --       observedBits: void | number | boolean,
@@ -1991,14 +2003,14 @@ if _G.__DEV__ then
 --       updateHookTypesDev()
 --       return readContext(context, observedBits)
 --     },
---     useEffect(
---       create: () => (() => void) | void,
---       deps: Array<mixed> | void | nil,
---     ): void {
---       currentHookNameInDev = 'useEffect'
---       updateHookTypesDev()
---       return mountEffect(create, deps)
---     },
+      useEffect = function(
+        create: () -> (() -> ())?,
+        deps: Array<any>?
+      )
+        currentHookNameInDev = "useEffect"
+        updateHookTypesDev()
+        return mountEffect(create, deps)
+      end,
 --     useImperativeHandle<T>(
 --       ref: {|current: T | nil|} | ((inst: T | nil) => mixed) | nil | void,
 --       create: () => T,
@@ -2008,14 +2020,14 @@ if _G.__DEV__ then
 --       updateHookTypesDev()
 --       return mountImperativeHandle(ref, create, deps)
 --     },
---     useLayoutEffect(
---       create: () => (() => void) | void,
---       deps: Array<mixed> | void | nil,
---     ): void {
---       currentHookNameInDev = 'useLayoutEffect'
---       updateHookTypesDev()
---       return mountLayoutEffect(create, deps)
---     },
+    useLayoutEffect = function(
+      create: () -> (() -> ())?,
+      deps: Array<any>?
+    )
+      currentHookNameInDev = 'useLayoutEffect'
+      updateHookTypesDev()
+      return mountLayoutEffect(create, deps)
+  end,
 --     useMemo<T>(create: () => T, deps: Array<mixed> | void | nil): T {
 --       currentHookNameInDev = 'useMemo'
 --       updateHookTypesDev()
@@ -2084,16 +2096,16 @@ if _G.__DEV__ then
 --       updateHookTypesDev()
 --       return mountMutableSource(source, getSnapshot, subscribe)
 --     },
---     useOpaqueIdentifier(): OpaqueIDType | void {
---       currentHookNameInDev = 'useOpaqueIdentifier'
---       updateHookTypesDev()
---       return mountOpaqueIdentifier()
---     },
+    useOpaqueIdentifier = function()
+      currentHookNameInDev = 'useOpaqueIdentifier'
+      updateHookTypesDev()
+      return mountOpaqueIdentifier()
+    end,
 
 --     unstable_isNewReconciler: enableNewReconciler,
---   end
+    }
 
---   HooksDispatcherOnUpdateInDEV = {
+  HooksDispatcherOnUpdateInDEV = {
 --     readContext<T>(
 --       context: ReactContext<T>,
 --       observedBits: void | number | boolean,
@@ -2113,14 +2125,14 @@ if _G.__DEV__ then
 --       updateHookTypesDev()
 --       return readContext(context, observedBits)
 --     },
---     useEffect(
---       create: () => (() => void) | void,
---       deps: Array<mixed> | void | nil,
---     ): void {
---       currentHookNameInDev = 'useEffect'
---       updateHookTypesDev()
---       return updateEffect(create, deps)
---     },
+      useEffect = function(
+        create: () -> (() -> ())?,
+        deps: Array<any>?
+      )
+        currentHookNameInDev = "useEffect"
+        updateHookTypesDev()
+        return updateEffect(create, deps)
+      end,
 --     useImperativeHandle<T>(
 --       ref: {|current: T | nil|} | ((inst: T | nil) => mixed) | nil | void,
 --       create: () => T,
@@ -2130,14 +2142,14 @@ if _G.__DEV__ then
 --       updateHookTypesDev()
 --       return updateImperativeHandle(ref, create, deps)
 --     },
---     useLayoutEffect(
---       create: () => (() => void) | void,
---       deps: Array<mixed> | void | nil,
---     ): void {
---       currentHookNameInDev = 'useLayoutEffect'
---       updateHookTypesDev()
---       return updateLayoutEffect(create, deps)
---     },
+    useLayoutEffect = function(
+      create: () -> (() -> ())?,
+      deps: Array<any>?
+    )
+      currentHookNameInDev = 'useLayoutEffect'
+      updateHookTypesDev()
+      return updateLayoutEffect(create, deps)
+    end,
 --     useMemo<T>(create: () => T, deps: Array<mixed> | void | nil): T {
 --       currentHookNameInDev = 'useMemo'
 --       updateHookTypesDev()
@@ -2213,9 +2225,9 @@ if _G.__DEV__ then
 --     },
 
 --     unstable_isNewReconciler: enableNewReconciler,
---   end
+  }
 
---   HooksDispatcherOnRerenderInDEV = {
+  HooksDispatcherOnRerenderInDEV = {
 --     readContext<T>(
 --       context: ReactContext<T>,
 --       observedBits: void | number | boolean,
@@ -2253,14 +2265,14 @@ if _G.__DEV__ then
 --       updateHookTypesDev()
 --       return updateImperativeHandle(ref, create, deps)
 --     },
---     useLayoutEffect(
---       create: () => (() => void) | void,
---       deps: Array<mixed> | void | nil,
---     ): void {
---       currentHookNameInDev = 'useLayoutEffect'
---       updateHookTypesDev()
---       return updateLayoutEffect(create, deps)
---     },
+    useLayoutEffect = function(
+      create: () -> (() -> ())?,
+      deps: Array<any>?
+    )
+      currentHookNameInDev = 'useLayoutEffect'
+      updateHookTypesDev()
+      return updateLayoutEffect(create, deps)
+  end
 --     useMemo<T>(create: () => T, deps: Array<mixed> | void | nil): T {
 --       currentHookNameInDev = 'useMemo'
 --       updateHookTypesDev()
@@ -2336,7 +2348,7 @@ if _G.__DEV__ then
 --     },
 
 --     unstable_isNewReconciler: enableNewReconciler,
---   end
+  }
 
 --   InvalidNestedHooksDispatcherOnMountInDEV = {
 --     readContext<T>(
@@ -2779,7 +2791,7 @@ exports.renderWithHooks = function(
     --     ? ((current._debugHookTypes: any): Array<HookType>)
     --     : nil
     hookTypesDev = current and current._debugHookTypes or nil
-    _hookTypesUpdateIndexDev = -1
+    hookTypesUpdateIndexDev = 0
     -- Used for hot reloading:
     ignorePreviousDependencies =
       current ~= nil and current.type ~= workInProgress.type
@@ -2852,7 +2864,7 @@ exports.renderWithHooks = function(
 
       if _G.__DEV__ then
         -- Also validate hook order for cascading updates.
-        _hookTypesUpdateIndexDev = -1
+        hookTypesUpdateIndexDev = 0
       end
 
       ReactCurrentDispatcher.current = _G.__DEV__
@@ -2885,7 +2897,7 @@ exports.renderWithHooks = function(
   if _G.__DEV__ then
     currentHookNameInDev = nil
     hookTypesDev = nil
-    _hookTypesUpdateIndexDev = -1
+    hookTypesUpdateIndexDev =0
   end
 
   didScheduleRenderPhaseUpdate = false

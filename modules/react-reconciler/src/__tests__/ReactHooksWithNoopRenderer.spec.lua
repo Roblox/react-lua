@@ -9,7 +9,6 @@
 ]]
 
 --[[ eslint-disable no-func-assign ]]
-
 local Workspace = script.Parent.Parent.Parent
 local React
 -- local textCache
@@ -989,9 +988,7 @@ return function()
   -- })
 
   describe("useEffect", function()
-    local itSkipIfDEV = _G.__DEV__ and xit or it
-
-    itSkipIfDEV("simple mount and update", function()
+    it("simple mount and update", function()
       -- FIXME: type of expect
       local expect: any = expect
       local function Counter(props)
@@ -1027,7 +1024,7 @@ return function()
       end)
     end)
 
-    itSkipIfDEV('flushes passive effects even with sibling deletions', function()
+    it('flushes passive effects even with sibling deletions', function()
       -- FIXME: type of expect
       local expect: any = expect
       local function LayoutEffect(props)
@@ -1108,7 +1105,7 @@ return function()
       })
     end)
 
-    itSkipIfDEV('flushes passive effects even if siblings schedule a new root', function()
+    it('flushes passive effects even if siblings schedule a new root', function()
       -- FIXME: type of expect
       local expect: any = expect
       local function PassiveEffect(props)
@@ -1148,7 +1145,7 @@ return function()
       end)
     end)
 
-    itSkipIfDEV(
+    it(
       'flushes effects serially by flushing old effects before flushing ' ..
         "new ones, if they haven't already fired", function()
       -- FIXME: type of expect
@@ -1921,7 +1918,7 @@ return function()
   --     expect(ReactNoop.getChildren()).toEqual([span('Count: 0')])
   --   })
 
-    itSkipIfDEV('unmounts previous effect', function()
+    it('unmounts previous effect', function()
       -- FIXME: type of expect
       local expect: any = expect
       local function Counter(props)
@@ -2062,7 +2059,7 @@ return function()
   --     expect(ReactNoop.getChildren()).toEqual([])
   --   })
 
-    itSkipIfDEV('skips effect if inputs have not changed', function()
+    it('skips effect if inputs have not changed', function()
       -- FIXME: type of expect
       local expect: any = expect
 

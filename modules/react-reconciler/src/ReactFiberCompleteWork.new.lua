@@ -36,7 +36,8 @@ type ChildSet = ReactFiberHostConfig.ChildSet;
 -- local type {SuspenseContext} = require(script.Parent.ReactFiberSuspenseContext.new)
 -- local type {OffscreenState} = require(script.Parent.ReactFiberOffscreenComponent)
 
--- local {resetWorkInProgressVersions as resetMutableSourceWorkInProgressVersions} = require(script.Parent.ReactMutableSource.new)
+local ReactMutableSource = require(script.Parent["ReactMutableSource.new"])
+local resetMutableSourceWorkInProgressVersions = ReactMutableSource.resetWorkInProgressVersions
 
 -- local {now} = require(script.Parent.SchedulerWithReactIntegration.new)
 
@@ -550,7 +551,7 @@ elseif supportsPersistence then
 --       childrenUnchanged,
 --       recyclableInstance,
 --     )
---     if 
+--     if
 --       finalizeInitialChildren(
 --         newInstance,
 --         type,
@@ -842,8 +843,7 @@ local function completeWork(
   elseif workInProgress.tag == HostRoot then
     popHostContainer(workInProgress)
     popTopLevelLegacyContextObject(workInProgress)
-    warn("Skip unimplemented: resetMutableSourceWorkInProgressVersions")
-    -- resetMutableSourceWorkInProgressVersions()
+    resetMutableSourceWorkInProgressVersions()
     -- FIXME (roblox): type coercion
     -- local fiberRoot = (workInProgress.stateNode: FiberRoot)
     local fiberRoot = workInProgress.stateNode
@@ -922,7 +922,7 @@ local function completeWork(
       --     markUpdate(workInProgress)
       --   end
       -- else
-        
+
         local instance = createInstance(
           type,
           newProps,
@@ -1008,7 +1008,7 @@ local function completeWork(
     --   local newFlags = flags
 
     --   -- Call onRender any time this fiber or its subtree are worked on.
-    --   if 
+    --   if
     --     (flags & PerformedWork) ~= NoFlags or
     --     (subtreeFlags & PerformedWork) ~= NoFlags
     --   )
@@ -1020,7 +1020,7 @@ local function completeWork(
     --   -- we include in the same measure.
     --   -- TODO: Can optimize by using a static flag to track whether a tree
     --   -- contains layout effects, like we do for passive effects.
-    --   if 
+    --   if
     --     (flags & (LayoutMask | Deletion)) ~= NoFlags or
     --     (subtreeFlags & (LayoutMask | Deletion)) ~= NoFlags
     --   )
@@ -1030,7 +1030,7 @@ local function completeWork(
     --   -- Call onPostCommit only if the subtree contains passive work.
     --   -- Don't have to check for deletions, because Deletion is already
     --   -- a passive flag.
-    --   if 
+    --   if
     --     (flags & PassiveMask) ~= NoFlags or
     --     (subtreeFlags & PassiveMask) ~= NoFlags
     --   )
@@ -1046,7 +1046,7 @@ local function completeWork(
     unimplemented("SuspenseComponent")
     -- popSuspenseContext(workInProgress)
     -- local nextState: nil | SuspenseState = workInProgress.memoizedState
-  
+
     -- if enableSuspenseServerRenderer)
     --   if nextState ~= nil and nextState.dehydrated ~= nil)
     --     if current == nil)
@@ -1108,12 +1108,12 @@ local function completeWork(
     --     end
     --   end
     -- end
-  
+
     -- if (workInProgress.flags & DidCapture) ~= NoFlags)
     --   -- Something suspended. Re-render with the fallback children.
     --   workInProgress.lanes = renderLanes
     --   -- Do not reset the effect list.
-    --   if 
+    --   if
     --     enableProfilerTimer and
     --     (workInProgress.mode & ProfileMode) ~= NoMode
     --   )
@@ -1122,7 +1122,7 @@ local function completeWork(
     --   -- Don't bubble properties in this case.
     --   return workInProgress
     -- end
-  
+
     -- local nextDidTimeout = nextState ~= nil
     -- local prevDidTimeout = false
     -- if current == nil)
@@ -1133,7 +1133,7 @@ local function completeWork(
     --   local prevState: nil | SuspenseState = current.memoizedState
     --   prevDidTimeout = prevState ~= nil
     -- end
-  
+
     -- if nextDidTimeout and !prevDidTimeout)
     --   -- If this subtreee is running in blocking mode we can suspend,
     --   -- otherwise we won't suspend.
@@ -1151,7 +1151,7 @@ local function completeWork(
     --     local hasInvisibleChildContext =
     --       current == nil and
     --       workInProgress.memoizedProps.unstable_avoidThisFallback ~= true
-    --     if 
+    --     if
     --       hasInvisibleChildContext or
     --       hasSuspenseContext(
     --         suspenseStackCursor.current,
@@ -1168,7 +1168,7 @@ local function completeWork(
     --     end
     --   end
     -- end
-  
+
     -- if supportsPersistence)
     --   -- TODO: Only schedule updates if not prevDidTimeout.
     --   if nextDidTimeout)
@@ -1189,7 +1189,7 @@ local function completeWork(
     --     workInProgress.flags |= Update
     --   end
     -- end
-    -- if 
+    -- if
     --   enableSuspenseCallback and
     --   workInProgress.updateQueue ~= nil and
     --   workInProgress.memoizedProps.suspenseCallback ~= nil
@@ -1363,7 +1363,7 @@ local function completeWork(
 
     --       cutOffTailIfNeeded(renderState, true)
     --       -- This might have been modified.
-    --       if 
+    --       if
     --         renderState.tail == nil and
     --         renderState.tailMode == 'hidden' and
     --         !renderedTail.alternate and
@@ -1373,7 +1373,7 @@ local function completeWork(
     --         bubbleProperties(workInProgress)
     --         return nil
     --       end
-    --     } else if 
+    --     } else if
     --       -- The time it took to render last row is greater than the remaining
     --       -- time we have to render. So rendering one more row would likely
     --       -- exceed it.
@@ -1536,28 +1536,28 @@ local function completeWork(
     -- popRenderLanes(workInProgress)
     -- local nextState: OffscreenState | nil = workInProgress.memoizedState
     -- local nextIsHidden = nextState ~= nil
-  
+
     -- if current ~= nil)
     --   local prevState: OffscreenState | nil = current.memoizedState
-  
+
     --   local prevIsHidden = prevState ~= nil
-    --   if 
+    --   if
     --     prevIsHidden ~= nextIsHidden and
     --     newProps.mode ~= 'unstable-defer-without-hiding'
     --   )
     --     workInProgress.flags |= Update
     --   end
     -- end
-  
+
     -- -- Don't bubble properties for hidden children.
-    -- if 
+    -- if
     --   !nextIsHidden or
     --   includesSomeLane(subtreeRenderLanes, (OffscreenLane: Lane)) or
     --   (workInProgress.mode & ConcurrentMode) == NoMode
     -- )
     --   bubbleProperties(workInProgress)
     -- end
-  
+
     -- return nil
   end
   invariant(

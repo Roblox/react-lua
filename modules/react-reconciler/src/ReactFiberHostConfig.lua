@@ -26,6 +26,7 @@ local invariant = require(Workspace.Shared.invariant)
 -- being shimmed?
 export type Instance = any;
 export type TextInstance = any;
+export type HydratableInstance = any;
 export type Container = any;
 export type PublicInstance = any;
 export type RendererInspectionConfig = any;

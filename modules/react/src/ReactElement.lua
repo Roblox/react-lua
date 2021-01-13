@@ -398,7 +398,9 @@ exports.createElement = function(_type, config, ...)
 			local displayName
 
 			if typeof(type) == "function" then
-				displayName = (_type.displayName or _type.name) or "Unknown"
+				console.warn("Roblox React can't pull displayName for functions")
+				-- displayName = (_type.displayName or _type.name) or "Unknown"
+				displayName = "Unknown"
 			else
 				displayName = _type
 			end
@@ -442,72 +444,72 @@ end
 ]]
 
 exports.cloneElement = function(element, config, ...)
- invariant(not (element == nil or element == nil), "React.cloneElement(...): The argument must be a React element, but you passed " .. tostring(element))
+	invariant(not (element == nil or element == nil), "React.cloneElement(...): The argument must be a React element, but you passed " .. tostring(element))
 
- -- Original props are copied
- local props = Object.assign({}, element.props)
+	-- Original props are copied
+	local props = Object.assign({}, element.props)
 
- -- Reserved names are extracted
- local key = element.key
- local ref = element.ref
+	-- Reserved names are extracted
+	local key = element.key
+	local ref = element.ref
 
- -- Self is preserved since the owner is preserved.
- local self = element._self
+	-- Self is preserved since the owner is preserved.
+	local self = element._self
 
- -- Source is preserved since cloneElement is unlikely to be targeted by a
- -- transpiler, and the original source is probably a better indicator of the
- -- true owner.
- local source = element._source;
+	-- Source is preserved since cloneElement is unlikely to be targeted by a
+	-- transpiler, and the original source is probably a better indicator of the
+	-- true owner.
+	local source = element._source;
 
- -- Owner will be preserved, unless ref is overridden
- local owner = element._owner
+	-- Owner will be preserved, unless ref is overridden
+	local owner = element._owner
 
- if config ~= nil then
-   if hasValidRef(config) then
-     -- Silently steal the ref from the parent.
-     ref = config.ref
-     owner = ReactCurrentOwner.current
-   end
+	if config ~= nil then
+		if hasValidRef(config) then
+			-- Silently steal the ref from the parent.
+			ref = config.ref
+			owner = ReactCurrentOwner.current
+		end
 
-   if hasValidKey(config) then
-     key = "" .. config.key
-   end
-  end
+		if hasValidKey(config) then
+			key = "" .. config.key
+		end
+	end
 
-   -- Remaining properties override existing props
-   local defaultProps
+	-- Remaining properties override existing props
+	local defaultProps
 
 	if element.type and element.type.defaultProps then
-     defaultProps = element.type.defaultProps
-   end
+		defaultProps = element.type.defaultProps
+	end
 
-   for propName, _ in pairs(config) do
-     if config[propName] and not RESERVED_PROPS[propName] then
-       if config[propName] == nil and defaultProps ~= nil then
-         -- Resolve default props
-         props[propName] = defaultProps[propName]
-       else
-         props[propName] = config[propName]
-       end
-     end
-   end
+	for propName, _ in pairs(config) do
+		if config[propName] and not RESERVED_PROPS[propName] then
+			if config[propName] == nil and defaultProps ~= nil then
+				-- Resolve default props
+				props[propName] = defaultProps[propName]
+			else
+				props[propName] = config[propName]
+			end
+		end
+	end
 
- -- Children can be more than one argument, and those are transferred onto
- -- the newly allocated props object.
- local childrenLength = select("#", ...)
+	-- Children can be more than one argument, and those are transferred onto
+	-- the newly allocated props object.
+	local childrenLength = select("#", ...)
 
- if childrenLength == 1 then
-	 props.children = select(1, ...)
- elseif childrenLength > 1 then
-   local childArray = {}
-   for i = 1, childrenLength do
-	local toInsert = select(i, ...)
-	table.insert(childArray, toInsert)
-   end
-   props.children = childArray
- end
+	if childrenLength == 1 then
+		props.children = select(1, ...)
+	elseif childrenLength > 1 then
+		local childArray = {}
+		for i = 1, childrenLength do
+			local toInsert = select(i, ...)
+			table.insert(childArray, toInsert)
+		end
+		props.children = childArray
+	end
 
- return ReactElement(element.type, key, ref, self, source, owner, props)
+	return ReactElement(element.type, key, ref, self, source, owner, props)
 end
 --[[*
  * Verifies the object is a ReactElement.

@@ -27,7 +27,8 @@ exports.enableSchedulingProfiler = _G.__PROFILE__ and _G.__EXPERIMENTAL__
 
 -- Helps identify side effects in render-phase lifecycle hooks and setState
 -- reducers by double invoking them in Strict Mode.
-exports.debugRenderPhaseSideEffectsForStrictMode = _G.__DEV__
+-- ROBLOX TODO: we'll want to enable this for DEV app bundles, but stay false for unit tests
+exports.debugRenderPhaseSideEffectsForStrictMode = false -- _G.__DEV__
 
 -- To preserve the "Pause on caught exceptions" behavior of the debugger, we
 -- replay the begin phase of a failed component inside invokeGuardedCallback.

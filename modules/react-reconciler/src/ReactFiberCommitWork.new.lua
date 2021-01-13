@@ -13,6 +13,9 @@ local function unimplemented(message)
 end
 
 local Workspace = script.Parent.Parent
+local Packages = Workspace.Parent.Packages
+local LuauPolyfill = require(Packages.LuauPolyfill)
+local console = LuauPolyfill.console
 
 local ReactFiberHostConfig = require(script.Parent.ReactFiberHostConfig)
 type Instance = ReactFiberHostConfig.Instance;
@@ -46,7 +49,7 @@ local enableSuspenseServerRenderer = ReactFeatureFlags.enableSuspenseServerRende
 local enableFundamentalAPI = ReactFeatureFlags.enableFundamentalAPI
 -- local enableSuspenseCallback = ReactFeatureFlags.enableSuspenseCallback
 local enableScopeAPI = ReactFeatureFlags.enableScopeAPI
--- local enableDoubleInvokingEffects = ReactFeatureFlags.enableDoubleInvokingEffects
+local enableDoubleInvokingEffects = ReactFeatureFlags.enableDoubleInvokingEffects
 local ReactWorkTags = require(script.Parent.ReactWorkTags)
 local FunctionComponent = ReactWorkTags.FunctionComponent
 local ForwardRef = ReactWorkTags.ForwardRef
@@ -70,7 +73,7 @@ local LegacyHiddenComponent = ReactWorkTags.LegacyHiddenComponent
 local ReactErrorUtils = require(Workspace.Shared.ReactErrorUtils)
 local invokeGuardedCallback = ReactErrorUtils.invokeGuardedCallback
 local hasCaughtError = ReactErrorUtils.hasCaughtError
--- local clearCaughtError = ReactErrorUtils.clearCaughtError
+local clearCaughtError = ReactErrorUtils.clearCaughtError
 local ReactFiberFlags = require(script.Parent.ReactFiberFlags)
 local NoFlags = ReactFiberFlags.NoFlags
 local ContentReset = ReactFiberFlags.ContentReset
@@ -81,7 +84,7 @@ local Callback = ReactFiberFlags.Callback
 local LayoutMask = ReactFiberFlags.LayoutMask
 local PassiveMask = ReactFiberFlags.PassiveMask
 local Ref = ReactFiberFlags.Ref
--- local getComponentName = require(Workspace.Shared.getComponentName)
+local getComponentName = require(Workspace.Shared.getComponentName)
 local invariant = require(Workspace.Shared.invariant)
 local ReactCurrentFiber = require(script.Parent.ReactCurrentFiber)
 -- deviation: this property would be captured as values instead of bound
@@ -133,6 +136,10 @@ local clearContainer = ReactFiberHostConfig.clearContainer
 --   markCommitTimeOfFallback,
 --   schedulePassiveEffectCallback,
 -- } = require(script.Parent.ReactFiberWorkLoop.new)
+
+-- ROBLOX FIXME: this causes an import cycle
+-- local captureCommitPhaseError = require(script.Parent["ReactFiberWorkLoop.new"]).captureCommitPhaseError
+
 local NoHookEffect = ReactHookEffectTags.NoFlags
 local HookHasEffect = ReactHookEffectTags.HasEffect
 local HookLayout = ReactHookEffectTags.Layout
@@ -155,51 +162,61 @@ local isHostParent, getHostSibling, insertOrAppendPlacementNode,
 
 -- local PossiblyWeakSet = typeof WeakSet == 'function' ? WeakSet : Set
 
--- local callComponentWillUnmountWithTimer = function(current, instance)
---   instance.props = current.memoizedProps
---   instance.state = current.memoizedState
---   if
---     enableProfilerTimer and
---     enableProfilerCommitHooks and
---     current.mode & ProfileMode
---   )
---     try {
---       startLayoutEffectTimer()
---       instance.componentWillUnmount()
---     } finally {
---       recordLayoutEffectDuration(current)
---     end
---   } else {
---     instance.componentWillUnmount()
---   end
--- end
+local callComponentWillUnmountWithTimer = function(current, instance)
+  instance.props = current.memoizedProps
+  instance.state = current.memoizedState
+  if
+    enableProfilerTimer and
+    enableProfilerCommitHooks and
+    bit32.band(current.mode, ProfileMode)
+  then
+    local ok, exception = pcall(function()
+      -- unimplemented("profiler timer logic")
+      -- startLayoutEffectTimer()
+      instance.componentWillUnmount()
+    end)
 
--- -- Capture errors so they don't interrupt unmounting.
--- function safelyCallComponentWillUnmount(
---   current: Fiber,
---   instance: any,
---   nearestMountedAncestor: Fiber | nil,
--- )
---   if __DEV__)
---     invokeGuardedCallback(
---       nil,
---       callComponentWillUnmountWithTimer,
---       nil,
---       current,
---       instance,
---     )
---     if hasCaughtError())
---       local unmountError = clearCaughtError()
---       captureCommitPhaseError(current, nearestMountedAncestor, unmountError)
---     end
---   } else {
---     try {
---       callComponentWillUnmountWithTimer(current, instance)
---     } catch (unmountError)
---       captureCommitPhaseError(current, nearestMountedAncestor, unmountError)
---     end
---   end
--- end
+    -- unimplemented("profiler timer logic")
+    -- recordLayoutEffectDuration(current)
+
+    if not ok then
+      error(exception)
+    end
+  else
+    instance.componentWillUnmount()
+  end
+end
+
+-- Capture errors so they don't interrupt unmounting.
+function safelyCallComponentWillUnmount(
+  current: Fiber,
+  instance: any,
+  nearestMountedAncestor
+)
+  if _G.__DEV__ then
+    invokeGuardedCallback(
+      nil,
+      callComponentWillUnmountWithTimer,
+      nil,
+      current,
+      instance
+    )
+    if hasCaughtError() then
+      local _unmountError = clearCaughtError()
+      unimplemented("captureCommitPhaseError")
+      -- captureCommitPhaseError(current, nearestMountedAncestor, unmountError)
+    end
+  else
+    local ok, _unmountError = pcall(function()
+      callComponentWillUnmountWithTimer(current, instance)
+    end)
+
+    if not ok then
+      unimplemented("captureCommitPhaseError")
+      -- captureCommitPhaseError(current, nearestMountedAncestor, unmountError)
+    end
+  end
+end
 
 local function safelyDetachRef(current: Fiber, nearestMountedAncestor: Fiber)
   local ref = current.ref
@@ -208,8 +225,8 @@ local function safelyDetachRef(current: Fiber, nearestMountedAncestor: Fiber)
       if _G.__DEV__ then
         invokeGuardedCallback(nil, ref, nil, nil)
         if hasCaughtError() then
+          local _refError = clearCaughtError()
           unimplemented("captureCommitPhaseError")
-          -- local refError = clearCaughtError()
           -- captureCommitPhaseError(current, nearestMountedAncestor, refError)
         end
       else
@@ -235,8 +252,8 @@ local function safelyCallDestroy(
   if _G.__DEV__ then
     invokeGuardedCallback(nil, destroy, nil)
     if hasCaughtError() then
+      local _error_ = clearCaughtError()
       unimplemented("captureCommitPhaseError")
-      -- local error_ = clearCaughtError()
       -- captureCommitPhaseError(current, nearestMountedAncestor, error_)
     end
   else
@@ -384,37 +401,36 @@ local function commitHookEffectListMount(flags: HookFlags, finishedWork: Fiber)
         effect.destroy = create()
 
         if _G.__DEV__ then
-          unimplemented("DEV warnings for effect that returns invalid destroy")
-          -- local destroy = effect.destroy
-          -- if destroy ~= undefined and typeof destroy ~= 'function')
-          --   local addendum
-          --   if destroy == nil)
-          --     addendum =
-          --       ' You returned nil. If your effect does not require clean ' +
-          --       'up, return undefined (or nothing).'
-          --   } else if typeof destroy.then == 'function')
-          --     addendum =
-          --       '\n\nIt looks like you wrote useEffect(async () => ...) or returned a Promise. ' +
-          --       'Instead, write the async function inside your effect ' +
-          --       'and call it immediately:\n\n' +
-          --       'useEffect(() => {\n' +
-          --       '  async function fetchData() {\n' +
-          --       '    -- You can await here\n' +
-          --       '    local response = await MyAPI.getData(someId);\n' +
-          --       '    -- ...\n' +
-          --       '  }\n' +
-          --       '  fetchData();\n' +
-          --       `}, [someId]); -- Or [] if effect doesn't need props or state\n\n` +
-          --       'Learn more about data fetching with Hooks: https:--reactjs.org/link/hooks-data-fetching'
-          --   } else {
-          --     addendum = ' You returned: ' + destroy
-          --   end
-          --   console.error(
-          --     'An effect function must not return anything besides a function, ' +
-          --       'which is used for clean-up.%s',
-          --     addendum,
-          --   )
-          -- end
+          local destroy = effect.destroy
+          if destroy ~= nil and typeof(destroy) ~= 'function' then
+            local addendum
+            if destroy == nil then
+              addendum =
+                ' You returned nil. If your effect does not require clean ' ..
+                'up, return undefined (or nothing).'
+            elseif typeof(destroy.then_) == 'function' then
+              addendum =
+                '\n\nIt looks like you wrote useEffect(async () => ...) or returned a Promise. ' ..
+                'Instead, write the async function inside your effect ' ..
+                'and call it immediately:\n\n' ..
+                'useEffect(() => {\n' ..
+                '  async function fetchData() {\n' ..
+                '    -- You can await here\n' ..
+                '    local response = await MyAPI.getData(someId);\n' ..
+                '    -- ...\n' ..
+                '  }\n' ..
+                '  fetchData();\n' ..
+                "}, [someId]); -- Or [] if effect doesn't need props or state\n\n" ..
+                'Learn more about data fetching with Hooks: https://reactjs.org/link/hooks-data-fetching'
+            else
+              addendum = ' You returned: ' .. destroy
+            end
+            console.error(
+              'An effect function must not return anything besides a function, ' ..
+                'which is used for clean-up.%s',
+              addendum
+            )
+          end
         end
       end
       effect = effect.next
@@ -572,9 +588,9 @@ local function recursivelyCommitLayoutEffects(
             finishedRoot
           )
           if hasCaughtError() then
-            unimplemented("captureCommitPhaseError")
-            -- local error = clearCaughtError()
-            -- captureCommitPhaseError(child, finishedWork, error)
+            local error_ = clearCaughtError()
+            unimplemented("recursivelyCommitLayoutEffects: can't captureCommitPhaseError due to cycle (" .. error_ .. ")")
+            -- captureCommitPhaseError(child, finishedWork, error_)
           end
           if prevCurrentFiberInDEV ~= nil then
             setCurrentDebugFiberInDEV(prevCurrentFiberInDEV)
@@ -587,7 +603,7 @@ local function recursivelyCommitLayoutEffects(
           end)
 
           if not ok then
-            unimplemented("captureCommitPhaseError (" .. result .. ")")
+            unimplemented("recursivelyCommitLayoutEffects: can't captureCommitPhaseError due to cycle (" .. result .. ")")
             -- captureCommitPhaseError(child, finishedWork, error)
           end
         end
@@ -663,13 +679,11 @@ local function recursivelyCommitLayoutEffects(
     if enableScopeAPI then
       -- TODO: This is a temporary solution that allowed us to transition away from React Flare on www.
       if bit32.band(flags, Ref) ~= 0 and tag ~= ScopeComponent then
-        unimplemented("commitAttachRef")
-        -- commitAttachRef(finishedWork)
+        commitAttachRef(finishedWork)
       end
     else
       if bit32.band(flags, Ref) ~= 0 then
-        unimplemented("commitAttachRef")
-        -- commitAttachRef(finishedWork)
+        commitAttachRef(finishedWork)
       end
     end
   end
@@ -972,50 +986,50 @@ end
 --   end
 -- end
 
--- function commitAttachRef(finishedWork: Fiber)
---   local ref = finishedWork.ref
---   if ref ~= nil)
---     local instance = finishedWork.stateNode
---     local instanceToUse
---     switch (finishedWork.tag)
---       case HostComponent:
---         instanceToUse = getPublicInstance(instance)
---         break
---       default:
---         instanceToUse = instance
---     end
---     -- Moved outside to ensure DCE works with this flag
---     if enableScopeAPI and finishedWork.tag == ScopeComponent)
---       instanceToUse = instance
---     end
---     if typeof ref == 'function')
---       ref(instanceToUse)
---     } else {
---       if __DEV__)
---         if !ref.hasOwnProperty('current'))
---           console.error(
---             'Unexpected ref object provided for %s. ' +
---               'Use either a ref-setter function or React.createRef().',
---             getComponentName(finishedWork.type),
---           )
---         end
---       end
+function commitAttachRef(finishedWork: Fiber)
+  local ref = finishedWork.ref
+  if ref ~= nil then
+    local instance = finishedWork.stateNode
+    local instanceToUse
+    if finishedWork.tag == HostComponent then
+      instanceToUse = getPublicInstance(instance)
+    else
+      instanceToUse = instance
+    end
+    -- Moved outside to ensure DCE works with this flag
+    if enableScopeAPI and finishedWork.tag == ScopeComponent then
+      instanceToUse = instance
+    end
+    if typeof(ref) == 'function' then
+      ref(instanceToUse)
+    else
+      if _G.__DEV__ then
+        if not ref.current then
+          console.error(
+            'Unexpected ref object provided for %s. ' ..
+              'Use either a ref-setter function or React.createRef().',
+            getComponentName(finishedWork.type)
+          )
+        end
+      end
 
---       ref.current = instanceToUse
---     end
---   end
--- end
+      -- ROBLOX FIXME: this assignment fails, ref is {}, and ref.current is nil. is ref frozen?
+      -- exception thrown is ` \"current\" (string) is not a valid member of table: 0xca17011e37c668fa)`
+      ref.current = instanceToUse
+    end
+  end
+end
 
--- function commitDetachRef(current: Fiber)
---   local currentRef = current.ref
---   if currentRef ~= nil)
---     if typeof currentRef == 'function')
---       currentRef(null)
---     } else {
---       currentRef.current = nil
---     end
---   end
--- end
+function commitDetachRef(current: Fiber)
+  local currentRef = current.ref
+  if currentRef ~= nil then
+    if typeof(currentRef) == 'function' then
+      currentRef(nil)
+    else
+      currentRef.current = nil
+    end
+  end
+end
 
 -- User-originating errors (lifecycles and refs) should not interrupt
 -- deletion, so don't local them throw. Host-originating errors should
@@ -2071,119 +2085,117 @@ local function commitPassiveMount(
   end
 end
 
--- function invokeLayoutEffectMountInDEV(fiber: Fiber): void {
---   if __DEV__ and enableDoubleInvokingEffects)
---     switch (fiber.tag)
---       case FunctionComponent:
---       case ForwardRef:
---       case SimpleMemoComponent:
---       case Block: {
---         invokeGuardedCallback(
---           nil,
---           commitHookEffectListMount,
---           nil,
---           HookLayout | HookHasEffect,
---           fiber,
---         )
---         if hasCaughtError())
---           local mountError = clearCaughtError()
---           captureCommitPhaseError(fiber, fiber.return, mountError)
---         end
---         break
---       end
---       case ClassComponent: {
---         local instance = fiber.stateNode
---         invokeGuardedCallback(null, instance.componentDidMount, instance)
---         if hasCaughtError())
---           local mountError = clearCaughtError()
---           captureCommitPhaseError(fiber, fiber.return, mountError)
---         end
---         break
---       end
---     end
---   end
--- end
+function invokeLayoutEffectMountInDEV(fiber: Fiber)
+  if _G.__DEV__ and enableDoubleInvokingEffects then
+    if fiber.tag == FunctionComponent or
+      fiber.tag == ForwardRef or
+      fiber.tag == SimpleMemoComponent or
+      fiber.tag == Block then
+        invokeGuardedCallback(
+          nil,
+          commitHookEffectListMount,
+          nil,
+          bit32.bor(HookLayout, HookHasEffect),
+          fiber
+        )
+        if hasCaughtError() then
+          local _mountError = clearCaughtError()
+          unimplemented("captureCommitPhaseError")
+          -- captureCommitPhaseError(fiber, fiber.return_, mountError)
+        end
+        return
+      end
+    elseif fiber.tag == ClassComponent then
+        local instance = fiber.stateNode
+        invokeGuardedCallback(nil, instance.componentDidMount, instance)
+        if hasCaughtError() then
+          local _mountError = clearCaughtError()
+          unimplemented("captureCommitPhaseError")
+          -- captureCommitPhaseError(fiber, fiber.return_, mountError)
+        end
+        return
+    end
+end
 
--- function invokePassiveEffectMountInDEV(fiber: Fiber): void {
---   if __DEV__ and enableDoubleInvokingEffects)
---     switch (fiber.tag)
---       case FunctionComponent:
---       case ForwardRef:
---       case SimpleMemoComponent:
---       case Block: {
---         invokeGuardedCallback(
---           nil,
---           commitHookEffectListMount,
---           nil,
---           HookPassive | HookHasEffect,
---           fiber,
---         )
---         if hasCaughtError())
---           local mountError = clearCaughtError()
---           captureCommitPhaseError(fiber, fiber.return, mountError)
---         end
---         break
---       end
---     end
---   end
--- end
 
--- function invokeLayoutEffectUnmountInDEV(fiber: Fiber): void {
---   if __DEV__ and enableDoubleInvokingEffects)
---     switch (fiber.tag)
---       case FunctionComponent:
---       case ForwardRef:
---       case SimpleMemoComponent:
---       case Block: {
---         invokeGuardedCallback(
---           nil,
---           commitHookEffectListUnmount,
---           nil,
---           HookLayout | HookHasEffect,
---           fiber,
---           fiber.return,
---         )
---         if hasCaughtError())
---           local unmountError = clearCaughtError()
---           captureCommitPhaseError(fiber, fiber.return, unmountError)
---         end
---         break
---       end
---       case ClassComponent: {
---         local instance = fiber.stateNode
---         if typeof instance.componentWillUnmount == 'function')
---           safelyCallComponentWillUnmount(fiber, instance, fiber.return)
---         end
---         break
---       end
---     end
---   end
--- end
+function invokePassiveEffectMountInDEV(fiber: Fiber)
+  if _G.__DEV__ and enableDoubleInvokingEffects then
+    if fiber.tag == FunctionComponent or
+      fiber.tag == ForwardRef or
+      fiber.tag == SimpleMemoComponent or
+      fiber.tag == Block then
+        invokeGuardedCallback(
+          nil,
+          commitHookEffectListMount,
+          nil,
+          bit32.bor(HookPassive, HookHasEffect),
+          fiber
+        )
+        if hasCaughtError() then
+          local _mountError = clearCaughtError()
+          unimplemented("captureCommitPhaseError")
+          -- captureCommitPhaseError(fiber, fiber.return_, mountError)
+        end
+        return
+    end
+  end
+end
 
--- function invokePassiveEffectUnmountInDEV(fiber: Fiber): void {
---   if __DEV__ and enableDoubleInvokingEffects)
---     switch (fiber.tag)
---       case FunctionComponent:
---       case ForwardRef:
---       case SimpleMemoComponent:
---       case Block: {
---         invokeGuardedCallback(
---           nil,
---           commitHookEffectListUnmount,
---           nil,
---           HookPassive | HookHasEffect,
---           fiber,
---           fiber.return,
---         )
---         if hasCaughtError())
---           local unmountError = clearCaughtError()
---           captureCommitPhaseError(fiber, fiber.return, unmountError)
---         end
---         break
---       end
---     end
---   end
--- end
+
+function invokeLayoutEffectUnmountInDEV(fiber: Fiber)
+  if _G.__DEV__ and enableDoubleInvokingEffects then
+    if fiber.tag == FunctionComponent or
+      fiber.tag == ForwardRef or
+      fiber.tag == SimpleMemoComponent or
+      fiber.tag == Block then
+        invokeGuardedCallback(
+          nil,
+          commitHookEffectListUnmount,
+          nil,
+          bit32.bor(HookLayout, HookHasEffect),
+          fiber,
+          fiber.return_
+        )
+        if hasCaughtError() then
+          local _unmountError = clearCaughtError()
+          unimplemented("captureCommitPhaseError")
+          -- captureCommitPhaseError(fiber, fiber.return_, unmountError)
+        end
+        return
+      end
+    elseif fiber.tag == ClassComponent then
+        local instance = fiber.stateNode
+        if typeof(instance.componentWillUnmount) == 'function' then
+          safelyCallComponentWillUnmount(fiber, instance, fiber.return_)
+        end
+        return
+    end
+end
+
+function invokePassiveEffectUnmountInDEV(fiber: Fiber)
+  if _G.__DEV__ and enableDoubleInvokingEffects then
+    if fiber.tag == FunctionComponent or
+      fiber.tag == ForwardRef or
+      fiber.tag == SimpleMemoComponent or
+      fiber.tag == Block then
+        invokeGuardedCallback(
+          nil,
+          commitHookEffectListUnmount,
+          nil,
+          bit32.bor(HookPassive, HookHasEffect),
+          fiber,
+          fiber.return_
+        )
+        if hasCaughtError() then
+          local _unmountError = clearCaughtError()
+          unimplemented("captureCommitPhaseError")
+          -- captureCommitPhaseError(fiber, fiber.return_, unmountError)
+        end
+        return
+    end
+  end
+end
+
 
 return {
   safelyCallDestroy = safelyCallDestroy,
@@ -2193,14 +2205,14 @@ return {
   commitPlacement = commitPlacement,
   commitDeletion = commitDeletion,
   commitWork = commitWork,
-  -- commitAttachRef = commitAttachRef,
-  -- commitDetachRef = commitDetachRef,
+  commitAttachRef = commitAttachRef,
+  commitDetachRef = commitDetachRef,
   commitPassiveUnmount = commitPassiveUnmount,
   commitPassiveUnmountInsideDeletedTree = commitPassiveUnmountInsideDeletedTree,
   commitPassiveMount = commitPassiveMount,
-  -- invokeLayoutEffectMountInDEV = invokeLayoutEffectMountInDEV,
-  -- invokeLayoutEffectUnmountInDEV = invokeLayoutEffectUnmountInDEV,
-  -- invokePassiveEffectMountInDEV = invokePassiveEffectMountInDEV,
-  -- invokePassiveEffectUnmountInDEV = invokePassiveEffectUnmountInDEV,
+  invokeLayoutEffectMountInDEV = invokeLayoutEffectMountInDEV,
+  invokeLayoutEffectUnmountInDEV = invokeLayoutEffectUnmountInDEV,
+  invokePassiveEffectMountInDEV = invokePassiveEffectMountInDEV,
+  invokePassiveEffectUnmountInDEV = invokePassiveEffectUnmountInDEV,
   recursivelyCommitLayoutEffects = recursivelyCommitLayoutEffects,
 }

@@ -23,11 +23,15 @@ type ReactContext<T> = ReactTypes.ReactContext<T>
 local ReactInternalTypes = require(script.Parent.ReactInternalTypes)
 type Fiber = ReactInternalTypes.Fiber
 type ContextDependency = ReactInternalTypes.ContextDependency
--- local type {StackCursor} = require(Workspace../ReactFiberStack.new'
+
+local ReactFiberStack = require(script.Parent["ReactFiberStack.new"])
+type StackCursor<T> = ReactFiberStack.StackCursor<T>
 
 local ReactFiberHostConfig = require(script.Parent.ReactFiberHostConfig)
 local isPrimaryRenderer = ReactFiberHostConfig.isPrimaryRenderer
--- local {createCursor, push, pop} = require(Workspace../ReactFiberStack.new'
+local createCursor = ReactFiberStack.createCursor
+local push = ReactFiberStack.push
+local pop = ReactFiberStack.pop
 -- local {MAX_SIGNED_31_BIT_INT} = require(Workspace../MaxInts'
 -- local {
 --   ContextProvider,
@@ -55,13 +59,13 @@ local invariant = require(Workspace.Shared.invariant)
 
 local exports = {}
 
--- local valueCursor: StackCursor<mixed> = createCursor(null)
+local valueCursor: StackCursor<any> = createCursor(nil)
 
--- local rendererSigil
--- if __DEV__)
---   -- Use this to detect multiple renderers using the same context
---   rendererSigil = {}
--- end
+local rendererSigil
+if _G.__DEV__ then
+  -- Use this to detect multiple renderers using the same context
+  rendererSigil = {}
+end
 
 local _currentlyRenderingFiber = nil
 -- FIXME (roblox): change to `ContextDependency<any>` when ContextDependency
@@ -94,58 +98,56 @@ exports.exitDisallowedContextReadInDEV = function()
   end
 end
 
--- exports.pushProvider<T>(providerFiber: Fiber, nextValue: T): void {
---   local context: ReactContext<T> = providerFiber.type._context
+exports.pushProvider = function(providerFiber: Fiber, nextValue)
+  local context: ReactContext<any> = providerFiber.type._context
 
---   if isPrimaryRenderer)
---     push(valueCursor, context._currentValue, providerFiber)
+  if isPrimaryRenderer then
+    push(valueCursor, context._currentValue, providerFiber)
 
---     context._currentValue = nextValue
---     if __DEV__)
---       if
---         context._currentRenderer ~= undefined and
---         context._currentRenderer ~= nil and
---         context._currentRenderer ~= rendererSigil
---       )
---         console.error(
---           'Detected multiple renderers concurrently rendering the ' +
---             'same context provider. This is currently unsupported.',
---         )
---       end
---       context._currentRenderer = rendererSigil
---     end
---   } else {
---     push(valueCursor, context._currentValue2, providerFiber)
+    context._currentValue = nextValue
+    if _G.__DEV__ then
+      if
+        context._currentRenderer ~= nil and
+        context._currentRenderer ~= rendererSigil
+      then
+        console.error(
+          'Detected multiple renderers concurrently rendering the ' ..
+            'same context provider. This is currently unsupported.'
+        )
+      end
+      context._currentRenderer = rendererSigil
+    end
+  else
+    push(valueCursor, context._currentValue2, providerFiber)
 
---     context._currentValue2 = nextValue
---     if __DEV__)
---       if
---         context._currentRenderer2 ~= undefined and
---         context._currentRenderer2 ~= nil and
---         context._currentRenderer2 ~= rendererSigil
---       )
---         console.error(
---           'Detected multiple renderers concurrently rendering the ' +
---             'same context provider. This is currently unsupported.',
---         )
---       end
---       context._currentRenderer2 = rendererSigil
---     end
---   end
--- end
+    context._currentValue2 = nextValue
+    if _G.__DEV__ then
+      if
+        context._currentRenderer2 ~= nil and
+        context._currentRenderer2 ~= rendererSigil
+      then
+        console.error(
+          'Detected multiple renderers concurrently rendering the ' ..
+            'same context provider. This is currently unsupported.'
+        )
+      end
+      context._currentRenderer2 = rendererSigil
+    end
+  end
+end
 
--- exports.popProvider(providerFiber: Fiber): void {
---   local currentValue = valueCursor.current
+exports.popProvider = function(providerFiber: Fiber)
+  local currentValue = valueCursor.current
 
---   pop(valueCursor, providerFiber)
+  pop(valueCursor, providerFiber)
 
---   local context: ReactContext<any> = providerFiber.type._context
---   if isPrimaryRenderer)
---     context._currentValue = currentValue
---   } else {
---     context._currentValue2 = currentValue
---   end
--- end
+  local context: ReactContext<any> = providerFiber.type._context
+  if isPrimaryRenderer then
+    context._currentValue = currentValue
+  else
+    context._currentValue2 = currentValue
+  end
+end
 
 -- exports.calculateChangedBits<T>(
 --   context: ReactContext<T>,
@@ -161,7 +163,7 @@ end
 --         ? context._calculateChangedBits(oldValue, newValue)
 --         : MAX_SIGNED_31_BIT_INT
 
---     if __DEV__)
+--     if _G.__DEV__ then
 --       if (changedBits & MAX_SIGNED_31_BIT_INT) ~= changedBits)
 --         console.error(
 --           'calculateChangedBits: Expected the return value to be a ' +
@@ -330,7 +332,7 @@ exports.prepareToReadContext = function(
     if firstContext ~= nil then
       if includesSomeLane(dependencies.lanes, renderLanes) then
         -- Context list has a pending update. Mark that this fiber performed work.
-				unimplemented("cycle markWorkInProgressReceivedUpdate")
+        unimplemented("cycle markWorkInProgressReceivedUpdate")
       end
       -- Reset the work-in-progress list
       dependencies.firstContext = nil
@@ -405,7 +407,7 @@ exports.readContext = function(
       -- Append a new context item.
       _lastContextDependency = contextItem
       _lastContextDependency.next = contextItem
-		end
+    end
   end
   return isPrimaryRenderer and context._currentValue or context._currentValue2
 end

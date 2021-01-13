@@ -67,7 +67,7 @@ local ReactFiberFlags = require(script.Parent.ReactFiberFlags)
 local NoFlags = ReactFiberFlags.NoFlags
 local PerformedWork = ReactFiberFlags.PerformedWork
 local Placement = ReactFiberFlags.Placement
--- local Hydrating = ReactFiberFlags.Hydrating
+local Hydrating = ReactFiberFlags.Hydrating
 local ContentReset = ReactFiberFlags.ContentReset
 -- local DidCapture = ReactFiberFlags.DidCapture
 -- local Update = ReactFiberFlags.Update
@@ -83,15 +83,15 @@ local enableProfilerTimer = ReactFeatureFlags.enableProfilerTimer
 -- local enableSchedulerTracing = ReactFeatureFlags.enableSchedulerTracing
 -- local enableSuspenseServerRenderer = ReactFeatureFlags.enableSuspenseServerRenderer
 -- local enableFundamentalAPI = ReactFeatureFlags.enableFundamentalAPI
--- local warnAboutDefaultPropsOnFunctionComponents = ReactFeatureFlags.warnAboutDefaultPropsOnFunctionComponents
+local warnAboutDefaultPropsOnFunctionComponents = ReactFeatureFlags.warnAboutDefaultPropsOnFunctionComponents
 -- local enableScopeAPI = ReactFeatureFlags.enableScopeAPI
 local invariant = require(Workspace.Shared.invariant)
 -- local shallowEqual = require(Workspace.Shared.shallowEqual)
 local getComponentName = require(Workspace.Shared.getComponentName)
--- local ReactStrictModeWarnings = require(script.Parent.ReactStrictModeWarnings.new)
+local ReactStrictModeWarnings = require(script.Parent["ReactStrictModeWarnings.new"])
 -- local {REACT_LAZY_TYPE, getIteratorFn} = require(Workspace.Shared.ReactSymbols)
 local ReactCurrentFiber = require(script.Parent.ReactCurrentFiber)
---   getCurrentFiberOwnerNameInDevOrNull,
+local getCurrentFiberOwnerNameInDevOrNull = ReactCurrentFiber.getCurrentFiberOwnerNameInDevOrNull
 local setIsRendering = ReactCurrentFiber.setIsRendering
 -- local {
 --   resolveFunctionForHotReloading,
@@ -130,7 +130,7 @@ local shouldSetTextContent = ReactFiberHostConfig.shouldSetTextContent
 -- local isSuspenseInstancePending = ReactFiberHostConfig.isSuspenseInstancePending
 -- local isSuspenseInstanceFallback = ReactFiberHostConfig.isSuspenseInstanceFallback
 -- local registerSuspenseInstanceRetry = ReactFiberHostConfig.registerSuspenseInstanceRetry
--- local supportsHydration = ReactFiberHostConfig.supportsHydration
+local supportsHydration = ReactFiberHostConfig.supportsHydration
 -- local type {SuspenseInstance} = require(script.Parent.ReactFiberHostConfig)
 -- local {shouldSuspend} = require(script.Parent.ReactFiberReconciler)
 local ReactFiberHostContext = require(script.Parent["ReactFiberHostContext.new"])
@@ -148,7 +148,7 @@ local pushHostContainer = ReactFiberHostContext.pushHostContainer
 -- } = require(script.Parent.ReactFiberSuspenseContext.new)
 -- local {findFirstSuspended} = require(script.Parent.ReactFiberSuspenseComponent.new)
 -- local {
---   pushProvider,
+--   ,
 --   propagateContextChange,
 --   readContext,
 --   prepareToReadContext,
@@ -157,6 +157,8 @@ local pushHostContainer = ReactFiberHostContext.pushHostContainer
 -- } = require(script.Parent.ReactFiberNewContext.new)
 local ReactFiberNewContext = require(script.Parent["ReactFiberNewContext.new"])
 local prepareToReadContext = ReactFiberNewContext.prepareToReadContext
+local pushProvider = ReactFiberNewContext.pushProvider
+
 local ReactFiberHooks = require(script.Parent["ReactFiberHooks.new"])
 local renderWithHooks = ReactFiberHooks.renderWithHooks
 local bailoutHooks = ReactFiberHooks.bailoutHooks
@@ -165,15 +167,17 @@ local ReactFiberContext = require(script.Parent["ReactFiberContext.new"])
 local getMaskedContext = ReactFiberContext.getMaskedContext
 local getUnmaskedContext = ReactFiberContext.getUnmaskedContext
 local hasLegacyContextChanged = ReactFiberContext.hasContextChanged
--- local pushLegacyContextProvider = ReactFiberContext.pushContextProvider
--- local isLegacyContextProvider = ReactFiberContext.isContextProvider
+local pushLegacyContextProvider = ReactFiberContext.pushContextProvider
+local isLegacyContextProvider = ReactFiberContext.isContextProvider
 local pushTopLevelContextObject = ReactFiberContext.pushTopLevelContextObject
 -- local invalidateContextProvider = ReactFiberContext.invalidateContextProvider
--- }
+
+local ReactFiberHydrationContext = require(script.Parent["ReactFiberHydrationContext.new"])
+local resetHydrationState =  ReactFiberHydrationContext.resetHydrationState
 -- local {
 --   enterHydrationState,
 --   reenterHydrationStateFromDehydratedSuspenseInstance,
---   resetHydrationState,
+--   ,
 --   tryToClaimNextHydratableInstance,
 --   warnIfHydrating,
 -- } = require(script.Parent.ReactFiberHydrationContext.new)
@@ -207,7 +211,7 @@ local pushTopLevelContextObject = ReactFiberContext.pushTopLevelContextObject
 --   NoContext,
 -- } = require(script.Parent.ReactFiberWorkLoop.new)
 -- local {unstable_wrap as Schedule_tracing_wrap} = require(Workspace.scheduler/tracing'
--- local {setWorkInProgressVersion} = require(script.Parent.ReactMutableSource.new)
+local setWorkInProgressVersion = require(script.Parent["ReactMutableSource.new"]).setWorkInProgressVersion
 local markSkippedUpdateLanes = require(script.Parent.ReactFiberWorkInProgress).markSkippedUpdateLanes
 local ConsolePatchingDev = require(Workspace.Shared["ConsolePatchingDev.roblox"])
 local disableLogs = ConsolePatchingDev.disableLogs
@@ -222,13 +226,13 @@ local didReceiveUpdate: boolean = false
 
 local didWarnAboutBadClass
 local didWarnAboutModulePatternComponent
--- local didWarnAboutContextTypeOnFunctionComponent
--- local didWarnAboutGetDerivedStateOnFunctionComponentq
--- local didWarnAboutFunctionRefs
+local didWarnAboutContextTypeOnFunctionComponent
+local didWarnAboutGetDerivedStateOnFunctionComponent
+local didWarnAboutFunctionRefs
 -- export local didWarnAboutReassigningProps
 -- local didWarnAboutRevealOrder
 -- local didWarnAboutTailOptions
--- local didWarnAboutDefaultPropsOnFunctionComponent
+local didWarnAboutDefaultPropsOnFunctionComponent
 
 if _G.__DEV__ then
   didWarnAboutBadClass = {}
@@ -320,7 +324,7 @@ end
 --   -- hasn't yet mounted. This happens after the first render suspends.
 --   -- We'll need to figure out if this is fine or can cause issues.
 
---   if __DEV__)
+--   if  _G.__DEV__ then
 --     if workInProgress.type ~= workInProgress.elementType)
 --       -- Lazy component props can't be validated in createElement
 --       -- because they're only guaranteed to be resolved here.
@@ -342,7 +346,7 @@ end
 --   -- The rest is a fork of updateFunctionComponent
 --   local nextChildren
 --   prepareToReadContext(workInProgress, renderLanes)
---   if __DEV__)
+--   if  _G.__DEV__ then
 --     ReactCurrentOwner.current = workInProgress
 --     setIsRendering(true)
 --     nextChildren = renderWithHooks(
@@ -411,7 +415,7 @@ end
 --       Component.defaultProps == undefined
 --     )
 --       local resolvedType = type
---       if __DEV__)
+--       if  _G.__DEV__ then
 --         resolvedType = resolveFunctionForHotReloading(type)
 --       end
 --       -- If this is a plain function component without default props,
@@ -419,7 +423,7 @@ end
 --       -- to a SimpleMemoComponent to allow fast path updates.
 --       workInProgress.tag = SimpleMemoComponent
 --       workInProgress.type = resolvedType
---       if __DEV__)
+--       if  _G.__DEV__ then
 --         validateFunctionComponentInDev(workInProgress, type)
 --       end
 --       return updateSimpleMemoComponent(
@@ -431,7 +435,7 @@ end
 --         renderLanes,
 --       )
 --     end
---     if __DEV__)
+--     if  _G.__DEV__ then
 --       local innerPropTypes = type.propTypes
 --       if innerPropTypes)
 --         -- Inner memo component props aren't currently validated in createElement.
@@ -457,7 +461,7 @@ end
 --     workInProgress.child = child
 --     return child
 --   end
---   if __DEV__)
+--   if  _G.__DEV__ then
 --     local type = Component.type
 --     local innerPropTypes = type.propTypes
 --     if innerPropTypes)
@@ -472,7 +476,7 @@ end
 --     end
 --   end
 --   local currentChild = ((current.child: any): Fiber); -- This is always exactly one child
---   if !includesSomeLane(updateLanes, renderLanes))
+--   if not includesSomeLane(updateLanes, renderLanes))
 --     -- This will be the props with resolved defaultProps,
 --     -- unlike current.memoizedProps which will be the unresolved ones.
 --     local prevProps = currentChild.memoizedProps
@@ -504,7 +508,7 @@ end
 --   -- hasn't yet mounted. This happens when the inner render suspends.
 --   -- We'll need to figure out if this is fine or can cause issues.
 
---   if __DEV__)
+--   if  _G.__DEV__ then
 --     if workInProgress.type ~= workInProgress.elementType)
 --       -- Lazy component props can't be validated in createElement
 --       -- because they're only guaranteed to be resolved here.
@@ -543,7 +547,7 @@ end
 --       (__DEV__ ? workInProgress.type == current.type : true)
 --     )
 --       didReceiveUpdate = false
---       if !includesSomeLane(renderLanes, updateLanes))
+--       if not includesSomeLane(renderLanes, updateLanes))
 --         -- The pending lanes were cleared at the beginning of beginWork. We're
 --         -- about to bail out, but there might be other lanes that weren't
 --         -- included in the current render. Usually, the priority level of the
@@ -602,7 +606,7 @@ end
 --       end
 --       workInProgress.memoizedState = nextState
 --       pushRenderLanes(workInProgress, renderLanes)
---     } else if !includesSomeLane(renderLanes, (OffscreenLane: Lane)))
+--     } else if not includesSomeLane(renderLanes, (OffscreenLane: Lane)))
 --       local nextBaseLanes
 --       if prevState ~= nil)
 --         local prevBaseLanes = prevState.baseLanes
@@ -815,7 +819,7 @@ end
 --   -- The rest is a fork of updateFunctionComponent
 --   local nextChildren
 --   prepareToReadContext(workInProgress, renderLanes)
---   if __DEV__)
+--   if  _G.__DEV__ then
 --     ReactCurrentOwner.current = workInProgress
 --     setIsRendering(true)
 --     nextChildren = renderWithHooks(
@@ -874,7 +878,7 @@ end
 --   nextProps: any,
 --   renderLanes: Lanes,
 -- )
---   if __DEV__)
+--   if  _G.__DEV__ then
 --     if workInProgress.type ~= workInProgress.elementType)
 --       -- Lazy component props can't be validated in createElement
 --       -- because they're only guaranteed to be resolved here.
@@ -944,10 +948,10 @@ end
 --     hasContext,
 --     renderLanes,
 --   )
---   if __DEV__)
+--   if  _G.__DEV__ then
 --     local inst = workInProgress.stateNode
 --     if shouldUpdate and inst.props ~= nextProps)
---       if !didWarnAboutReassigningProps)
+--       if not didWarnAboutReassigningProps)
 --         console.error(
 --           'It looks like %s is reassigning its own `this.props` while rendering. ' +
 --             'This is not supported and can lead to confusing bugs.',
@@ -973,7 +977,7 @@ end
 
 --   local didCaptureError = (workInProgress.flags & DidCapture) ~= NoFlags
 
---   if !shouldUpdate and !didCaptureError)
+--   if not shouldUpdate and !didCaptureError)
 --     -- Context providers should defer to sCU for rendering
 --     if hasContext)
 --       invalidateContextProvider(workInProgress, Component, false)
@@ -1002,7 +1006,7 @@ end
 --       stopProfilerTimerIfRunning(workInProgress)
 --     end
 --   } else {
---     if __DEV__)
+--     if  _G.__DEV__ then
 --       setIsRendering(true)
 --       nextChildren = instance.render()
 --       if
@@ -1086,61 +1090,58 @@ local function updateHostRoot(current, workInProgress, renderLanes)
   -- being called "element".
   local nextChildren = nextState.element
   if nextChildren == prevChildren then
-    warn("skipping unimplemented `resetHydrationState`")
-    -- resetHydrationState()
+    resetHydrationState()
     return bailoutOnAlreadyFinishedWork(current, workInProgress, renderLanes)
   end
   local root: FiberRoot = workInProgress.stateNode
   -- deviation: comment out unimplemented hydration stuff
   -- if root.hydrate and enterHydrationState(workInProgress) then
   if root.hydrate then
-    unimplemented("hydration logic")
-    -- -- If we don't have any current children this might be the first pass.
-    -- -- We always try to hydrate. If this isn't a hydration pass there won't
-    -- -- be any children to hydrate which is effectively the same thing as
-    -- -- not hydrating.
+    -- If we don't have any current children this might be the first pass.
+    -- We always try to hydrate. If this isn't a hydration pass there won't
+    -- be any children to hydrate which is effectively the same thing as
+    -- not hydrating.
 
-    -- if supportsHydration then
-    --   local mutableSourceEagerHydrationData =
-    --     root.mutableSourceEagerHydrationData
-    --   if mutableSourceEagerHydrationData ~= nil then
-    --     for i = 0, #mutableSourceEagerHydrationData, 2 do
-    --       -- FIXME (roblox): type refinement
-    --       -- local mutableSource = ((mutableSourceEagerHydrationData[
-    --       --   i
-    --       -- ]: any): MutableSource<any>)
-    --       local mutableSource = mutableSourceEagerHydrationData[i]
-    --       local version = mutableSourceEagerHydrationData[i + 1]
-    --       setWorkInProgressVersion(mutableSource, version)
-    --     end
-    --   end
-    -- end
+    if supportsHydration then
+      local mutableSourceEagerHydrationData =
+        root.mutableSourceEagerHydrationData
+      if mutableSourceEagerHydrationData ~= nil then
+        for i = 1, #mutableSourceEagerHydrationData, 2 do
+          -- FIXME (roblox): type refinement
+          -- local mutableSource = ((mutableSourceEagerHydrationData[
+          --   i
+          -- ]: any): MutableSource<any>)
+          local mutableSource = mutableSourceEagerHydrationData[i]
+          local version = mutableSourceEagerHydrationData[i + 1]
+          setWorkInProgressVersion(mutableSource, version)
+        end
+      end
+    end
 
-    -- local child = mountChildFibers(
-    --   workInProgress,
-    --   nil,
-    --   nextChildren,
-    --   renderLanes
-    -- )
-    -- workInProgress.child = child
+    local child = mountChildFibers(
+      workInProgress,
+      nil,
+      nextChildren,
+      renderLanes
+    )
+    workInProgress.child = child
 
-    -- local node = child
-    -- while node do
-    --   -- Mark each child as hydrating. This is a fast path to know whether this
-    --   -- tree is part of a hydrating tree. This is used to determine if a child
-    --   -- node has fully mounted yet, and for scheduling event replaying.
-    --   -- Conceptually this is similar to Placement in that a new subtree is
-    --   -- inserted into the React tree here. It just happens to not need DOM
-    --   -- mutations because it already exists.
-    --   node.flags = bit32.bor(bit32.band(node.flags, bit32.bnot(Placement)), Hydrating)
-    --   node = node.sibling
-    -- end
+    local node = child
+    while node do
+      -- Mark each child as hydrating. This is a fast path to know whether this
+      -- tree is part of a hydrating tree. This is used to determine if a child
+      -- node has fully mounted yet, and for scheduling event replaying.
+      -- Conceptually this is similar to Placement in that a new subtree is
+      -- inserted into the React tree here. It just happens to not need DOM
+      -- mutations because it already exists.
+      node.flags = bit32.bor(bit32.band(node.flags, bit32.bnot(Placement)), Hydrating)
+      node = node.sibling
+    end
   else
     -- Otherwise reset hydration state in case we aborted and resumed another
     -- root.
     reconcileChildren(current, workInProgress, nextChildren, renderLanes)
-    warn("Skip unimplemented: resetting hydration state")
-    -- resetHydrationState()
+    resetHydrationState()
   end
   return workInProgress.child
 end
@@ -1229,7 +1230,7 @@ end
 --   local child
 --   switch (resolvedTag)
 --     case FunctionComponent: {
---       if __DEV__)
+--       if  _G.__DEV__ then
 --         validateFunctionComponentInDev(workInProgress, Component)
 --         workInProgress.type = Component = resolveFunctionForHotReloading(
 --           Component,
@@ -1245,7 +1246,7 @@ end
 --       return child
 --     end
 --     case ClassComponent: {
---       if __DEV__)
+--       if  _G.__DEV__ then
 --         workInProgress.type = Component = resolveClassForHotReloading(
 --           Component,
 --         )
@@ -1260,7 +1261,7 @@ end
 --       return child
 --     end
 --     case ForwardRef: {
---       if __DEV__)
+--       if  _G.__DEV__ then
 --         workInProgress.type = Component = resolveForwardRefForHotReloading(
 --           Component,
 --         )
@@ -1275,7 +1276,7 @@ end
 --       return child
 --     end
 --     case MemoComponent: {
---       if __DEV__)
+--       if  _G.__DEV__ then
 --         if workInProgress.type ~= workInProgress.elementType)
 --           local outerPropTypes = Component.propTypes
 --           if outerPropTypes)
@@ -1314,7 +1315,7 @@ end
 --     end
 --   end
 --   local hint = ''
---   if __DEV__)
+--   if  _G.__DEV__ then
 --     if
 --       Component ~= nil and
 --       typeof Component == 'table’' and
@@ -1435,8 +1436,7 @@ local function mountIndeterminateComponent(
     end
 
     if bit32.band(workInProgress.mode, StrictMode) then
-      warn("Skip unimplemented: strict mode warnings for legacy context")
-      -- ReactStrictModeWarnings.recordLegacyContextWarning(workInProgress, nil)
+      ReactStrictModeWarnings.recordLegacyContextWarning(workInProgress, nil)
     end
 
     setIsRendering(true)
@@ -1595,90 +1595,94 @@ local function mountIndeterminateComponent(
     end
     reconcileChildren(nil, workInProgress, value, renderLanes)
     if _G.__DEV__ then
-      warn("Skip unimplemented: beginWork - validateFunctionComponentInDev")
-      -- validateFunctionComponentInDev(workInProgress, Component)
+      validateFunctionComponentInDev(workInProgress, Component)
     end
     return workInProgress.child
   end
 end
 
--- function validateFunctionComponentInDev(workInProgress: Fiber, Component: any)
---   if __DEV__)
---     if Component)
---       if Component.childContextTypes)
---         console.error(
---           '%s(...): childContextTypes cannot be defined on a function component.',
---           Component.displayName or Component.name or 'Component',
---         )
---       end
---     end
---     if workInProgress.ref ~= nil)
---       local info = ''
---       local ownerName = getCurrentFiberOwnerNameInDevOrNull()
---       if ownerName)
---         info += '\n\nCheck the render method of `' + ownerName + '`.'
---       end
+function validateFunctionComponentInDev(workInProgress: Fiber, Component: any)
+  if  _G.__DEV__ then
+    -- deviation: Lua doesn't allow fields on functions, so this never happens
+    -- if Component then
+    --   if Component.childContextTypes then
+    --     console.error(
+    --       '%s(...): childContextTypes cannot be defined on a function component.',
+    --       Component.displayName or Component.name or 'Component'
+    --     )
+    --   end
+    -- end
+    if workInProgress.ref ~= nil then
+      local info = ''
+      local ownerName = getCurrentFiberOwnerNameInDevOrNull()
+      if ownerName then
+        info ..= '\n\nCheck the render method of `' .. ownerName .. '`.'
+      end
 
---       local warningKey = ownerName or workInProgress._debugID or ''
---       local debugSource = workInProgress._debugSource
---       if debugSource)
---         warningKey = debugSource.fileName + ':' + debugSource.lineNumber
---       end
---       if !didWarnAboutFunctionRefs[warningKey])
---         didWarnAboutFunctionRefs[warningKey] = true
---         console.error(
---           'Function components cannot be given refs. ' +
---             'Attempts to access this ref will fail. ' +
---             'Did you mean to use React.forwardRef()?%s',
---           info,
---         )
---       end
---     end
+      local warningKey = ownerName or workInProgress._debugID or ''
+      local debugSource = workInProgress._debugSource
+      if debugSource then
+        warningKey = debugSource.fileName + ':' + debugSource.lineNumber
+      end
+      if not didWarnAboutFunctionRefs[warningKey] then
+        didWarnAboutFunctionRefs[warningKey] = true
+        console.error(
+          'Function components cannot be given refs. ' ..
+            'Attempts to access this ref will fail. ' ..
+            'Did you mean to use React.forwardRef()?%s',
+          info
+        )
+      end
+    end
 
---     if
---       warnAboutDefaultPropsOnFunctionComponents and
---       Component.defaultProps ~= undefined
---     )
---       local componentName = getComponentName(Component) or 'Unknown'
+    if
+      warnAboutDefaultPropsOnFunctionComponents and
+      -- ROBLOX deviation: functions can't have fields in Lua
+      typeof(Component) ~= 'function' and
+      Component.defaultProps ~= nil
+    then
+      local componentName = getComponentName(Component) or 'Unknown'
 
---       if !didWarnAboutDefaultPropsOnFunctionComponent[componentName])
---         console.error(
---           '%s: Support for defaultProps will be removed from function components ' +
---             'in a future major release. Use JavaScript default parameters instead.',
---           componentName,
---         )
---         didWarnAboutDefaultPropsOnFunctionComponent[componentName] = true
---       end
---     end
+      if not didWarnAboutDefaultPropsOnFunctionComponent[componentName] then
+        console.error(
+          '%s: Support for defaultProps will be removed from function components ' ..
+            'in a future major release. Use JavaScript default parameters instead.',
+          componentName
+        )
+        didWarnAboutDefaultPropsOnFunctionComponent[componentName] = true
+      end
+    end
 
---     if typeof Component.getDerivedStateFromProps == 'function')
---       local componentName = getComponentName(Component) or 'Unknown'
+    -- ROBLOX deviation: Lua functions can't have fields
+    if typeof(Component) ~= 'function' and typeof(Component.getDerivedStateFromProps) == 'function' then
+      local componentName = getComponentName(Component) or 'Unknown'
 
---       if !didWarnAboutGetDerivedStateOnFunctionComponent[componentName])
---         console.error(
---           '%s: Function components do not support getDerivedStateFromProps.',
---           componentName,
---         )
---         didWarnAboutGetDerivedStateOnFunctionComponent[componentName] = true
---       end
---     end
+      if not didWarnAboutGetDerivedStateOnFunctionComponent[componentName] then
+        console.error(
+          '%s: Function components do not support getDerivedStateFromProps.',
+          componentName
+        )
+        didWarnAboutGetDerivedStateOnFunctionComponent[componentName] = true
+      end
+    end
 
---     if
---       typeof Component.contextType == 'table’' and
---       Component.contextType ~= nil
---     )
---       local componentName = getComponentName(Component) or 'Unknown'
+    -- ROBLOX deviation: Lua functions can't have fields
+    if typeof(Component) ~= 'function' and
+      typeof(Component.contextType) == 'table' and
+      Component.contextType ~= nil
+    then
+      local componentName = getComponentName(Component) or 'Unknown'
 
---       if !didWarnAboutContextTypeOnFunctionComponent[componentName])
---         console.error(
---           '%s: Function components do not support contextType.',
---           componentName,
---         )
---         didWarnAboutContextTypeOnFunctionComponent[componentName] = true
---       end
---     end
---   end
--- end
+      if not didWarnAboutContextTypeOnFunctionComponent[componentName] then
+        console.error(
+          '%s: Function components do not support contextType.',
+          componentName
+        )
+        didWarnAboutContextTypeOnFunctionComponent[componentName] = true
+      end
+    end
+  end
+end
 
 -- local SUSPENDED_MARKER: SuspenseState = {
 --   dehydrated: nil,
@@ -1737,7 +1741,7 @@ end
 --   local nextProps = workInProgress.pendingProps
 
 --   -- This is used by DevTools to force a boundary to suspend.
---   if __DEV__)
+--   if  _G.__DEV__ then
 --     if shouldSuspend(workInProgress))
 --       workInProgress.flags |= DidCapture
 --     end
@@ -1897,7 +1901,7 @@ end
 --       if enableSuspenseServerRenderer)
 --         local dehydrated = prevState.dehydrated
 --         if dehydrated ~= nil)
---           if !didSuspend)
+--           if not didSuspend)
 --             return updateDehydratedSuspenseComponent(
 --               current,
 --               workInProgress,
@@ -2306,7 +2310,7 @@ end
 --   -- During the first pass, we'll bail out and not drill into the children.
 --   -- Instead, we'll leave the content in place and try to hydrate it later.
 --   if (workInProgress.mode & BlockingMode) == NoMode)
---     if __DEV__)
+--     if  _G.__DEV__ then
 --       console.error(
 --         'Cannot hydrate Suspense in legacy mode. Switch = require(Workspace. +
 --           'ReactDOM.hydrate(element, container) to ' +
@@ -2543,7 +2547,7 @@ end
 -- type SuspenseListRevealOrder = 'forwards' | 'backwards' | 'together' | void
 
 -- function validateRevealOrder(revealOrder: SuspenseListRevealOrder)
---   if __DEV__)
+--   if  _G.__DEV__ then
 --     if
 --       revealOrder ~= undefined and
 --       revealOrder ~= 'forwards' and
@@ -2598,7 +2602,7 @@ end
 --   tailMode: SuspenseListTailMode,
 --   revealOrder: SuspenseListRevealOrder,
 -- )
---   if __DEV__)
+--   if  _G.__DEV__ then
 --     if tailMode ~= undefined and !didWarnAboutTailOptions[tailMode])
 --       if tailMode ~= 'collapsed' and tailMode ~= 'hidden')
 --         didWarnAboutTailOptions[tailMode] = true
@@ -2621,7 +2625,7 @@ end
 -- end
 
 -- function validateSuspenseListNestedChild(childSlot: mixed, index: number)
---   if __DEV__)
+--   if  _G.__DEV__ then
 --     local isArray = Array.isArray(childSlot)
 --     local isIterable =
 --       !isArray and typeof getIteratorFn(childSlot) == 'function'
@@ -2647,7 +2651,7 @@ end
 --   children: mixed,
 --   revealOrder: SuspenseListRevealOrder,
 -- )
---   if __DEV__)
+--   if  _G.__DEV__ then
 --     if
 --       (revealOrder == 'forwards' or revealOrder == 'backwards') and
 --       children ~= undefined and
@@ -2656,7 +2660,7 @@ end
 --     )
 --       if Array.isArray(children))
 --         for (local i = 0; i < children.length; i++)
---           if !validateSuspenseListNestedChild(children[i], i))
+--           if not validateSuspenseListNestedChild(children[i], i))
 --             return
 --           end
 --         end
@@ -2668,7 +2672,7 @@ end
 --             local step = childrenIterator.next()
 --             local i = 0
 --             for (; !step.done; step = childrenIterator.next())
---               if !validateSuspenseListNestedChild(step.value, i))
+--               if not validateSuspenseListNestedChild(step.value, i))
 --                 return
 --               end
 --               i++
@@ -2888,9 +2892,9 @@ end
 
 --   local newValue = newProps.value
 
---   if __DEV__)
---     if !('value' in newProps))
---       if !hasWarnedAboutUsingNoValuePropOnContextProvider)
+--   if  _G.__DEV__ then
+--     if not ('value' in newProps))
+--       if not hasWarnedAboutUsingNoValuePropOnContextProvider)
 --         hasWarnedAboutUsingNoValuePropOnContextProvider = true
 --         console.error(
 --           'The `value` prop is required for the `<Context.Provider>`. Did you misspell it or forget to pass it?',
@@ -2948,13 +2952,13 @@ end
 --   -- reduce size and overhead. The separate object references context via
 --   -- a property called "_context", which also gives us the ability to check
 --   -- in DEV mode if this property exists or not and warn if it does not.
---   if __DEV__)
+--   if  _G.__DEV__ then
 --     if (context: any)._context == undefined)
 --       -- This may be because it's a Context (rather than a Consumer).
 --       -- Or it may be because it's older React where they're the same thing.
 --       -- We only want to warn if we're sure it's a new React.
 --       if context ~= context.Consumer)
---         if !hasWarnedAboutUsingContextAsConsumer)
+--         if not hasWarnedAboutUsingContextAsConsumer)
 --           hasWarnedAboutUsingContextAsConsumer = true
 --           console.error(
 --             'Rendering <Context> directly is not supported and will be removed in ' +
@@ -2969,7 +2973,7 @@ end
 --   local newProps = workInProgress.pendingProps
 --   local render = newProps.children
 
---   if __DEV__)
+--   if  _G.__DEV__ then
 --     if typeof render ~= 'function')
 --       console.error(
 --         'A context consumer was rendered with multiple children, or a child ' +
@@ -2983,7 +2987,7 @@ end
 --   prepareToReadContext(workInProgress, renderLanes)
 --   local newValue = readContext(context, newProps.unstable_observedBits)
 --   local newChildren
---   if __DEV__)
+--   if  _G.__DEV__ then
 --     ReactCurrentOwner.current = workInProgress
 --     setIsRendering(true)
 --     newChildren = render(newValue)
@@ -3059,7 +3063,7 @@ end
 --   oldWorkInProgress: Fiber,
 --   newWorkInProgress: Fiber,
 -- ): Fiber | nil {
---   if __DEV__)
+--   if  _G.__DEV__ then
 --     local returnFiber = oldWorkInProgress.return
 --     if returnFiber == nil)
 --       throw new Error('Cannot swap the root fiber.')
@@ -3170,27 +3174,22 @@ local function beginWork(
       -- in this optimized path, mostly pushing stuff onto the stack.
       if workInProgress.tag == HostRoot then
         pushHostRootContext(workInProgress)
-        warn("Skip unimplemented: resetHydrationState")
-        -- resetHydrationState()
+        resetHydrationState()
       elseif workInProgress.tag == HostComponent then
-        unimplemented("beginWork: HostComponent")
-        -- pushHostContext(workInProgress)
+        pushHostContext(workInProgress)
       elseif workInProgress.tag == ClassComponent then
-        unimplemented("beginWork: ClassComponent")
-        -- local Component = workInProgress.type
-        -- if isLegacyContextProvider(Component) then
-        --   pushLegacyContextProvider(workInProgress)
-        -- end
+        local Component = workInProgress.type
+        if isLegacyContextProvider(Component) then
+          pushLegacyContextProvider(workInProgress)
+        end
       elseif workInProgress.tag == HostPortal then
-        unimplemented("beginWork: HostPortal")
-        -- pushHostContainer(
-        --   workInProgress,
-        --   workInProgress.stateNode.containerInfo
-        -- )
+        pushHostContainer(
+          workInProgress,
+          workInProgress.stateNode.containerInfo
+        )
       elseif workInProgress.tag == ContextProvider then
-        unimplemented("beginWork: ContextProvider")
-        -- local newValue = workInProgress.memoizedProps.value
-        -- pushProvider(workInProgress, newValue)
+        local newValue = workInProgress.memoizedProps.value
+        pushProvider(workInProgress, newValue)
       elseif workInProgress.tag == Profiler then
         if enableProfilerTimer then
           unimplemented("beginWork: Profiler timer logic")

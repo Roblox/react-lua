@@ -11,172 +11,155 @@ local function unimplemented(message)
   error("FIXME (roblox): " .. message .. " is unimplemented", 2)
 end
 
+local Workspace = script.Parent.Parent
+
 local ReactInternalTypes = require(script.Parent.ReactInternalTypes)
 type Fiber = ReactInternalTypes.Fiber;
 local ReactFiberLane = require(script.Parent.ReactFiberLane)
 type Lanes = ReactFiberLane.Lanes;
--- local type {SuspenseState} = require(script.Parent.ReactFiberSuspenseComponent.new)
+local ReactFiberSuspenseComponent = require(script.Parent["ReactFiberSuspenseComponent.new"])
+type SuspenseState = ReactFiberSuspenseComponent.SuspenseState
 
--- local {resetWorkInProgressVersions as resetMutableSourceWorkInProgressVersions} = require(script.Parent.ReactMutableSource.new)
--- local {
---   ClassComponent,
---   HostRoot,
---   HostComponent,
---   HostPortal,
---   ContextProvider,
---   SuspenseComponent,
---   SuspenseListComponent,
---   OffscreenComponent,
---   LegacyHiddenComponent,
--- } = require(script.Parent.ReactWorkTags)
--- local {DidCapture, NoFlags, ShouldCapture} = require(script.Parent.ReactFiberFlags)
--- local {NoMode, ProfileMode} = require(script.Parent.ReactTypeOfMode)
--- local {
---   enableSuspenseServerRenderer,
---   enableProfilerTimer,
--- } = require(Workspace.shared/ReactFeatureFlags'
+local resetMutableSourceWorkInProgressVersions = require(script.Parent["ReactMutableSource.new"]).resetWorkInProgressVersions
+local ReactWorkTags = require(script.Parent.ReactWorkTags)
+-- local {ReactFiberFlags.DidCapture, ReactFiberFlags.NoFlags, ReactFiberFlags.ShouldCapture} = require(script.Parent.ReactFiberFlags)
+local ReactFiberFlags = require(script.Parent.ReactFiberFlags)
+local ReactTypeOfMode = require(script.Parent.ReactTypeOfMode)
 
--- local {popHostContainer, popHostContext} = require(script.Parent.ReactFiberHostContext.new)
--- local {popSuspenseContext} = require(script.Parent.ReactFiberSuspenseContext.new)
--- local {resetHydrationState} = require(script.Parent.ReactFiberHydrationContext.new)
--- local {
---   isContextProvider as isLegacyContextProvider,
---   popContext as popLegacyContext,
---   popTopLevelContextObject as popTopLevelLegacyContextObject,
--- } = require(script.Parent.ReactFiberContext.new)
--- local {popProvider} = require(script.Parent.ReactFiberNewContext.new)
--- local {popRenderLanes} = require(script.Parent.ReactFiberWorkLoop.new)
+local ReactFeatureFlags = require(Workspace.Shared.ReactFeatureFlags)
+local enableSuspenseServerRenderer = ReactFeatureFlags.enableSuspenseServerRenderer
+local enableProfilerTimer = ReactFeatureFlags.enableProfilerTimer
+
+local ReactFiberHostContext = require(script.Parent["ReactFiberHostContext.new"])
+local popHostContainer = ReactFiberHostContext.popHostContainer
+local popHostContext = ReactFiberHostContext.popHostContext
+local popSuspenseContext = require(script.Parent["ReactFiberSuspenseContext.new"]).popSuspenseContext
+-- local resetHydrationState = require(script.Parent["ReactFiberHydrationContext.new"]).resetHydrationState
+local ReactFiberContext = require(script.Parent["ReactFiberContext.new"])
+local isLegacyContextProvider = ReactFiberContext.isContextProvider
+local popLegacyContext = ReactFiberContext.popContext
+local popTopLevelLegacyContextObject = ReactFiberContext.popTopLevelContextObject
+local popProvider = require(script.Parent["ReactFiberNewContext.new"]).popProvider
+-- ROBLOX FIXME: this causes a circular require
+-- local popRenderLanes = require(script.Parent["ReactFiberWorkLoop.new"]).popRenderLanes
 -- local {transferActualDuration} = require(script.Parent.ReactProfilerTimer.new)
 
--- local invariant = require(Workspace.shared/invariant'
+local invariant = require(Workspace.Shared.invariant)
+
 
 local function unwindWork(workInProgress: Fiber, renderLanes: Lanes)
-  unimplemented("unwindWork")
---   switch (workInProgress.tag)
---     case ClassComponent: {
---       local Component = workInProgress.type
---       if isLegacyContextProvider(Component))
---         popLegacyContext(workInProgress)
---       end
---       local flags = workInProgress.flags
---       if flags & ShouldCapture)
---         workInProgress.flags = (flags & ~ShouldCapture) | DidCapture
---         if 
---           enableProfilerTimer and
---           (workInProgress.mode & ProfileMode) ~= NoMode
---         )
---           transferActualDuration(workInProgress)
---         end
---         return workInProgress
---       end
---       return nil
---     end
---     case HostRoot: {
---       popHostContainer(workInProgress)
---       popTopLevelLegacyContextObject(workInProgress)
---       resetMutableSourceWorkInProgressVersions()
---       local flags = workInProgress.flags
---       invariant(
---         (flags & DidCapture) == NoFlags,
---         'The root failed to unmount after an error. This is likely a bug in ' +
---           'React. Please file an issue.',
---       )
---       workInProgress.flags = (flags & ~ShouldCapture) | DidCapture
---       return workInProgress
---     end
---     case HostComponent: {
---       -- TODO: popHydrationState
---       popHostContext(workInProgress)
---       return nil
---     end
---     case SuspenseComponent: {
---       popSuspenseContext(workInProgress)
---       if enableSuspenseServerRenderer)
---         local suspenseState: nil | SuspenseState =
---           workInProgress.memoizedState
---         if suspenseState ~= nil and suspenseState.dehydrated ~= nil)
---           invariant(
---             workInProgress.alternate ~= nil,
---             'Threw in newly mounted dehydrated component. This is likely a bug in ' +
---               'React. Please file an issue.',
---           )
---           resetHydrationState()
---         end
---       end
---       local flags = workInProgress.flags
---       if flags & ShouldCapture)
---         workInProgress.flags = (flags & ~ShouldCapture) | DidCapture
---         -- Captured a suspense effect. Re-render the boundary.
---         if 
---           enableProfilerTimer and
---           (workInProgress.mode & ProfileMode) ~= NoMode
---         )
---           transferActualDuration(workInProgress)
---         end
---         return workInProgress
---       end
---       return nil
---     end
---     case SuspenseListComponent: {
---       popSuspenseContext(workInProgress)
---       -- SuspenseList doesn't actually catch anything. It should've been
---       -- caught by a nested boundary. If not, it should bubble through.
---       return nil
---     end
---     case HostPortal:
---       popHostContainer(workInProgress)
---       return nil
---     case ContextProvider:
---       popProvider(workInProgress)
---       return nil
---     case OffscreenComponent:
---     case LegacyHiddenComponent:
---       popRenderLanes(workInProgress)
---       return nil
---     default:
---       return nil
---   end
+  if workInProgress.tag == ReactWorkTags.ClassComponent then
+    local Component = workInProgress.type
+    if isLegacyContextProvider(Component) then
+      popLegacyContext(workInProgress)
+    end
+    local flags = workInProgress.flags
+    if bit32.band(flags, ReactFiberFlags.ShouldCapture) then
+      workInProgress.flags = bit32.bor(bit32.band(flags, bit32.bnot(ReactFiberFlags.ShouldCapture)), ReactFiberFlags.DidCapture)
+      if
+        enableProfilerTimer and
+        bit32.band(workInProgress.mode, ReactTypeOfMode.ProfileMode) ~= ReactTypeOfMode.NoMode
+      then
+        unimplemented("profiler timer")
+        -- transferActualDuration(workInProgress)
+      end
+      return workInProgress
+    end
+    return nil
+  elseif workInProgress.tag == ReactWorkTags.HostRoot then
+    popHostContainer(workInProgress)
+    popTopLevelLegacyContextObject(workInProgress)
+    resetMutableSourceWorkInProgressVersions()
+    local flags = workInProgress.flags
+    invariant(
+      bit32.band(flags, ReactFiberFlags.DidCapture) == ReactFiberFlags.NoFlags,
+      'The root failed to unmount after an error. This is likely a bug in ' ..
+        'React. Please file an issue.'
+    )
+    workInProgress.flags = bit32.bor(bit32.band(flags, bit32.bnot(ReactFiberFlags.ShouldCapture)), ReactFiberFlags.DidCapture)
+    return workInProgress
+  elseif workInProgress.tag == ReactWorkTags.HostComponent then
+    -- TODO: popHydrationState
+    popHostContext(workInProgress)
+    return nil
+  elseif workInProgress.tag == ReactWorkTags.SuspenseComponent then
+    popSuspenseContext(workInProgress)
+    if enableSuspenseServerRenderer then
+      local suspenseState =
+        workInProgress.memoizedState
+      if suspenseState ~= nil and suspenseState.dehydrated ~= nil then
+        invariant(
+          workInProgress.alternate ~= nil,
+          'Threw in newly mounted dehydrated component. This is likely a bug in ' ..
+            'React. Please file an issue.'
+        )
+        unimplemented("ReactFiberHydrationContext")
+        -- resetHydrationState()
+      end
+    end
+    local flags = workInProgress.flags
+    if bit32.band(flags, ReactFiberFlags.ShouldCapture) then
+      workInProgress.flags = bit32.bor(bit32.band(flags, bit32.bnot(ReactFiberFlags.ShouldCapture)), ReactFiberFlags.DidCapture)
+      -- Captured a suspense effect. Re-render the boundary.
+      if
+        enableProfilerTimer and
+        (bit32.band(workInProgress.mode, ReactTypeOfMode.ProfileMode) ~= ReactTypeOfMode.NoMode)
+      then
+        unimplemented("profiler timer")
+      -- transferActualDuration(workInProgress)
+      end
+      return workInProgress
+    end
+    return nil
+  elseif workInProgress.tag == ReactWorkTags.SuspenseListComponent then
+    popSuspenseContext(workInProgress)
+    -- SuspenseList doesn't actually catch anything. It should've been
+    -- caught by a nested boundary. If not, it should bubble through.
+    return nil
+  elseif workInProgress.tag == ReactWorkTags.HostPortal then
+    popHostContainer(workInProgress)
+    return nil
+  elseif workInProgress.tag == ReactWorkTags.ContextProvider then
+    popProvider(workInProgress)
+    return nil
+  elseif workInProgress.tag == ReactWorkTags.OffscreenComponent or
+    workInProgress.tag == ReactWorkTags.LegacyHiddenComponent then
+      unimplemented("popRenderLanes in UnwindWork")
+    -- popRenderLanes(workInProgress)
+    return nil
+  else
+    return nil
+  end
 end
 
 function unwindInterruptedWork(interruptedWork: Fiber)
-  unimplemented("unwindInterruptedWork")
-  -- switch (interruptedWork.tag)
-  --   case ClassComponent: {
-  --     local childContextTypes = interruptedWork.type.childContextTypes
-  --     if childContextTypes ~= nil and childContextTypes ~= undefined)
-  --       popLegacyContext(interruptedWork)
-  --     end
-  --     break
-  --   end
-  --   case HostRoot: {
-  --     popHostContainer(interruptedWork)
-  --     popTopLevelLegacyContextObject(interruptedWork)
-  --     resetMutableSourceWorkInProgressVersions()
-  --     break
-  --   end
-  --   case HostComponent: {
-  --     popHostContext(interruptedWork)
-  --     break
-  --   end
-  --   case HostPortal:
-  --     popHostContainer(interruptedWork)
-  --     break
-  --   case SuspenseComponent:
-  --     popSuspenseContext(interruptedWork)
-  --     break
-  --   case SuspenseListComponent:
-  --     popSuspenseContext(interruptedWork)
-  --     break
-  --   case ContextProvider:
-  --     popProvider(interruptedWork)
-  --     break
-  --   case OffscreenComponent:
-  --   case LegacyHiddenComponent:
-  --     popRenderLanes(interruptedWork)
-  --     break
-  --   default:
-  --     break
-  -- end
+  if interruptedWork.tag == ReactWorkTags.ClassComponent then
+    local childContextTypes = interruptedWork.type.childContextTypes
+    if childContextTypes ~= nil then
+      popLegacyContext(interruptedWork)
+    end
+  elseif interruptedWork.tag == ReactWorkTags.HostRoot then
+    popHostContainer(interruptedWork)
+    popTopLevelLegacyContextObject(interruptedWork)
+    resetMutableSourceWorkInProgressVersions()
+  elseif interruptedWork.tag == ReactWorkTags.HostComponent then
+    popHostContext(interruptedWork)
+  elseif interruptedWork.tag == ReactWorkTags.HostPortal then
+    popHostContainer(interruptedWork)
+  elseif interruptedWork.tag == ReactWorkTags.SuspenseComponent then
+    popSuspenseContext(interruptedWork)
+  elseif interruptedWork.tag == ReactWorkTags.SuspenseListComponent then
+    popSuspenseContext(interruptedWork)
+  elseif interruptedWork.tag == ReactWorkTags.ContextProvider then
+    popProvider(interruptedWork)
+  elseif interruptedWork.tag == ReactWorkTags.OffscreenComponent or
+         interruptedWork.tag ==  ReactWorkTags.LegacyHiddenComponent then
+    unimplemented("popRenderLanes")
+    -- popRenderLanes(interruptedWork)
+    return
+  else -- default
+    return
+  end
 end
 
 return {
