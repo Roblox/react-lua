@@ -2810,7 +2810,7 @@ captureCommitPhaseErrorOnRoot = function(
   error_
 )
   local errorInfo = createCapturedValue(error_, sourceFiber)
- local update = createRootErrorUpdate(rootFiber, errorInfo, SyncLane)
+  local update = createRootErrorUpdate(rootFiber, errorInfo, SyncLane)
   enqueueUpdate(rootFiber, update)
   local eventTime = exports.requestEventTime()
   local root = mod.markUpdateLaneFromFiberToRoot(rootFiber, SyncLane)
@@ -2847,7 +2847,7 @@ exports.captureCommitPhaseError = function(
 
   while fiber ~= nil do
     if fiber.tag == ReactWorkTags.HostRoot then
-      captureCommitPhaseErrorOnRoot(fiber, sourceFiber, error)
+      captureCommitPhaseErrorOnRoot(fiber, sourceFiber, error_)
       return
     else if fiber.tag == ReactWorkTags.ClassComponent then
       local ctor = fiber.type
