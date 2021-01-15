@@ -239,8 +239,8 @@ return function(consoleMethod, matcherName)
 			-- // Any remaining messages indicate a failed expectations.
 			if #expectedMessages > 0 then
 				return {
-					message = ("Expected warning was not recorded:\n  "):format(
-						expectedMessages[0]
+					message = ("Expected warning was not recorded: %s\n  "):format(
+						expectedMessages[1]
 					),
 					pass = false,
 				}
