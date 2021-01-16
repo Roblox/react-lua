@@ -1415,6 +1415,7 @@ mod.prepareFreshStack = function(root: ReactInternalTypes.FiberRoot, lanes: Lane
     HostConfig.cancelTimeout(timeoutHandle)
   end
 
+  -- ROBLOX deviation: should be ~= nil check, but need to do this to work around Luau narrowing issue
   if workInProgress then
     local interruptedWork = workInProgress.return_
     while interruptedWork ~= nil do
@@ -1548,10 +1549,6 @@ end
 
 exports.markSkippedUpdateLanes = function(lane: Lane | Lanes)
   ReactFiberWorkInProgress.markSkippedUpdateLanes(lane)
-  workInProgressRootSkippedLanes = mergeLanes(
-    lane,
-    workInProgressRootSkippedLanes
-  )
 end
 
 exports.renderDidSuspend = function()

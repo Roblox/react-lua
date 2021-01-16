@@ -459,7 +459,7 @@ local function markStarvedLanesAsExpired(root: FiberRoot, currentTime: number)
 			-- // Found a pending lane with no expiration time. If it's not suspended, or
 			-- // if it's pinged, assume it's CPU-bound. Compute a new expiration time
 			-- // using the current time.
-			if bit32.band(lane, suspendedLanes) == NoLanes and
+			if bit32.band(lane, suspendedLanes) == NoLanes or
 				bit32.band(lane, pingedLanes) ~= NoLanes
 			then
 				-- // Assumes timestamps are monotonically increasing.
