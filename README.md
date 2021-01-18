@@ -123,5 +123,40 @@ To avoid this in the future, be sure that your foreman binary path is *before* t
 
 * and for Roblox-specific tests, use the file name format: ```Timeout.roblox.spec.lua```
 
+### How to debug upstream tests
+
+First, set a breakpoint in the ReactJS code you want to step through, like at the beginning of a specific test. 
+
+Note: You probably don't want to set a breakpoint on the `fit`, `it`, or `itFOCUS` line itself, but the first line of the test after that.
+
+Note: Using https://github.com/Roblox/vscode-rbx-lrdb , you can set the same breakpoint in your equivalent Lua test. This allows you to single step in both the JS and Lua implementations, lock-step, to see where they deviate.
+
+In VS Code, press `F1` key. Search for "auto attach" and select it.
+![image](https://user-images.githubusercontent.com/1550766/104784482-3cd2c680-573d-11eb-899d-bedcd696dd2d.png)
+
+Set the Auto Attach option to "Smart"
+![image](https://user-images.githubusercontent.com/1550766/104784582-760b3680-573d-11eb-9ec0-fd63d37d8c32.png)
+
+Open a JavaScript Debug Terminal, by first using View -> Terminal.
+![image](https://user-images.githubusercontent.com/1550766/104784704-b7034b00-573d-11eb-88fc-7fb84397cbd6.png)
+
+In the Terminal window, select "Create Debug JavaScript Terminal".
+![image](https://user-images.githubusercontent.com/1550766/104784781-df8b4500-573d-11eb-8e32-9aa18cc87f9c.png)
+
+In Debug JavaScript Terminal window, paste in the command you use to run the specific React test file you are interested in.
+An example:
+```yarn test --watch -v -r www-modern packages/react-reconciler/src/__tests__/ReactFiberHostContext-test.internal.js```
+Note that to match the React feature set that Roblox is aligning to, you *need* to enable the variant *and* www-modern flags.
+
+![image](https://user-images.githubusercontent.com/1550766/104785390-3fceb680-573f-11eb-9421-7df6c1440e3b.png)
+
+You should see your status bar turn __orange__ (depending on your local theme), indicating that VS Code auto attach worked.
+
+![image](https://user-images.githubusercontent.com/1550766/104785254-ecf4ff00-573e-11eb-8364-c1a310897fff.png)
+
+Shortly after you see the status bar change colors to indicate an active debugger attachment, you should hit your breakpoint.
+![image](https://user-images.githubusercontent.com/1550766/104785584-b4095a00-573f-11eb-8363-3b73a612e2a2.png)
+
+Note that VS Code even tells you the value of the variables on the line. Pretty cool!
 
 
