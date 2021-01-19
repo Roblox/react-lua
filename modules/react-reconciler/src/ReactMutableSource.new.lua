@@ -1,3 +1,4 @@
+-- upstream: https://github.com/facebook/react/blob/142d4f1c00c66f3d728177082dbc027fd6335115/packages/react-reconciler/src/ReactMutableSource.new.js
 --[[*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
@@ -8,9 +9,8 @@
  ]]
 
 local Workspace = script.Parent.Parent
-local Packages = Workspace.Parent.Packages
-local LuauPolyfill = require(Packages.LuauPolyfill)
-local console = LuauPolyfill.console
+-- ROBLOX: use patched console from shared
+local console = require(Workspace.Shared.console)
 
 type Array<T> = { [number]: T }
 local exports = {}

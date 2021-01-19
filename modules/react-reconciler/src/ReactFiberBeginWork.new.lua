@@ -1,3 +1,4 @@
+-- upstream: https://github.com/facebook/react/blob/1faf9e3dd5d6492f3607d5c721055819e4106bc6/packages/react-reconciler/src/ReactFiberBeginWork.new.js
 --[[*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
@@ -13,9 +14,8 @@ local function unimplemented(message)
 end
 
 local Workspace = script.Parent.Parent
-local Packages = Workspace.Parent.Packages
-local LuauPolyfill = require(Packages.LuauPolyfill)
-local console = LuauPolyfill.console
+-- ROBLOX: use patched console from shared
+local console = require(Workspace.Shared.console)
 
 -- local type {ReactProviderType, ReactContext} = require(Workspace.Shared.ReactTypes)
 -- local type {LazyComponent as LazyComponentType} = require(Workspace.react/src/ReactLazy'
@@ -69,7 +69,7 @@ local PerformedWork = ReactFiberFlags.PerformedWork
 local Placement = ReactFiberFlags.Placement
 local Hydrating = ReactFiberFlags.Hydrating
 local ContentReset = ReactFiberFlags.ContentReset
--- local DidCapture = ReactFiberFlags.DidCapture
+local DidCapture = ReactFiberFlags.DidCapture
 -- local Update = ReactFiberFlags.Update
 local Ref = ReactFiberFlags.Ref
 -- local Deletion = ReactFiberFlags.Deletion
@@ -106,7 +106,7 @@ local cloneChildFibers = ReactChildFiber.cloneChildFibers
 local ReactUpdateQueue = require(script.Parent["ReactUpdateQueue.new"])
 local processUpdateQueue = ReactUpdateQueue.processUpdateQueue
 local cloneUpdateQueue = ReactUpdateQueue.cloneUpdateQueue
--- local initializeUpdateQueue = ReactUpdateQueue.initializeUpdateQueue
+local initializeUpdateQueue = ReactUpdateQueue.initializeUpdateQueue
 -- local NoLane = ReactFiberLane.NoLane
 local NoLanes = ReactFiberLane.NoLanes
 -- local SyncLane = ReactFiberLane.SyncLane
@@ -170,26 +170,23 @@ local hasLegacyContextChanged = ReactFiberContext.hasContextChanged
 local pushLegacyContextProvider = ReactFiberContext.pushContextProvider
 local isLegacyContextProvider = ReactFiberContext.isContextProvider
 local pushTopLevelContextObject = ReactFiberContext.pushTopLevelContextObject
--- local invalidateContextProvider = ReactFiberContext.invalidateContextProvider
+local invalidateContextProvider = ReactFiberContext.invalidateContextProvider
 
 local ReactFiberHydrationContext = require(script.Parent["ReactFiberHydrationContext.new"])
-local resetHydrationState =  ReactFiberHydrationContext.resetHydrationState
--- local {
---   enterHydrationState,
---   reenterHydrationStateFromDehydratedSuspenseInstance,
---   ,
---   tryToClaimNextHydratableInstance,
---   warnIfHydrating,
--- } = require(script.Parent.ReactFiberHydrationContext.new)
--- local {
---   adoptClassInstance,
---   applyDerivedStateFromProps,
---   constructClassInstance,
---   mountClassInstance,
---   resumeMountClassInstance,
---   updateClassInstance,
--- } = require(script.Parent.ReactFiberClassComponent.new)
--- local {resolveDefaultProps} = require(script.Parent.ReactFiberLazyComponent.new)
+local resetHydrationState = ReactFiberHydrationContext.resetHydrationState
+local enterHydrationState = ReactFiberHydrationContext.enterHydrationState
+-- local reenterHydrationStateFromDehydratedSuspenseInstance = ReactFiberHydrationContext.reenterHydrationStateFromDehydratedSuspenseInstance
+local tryToClaimNextHydratableInstance = ReactFiberHydrationContext.tryToClaimNextHydratableInstance
+-- local warnIfHydrating = ReactFiberHydrationContext.warnIfHydrating
+local ReactFiberClassComponent = require(script.Parent["ReactFiberClassComponent.new"])
+local adoptClassInstance = ReactFiberClassComponent.adoptClassInstance
+local applyDerivedStateFromProps = ReactFiberClassComponent.applyDerivedStateFromProps
+local constructClassInstance = ReactFiberClassComponent.constructClassInstance
+local mountClassInstance = ReactFiberClassComponent.mountClassInstance
+-- local resumeMountClassInstance = ReactFiberClassComponent.resumeMountClassInstance
+local updateClassInstance = ReactFiberClassComponent.updateClassInstance
+
+local resolveDefaultProps = require(script.Parent["ReactFiberLazyComponent.new"]).resolveDefaultProps
 -- local {
 --   resolveLazyComponentTag,
 --   createFiberFromTypeAndProps,
@@ -219,6 +216,8 @@ local reenableLogs = ConsolePatchingDev.reenableLogs
 
 local ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner
 
+local exports = {}
+
 -- deviation: Pre-declare functions
 local bailoutOnAlreadyFinishedWork, updateFunctionComponent
 
@@ -240,7 +239,7 @@ if _G.__DEV__ then
 --   didWarnAboutContextTypeOnFunctionComponent = {}
 --   didWarnAboutGetDerivedStateOnFunctionComponent = {}
 --   didWarnAboutFunctionRefs = {}
---   didWarnAboutReassigningProps = false
+  exports.didWarnAboutReassigningProps = false
 --   didWarnAboutRevealOrder = {}
 --   didWarnAboutTailOptions = {}
 --   didWarnAboutDefaultPropsOnFunctionComponent = {}
@@ -665,25 +664,25 @@ end
 -- -- fork the function.
 -- local updateLegacyHiddenComponent = updateOffscreenComponent
 
--- function updateFragment(
---   current: Fiber | nil,
---   workInProgress: Fiber,
---   renderLanes: Lanes,
--- )
---   local nextChildren = workInProgress.pendingProps
---   reconcileChildren(current, workInProgress, nextChildren, renderLanes)
---   return workInProgress.child
--- end
+function updateFragment(
+  current: Fiber | nil,
+  workInProgress: Fiber,
+  renderLanes: Lanes
+)
+  local nextChildren = workInProgress.pendingProps
+  reconcileChildren(current, workInProgress, nextChildren, renderLanes)
+  return workInProgress.child
+end
 
--- function updateMode(
---   current: Fiber | nil,
---   workInProgress: Fiber,
---   renderLanes: Lanes,
--- )
---   local nextChildren = workInProgress.pendingProps.children
---   reconcileChildren(current, workInProgress, nextChildren, renderLanes)
---   return workInProgress.child
--- end
+function updateMode(
+  current: Fiber | nil,
+  workInProgress: Fiber,
+  renderLanes: Lanes
+)
+  local nextChildren = workInProgress.pendingProps.children
+  reconcileChildren(current, workInProgress, nextChildren, renderLanes)
+  return workInProgress.child
+end
 
 -- function updateProfiler(
 --   current: Fiber | nil,
@@ -871,189 +870,203 @@ end
 --   return workInProgress.child
 -- end
 
--- function updateClassComponent(
+-- ROBLOX FIXME: type refinement
+-- local function updateClassComponent(
 --   current: Fiber | nil,
---   workInProgress: Fiber,
---   Component: any,
---   nextProps: any,
---   renderLanes: Lanes,
+--   ...
 -- )
---   if  _G.__DEV__ then
---     if workInProgress.type ~= workInProgress.elementType)
---       -- Lazy component props can't be validated in createElement
---       -- because they're only guaranteed to be resolved here.
---       local innerPropTypes = Component.propTypes
---       if innerPropTypes)
---         checkPropTypes(
---           innerPropTypes,
---           nextProps, -- Resolved props
---           'prop',
---           getComponentName(Component),
---         )
---       end
---     end
---   end
+local function updateClassComponent(
+  current: any,
+  workInProgress: Fiber,
+  Component: any,
+  nextProps: any,
+  renderLanes: Lanes
+)
+  if _G.__DEV__ then
+    if workInProgress.type ~= workInProgress.elementType then
+      -- Lazy component props can't be validated in createElement
+      -- because they're only guaranteed to be resolved here.
+      local innerPropTypes = Component.propTypes
+      if innerPropTypes then
+        checkPropTypes(
+          innerPropTypes,
+          nextProps, -- Resolved props
+          "prop",
+          getComponentName(Component)
+        )
+      end
+    end
+  end
 
---   -- Push context providers early to prevent context stack mismatches.
---   -- During mounting we don't know the child context yet as the instance doesn't exist.
---   -- We will invalidate the child context in finishClassComponent() right after rendering.
---   local hasContext
---   if isLegacyContextProvider(Component))
---     hasContext = true
---     pushLegacyContextProvider(workInProgress)
---   } else {
---     hasContext = false
---   end
---   prepareToReadContext(workInProgress, renderLanes)
+  -- Push context providers early to prevent context stack mismatches.
+  -- During mounting we don't know the child context yet as the instance doesn't exist.
+  -- We will invalidate the child context in finishClassComponent() right after rendering.
+  local hasContext
+  if isLegacyContextProvider(Component) then
+    hasContext = true
+    pushLegacyContextProvider(workInProgress)
+  else
+    hasContext = false
+  end
+  prepareToReadContext(workInProgress, renderLanes)
 
---   local instance = workInProgress.stateNode
---   local shouldUpdate
---   if instance == nil)
---     if current ~= nil)
---       -- A class component without an instance only mounts if it suspended
---       -- inside a non-concurrent tree, in an inconsistent state. We want to
---       -- treat it like a new mount, even though an empty version of it already
---       -- committed. Disconnect the alternate pointers.
---       current.alternate = nil
---       workInProgress.alternate = nil
---       -- Since this is conceptually a new fiber, schedule a Placement effect
---       workInProgress.flags |= Placement
---     end
---     -- In the initial pass we might need to construct the instance.
---     constructClassInstance(workInProgress, Component, nextProps)
---     mountClassInstance(workInProgress, Component, nextProps, renderLanes)
---     shouldUpdate = true
---   } else if current == nil)
---     -- In a resume, we'll already have an instance we can reuse.
---     shouldUpdate = resumeMountClassInstance(
---       workInProgress,
---       Component,
---       nextProps,
---       renderLanes,
---     )
---   } else {
---     shouldUpdate = updateClassInstance(
---       current,
---       workInProgress,
---       Component,
---       nextProps,
---       renderLanes,
---     )
---   end
---   local nextUnitOfWork = finishClassComponent(
---     current,
---     workInProgress,
---     Component,
---     shouldUpdate,
---     hasContext,
---     renderLanes,
---   )
---   if  _G.__DEV__ then
---     local inst = workInProgress.stateNode
---     if shouldUpdate and inst.props ~= nextProps)
---       if not didWarnAboutReassigningProps)
---         console.error(
---           'It looks like %s is reassigning its own `this.props` while rendering. ' +
---             'This is not supported and can lead to confusing bugs.',
---           getComponentName(workInProgress.type) or 'a component',
---         )
---       end
---       didWarnAboutReassigningProps = true
---     end
---   end
---   return nextUnitOfWork
--- end
+  local instance = workInProgress.stateNode
+  local shouldUpdate
+  if instance == nil then
+    if current ~= nil then
+      -- A class component without an instance only mounts if it suspended
+      -- inside a non-concurrent tree, in an inconsistent state. We want to
+      -- treat it like a new mount, even though an empty version of it already
+      -- committed. Disconnect the alternate pointers.
+      current.alternate = nil
+      workInProgress.alternate = nil
+      -- Since this is conceptually a new fiber, schedule a Placement effect
+      workInProgress.flags = bit32.bor(workInProgress.flags, Placement)
+    end
+    -- In the initial pass we might need to construct the instance.
+    constructClassInstance(workInProgress, Component, nextProps)
+    mountClassInstance(workInProgress, Component, nextProps, renderLanes)
+    shouldUpdate = true
+  elseif current == nil then
+    unimplemented("resumeMountClassInstance")
+    -- -- In a resume, we'll already have an instance we can reuse.
+    -- shouldUpdate = resumeMountClassInstance(
+    --   workInProgress,
+    --   Component,
+    --   nextProps,
+    --   renderLanes
+    -- )
+  else
+    shouldUpdate = updateClassInstance(
+      current,
+      workInProgress,
+      Component,
+      nextProps,
+      renderLanes
+    )
+  end
+  local nextUnitOfWork = finishClassComponent(
+    current,
+    workInProgress,
+    Component,
+    shouldUpdate,
+    hasContext,
+    renderLanes
+  )
+  if _G.__DEV__ then
+    local inst = workInProgress.stateNode
+    if shouldUpdate and inst.props ~= nextProps then
+      if not exports.didWarnAboutReassigningProps then
+        console.error(
+          "It looks like %s is reassigning its own `this.props` while rendering. " ..
+            "This is not supported and can lead to confusing bugs.",
+          getComponentName(workInProgress.type) or "a component"
+        )
+      end
+      exports.didWarnAboutReassigningProps = true
+    end
+  end
+  return nextUnitOfWork
+end
 
--- function finishClassComponent(
---   current: Fiber | nil,
---   workInProgress: Fiber,
---   Component: any,
---   shouldUpdate: boolean,
---   hasContext: boolean,
---   renderLanes: Lanes,
--- )
---   -- Refs should update even if shouldComponentUpdate returns false
---   markRef(current, workInProgress)
+function finishClassComponent(
+  current: Fiber | nil,
+  workInProgress: Fiber,
+  Component: any,
+  shouldUpdate: boolean,
+  hasContext: boolean,
+  renderLanes: Lanes
+)
+  -- Refs should update even if shouldComponentUpdate returns false
+  markRef(current, workInProgress)
 
---   local didCaptureError = (workInProgress.flags & DidCapture) ~= NoFlags
+  local didCaptureError = bit32.band(workInProgress.flags, DidCapture) ~= NoFlags
 
---   if not shouldUpdate and !didCaptureError)
---     -- Context providers should defer to sCU for rendering
---     if hasContext)
---       invalidateContextProvider(workInProgress, Component, false)
---     end
+  if not shouldUpdate and not didCaptureError then
+    -- Context providers should defer to sCU for rendering
+    if hasContext then
+      invalidateContextProvider(workInProgress, Component, false)
+    end
 
---     return bailoutOnAlreadyFinishedWork(current, workInProgress, renderLanes)
---   end
+    return bailoutOnAlreadyFinishedWork(current, workInProgress, renderLanes)
+  end
 
---   local instance = workInProgress.stateNode
+  local instance = workInProgress.stateNode
 
---   -- Rerender
---   ReactCurrentOwner.current = workInProgress
---   local nextChildren
---   if
---     didCaptureError and
---     typeof Component.getDerivedStateFromError ~= 'function'
---   )
---     -- If we captured an error, but getDerivedStateFromError is not defined,
---     -- unmount all the children. componentDidCatch will schedule an update to
---     -- re-render a fallback. This is temporary until we migrate everyone to
---     -- the new API.
---     -- TODO: Warn in a future release.
---     nextChildren = nil
+  -- Rerender
+  ReactCurrentOwner.current = workInProgress
+  local nextChildren
+  if
+    didCaptureError and
+    typeof(Component.getDerivedStateFromError) ~= "function"
+   then
+    -- If we captured an error, but getDerivedStateFromError is not defined,
+    -- unmount all the children. componentDidCatch will schedule an update to
+    -- re-render a fallback. This is temporary until we migrate everyone to
+    -- the new API.
+    -- TODO: Warn in a future release.
+    nextChildren = nil
 
---     if enableProfilerTimer)
---       stopProfilerTimerIfRunning(workInProgress)
---     end
---   } else {
---     if  _G.__DEV__ then
---       setIsRendering(true)
---       nextChildren = instance.render()
---       if
---         debugRenderPhaseSideEffectsForStrictMode and
---         workInProgress.mode & StrictMode
---       )
---         disableLogs()
---         try {
---           instance.render()
---         } finally {
---           reenableLogs()
---         end
---       end
---       setIsRendering(false)
---     } else {
---       nextChildren = instance.render()
---     end
---   end
+    if enableProfilerTimer then
+      unimplemented("profiler timer logic")
+      -- stopProfilerTimerIfRunning(workInProgress)
+    end
+  else
+    if _G.__DEV__ then
+      setIsRendering(true)
+      -- deviation: Call with ':' instead of '.' so that render can access self
+      nextChildren = instance:render()
+      if
+        debugRenderPhaseSideEffectsForStrictMode and
+        bit32.band(workInProgress.mode, StrictMode)
+      then
+        disableLogs()
+        local ok, result = pcall(function()
+          -- deviation: Call with ':' instead of '.' so that render can access self
+          instance:render()
+        end)
+        -- finally
+        reenableLogs()
+        if not ok then
+          error(result)
+        end
+      end
+      setIsRendering(false)
+    else
+      -- deviation: Call with ':' instead of '.' so that render can access self
+      nextChildren = instance:render()
+    end
+  end
 
---   -- React DevTools reads this flag.
---   workInProgress.flags |= PerformedWork
---   if current ~= nil and didCaptureError)
---     -- If we're recovering from an error, reconcile without reusing any of
---     -- the existing children. Conceptually, the normal children and the children
---     -- that are shown on error are two different sets, so we shouldn't reuse
---     -- normal children even if their identities match.
---     forceUnmountCurrentAndReconcile(
---       current,
---       workInProgress,
---       nextChildren,
---       renderLanes,
---     )
---   } else {
---     reconcileChildren(current, workInProgress, nextChildren, renderLanes)
---   end
+  -- React DevTools reads this flag.
+  workInProgress.flags = bit32.bor(workInProgress.flags, PerformedWork)
+  if current ~= nil and didCaptureError then
+    -- If we're recovering from an error, reconcile without reusing any of
+    -- the existing children. Conceptually, the normal children and the children
+    -- that are shown on error are two different sets, so we shouldn't reuse
+    -- normal children even if their identities match.
+    unimplemented("forceUnmountCurrentAndReconcile")
+    -- forceUnmountCurrentAndReconcile(
+    --   current,
+    --   workInProgress,
+    --   nextChildren,
+    --   renderLanes
+    -- )
+  else
+    reconcileChildren(current, workInProgress, nextChildren, renderLanes)
+  end
 
---   -- Memoize state using the values we just used to render.
---   -- TODO: Restructure so we never read values from the instance.
---   workInProgress.memoizedState = instance.state
+  -- Memoize state using the values we just used to render.
+  -- TODO: Restructure so we never read values from the instance.
+  workInProgress.memoizedState = instance.state
 
---   -- The context might have changed so we need to recalculate it.
---   if hasContext)
---     invalidateContextProvider(workInProgress, Component, true)
---   end
+  -- The context might have changed so we need to recalculate it.
+  if hasContext then
+    invalidateContextProvider(workInProgress, Component, true)
+  end
 
---   return workInProgress.child
--- end
+  return workInProgress.child
+end
 
 local function pushHostRootContext(workInProgress)
   -- FIXME (roblox): type refinement '(workInProgress.stateNode: FiberRoot)'
@@ -1094,9 +1107,7 @@ local function updateHostRoot(current, workInProgress, renderLanes)
     return bailoutOnAlreadyFinishedWork(current, workInProgress, renderLanes)
   end
   local root: FiberRoot = workInProgress.stateNode
-  -- deviation: comment out unimplemented hydration stuff
-  -- if root.hydrate and enterHydrationState(workInProgress) then
-  if root.hydrate then
+  if root.hydrate and enterHydrationState(workInProgress) then
     -- If we don't have any current children this might be the first pass.
     -- We always try to hydrate. If this isn't a hydration pass there won't
     -- be any children to hydrate which is effectively the same thing as
@@ -1160,8 +1171,7 @@ local function updateHostComponent(
   pushHostContext(workInProgress)
 
   if current == nil then
-    warn("Skip unimplemented: hydration logic")
-    -- tryToClaimNextHydratableInstance(workInProgress)
+    tryToClaimNextHydratableInstance(workInProgress)
   end
 
   local type = workInProgress.type
@@ -1191,14 +1201,14 @@ local function updateHostComponent(
   return workInProgress.child
 end
 
--- function updateHostText(current, workInProgress)
---   if current == nil)
---     tryToClaimNextHydratableInstance(workInProgress)
---   end
---   -- Nothing to do here. This is terminal. We'll do the completion step
---   -- immediately after.
---   return nil
--- end
+function updateHostText(current, workInProgress)
+  if current == nil then
+    tryToClaimNextHydratableInstance(workInProgress)
+  end
+  -- Nothing to do here. This is terminal. We'll do the completion step
+  -- immediately after.
+  return nil
+end
 
 -- function mountLazyComponent(
 --   _current,
@@ -1514,51 +1524,49 @@ local function mountIndeterminateComponent(
       end
     end
 
-    unimplemented("ClassComponent")
-    return nil
-    -- -- Proceed under the assumption that this is a class instance
-    -- workInProgress.tag = ClassComponent
+    -- Proceed under the assumption that this is a class instance
+    workInProgress.tag = ClassComponent
 
-    -- -- Throw out any hooks that were used.
-    -- workInProgress.memoizedState = nil
-    -- workInProgress.updateQueue = nil
+    -- Throw out any hooks that were used.
+    workInProgress.memoizedState = nil
+    workInProgress.updateQueue = nil
 
-    -- -- Push context providers early to prevent context stack mismatches.
-    -- -- During mounting we don't know the child context yet as the instance doesn't exist.
-    -- -- We will invalidate the child context in finishClassComponent() right after rendering.
-    -- local hasContext = false
-    -- if isLegacyContextProvider(Component) then
-    --   hasContext = true
-    --   pushLegacyContextProvider(workInProgress)
-    -- else
-    --   hasContext = false
-    -- end
+    -- Push context providers early to prevent context stack mismatches.
+    -- During mounting we don't know the child context yet as the instance doesn't exist.
+    -- We will invalidate the child context in finishClassComponent() right after rendering.
+    local hasContext = false
+    if isLegacyContextProvider(Component) then
+      hasContext = true
+      pushLegacyContextProvider(workInProgress)
+    else
+      hasContext = false
+    end
 
-    -- -- deviation: Lua doesn't need to coerce `T | null | undefined` to `T | null`
-    -- workInProgress.memoizedState = value.state
+    -- deviation: Lua doesn't need to coerce `T | null | undefined` to `T | null`
+    workInProgress.memoizedState = value.state
 
-    -- initializeUpdateQueue(workInProgress)
+    initializeUpdateQueue(workInProgress)
 
-    -- local getDerivedStateFromProps = Component.getDerivedStateFromProps
-    -- if typeof(getDerivedStateFromProps) == "function" then
-    --   applyDerivedStateFromProps(
-    --     workInProgress,
-    --     Component,
-    --     getDerivedStateFromProps,
-    --     props
-    --   )
-    -- end
+    local getDerivedStateFromProps = Component.getDerivedStateFromProps
+    if typeof(getDerivedStateFromProps) == "function" then
+      applyDerivedStateFromProps(
+        workInProgress,
+        Component,
+        getDerivedStateFromProps,
+        props
+      )
+    end
 
-    -- adoptClassInstance(workInProgress, value)
-    -- mountClassInstance(workInProgress, Component, props, renderLanes)
-    -- return finishClassComponent(
-    --   nil,
-    --   workInProgress,
-    --   Component,
-    --   true,
-    --   hasContext,
-    --   renderLanes
-    -- )
+    adoptClassInstance(workInProgress, value)
+    mountClassInstance(workInProgress, Component, props, renderLanes)
+    return finishClassComponent(
+      nil,
+      workInProgress,
+      Component,
+      true,
+      hasContext,
+      renderLanes
+    )
   else
     -- Proceed under the assumption that this is a function component
     workInProgress.tag = FunctionComponent
@@ -3122,7 +3130,7 @@ end
 
 -- FIXME (roblox): restore types when refinement is better:
 -- current: Fiber | nil,
-local function beginWork(
+exports.beginWork = function(
   current: any,
   workInProgress: Fiber,
   renderLanes: Lanes
@@ -3132,7 +3140,7 @@ local function beginWork(
   if _G.__DEV__ then
     if workInProgress._debugNeedsRemount and current ~= nil then
       -- This will restart the begin phase with a new fiber.
-      unimplemented("'needs remount' logic")
+      unimplemented("ReactFiberBeginWork: beginWork(): remountFiber")
       -- return remountFiber(
       --   current,
       --   workInProgress,
@@ -3383,27 +3391,25 @@ local function beginWork(
       renderLanes
     )
   elseif workInProgress.tag == ClassComponent then
-    unimplemented("beginWork: ClassComponent")
-    -- local Component = workInProgress.type
-    -- local unresolvedProps = workInProgress.pendingProps
-    -- local resolvedProps =
-    --   workInProgress.elementType == Component
-    --     and unresolvedProps
-    --     or resolveDefaultProps(Component, unresolvedProps)
-    -- return updateClassComponent(
-    --   current,
-    --   workInProgress,
-    --   Component,
-    --   resolvedProps,
-    --   renderLanes
-    -- )
+    local Component = workInProgress.type
+    local unresolvedProps = workInProgress.pendingProps
+    local resolvedProps =
+      workInProgress.elementType == Component
+        and unresolvedProps
+        or resolveDefaultProps(Component, unresolvedProps)
+    return updateClassComponent(
+      current,
+      workInProgress,
+      Component,
+      resolvedProps,
+      renderLanes
+    )
   elseif workInProgress.tag == HostRoot then
     return updateHostRoot(current, workInProgress, renderLanes)
   elseif workInProgress.tag == HostComponent then
     return updateHostComponent(current, workInProgress, renderLanes)
   elseif workInProgress.tag == HostText then
-    unimplemented("beginWork: HostText")
-    -- return updateHostText(current, workInProgress)
+    return updateHostText(current, workInProgress)
   elseif workInProgress.tag == SuspenseComponent then
     unimplemented("beginWork: SuspenseComponent")
     -- return updateSuspenseComponent(current, workInProgress, renderLanes)
@@ -3426,11 +3432,9 @@ local function beginWork(
     --   renderLanes
     -- )
   elseif workInProgress.tag == Fragment then
-    unimplemented("beginWork: Fragment")
-    -- return updateFragment(current, workInProgress, renderLanes)
+    return updateFragment(current, workInProgress, renderLanes)
   elseif workInProgress.tag == Mode then
-    unimplemented("beginWork: Mode")
-    -- return updateMode(current, workInProgress, renderLanes)
+    return updateMode(current, workInProgress, renderLanes)
   elseif workInProgress.tag == Profiler then
     unimplemented("beginWork: Profiler")
     -- return updateProfiler(current, workInProgress, renderLanes)
@@ -3522,6 +3526,4 @@ local function beginWork(
   return nil
 end
 
-return {
-  beginWork = beginWork,
-}
+return exports

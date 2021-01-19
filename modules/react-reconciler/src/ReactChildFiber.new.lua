@@ -1,3 +1,4 @@
+-- upstream: https://github.com/facebook/react/blob/16654436039dd8f16a63928e71081c7745872e8f/packages/react-reconciler/src/ReactChildFiber.new.js
 --[[*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
@@ -16,11 +17,15 @@ local Workspace = script.Parent.Parent
 local Packages = Workspace.Parent.Packages
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local Array = LuauPolyfill.Array
-local console = LuauPolyfill.console
+-- ROBLOX: use patched console from shared
+local console = require(Workspace.Shared.console)
 
 local ReactElementType = require(Workspace.Shared.ReactElementType)
 type ReactElement = ReactElementType.ReactElement;
--- local type {ReactPortal} = require(Workspace.Shared.ReactTypes)
+local ReactTypes = require(Workspace.Shared.ReactTypes)
+type ReactPortal = ReactTypes.ReactPortal
+-- local ReactLazy = require(script.Parent.ReactLazy)
+-- type LazyComponent = ReactLazy.LazyComponent
 local ReactInternalTypes = require(script.Parent.ReactInternalTypes)
 type Fiber = ReactInternalTypes.Fiber;
 local ReactFiberLanes = require(script.Parent.ReactFiberLane)
@@ -40,8 +45,8 @@ local REACT_BLOCK_TYPE = ReactSymbols.REACT_BLOCK_TYPE
 local ReactWorkTags = require(script.Parent.ReactWorkTags)
 local FunctionComponent = ReactWorkTags.FunctionComponent
 local ClassComponent = ReactWorkTags.ClassComponent
--- local HostText = ReactWorkTags.HostText
--- local HostPortal = ReactWorkTags.HostPortal
+local HostText = ReactWorkTags.HostText
+local HostPortal = ReactWorkTags.HostPortal
 local ForwardRef = ReactWorkTags.ForwardRef
 local Fragment = ReactWorkTags.Fragment
 local SimpleMemoComponent = ReactWorkTags.SimpleMemoComponent
@@ -70,7 +75,8 @@ type Set<T> = { [T]: boolean }
 
 local exports = {}
 
--- local didWarnAboutMaps
+local didWarnAboutMaps
+-- ROBLOX deviation: Lua doesn't have built-in generators
 -- local didWarnAboutGenerators
 local didWarnAboutStringRefs
 local ownerHasKeyUseWarning
@@ -79,9 +85,10 @@ local warnForMissingKey = function(child: any, returnFiber: Fiber)
 end
 
 if _G.__DEV__ then
---   didWarnAboutMaps = false
+  didWarnAboutMaps = false
+-- ROBLOX deviation: Lua doesn't have built-in generators
 --   didWarnAboutGenerators = false
---   didWarnAboutStringRefs = {}
+  didWarnAboutStringRefs = {}
 
   --[[
     Warn if there's no key explicitly set on dynamic arrays of children or
@@ -168,7 +175,7 @@ function coerceRef(
                 'String refs are a source of potential bugs and should be avoided. ' ..
                 'We recommend using useRef() or createRef() instead. ' ..
                 'Learn more about using refs safely here: ' ..
-                'https:--reactjs.org/link/strict-mode-string-ref',
+                'https://reactjs.org/link/strict-mode-string-ref',
               mixedRef
             )
           end
@@ -199,7 +206,7 @@ function coerceRef(
       )
 
       -- ROBLOX FIXME: is this turning a number into a string?
-      local stringRef = '' + mixedRef
+      local stringRef = '' .. mixedRef
       -- Check if previous string ref matches new string ref
       if
         current ~= nil and
@@ -250,6 +257,8 @@ local function throwOnInvalidObjectType(returnFiber: Fiber, newChild: { [any]: a
     -- and print appropriately
     unimplemented("throwOnInvalidObjectType textarea")
 
+    -- ROBLOX TODO: This is likely a bigger deviation; in Roact today, we allow
+    -- tables and use the keys as equivalents to the `key` prop
     -- invariant(
     --   false,
     --   "Objects are not valid as a React child (found: %s). " ..
@@ -283,18 +292,25 @@ end
 -- // We avoid inlining this to avoid potential deopts from using try/catch.
 -- /** @noinline */
 -- function resolveLazyType<T, P>(
---   lazyComponent: LazyComponent<T, P>,
--- ): LazyComponent<T, P> | T {
---   try {
---     // If we can, let's peek at the resulting type.
---     const payload = lazyComponent._payload;
---     const init = lazyComponent._init;
---     return init(payload);
---   } catch (x) {
---     // Leave it in place and let it throw again in the begin phase.
---     return lazyComponent;
---   }
--- }
+--   lazyComponent: LazyComponent<T, P>
+-- ): LazyComponent<T, P> | T
+-- ROBLOX TODO: re-add types when ReactLazy exports LazyComponent
+function resolveLazyType(
+  lazyComponent
+)
+  local ok, _x = pcall(function()
+    -- If we can, let's peek at the resulting type.
+    local payload = lazyComponent._payload;
+    local init = lazyComponent._init;
+    return init(payload);
+  end)
+  if not ok then
+    -- Leave it in place and let it throw again in the begin phase.
+    return lazyComponent;
+  end
+
+  return _x
+end
 
 -- This wrapper function exists because I expect to clone the code in each path
 -- to be able to optimize each path individually by branching early. This needs
@@ -311,7 +327,7 @@ local function ChildReconciler(shouldTrackSideEffects)
       returnFiber.deletions = { childToDelete }
       returnFiber.flags = bit32.bor(returnFiber.flags, Deletion)
     else
-      deletions.push(childToDelete)
+      table.insert(deletions, childToDelete)
     end
   end
 
@@ -402,24 +418,31 @@ local function ChildReconciler(shouldTrackSideEffects)
     return newFiber
   end
 
+  -- ROBLOX FIXME: Luau narrowing issue
   -- function updateTextNode(
   --   returnFiber: Fiber,
   --   current: Fiber | nil,
   --   textContent: string,
-  --   lanes: Lanes,
+  --   lanes: Lanes
   -- )
-  --   if current == nil or current.tag ~= HostText)
-  --     -- Insert
-  --     local created = createFiberFromText(textContent, returnFiber.mode, lanes)
-  --     created.return = returnFiber
-  --     return created
-  --   } else {
-  --     -- Update
-  --     local existing = useFiber(current, textContent)
-  --     existing.return = returnFiber
-  --     return existing
-  --   end
-  -- end
+  function updateTextNode(
+    returnFiber: Fiber,
+    current: any,
+    textContent: string,
+    lanes: Lanes
+  )
+    if current == nil or current.tag ~= HostText then
+      -- Insert
+      local created = createFiberFromText(textContent, returnFiber.mode, lanes)
+      created.return_ = returnFiber
+      return created
+    else
+      -- Update
+      local existing = useFiber(current, textContent)
+      existing.return_ = returnFiber
+      return existing
+    end
+  end
 
   -- ROBLOX FIXME: type refinement
   -- local function updateElement(
@@ -454,8 +477,7 @@ local function ChildReconciler(shouldTrackSideEffects)
         -- it in case initializing it turns out it would match.
         local type = element.type
         if type["$$typeof"] == REACT_LAZY_TYPE then
-          unimplemented("resolveLazyType")
-          -- type = resolveLazyType(type)
+          type = resolveLazyType(type)
         end
         if
           type["$$typeof"] == REACT_BLOCK_TYPE and
@@ -480,29 +502,36 @@ local function ChildReconciler(shouldTrackSideEffects)
     return created
   end
 
+
+  -- ROBLOX FIXME: type narrowing.
   -- function updatePortal(
   --   returnFiber: Fiber,
   --   current: Fiber | nil,
   --   portal: ReactPortal,
   --   lanes: Lanes,
   -- ): Fiber {
-  --   if
-  --     current == nil or
-  --     current.tag ~= HostPortal or
-  --     current.stateNode.containerInfo ~= portal.containerInfo or
-  --     current.stateNode.implementation ~= portal.implementation
-  --   )
-  --     -- Insert
-  --     local created = createFiberFromPortal(portal, returnFiber.mode, lanes)
-  --     created.return = returnFiber
-  --     return created
-  --   } else {
-  --     -- Update
-  --     local existing = useFiber(current, portal.children or [])
-  --     existing.return = returnFiber
-  --     return existing
-  --   end
-  -- end
+  function updatePortal(
+    returnFiber: Fiber,
+    current: Fiber,
+    portal: ReactPortal,
+    lanes: Lanes
+  ): Fiber
+      if current == nil or
+        current.tag ~= HostPortal or
+        current.stateNode.containerInfo ~= portal.containerInfo or
+        current.stateNode.implementation ~= portal.implementation
+    then
+      -- Insert
+      local created = createFiberFromPortal(portal, returnFiber.mode, lanes)
+      created.return_ = returnFiber
+      return created
+    else
+      -- Update
+      local existing = useFiber(current, portal.children or {})
+      existing.return_ = returnFiber
+      return existing
+    end
+  end
 
   -- function updateFragment(
   --   returnFiber: Fiber,
@@ -511,23 +540,30 @@ local function ChildReconciler(shouldTrackSideEffects)
   --   lanes: Lanes,
   --   key: nil | string,
   -- ): Fiber {
-  --   if current == nil or current.tag ~= Fragment)
-  --     -- Insert
-  --     local created = createFiberFromFragment(
-  --       fragment,
-  --       returnFiber.mode,
-  --       lanes,
-  --       key,
-  --     )
-  --     created.return = returnFiber
-  --     return created
-  --   } else {
-  --     -- Update
-  --     local existing = useFiber(current, fragment)
-  --     existing.return = returnFiber
-  --     return existing
-  --   end
-  -- end
+    function updateFragment(
+      returnFiber: Fiber,
+      current: any,
+      fragment: any,
+      lanes: Lanes,
+      key: nil | string
+    ): Fiber
+      if current == nil or current.tag ~= Fragment then
+      -- Insert
+      local created = createFiberFromFragment(
+        fragment,
+        returnFiber.mode,
+        lanes,
+        key
+      )
+      created.return_ = returnFiber
+      return created
+    else
+      -- Update
+      local existing = useFiber(current, fragment)
+      existing.return_ = returnFiber
+      return existing
+    end
+  end
 
   local function createChild(
     returnFiber: Fiber,
@@ -596,9 +632,16 @@ local function ChildReconciler(shouldTrackSideEffects)
     return nil
   end
 
+  -- ROBLOX FIXME: type narrowing
+  -- local function updateSlot(
+  --   returnFiber: Fiber,
+  --   oldFiber: Fiber | nil,
+  --   newChild: any,
+  --   lanes: Lanes
+  -- ): Fiber | nil
   local function updateSlot(
     returnFiber: Fiber,
-    oldFiber: Fiber | nil,
+    oldFiber: Fiber,
     newChild: any,
     lanes: Lanes
   ): Fiber | nil
@@ -616,22 +659,20 @@ local function ChildReconciler(shouldTrackSideEffects)
       if key ~= nil then
         return nil
       end
-      unimplemented("ReactChildFiber updateTextNode")
-      -- return updateTextNode(returnFiber, oldFiber, tostring(newChild), lanes)
+      return updateTextNode(returnFiber, oldFiber, tostring(newChild), lanes)
     end
 
     if typeof(newChild) == "table" and newChild ~= nil then
       if newChild["$$typeof"] == REACT_ELEMENT_TYPE then
         if newChild.key == key then
           if newChild.type == REACT_FRAGMENT_TYPE then
-            unimplemented("ReactChildFiber updateFragment")
-            -- return updateFragment(
-            --   returnFiber,
-            --   oldFiber,
-            --   newChild.props.children,
-            --   lanes,
-            --   key
-            -- )
+            return updateFragment(
+              returnFiber,
+              oldFiber,
+              newChild.props.children,
+              lanes,
+              key
+            )
           end
           return updateElement(returnFiber, oldFiber, newChild, lanes)
         else
@@ -639,8 +680,7 @@ local function ChildReconciler(shouldTrackSideEffects)
         end
       elseif newChild["$$typeof"] == REACT_PORTAL_TYPE then
         if newChild.key == key then
-          unimplemented("ReactChildFiber updatePortal")
-          -- return updatePortal(returnFiber, oldFiber, newChild, lanes)
+          return updatePortal(returnFiber, oldFiber, newChild, lanes)
         else
           return nil
         end
@@ -657,8 +697,7 @@ local function ChildReconciler(shouldTrackSideEffects)
           return nil
         end
 
-        unimplemented("ReactChildFiber updateFragment")
-        -- return updateFragment(returnFiber, oldFiber, newChild, lanes, nil)
+        return updateFragment(returnFiber, oldFiber, newChild, lanes, nil)
       end
 
       throwOnInvalidObjectType(returnFiber, newChild)
@@ -683,9 +722,8 @@ local function ChildReconciler(shouldTrackSideEffects)
     if typeof(newChild) == "string" or typeof(newChild) == "number" then
       -- Text nodes don't have keys, so we neither have to check the old nor
       -- new node for the key. If both are text nodes, they match.
-      unimplemented("ReactChildFiber updateTextNode")
-      -- local matchedFiber = existingChildren[newIdx] or nil
-      -- return updateTextNode(returnFiber, matchedFiber, tostring(newChild), lanes)
+      local matchedFiber = existingChildren[newIdx] or nil
+      return updateTextNode(returnFiber, matchedFiber, tostring(newChild), lanes)
     end
 
     if typeof(newChild) == "table" and newChild ~= nil then
@@ -693,21 +731,19 @@ local function ChildReconciler(shouldTrackSideEffects)
         local matchedFiber =
           existingChildren[newChild.key == nil and newIdx or newChild.key]
         if newChild.type == REACT_FRAGMENT_TYPE then
-          unimplemented("ReactChildFiber updateFragment")
-          -- return updateFragment(
-          --   returnFiber,
-          --   matchedFiber,
-          --   newChild.props.children,
-          --   lanes,
-          --   newChild.key,
-          -- )
+          return updateFragment(
+            returnFiber,
+            matchedFiber,
+            newChild.props.children,
+            lanes,
+            newChild.key
+          )
         end
         return updateElement(returnFiber, matchedFiber, newChild, lanes)
       elseif newChild["$$typeof"] == REACT_PORTAL_TYPE then
-        unimplemented("ReactChildFiber updatePortal")
-        -- local matchedFiber =
-        --   existingChildren[newChild.key == nil and newIdx or newChild.key]
-        -- return updatePortal(returnFiber, matchedFiber, newChild, lanes)
+        local matchedFiber =
+          existingChildren[newChild.key == nil and newIdx or newChild.key]
+        return updatePortal(returnFiber, matchedFiber, newChild, lanes)
       elseif newChild["$$typeof"] == REACT_LAZY_TYPE then
         if enableLazyElements then
           local payload = newChild._payload
@@ -723,9 +759,8 @@ local function ChildReconciler(shouldTrackSideEffects)
       end
 
       if isArray(newChild) or getIteratorFn(newChild) then
-        unimplemented("ReactChildFiber updateFragment")
-        -- local matchedFiber = existingChildren[newIdx]
-        -- return updateFragment(returnFiber, matchedFiber, newChild, lanes, nil)
+        local matchedFiber = existingChildren[newIdx]
+        return updateFragment(returnFiber, matchedFiber, newChild, lanes, nil)
       end
 
       throwOnInvalidObjectType(returnFiber, newChild)
@@ -963,209 +998,225 @@ local function ChildReconciler(shouldTrackSideEffects)
   --   currentFirstChild: Fiber | nil,
   --   newChildrenIterable: Iterable<*>,
   --   lanes: Lanes,
-  -- ): Fiber | nil {
-  --   -- This is the same implementation as reconcileChildrenArray(),
-  --   -- but using the iterator instead.
+  -- ): Fiber | nil
+  function reconcileChildrenIterator(
+    returnFiber: Fiber,
+    currentFirstChild: Fiber | nil,
+    newChildrenIterable: any,
+    lanes: Lanes
+  ): Fiber | nil
+    -- This is the same implementation as reconcileChildrenArray(),
+    -- but using the iterator instead.
 
-  --   local iteratorFn = getIteratorFn(newChildrenIterable)
-  --   invariant(
-  --     typeof iteratorFn == 'function',
-  --     'An object is not an iterable. This error is likely caused by a bug in ' +
-  --       'React. Please file an issue.',
-  --   )
+    local iteratorFn = getIteratorFn(newChildrenIterable)
+    invariant(
+      typeof(iteratorFn) == 'function',
+      'An object is not an iterable. This error is likely caused by a bug in ' ..
+        'React. Please file an issue.'
+    )
 
-  --   if __DEV__)
-  --     -- We don't support rendering Generators because it's a mutation.
-  --     -- See https:--github.com/facebook/react/issues/12995
-  --     if
-  --       typeof Symbol == 'function' and
-  --       -- $FlowFixMe Flow doesn't know about toStringTag
-  --       newChildrenIterable[Symbol.toStringTag] == 'Generator'
-  --     )
-  --       if !didWarnAboutGenerators)
-  --         console.error(
-  --           'Using Generators as children is unsupported and will likely yield ' +
-  --             'unexpected results because enumerating a generator mutates it. ' +
-  --             'You may convert it to an array with `Array.from()` or the ' +
-  --             '`[...spread]` operator before rendering. Keep in mind ' +
-  --             'you might need to polyfill these features for older browsers.',
-  --         )
-  --       end
-  --       didWarnAboutGenerators = true
-  --     end
+    if _G.__DEV__ then
+      -- We don't support rendering Generators because it's a mutation.
+      -- See https://github.com/facebook/react/issues/12995
+      -- ROBLOX deviation: Lua doesn't have built-in generators
+      -- if
+      --   typeof(Symbol) == 'function' and
+      --   -- $FlowFixMe Flow doesn't know about toStringTag
+      --   newChildrenIterable[Symbol.toStringTag] == 'Generator'
+      -- then
+      --   if not didWarnAboutGenerators then
+      --     console.error(
+      --       'Using Generators as children is unsupported and will likely yield ' ..
+      --         'unexpected results because enumerating a generator mutates it. ' ..
+      --         'You may convert it to an array with `Array.from()` or the ' ..
+      --         '`[...spread]` operator before rendering. Keep in mind ' ..
+      --         'you might need to polyfill these features for older browsers.'
+      --     )
+      --   end
+      --   didWarnAboutGenerators = true
+      -- end
 
-  --     -- Warn about using Maps as children
-  --     if (newChildrenIterable: any).entries == iteratorFn)
-  --       if !didWarnAboutMaps)
-  --         console.error(
-  --           'Using Maps as children is not supported. ' +
-  --             'Use an array of keyed ReactElements instead.',
-  --         )
-  --       end
-  --       didWarnAboutMaps = true
-  --     end
+      -- Warn about using Maps as children
+      if newChildrenIterable.entries == iteratorFn then
+        if not didWarnAboutMaps then
+          console.error(
+            'Using Maps as children is not supported. ' ..
+              'Use an array of keyed ReactElements instead.'
+          )
+        end
+        didWarnAboutMaps = true
+      end
 
-  --     -- First, validate keys.
-  --     -- We'll get a different iterator later for the main pass.
-  --     local newChildren = iteratorFn.call(newChildrenIterable)
-  --     if newChildren)
-  --       local knownKeys = nil
-  --       local step = newChildren.next()
-  --       for (; !step.done; step = newChildren.next())
-  --         local child = step.value
-  --         knownKeys = warnOnInvalidKey(child, knownKeys, returnFiber)
-  --       end
-  --     end
-  --   end
+      -- First, validate keys.
+      -- We'll get a different iterator later for the main pass.
+      local newChildren = iteratorFn(newChildrenIterable)
+      if newChildren then
+        local knownKeys = nil
+        local step = newChildren.next()
+        while not step.done do
+          step = newChildren.next()
+          local child = step.value
+          knownKeys = warnOnInvalidKey(child, knownKeys, returnFiber)
+        end
+      end
+    end
 
-  --   local newChildren = iteratorFn.call(newChildrenIterable)
-  --   invariant(newChildren ~= nil, 'An iterable object provided no iterator.')
+    local newChildren = iteratorFn(newChildrenIterable)
+    invariant(newChildren ~= nil, 'An iterable object provided no iterator.')
 
-  --   local resultingFirstChild: Fiber | nil = nil
-  --   local previousNewFiber: Fiber | nil = nil
+    local resultingFirstChild: Fiber | nil = nil
+    local previousNewFiber: Fiber = nil
 
-  --   local oldFiber = currentFirstChild
-  --   local lastPlacedIndex = 0
-  --   local newIdx = 0
-  --   local nextOldFiber = nil
+    local oldFiber = currentFirstChild
+    local lastPlacedIndex = 1
+    local newIdx = 1
+    local nextOldFiber = nil
 
-  --   local step = newChildren.next()
-  --   for (
+    local step = newChildren.next()
+    while oldFiber ~= nil and not step.done do
+      newIdx += 1
+      step = newChildren.next()
+      if oldFiber.index > newIdx then
+        nextOldFiber = oldFiber
+        oldFiber = nil
+      else
+        nextOldFiber = oldFiber.sibling
+      end
+      local newFiber = updateSlot(returnFiber, oldFiber, step.value, lanes)
+      if newFiber == nil then
+        -- TODO: This breaks on empty slots like nil children. That's
+        -- unfortunate because it triggers the slow path all the time. We need
+        -- a better way to communicate whether this was a miss or nil,
+        -- boolean, undefined, etc.
+        if oldFiber == nil then
+          oldFiber = nextOldFiber
+        end
+        break
+      end
+      if shouldTrackSideEffects then
+        if oldFiber and newFiber.alternate == nil then
+          -- We matched the slot, but we didn't reuse the existing fiber, so we
+          -- need to delete the existing child.
+          deleteChild(returnFiber, oldFiber)
+        end
+      end
+      lastPlacedIndex = placeChild(newFiber, lastPlacedIndex, newIdx)
+      if previousNewFiber == nil then
+        -- TODO: Move out of the loop. This only happens for the first run.
+        resultingFirstChild = newFiber
+      else
+        -- TODO: Defer siblings if we're not at the right index for this slot.
+        -- I.e. if we had nil values before, then we want to defer this
+        -- for each nil value. However, we also don't want to call updateSlot
+        -- with the previous one.
+        previousNewFiber.sibling = newFiber
+      end
+      previousNewFiber = newFiber
+      oldFiber = nextOldFiber
+    end
 
-  --     oldFiber ~= nil and !step.done
-  --     newIdx++, step = newChildren.next()
-  --   )
-  --     if oldFiber.index > newIdx)
-  --       nextOldFiber = oldFiber
-  --       oldFiber = nil
-  --     } else {
-  --       nextOldFiber = oldFiber.sibling
-  --     end
-  --     local newFiber = updateSlot(returnFiber, oldFiber, step.value, lanes)
-  --     if newFiber == nil)
-  --       -- TODO: This breaks on empty slots like nil children. That's
-  --       -- unfortunate because it triggers the slow path all the time. We need
-  --       -- a better way to communicate whether this was a miss or nil,
-  --       -- boolean, undefined, etc.
-  --       if oldFiber == nil)
-  --         oldFiber = nextOldFiber
-  --       end
-  --       break
-  --     end
-  --     if shouldTrackSideEffects)
-  --       if oldFiber and newFiber.alternate == nil)
-  --         -- We matched the slot, but we didn't reuse the existing fiber, so we
-  --         -- need to delete the existing child.
-  --         deleteChild(returnFiber, oldFiber)
-  --       end
-  --     end
-  --     lastPlacedIndex = placeChild(newFiber, lastPlacedIndex, newIdx)
-  --     if previousNewFiber == nil)
-  --       -- TODO: Move out of the loop. This only happens for the first run.
-  --       resultingFirstChild = newFiber
-  --     } else {
-  --       -- TODO: Defer siblings if we're not at the right index for this slot.
-  --       -- I.e. if we had nil values before, then we want to defer this
-  --       -- for each nil value. However, we also don't want to call updateSlot
-  --       -- with the previous one.
-  --       previousNewFiber.sibling = newFiber
-  --     end
-  --     previousNewFiber = newFiber
-  --     oldFiber = nextOldFiber
-  --   end
+    if step.done then
+      -- We've reached the end of the new children. We can delete the rest.
+      deleteRemainingChildren(returnFiber, oldFiber)
+      return resultingFirstChild
+    end
 
-  --   if step.done)
-  --     -- We've reached the end of the new children. We can delete the rest.
-  --     deleteRemainingChildren(returnFiber, oldFiber)
-  --     return resultingFirstChild
-  --   end
+    if oldFiber == nil then
+      -- If we don't have any more existing children we can choose a fast path
+      -- since the rest will all be insertions.
+      while not step.done do
+        newIdx+= 1
+        step = newChildren.next()
+        local newFiber = createChild(returnFiber, step.value, lanes)
+        if newFiber == nil then
+          continue
+        end
+        lastPlacedIndex = placeChild(newFiber, lastPlacedIndex, newIdx)
+        if previousNewFiber == nil then
+          -- TODO: Move out of the loop. This only happens for the first run.
+          resultingFirstChild = newFiber
+        else
+          previousNewFiber.sibling = newFiber
+        end
+        previousNewFiber = newFiber
+      end
+      return resultingFirstChild
+    end
 
-  --   if oldFiber == nil)
-  --     -- If we don't have any more existing children we can choose a fast path
-  --     -- since the rest will all be insertions.
-  --     for (; !step.done; newIdx++, step = newChildren.next())
-  --       local newFiber = createChild(returnFiber, step.value, lanes)
-  --       if newFiber == nil)
-  --         continue
-  --       end
-  --       lastPlacedIndex = placeChild(newFiber, lastPlacedIndex, newIdx)
-  --       if previousNewFiber == nil)
-  --         -- TODO: Move out of the loop. This only happens for the first run.
-  --         resultingFirstChild = newFiber
-  --       } else {
-  --         previousNewFiber.sibling = newFiber
-  --       end
-  --       previousNewFiber = newFiber
-  --     end
-  --     return resultingFirstChild
-  --   end
+    -- Add all children to a key map for quick lookups.
+    local existingChildren = mapRemainingChildren(returnFiber, oldFiber)
 
-  --   -- Add all children to a key map for quick lookups.
-  --   local existingChildren = mapRemainingChildren(returnFiber, oldFiber)
+    -- Keep scanning and use the map to restore deleted items as moves.
+    while not step.done do
+      newIdx+= 1
+      step = newChildren.next()
+      local newFiber = updateFromMap(
+        existingChildren,
+        returnFiber,
+        newIdx,
+        step.value,
+        lanes
+      )
+      if newFiber ~= nil then
+        if shouldTrackSideEffects then
+          if newFiber.alternate ~= nil then
+            -- The new fiber is a work in progress, but if there exists a
+            -- current, that means that we reused the fiber. We need to delete
+            -- it from the child list so that we don't add it to the deletion
+            -- list.
+            if newFiber.key == nil then
+              existingChildren.delete(newIdx)
+            else
+              existingChildren.delete(newFiber.key)
+            end
+          end
+        end
+        lastPlacedIndex = placeChild(newFiber, lastPlacedIndex, newIdx)
+        if previousNewFiber == nil then
+          resultingFirstChild = newFiber
+        else
+          previousNewFiber.sibling = newFiber
+        end
+        previousNewFiber = newFiber
+      end
+    end
 
-  --   -- Keep scanning and use the map to restore deleted items as moves.
-  --   for (; !step.done; newIdx++, step = newChildren.next())
-  --     local newFiber = updateFromMap(
-  --       existingChildren,
-  --       returnFiber,
-  --       newIdx,
-  --       step.value,
-  --       lanes,
-  --     )
-  --     if newFiber ~= nil)
-  --       if shouldTrackSideEffects)
-  --         if newFiber.alternate ~= nil)
-  --           -- The new fiber is a work in progress, but if there exists a
-  --           -- current, that means that we reused the fiber. We need to delete
-  --           -- it from the child list so that we don't add it to the deletion
-  --           -- list.
-  --           existingChildren.delete(
-  --             newFiber.key == nil ? newIdx : newFiber.key,
-  --           )
-  --         end
-  --       end
-  --       lastPlacedIndex = placeChild(newFiber, lastPlacedIndex, newIdx)
-  --       if previousNewFiber == nil)
-  --         resultingFirstChild = newFiber
-  --       } else {
-  --         previousNewFiber.sibling = newFiber
-  --       end
-  --       previousNewFiber = newFiber
-  --     end
-  --   end
+    if shouldTrackSideEffects then
+      -- Any existing children that weren't consumed above were deleted. We need
+      -- to add them to the deletion list.
+      for _, child in pairs(existingChildren) do
+        deleteChild(returnFiber, child)
+      end
+    end
 
-  --   if shouldTrackSideEffects)
-  --     -- Any existing children that weren't consumed above were deleted. We need
-  --     -- to add them to the deletion list.
-  --     existingChildren.forEach(child => deleteChild(returnFiber, child))
-  --   end
+    return resultingFirstChild
+  end
 
-  --   return resultingFirstChild
-  -- end
-
-  -- function reconcileSingleTextNode(
-  --   returnFiber: Fiber,
-  --   currentFirstChild: Fiber | nil,
-  --   textContent: string,
-  --   lanes: Lanes,
-  -- ): Fiber {
-  --   -- There's no need to check for keys on text nodes since we don't have a
-  --   -- way to define them.
-  --   if currentFirstChild ~= nil and currentFirstChild.tag == HostText)
-  --     -- We already have an existing node so let's just update it and delete
-  --     -- the rest.
-  --     deleteRemainingChildren(returnFiber, currentFirstChild.sibling)
-  --     local existing = useFiber(currentFirstChild, textContent)
-  --     existing.return = returnFiber
-  --     return existing
-  --   end
-  --   -- The existing first child is not a text node so we need to create one
-  --   -- and delete the existing ones.
-  --   deleteRemainingChildren(returnFiber, currentFirstChild)
-  --   local created = createFiberFromText(textContent, returnFiber.mode, lanes)
-  --   created.return = returnFiber
-  --   return created
-  -- end
+  -- ROBLOX FIXME: Luau narrowing issue
+  -- currentFirstChild: Fiber | nil,
+  function reconcileSingleTextNode(
+    returnFiber: Fiber,
+    currentFirstChild: Fiber,
+    textContent: string,
+    lanes: Lanes
+  ): Fiber
+    -- There's no need to check for keys on text nodes since we don't have a
+    -- way to define them.
+    if currentFirstChild ~= nil and currentFirstChild.tag == HostText then
+      -- We already have an existing node so let's just update it and delete
+      -- the rest.
+      deleteRemainingChildren(returnFiber, currentFirstChild.sibling)
+      local existing = useFiber(currentFirstChild, textContent)
+      existing.return_ = returnFiber
+      return existing
+    end
+    -- The existing first child is not a text node so we need to create one
+    -- and delete the existing ones.
+    deleteRemainingChildren(returnFiber, currentFirstChild)
+    local created = createFiberFromText(textContent, returnFiber.mode, lanes)
+    created.return_ = returnFiber
+    return created
+  end
 
   local function reconcileSingleElement(
     returnFiber: Fiber,
@@ -1181,15 +1232,14 @@ local function ChildReconciler(shouldTrackSideEffects)
       if child.key == key then
         if child.tag == Fragment then
           if element.type == REACT_FRAGMENT_TYPE then
-            unimplemented("reconcileSingleElement: Fragment")
-            -- deleteRemainingChildren(returnFiber, child.sibling)
-            -- local existing = useFiber(child, element.props.children)
-            -- existing.return_ = returnFiber
-            -- if _G.__DEV__ then
-            --   existing._debugSource = element._source
-            --   existing._debugOwner = element._owner
-            -- end
-            -- return existing
+            deleteRemainingChildren(returnFiber, child.sibling)
+            local existing = useFiber(child, element.props.children)
+            existing.return_ = returnFiber
+            if _G.__DEV__ then
+              existing._debugSource = element._source
+              existing._debugOwner = element._owner
+            end
+            return existing
           end
         elseif child.tag == Block then
           unimplemented("reconcileSingleElement: Block")
@@ -1246,16 +1296,14 @@ local function ChildReconciler(shouldTrackSideEffects)
     end
 
     if element.type == REACT_FRAGMENT_TYPE then
-      unimplemented("reconcileSingleElement: Fragment")
-      return returnFiber
-      -- local created = createFiberFromFragment(
-      --   element.props.children,
-      --   returnFiber.mode,
-      --   lanes,
-      --   element.key
-      -- )
-      -- created.return_ = returnFiber
-      -- return created
+      local created = createFiberFromFragment(
+        element.props.children,
+        returnFiber.mode,
+        lanes,
+        element.key
+      )
+      created.return_ = returnFiber
+      return created
     else
       local created = createFiberFromElement(element, returnFiber.mode, lanes)
       created.ref = coerceRef(returnFiber, currentFirstChild, element)
@@ -1264,48 +1312,57 @@ local function ChildReconciler(shouldTrackSideEffects)
     end
   end
 
+  -- ROBLOX TODO: Luau narrowing
   -- function reconcileSinglePortal(
   --   returnFiber: Fiber,
   --   currentFirstChild: Fiber | nil,
   --   portal: ReactPortal,
   --   lanes: Lanes,
-  -- ): Fiber {
-  --   local key = portal.key
-  --   local child = currentFirstChild
-  --   while (child ~= nil)
-  --     -- TODO: If key == nil and child.key == nil, then this only applies to
-  --     -- the first item in the list.
-  --     if child.key == key)
-  --       if
-  --         child.tag == HostPortal and
-  --         child.stateNode.containerInfo == portal.containerInfo and
-  --         child.stateNode.implementation == portal.implementation
-  --       )
-  --         deleteRemainingChildren(returnFiber, child.sibling)
-  --         local existing = useFiber(child, portal.children or [])
-  --         existing.return = returnFiber
-  --         return existing
-  --       } else {
-  --         deleteRemainingChildren(returnFiber, child)
-  --         break
-  --       end
-  --     } else {
-  --       deleteChild(returnFiber, child)
-  --     end
-  --     child = child.sibling
-  --   end
+  -- ): Fiber
+  function reconcileSinglePortal(
+    returnFiber: Fiber,
+    currentFirstChild: Fiber,
+    portal: ReactPortal,
+    lanes: Lanes
+  ): Fiber
+    local key = portal.key
+    local child = currentFirstChild
+    while child ~= nil do
+      -- TODO: If key == nil and child.key == nil, then this only applies to
+      -- the first item in the list.
+      if child.key == key then
+        if
+          child.tag == HostPortal and
+          child.stateNode.containerInfo == portal.containerInfo and
+          child.stateNode.implementation == portal.implementation
+        then
+          deleteRemainingChildren(returnFiber, child.sibling)
+          local existing = useFiber(child, portal.children or {})
+          existing.return_ = returnFiber
+          return existing
+        else
+          deleteRemainingChildren(returnFiber, child)
+          break
+        end
+      else
+        deleteChild(returnFiber, child)
+      end
+      child = child.sibling
+    end
 
-  --   local created = createFiberFromPortal(portal, returnFiber.mode, lanes)
-  --   created.return = returnFiber
-  --   return created
-  -- end
+    local created = createFiberFromPortal(portal, returnFiber.mode, lanes)
+    created.return_ = returnFiber
+    return created
+  end
 
   -- This API will tag the children with the side-effect of the reconciliation
   -- itself. They will be added to the side-effect list as we pass through the
   -- children and the parent.
+  -- ROBLOX FIXME: Luau narrowing issue
+  -- currentFirstChild: Fiber?,
   local function reconcileChildFibers(
     returnFiber: Fiber,
-    currentFirstChild: Fiber?,
+    currentFirstChild: Fiber,
     newChild: any,
     lanes: Lanes
   ): Fiber?
@@ -1339,41 +1396,38 @@ local function ChildReconciler(shouldTrackSideEffects)
           )
         )
       elseif newChild["$$typeof"] == REACT_PORTAL_TYPE then
-        unimplemented("Portals")
-        -- return placeSingleChild(
-        --   reconcileSinglePortal(
-        --     returnFiber,
-        --     currentFirstChild,
-        --     newChild,
-        --     lanes
-        --   )
-        -- )
+        return placeSingleChild(
+          reconcileSinglePortal(
+            returnFiber,
+            currentFirstChild,
+            newChild,
+            lanes
+          )
+        )
       elseif newChild["$$typeof"] == REACT_LAZY_TYPE then
-        unimplemented("Lazy")
-        -- if enableLazyElements then
-        --   local payload = newChild._payload
-        --   local init = newChild._init
-        --   -- TODO: This function is supposed to be non-recursive.
-        --   return reconcileChildFibers(
-        --     returnFiber,
-        --     currentFirstChild,
-        --     init(payload),
-        --     lanes
-        --   )
-        -- end
+        if enableLazyElements then
+          local payload = newChild._payload
+          local init = newChild._init
+          -- TODO: This function is supposed to be non-recursive.
+          return reconcileChildFibers(
+            returnFiber,
+            currentFirstChild,
+            init(payload),
+            lanes
+          )
+        end
       end
     end
 
     if typeof(newChild) == "string" or typeof(newChild) == "number" then
-      unimplemented("string or number child")
-      -- return placeSingleChild(
-      --   reconcileSingleTextNode(
-      --     returnFiber,
-      --     currentFirstChild,
-      --     "" .. newChild,
-      --     lanes
-      --   )
-      -- )
+      return placeSingleChild(
+        reconcileSingleTextNode(
+          returnFiber,
+          currentFirstChild,
+          "" .. newChild,
+          lanes
+        )
+      )
     end
 
     if isArray(newChild) then
@@ -1386,13 +1440,12 @@ local function ChildReconciler(shouldTrackSideEffects)
     end
 
     if getIteratorFn(newChild) then
-      unimplemented("children iterator")
-      -- return reconcileChildrenIterator(
-      --   returnFiber,
-      --   currentFirstChild,
-      --   newChild,
-      --   lanes
-      -- )
+      return reconcileChildrenIterator(
+        returnFiber,
+        currentFirstChild,
+        newChild,
+        lanes
+      )
     end
 
     if isObject then
@@ -1402,8 +1455,7 @@ local function ChildReconciler(shouldTrackSideEffects)
 
     if _G.__DEV__ then
       if typeof(newChild) == "function" then
-        unimplemented("warnOnFunctionType")
-        -- warnOnFunctionType(returnFiber)
+        warnOnFunctionType(returnFiber)
       end
     end
     if typeof(newChild) == "nil" and not isUnkeyedTopLevelFragment then
@@ -1414,11 +1466,16 @@ local function ChildReconciler(shouldTrackSideEffects)
       -- we already threw above.
       if returnFiber.tag == ClassComponent then
         if _G.__DEV__ then
-          local instance = returnFiber.stateNode
-          if instance.render._isMockFunction then
-            -- We allow auto-mocks to proceed as if they're returning nil.
-            shouldFallThrough = true
-          end
+          -- ROBLOX TODO: Make this logic compatible with however we expect
+          -- mocked functions to work. With coercion of no returns to `nil`, it
+          -- may not even be necessary to special case this scenario
+
+          -- deviation: This won't work with Lua functions
+          -- local instance = returnFiber.stateNode
+          -- if instance.render._isMockFunction then
+          --   -- We allow auto-mocks to proceed as if they're returning nil.
+          --   shouldFallThrough = true
+          -- end
         end
       end
       -- Intentionally fall through to the next case, which handles both
@@ -1489,7 +1546,7 @@ end
 -- -- Reset a workInProgress child set to prepare it for a second pass.
 -- exports.resetChildFibers(workInProgress: Fiber, lanes: Lanes): void {
 --   local child = workInProgress.child
---   while (child ~= nil)
+--   while (child ~= nil then
 --     resetWorkInProgress(child, lanes)
 --     child = child.sibling
 --   end

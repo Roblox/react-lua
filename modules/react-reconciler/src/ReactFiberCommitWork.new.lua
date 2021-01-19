@@ -1,3 +1,4 @@
+-- upstream: https://github.com/facebook/react/blob/7f08e908b10a58cda902611378ec053003d371ed/packages/react-reconciler/src/ReactFiberCommitWork.new.js
 --[[*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
@@ -13,18 +14,15 @@ local function unimplemented(message)
 end
 
 local Workspace = script.Parent.Parent
-local Packages = Workspace.Parent.Packages
-local LuauPolyfill = require(Packages.LuauPolyfill)
-local console = LuauPolyfill.console
+-- ROBLOX: use patched console from shared
+local console = require(Workspace.Shared.console)
 
 local ReactFiberHostConfig = require(script.Parent.ReactFiberHostConfig)
 type Instance = ReactFiberHostConfig.Instance;
 type Container = ReactFiberHostConfig.Container;
+type TextInstance = ReactFiberHostConfig.TextInstance
 -- local type {
---   Instance,
---   TextInstance,
 --   SuspenseInstance,
---   Container,
 --   ChildSet,
 --   UpdatePayload,
 -- } = require(script.Parent.ReactFiberHostConfig)
@@ -92,7 +90,7 @@ local ReactCurrentFiber = require(script.Parent.ReactCurrentFiber)
 local resetCurrentDebugFiberInDEV = ReactCurrentFiber.resetCurrentFiber
 local setCurrentDebugFiberInDEV = ReactCurrentFiber.setCurrentFiber
 local onCommitUnmount = require(script.Parent["ReactFiberDevToolsHook.new"]).onCommitUnmount
--- local {resolveDefaultProps} = require(script.Parent.ReactFiberLazyComponent.new)
+local resolveDefaultProps = require(script.Parent["ReactFiberLazyComponent.new"]).resolveDefaultProps
 -- local {
 --   getCommitTime,
 --   recordLayoutEffectDuration,
@@ -104,12 +102,12 @@ local ProfileMode = require(script.Parent.ReactTypeOfMode).ProfileMode
 local commitUpdateQueue = require(script.Parent["ReactUpdateQueue.new"]).commitUpdateQueue
 local getPublicInstance = ReactFiberHostConfig.getPublicInstance
 local supportsMutation = ReactFiberHostConfig.supportsMutation
--- local supportsPersistence = ReactFiberHostConfig.supportsPersistence
--- local supportsHydration = ReactFiberHostConfig.supportsHydration
+local supportsPersistence = ReactFiberHostConfig.supportsPersistence
+local supportsHydration = ReactFiberHostConfig.supportsHydration
 local commitMount = ReactFiberHostConfig.commitMount
 local commitUpdate = ReactFiberHostConfig.commitUpdate
 local resetTextContent = ReactFiberHostConfig.resetTextContent
--- local commitTextUpdate = ReactFiberHostConfig.commitTextUpdate
+local commitTextUpdate = ReactFiberHostConfig.commitTextUpdate
 local appendChild = ReactFiberHostConfig.appendChild
 local appendChildToContainer = ReactFiberHostConfig.appendChildToContainer
 local insertBefore = ReactFiberHostConfig.insertBefore
@@ -130,6 +128,10 @@ local removeChildFromContainer = ReactFiberHostConfig.removeChildFromContainer
 -- local commitHydratedSuspenseInstance = ReactFiberHostConfig.commitHydratedSuspenseInstance
 local clearContainer = ReactFiberHostConfig.clearContainer
 -- local prepareScopeUpdate = ReactFiberHostConfig.prepareScopeUpdate
+
+-- ROBLOX FIXME: this causes an import cycle
+-- local captureCommitPhaseError = require(script.Parent["ReactFiberWorkLoop.new"]).captureCommitPhaseError
+-- local schedulePassiveEffectCallback = require(script.Parent["ReactFiberWorkLoop.new"]).schedulePassiveEffectCallback
 -- local {
 --   captureCommitPhaseError,
 --   resolveRetryWakeable,
@@ -137,28 +139,34 @@ local clearContainer = ReactFiberHostConfig.clearContainer
 --   schedulePassiveEffectCallback,
 -- } = require(script.Parent.ReactFiberWorkLoop.new)
 
--- ROBLOX FIXME: this causes an import cycle
--- local captureCommitPhaseError = require(script.Parent["ReactFiberWorkLoop.new"]).captureCommitPhaseError
+local function captureCommitPhaseError(current, parent, error_)
+  console.warn("ReactFiberCommitWork: captureCommitPhaseError causes a dependency cycle")
+  error(error_)
+end
 
 local NoHookEffect = ReactHookEffectTags.NoFlags
 local HookHasEffect = ReactHookEffectTags.HasEffect
 local HookLayout = ReactHookEffectTags.Layout
 local HookPassive = ReactHookEffectTags.Passive
--- }
--- local {didWarnAboutReassigningProps} = require(script.Parent.ReactFiberBeginWork.new)
+
+local didWarnAboutReassigningProps = require(script.Parent["ReactFiberBeginWork.new"]).didWarnAboutReassigningProps
+
+-- deviation: Common types
+type Set<T> = { [T]: boolean };
 
 -- deviation: pre-declare functions when necessary
 local isHostParent, getHostSibling, insertOrAppendPlacementNode,
   insertOrAppendPlacementNodeIntoContainer, commitLayoutEffectsForHostRoot,
-  commitLayoutEffectsForHostComponent
+  commitLayoutEffectsForHostComponent, commitLayoutEffectsForClassComponent,
+  unmountHostComponents, commitNestedUnmounts, commitUnmount
 
 -- -- Used to avoid traversing the return path to find the nearest Profiler ancestor during commit.
 -- local nearestProfilerOnStack: Fiber | nil = nil
 
--- local didWarnAboutUndefinedSnapshotBeforeUpdate: Set<mixed> | nil = nil
--- if __DEV__)
---   didWarnAboutUndefinedSnapshotBeforeUpdate = new Set()
--- end
+local didWarnAboutUndefinedSnapshotBeforeUpdate: Set<any>? = nil
+if _G.__DEV__ then
+  didWarnAboutUndefinedSnapshotBeforeUpdate = {}
+end
 
 -- local PossiblyWeakSet = typeof WeakSet == 'function' ? WeakSet : Set
 
@@ -173,7 +181,8 @@ local callComponentWillUnmountWithTimer = function(current, instance)
     local ok, exception = pcall(function()
       -- unimplemented("profiler timer logic")
       -- startLayoutEffectTimer()
-      instance.componentWillUnmount()
+      -- deviation: Call with ":" so that the method receives self
+      instance:componentWillUnmount()
     end)
 
     -- unimplemented("profiler timer logic")
@@ -183,7 +192,8 @@ local callComponentWillUnmountWithTimer = function(current, instance)
       error(exception)
     end
   else
-    instance.componentWillUnmount()
+    -- deviation: Call with ":" so that the method receives self
+    instance:componentWillUnmount()
   end
 end
 
@@ -202,18 +212,16 @@ function safelyCallComponentWillUnmount(
       instance
     )
     if hasCaughtError() then
-      local _unmountError = clearCaughtError()
-      unimplemented("captureCommitPhaseError")
-      -- captureCommitPhaseError(current, nearestMountedAncestor, unmountError)
+      local unmountError = clearCaughtError()
+      captureCommitPhaseError(current, nearestMountedAncestor, unmountError)
     end
   else
-    local ok, _unmountError = pcall(function()
+    local ok, unmountError = pcall(function()
       callComponentWillUnmountWithTimer(current, instance)
     end)
 
     if not ok then
-      unimplemented("captureCommitPhaseError")
-      -- captureCommitPhaseError(current, nearestMountedAncestor, unmountError)
+      captureCommitPhaseError(current, nearestMountedAncestor, unmountError)
     end
   end
 end
@@ -225,17 +233,15 @@ local function safelyDetachRef(current: Fiber, nearestMountedAncestor: Fiber)
       if _G.__DEV__ then
         invokeGuardedCallback(nil, ref, nil, nil)
         if hasCaughtError() then
-          local _refError = clearCaughtError()
-          unimplemented("captureCommitPhaseError")
-          -- captureCommitPhaseError(current, nearestMountedAncestor, refError)
+          local refError = clearCaughtError()
+          captureCommitPhaseError(current, nearestMountedAncestor, refError)
         end
       else
-        local ok, _refError = pcall(function()
+        local ok, refError = pcall(function()
           ref(nil)
         end)
         if not ok then
-          unimplemented("captureCommitPhaseError")
-          -- captureCommitPhaseError(current, nearestMountedAncestor, refError)
+          captureCommitPhaseError(current, nearestMountedAncestor, refError)
         end
       end
     else
@@ -252,23 +258,26 @@ local function safelyCallDestroy(
   if _G.__DEV__ then
     invokeGuardedCallback(nil, destroy, nil)
     if hasCaughtError() then
-      local _error_ = clearCaughtError()
-      unimplemented("captureCommitPhaseError")
-      -- captureCommitPhaseError(current, nearestMountedAncestor, error_)
+      local error_ = clearCaughtError()
+      captureCommitPhaseError(current, nearestMountedAncestor, error_)
     end
   else
-    local ok, _result = pcall(function()
+    local ok, error_ = pcall(function()
       destroy()
     end)
     if not ok then
-      unimplemented("captureCommitPhaseError")
-      -- captureCommitPhaseError(current, nearestMountedAncestor, result)
+      captureCommitPhaseError(current, nearestMountedAncestor, error_)
     end
   end
 end
 
+-- FIXME: Type refinement
+-- local function commitBeforeMutationLifeCycles(
+--   current: Fiber | nil,
+--   finishedWork: Fiber
+-- )
 local function commitBeforeMutationLifeCycles(
-  current: Fiber | nil,
+  current: any,
   finishedWork: Fiber
 )
   if
@@ -279,63 +288,65 @@ local function commitBeforeMutationLifeCycles(
   then
     return
   elseif finishedWork.tag == ClassComponent then
-    unimplemented("ClassComponent")
-    -- if finishedWork.flags & Snapshot)
-    --   if current ~= nil)
-    --     local prevProps = current.memoizedProps
-    --     local prevState = current.memoizedState
-    --     local instance = finishedWork.stateNode
-    --     -- We could update instance props and state here,
-    --     -- but instead we rely on them being set during last render.
-    --     -- TODO: revisit this when we implement resuming.
-    --     if __DEV__)
-    --       if
-    --         finishedWork.type == finishedWork.elementType and
-    --         !didWarnAboutReassigningProps
-    --       )
-    --         if instance.props ~= finishedWork.memoizedProps)
-    --           console.error(
-    --             'Expected %s props to match memoized props before ' +
-    --               'getSnapshotBeforeUpdate. ' +
-    --               'This might either be because of a bug in React, or because ' +
-    --               'a component reassigns its own `this.props`. ' +
-    --               'Please file an issue.',
-    --             getComponentName(finishedWork.type) or 'instance',
-    --           )
-    --         end
-    --         if instance.state ~= finishedWork.memoizedState)
-    --           console.error(
-    --             'Expected %s state to match memoized state before ' +
-    --               'getSnapshotBeforeUpdate. ' +
-    --               'This might either be because of a bug in React, or because ' +
-    --               'a component reassigns its own `this.state`. ' +
-    --               'Please file an issue.',
-    --             getComponentName(finishedWork.type) or 'instance',
-    --           )
-    --         end
-    --       end
-    --     end
-    --     local snapshot = instance.getSnapshotBeforeUpdate(
-    --       finishedWork.elementType == finishedWork.type
-    --         ? prevProps
-    --         : resolveDefaultProps(finishedWork.type, prevProps),
-    --       prevState,
-    --     )
-    --     if __DEV__)
-    --       local didWarnSet = ((didWarnAboutUndefinedSnapshotBeforeUpdate: any): Set<mixed>)
-    --       if snapshot == undefined and !didWarnSet.has(finishedWork.type))
-    --         didWarnSet.add(finishedWork.type)
-    --         console.error(
-    --           '%s.getSnapshotBeforeUpdate(): A snapshot value (or nil) ' +
-    --             'must be returned. You have returned undefined.',
-    --           getComponentName(finishedWork.type),
-    --         )
-    --       end
-    --     end
-    --     instance.__reactInternalSnapshotBeforeUpdate = snapshot
-    --   end
-    -- end
-    -- return
+    if bit32.band(finishedWork.flags, Snapshot) then
+      if current ~= nil then
+        local prevProps = current.memoizedProps
+        local prevState = current.memoizedState
+        local instance = finishedWork.stateNode
+        -- We could update instance props and state here,
+        -- but instead we rely on them being set during last render.
+        -- TODO: revisit this when we implement resuming.
+        if _G.__DEV__ then
+          if
+            finishedWork.type == finishedWork.elementType and
+            not didWarnAboutReassigningProps
+          then
+            if instance.props ~= finishedWork.memoizedProps then
+              console.error(
+                "Expected %s props to match memoized props before " ..
+                  "getSnapshotBeforeUpdate. " ..
+                  "This might either be because of a bug in React, or because " ..
+                  "a component reassigns its own `this.props`. " ..
+                  "Please file an issue.",
+                getComponentName(finishedWork.type) or "instance"
+              )
+            end
+            if instance.state ~= finishedWork.memoizedState then
+              console.error(
+                "Expected %s state to match memoized state before " ..
+                  "getSnapshotBeforeUpdate. " ..
+                  "This might either be because of a bug in React, or because " ..
+                  "a component reassigns its own `this.state`. " ..
+                  "Please file an issue.",
+                getComponentName(finishedWork.type) or "instance"
+              )
+            end
+          end
+        end
+        -- deviation: Call with ':' instead of '.' so that self is available
+        local snapshot = instance:getSnapshotBeforeUpdate(
+          finishedWork.elementType == finishedWork.type
+            and prevProps
+            or resolveDefaultProps(finishedWork.type, prevProps),
+          prevState
+        )
+        if _G.__DEV__ then
+          -- deviation: type coercion
+          -- local didWarnSet = ((didWarnAboutUndefinedSnapshotBeforeUpdate: any): Set<mixed>)
+          local didWarnSet: any = didWarnAboutUndefinedSnapshotBeforeUpdate
+          if snapshot == nil and not didWarnSet[finishedWork.type] then
+            didWarnSet.add(finishedWork.type)
+            console.error(
+              "%s.getSnapshotBeforeUpdate(): A snapshot value (or nil) " ..
+                "must be returned. You have returned undefined.",
+              getComponentName(finishedWork.type)
+            )
+          end
+        end
+        instance.__reactInternalSnapshotBeforeUpdate = snapshot
+      end
+    end
+    return
   elseif finishedWork.tag == HostRoot then
     if supportsMutation then
       if bit32.band(finishedWork.flags, Snapshot) then
@@ -496,7 +507,7 @@ local function recursivelyCommitLayoutEffects(
     -- while (child ~= nil)
     --   local primarySubtreeFlags = finishedWork.subtreeFlags & LayoutMask
     --   if primarySubtreeFlags ~= NoFlags)
-    --     if __DEV__)
+    --     if _G.__DEV__ then
     --       local prevCurrentFiberInDEV = currentDebugFiberInDEV
     --       setCurrentDebugFiberInDEV(child)
     --       invokeGuardedCallback(
@@ -529,7 +540,7 @@ local function recursivelyCommitLayoutEffects(
     -- local primaryFlags = flags & (Update | Callback)
     -- if primaryFlags ~= NoFlags)
     --   if enableProfilerTimer)
-    --     if __DEV__)
+    --     if _G.__DEV__ then
     --       local prevCurrentFiberInDEV = currentDebugFiberInDEV
     --       setCurrentDebugFiberInDEV(finishedWork)
     --       invokeGuardedCallback(
@@ -589,8 +600,7 @@ local function recursivelyCommitLayoutEffects(
           )
           if hasCaughtError() then
             local error_ = clearCaughtError()
-            unimplemented("recursivelyCommitLayoutEffects: can't captureCommitPhaseError due to cycle (" .. error_ .. ")")
-            -- captureCommitPhaseError(child, finishedWork, error_)
+            captureCommitPhaseError(child, finishedWork, error_)
           end
           if prevCurrentFiberInDEV ~= nil then
             setCurrentDebugFiberInDEV(prevCurrentFiberInDEV)
@@ -598,13 +608,12 @@ local function recursivelyCommitLayoutEffects(
             resetCurrentDebugFiberInDEV()
           end
         else
-          local ok, result = pcall(function()
+          local ok, error_ = pcall(function()
             recursivelyCommitLayoutEffects(child, finishedRoot)
           end)
 
           if not ok then
-            unimplemented("recursivelyCommitLayoutEffects: can't captureCommitPhaseError due to cycle (" .. result .. ")")
-            -- captureCommitPhaseError(child, finishedWork, error)
+            captureCommitPhaseError(child, finishedWork, error_)
           end
         end
       end
@@ -642,13 +651,12 @@ local function recursivelyCommitLayoutEffects(
         end
 
         if bit32.band(finishedWork.subtreeFlags, PassiveMask) ~= NoFlags then
-          unimplemented("schedulePassiveEffectCallback")
+          unimplemented("ReactFiberCommitWork: recursivelyCommitLayoutEffects: schedulePassiveEffectCallback() due to dep cycle")
           -- schedulePassiveEffectCallback()
         end
       elseif tag == ClassComponent then
         -- NOTE: Layout effect durations are measured within this function.
-        unimplemented("commitLayoutEffectsForClassComponent")
-        -- commitLayoutEffectsForClassComponent(finishedWork)
+        commitLayoutEffectsForClassComponent(finishedWork)
       elseif tag == HostRoot then
         commitLayoutEffectsForHostRoot(finishedWork)
       elseif tag == HostComponent then
@@ -754,153 +762,167 @@ end
 --   end
 -- end
 
--- function commitLayoutEffectsForClassComponent(finishedWork: Fiber)
---   local instance = finishedWork.stateNode
---   local current = finishedWork.alternate
---   if finishedWork.flags & Update)
---     if current == nil)
---       -- We could update instance props and state here,
---       -- but instead we rely on them being set during last render.
---       -- TODO: revisit this when we implement resuming.
---       if __DEV__)
---         if
---           finishedWork.type == finishedWork.elementType and
---           !didWarnAboutReassigningProps
---         )
---           if instance.props ~= finishedWork.memoizedProps)
---             console.error(
---               'Expected %s props to match memoized props before ' +
---                 'componentDidMount. ' +
---                 'This might either be because of a bug in React, or because ' +
---                 'a component reassigns its own `this.props`. ' +
---                 'Please file an issue.',
---               getComponentName(finishedWork.type) or 'instance',
---             )
---           end
---           if instance.state ~= finishedWork.memoizedState)
---             console.error(
---               'Expected %s state to match memoized state before ' +
---                 'componentDidMount. ' +
---                 'This might either be because of a bug in React, or because ' +
---                 'a component reassigns its own `this.state`. ' +
---                 'Please file an issue.',
---               getComponentName(finishedWork.type) or 'instance',
---             )
---           end
---         end
---       end
---       if
---         enableProfilerTimer and
---         enableProfilerCommitHooks and
---         finishedWork.mode & ProfileMode
---       )
---         try {
---           startLayoutEffectTimer()
---           instance.componentDidMount()
---         } finally {
---           recordLayoutEffectDuration(finishedWork)
---         end
---       } else {
---         instance.componentDidMount()
---       end
---     } else {
---       local prevProps =
---         finishedWork.elementType == finishedWork.type
---           ? current.memoizedProps
---           : resolveDefaultProps(finishedWork.type, current.memoizedProps)
---       local prevState = current.memoizedState
---       -- We could update instance props and state here,
---       -- but instead we rely on them being set during last render.
---       -- TODO: revisit this when we implement resuming.
---       if __DEV__)
---         if
---           finishedWork.type == finishedWork.elementType and
---           !didWarnAboutReassigningProps
---         )
---           if instance.props ~= finishedWork.memoizedProps)
---             console.error(
---               'Expected %s props to match memoized props before ' +
---                 'componentDidUpdate. ' +
---                 'This might either be because of a bug in React, or because ' +
---                 'a component reassigns its own `this.props`. ' +
---                 'Please file an issue.',
---               getComponentName(finishedWork.type) or 'instance',
---             )
---           end
---           if instance.state ~= finishedWork.memoizedState)
---             console.error(
---               'Expected %s state to match memoized state before ' +
---                 'componentDidUpdate. ' +
---                 'This might either be because of a bug in React, or because ' +
---                 'a component reassigns its own `this.state`. ' +
---                 'Please file an issue.',
---               getComponentName(finishedWork.type) or 'instance',
---             )
---           end
---         end
---       end
---       if
---         enableProfilerTimer and
---         enableProfilerCommitHooks and
---         finishedWork.mode & ProfileMode
---       )
---         try {
---           startLayoutEffectTimer()
---           instance.componentDidUpdate(
---             prevProps,
---             prevState,
---             instance.__reactInternalSnapshotBeforeUpdate,
---           )
---         } finally {
---           recordLayoutEffectDuration(finishedWork)
---         end
---       } else {
---         instance.componentDidUpdate(
---           prevProps,
---           prevState,
---           instance.__reactInternalSnapshotBeforeUpdate,
---         )
---       end
---     end
---   end
+commitLayoutEffectsForClassComponent = function(finishedWork: Fiber)
+  local instance = finishedWork.stateNode
+  local current = finishedWork.alternate
+  if bit32.band(finishedWork.flags, Update) then
+    if current == nil then
+      -- We could update instance props and state here,
+      -- but instead we rely on them being set during last render.
+      -- TODO: revisit this when we implement resuming.
+      if _G.__DEV__ then
+        if
+          finishedWork.type == finishedWork.elementType and
+          not didWarnAboutReassigningProps
+        then
+          if instance.props ~= finishedWork.memoizedProps then
+            console.error(
+              "Expected %s props to match memoized props before " ..
+                "componentDidMount. " ..
+                "This might either be because of a bug in React, or because " ..
+                "a component reassigns its own `this.props`. " ..
+                "Please file an issue.",
+              getComponentName(finishedWork.type) or "instance"
+            )
+          end
+          if instance.state ~= finishedWork.memoizedState then
+            console.error(
+              "Expected %s state to match memoized state before " ..
+                "componentDidMount. " ..
+                "This might either be because of a bug in React, or because " ..
+                "a component reassigns its own `this.state`. " ..
+                "Please file an issue.",
+              getComponentName(finishedWork.type) or "instance"
+            )
+          end
+        end
+      end
+      if
+        enableProfilerTimer and
+        enableProfilerCommitHooks and
+        bit32.band(finishedWork.mode, ProfileMode)
+      then
+        unimplemented("profiler timer logic")
+        -- local ok, result = pcall(function()
+        --   startLayoutEffectTimer()
+        --   -- deviation: Call with ":" so that the method receives self
+        --   instance:componentDidMount()
+        -- end)
+        -- -- finally
+        -- recordLayoutEffectDuration(finishedWork)
+        -- if not ok then
+        --   error(result)
+        -- end
+      else
+        -- deviation: Call with ":" so that the method receives self
+        instance:componentDidMount()
+      end
+    else
+      local prevProps =
+        finishedWork.elementType == finishedWork.type
+          and current.memoizedProps
+          or resolveDefaultProps(finishedWork.type, current.memoizedProps)
+      local prevState = current.memoizedState
+      -- We could update instance props and state here,
+      -- but instead we rely on them being set during last render.
+      -- TODO: revisit this when we implement resuming.
+      if _G.__DEV__ then
+        if
+          finishedWork.type == finishedWork.elementType and
+          not didWarnAboutReassigningProps
+        then
+          if instance.props ~= finishedWork.memoizedProps then
+            console.error(
+              "Expected %s props to match memoized props before " ..
+                "componentDidUpdate. " ..
+                "This might either be because of a bug in React, or because " ..
+                "a component reassigns its own `this.props`. " ..
+                "Please file an issue.",
+              getComponentName(finishedWork.type) or "instance"
+            )
+          end
+          if instance.state ~= finishedWork.memoizedState then
+            console.error(
+              "Expected %s state to match memoized state before " ..
+                "componentDidUpdate. " ..
+                "This might either be because of a bug in React, or because " ..
+                "a component reassigns its own `this.state`. " ..
+                "Please file an issue.",
+              getComponentName(finishedWork.type) or "instance"
+            )
+          end
+        end
+      end
+      if
+        enableProfilerTimer and
+        enableProfilerCommitHooks and
+        bit32.band(finishedWork.mode, ProfileMode)
+      then
+        unimplemented("profiler timer logic")
+        -- local ok, result = pcall(function()
+        --   startLayoutEffectTimer()
+        --   -- deviation: Call with ":" so that the method receives self
+        --   instance:componentDidUpdate(
+        --     prevProps,
+        --     prevState,
+        --     instance.__reactInternalSnapshotBeforeUpdate
+        --   )
+        -- end)
+        -- -- finally
+        -- recordLayoutEffectDuration(finishedWork)
+        -- if not ok then
+        --   error(result)
+        -- end
+      else
+        -- deviation: Call with ":" so that the method receives self
+        instance:componentDidUpdate(
+          prevProps,
+          prevState,
+          instance.__reactInternalSnapshotBeforeUpdate
+        )
+      end
+    end
+  end
 
---   -- TODO: I think this is now always non-null by the time it reaches the
---   -- commit phase. Consider removing the type check.
---   local updateQueue: UpdateQueue<*> | nil = (finishedWork.updateQueue: any)
---   if updateQueue ~= nil)
---     if __DEV__)
---       if
---         finishedWork.type == finishedWork.elementType and
---         !didWarnAboutReassigningProps
---       )
---         if instance.props ~= finishedWork.memoizedProps)
---           console.error(
---             'Expected %s props to match memoized props before ' +
---               'processing the update queue. ' +
---               'This might either be because of a bug in React, or because ' +
---               'a component reassigns its own `this.props`. ' +
---               'Please file an issue.',
---             getComponentName(finishedWork.type) or 'instance',
---           )
---         end
---         if instance.state ~= finishedWork.memoizedState)
---           console.error(
---             'Expected %s state to match memoized state before ' +
---               'processing the update queue. ' +
---               'This might either be because of a bug in React, or because ' +
---               'a component reassigns its own `this.state`. ' +
---               'Please file an issue.',
---             getComponentName(finishedWork.type) or 'instance',
---           )
---         end
---       end
---     end
---     -- We could update instance props and state here,
---     -- but instead we rely on them being set during last render.
---     -- TODO: revisit this when we implement resuming.
---     commitUpdateQueue(finishedWork, updateQueue, instance)
---   end
--- end
+  -- TODO: I think this is now always non-null by the time it reaches the
+  -- commit phase. Consider removing the type check.
+  -- ROBLOX FIXME: type coercion
+  -- local updateQueue: UpdateQueue<*> | nil = (finishedWork.updateQueue: any)
+  local updateQueue = finishedWork.updateQueue
+  if updateQueue ~= nil then
+    if _G.__DEV__ then
+      if
+        finishedWork.type == finishedWork.elementType and
+        not didWarnAboutReassigningProps
+      then
+        if instance.props ~= finishedWork.memoizedProps then
+          console.error(
+            "Expected %s props to match memoized props before " ..
+              "processing the update queue. " ..
+              "This might either be because of a bug in React, or because " ..
+              "a component reassigns its own `this.props`. " ..
+              "Please file an issue.",
+            getComponentName(finishedWork.type) or "instance"
+          )
+        end
+        if instance.state ~= finishedWork.memoizedState then
+          console.error(
+            "Expected %s state to match memoized state before " ..
+              "processing the update queue. " ..
+              "This might either be because of a bug in React, or because " ..
+              "a component reassigns its own `this.state`. " ..
+              "Please file an issue.",
+            getComponentName(finishedWork.type) or "instance"
+          )
+        end
+      end
+    end
+    -- We could update instance props and state here,
+    -- but instead we rely on them being set during last render.
+    -- TODO: revisit this when we implement resuming.
+    commitUpdateQueue(finishedWork, updateQueue, instance)
+  end
+end
 
 commitLayoutEffectsForHostRoot = function(finishedWork: Fiber)
   -- TODO: I think this is now always non-null by the time it reaches the
@@ -1034,7 +1056,7 @@ end
 -- User-originating errors (lifecycles and refs) should not interrupt
 -- deletion, so don't local them throw. Host-originating errors should
 -- interrupt deletion, so it's okay
-local function commitUnmount(
+commitUnmount = function(
   finishedRoot: FiberRoot,
   current: Fiber,
   nearestMountedAncestor: Fiber,
@@ -1081,36 +1103,35 @@ local function commitUnmount(
     end
     return
   elseif current.tag == ClassComponent then
-    unimplemented("commitUnmount - ClassComponent")
-    -- safelyDetachRef(current, nearestMountedAncestor)
-    -- local instance = current.stateNode
-    -- if typeof instance.componentWillUnmount == 'function')
-    --   safelyCallComponentWillUnmount(
-    --     current,
-    --     instance,
-    --     nearestMountedAncestor,
-    --   )
-    -- end
-    -- return
+    safelyDetachRef(current, nearestMountedAncestor)
+    local instance = current.stateNode
+    if typeof(instance.componentWillUnmount) == 'function' then
+      safelyCallComponentWillUnmount(
+        current,
+        instance,
+        nearestMountedAncestor
+      )
+    end
+    return
   elseif current.tag == HostComponent then
     safelyDetachRef(current, nearestMountedAncestor)
     return
-  elseif HostPortal then
-    unimplemented("commitUnmount - HostPortal")
-    -- -- TODO: this is recursive.
-    -- -- We are also not using this parent because
-    -- -- the portal will get pushed immediately.
-    -- if supportsMutation then
-    --   unmountHostComponents(
-    --     finishedRoot,
-    --     current,
-    --     nearestMountedAncestor,
-    --     renderPriorityLevel
-    --   )
-    -- elseif supportsPersistence then
-    --   emptyPortalContainer(current)
-    -- end
-    -- return
+  elseif current.tag == HostPortal then
+    -- TODO: this is recursive.
+    -- We are also not using this parent because
+    -- the portal will get pushed immediately.
+    if supportsMutation then
+      unmountHostComponents(
+        finishedRoot,
+        current,
+        nearestMountedAncestor,
+        renderPriorityLevel
+      )
+    elseif supportsPersistence then
+      unimplemented("emptyPortalContainer")
+      -- emptyPortalContainer(current)
+    end
+    return
   elseif current.tag == FundamentalComponent then
     unimplemented("commitUnmount - FundamentalComponent")
     -- if enableFundamentalAPI then
@@ -1141,7 +1162,7 @@ local function commitUnmount(
   end
 end
 
-local function commitNestedUnmounts(
+commitNestedUnmounts = function(
   finishedRoot: FiberRoot,
   root: Fiber,
   nearestMountedAncestor: Fiber,
@@ -1451,7 +1472,7 @@ insertOrAppendPlacementNode = function(
   end
 end
 
-local function unmountHostComponents(
+unmountHostComponents = function(
   finishedRoot: FiberRoot,
   current: Fiber,
   nearestMountedAncestor: Fiber,
@@ -1656,9 +1677,11 @@ local function commitDeletion(
   end
 end
 
-local function commitWork(current: Fiber | nil, finishedWork: Fiber)
+-- ROBLOX FIXME: Luau type narrow issue
+-- local function commitWork(current: Fiber | nil, finishedWork: Fiber)
+  local function commitWork(current: Fiber, finishedWork: Fiber)
   if not supportsMutation then
-    unimplemented("non-mutation branch")
+    unimplemented("commitWork: non-mutation branch")
     -- switch (finishedWork.tag)
     --   case FunctionComponent:
     --   case ForwardRef:
@@ -1801,32 +1824,34 @@ local function commitWork(current: Fiber | nil, finishedWork: Fiber)
     end
     return
   elseif finishedWork.tag == HostText then
-    unimplemented("commitWork: HostText")
-    -- invariant(
-    --   finishedWork.stateNode ~= nil,
-    --   'This should have a text node initialized. This error is likely ' +
-    --     'caused by a bug in React. Please file an issue.',
-    -- )
-    -- local textInstance: TextInstance = finishedWork.stateNode
-    -- local newText: string = finishedWork.memoizedProps
-    -- -- For hydration we reuse the update path but we treat the oldProps
-    -- -- as the newProps. The updatePayload will contain the real change in
-    -- -- this case.
-    -- local oldText: string =
-    --   current ~= nil ? current.memoizedProps : newText
-    -- commitTextUpdate(textInstance, oldText, newText)
-    -- return
+    invariant(
+      finishedWork.stateNode ~= nil,
+      'This should have a text node initialized. This error is likely ' ..
+        'caused by a bug in React. Please file an issue.'
+    )
+    local textInstance: TextInstance = finishedWork.stateNode
+    local newText: string = finishedWork.memoizedProps
+    -- For hydration we reuse the update path but we treat the oldProps
+    -- as the newProps. The updatePayload will contain the real change in
+    -- this case.
+    local oldText: string
+    if current ~= nil then
+      oldText = current.memoizedProps
+      oldText = newText
+    end
+    commitTextUpdate(textInstance, oldText, newText)
+    return
   elseif finishedWork.tag == HostRoot then
-    unimplemented("commitWork: HostText")
-      -- if supportsHydration)
-      --   local root: FiberRoot = finishedWork.stateNode
-      --   if root.hydrate)
-      --     -- We've just hydrated. No need to hydrate again.
-      --     root.hydrate = false
-      --     commitHydratedContainer(root.containerInfo)
-      --   end
-      -- end
-      -- return
+      if supportsHydration then
+        local root: FiberRoot = finishedWork.stateNode
+        if root.hydrate then
+          -- We've just hydrated. No need to hydrate again.
+          root.hydrate = false
+          unimplemented("commitWork: HostRoot: commitHydratedContainer")
+          -- commitHydratedContainer(root.containerInfo)
+        end
+      end
+      return
   elseif finishedWork.tag == Profiler then
     return
   elseif finishedWork.tag == SuspenseComponent then
@@ -1901,7 +1926,7 @@ end
 --       if wakeables ~= nil)
 --         suspenseCallback(new Set(wakeables))
 --       end
---     } else if __DEV__)
+--     } else if _G.__DEV__ then
 --       if suspenseCallback ~= undefined)
 --         console.error('Unexpected type for suspenseCallback.')
 --       end
@@ -2099,9 +2124,8 @@ function invokeLayoutEffectMountInDEV(fiber: Fiber)
           fiber
         )
         if hasCaughtError() then
-          local _mountError = clearCaughtError()
-          unimplemented("captureCommitPhaseError")
-          -- captureCommitPhaseError(fiber, fiber.return_, mountError)
+          local mountError = clearCaughtError()
+          captureCommitPhaseError(fiber, fiber.return_, mountError)
         end
         return
       end
@@ -2109,9 +2133,8 @@ function invokeLayoutEffectMountInDEV(fiber: Fiber)
         local instance = fiber.stateNode
         invokeGuardedCallback(nil, instance.componentDidMount, instance)
         if hasCaughtError() then
-          local _mountError = clearCaughtError()
-          unimplemented("captureCommitPhaseError")
-          -- captureCommitPhaseError(fiber, fiber.return_, mountError)
+          local mountError = clearCaughtError()
+          captureCommitPhaseError(fiber, fiber.return_, mountError)
         end
         return
     end
@@ -2132,9 +2155,8 @@ function invokePassiveEffectMountInDEV(fiber: Fiber)
           fiber
         )
         if hasCaughtError() then
-          local _mountError = clearCaughtError()
-          unimplemented("captureCommitPhaseError")
-          -- captureCommitPhaseError(fiber, fiber.return_, mountError)
+          local mountError = clearCaughtError()
+          captureCommitPhaseError(fiber, fiber.return_, mountError)
         end
         return
     end
@@ -2157,10 +2179,9 @@ function invokeLayoutEffectUnmountInDEV(fiber: Fiber)
           fiber.return_
         )
         if hasCaughtError() then
-          local _unmountError = clearCaughtError()
-          unimplemented("captureCommitPhaseError")
-          -- captureCommitPhaseError(fiber, fiber.return_, unmountError)
-        end
+          local unmountError = clearCaughtError()
+          captureCommitPhaseError(fiber, fiber.return_, unmountError)
+       end
         return
       end
     elseif fiber.tag == ClassComponent then
@@ -2187,9 +2208,8 @@ function invokePassiveEffectUnmountInDEV(fiber: Fiber)
           fiber.return_
         )
         if hasCaughtError() then
-          local _unmountError = clearCaughtError()
-          unimplemented("captureCommitPhaseError")
-          -- captureCommitPhaseError(fiber, fiber.return_, unmountError)
+          local unmountError = clearCaughtError()
+          captureCommitPhaseError(fiber, fiber.return_, unmountError)
         end
         return
     end

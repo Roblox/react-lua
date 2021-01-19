@@ -1,3 +1,4 @@
+-- upstream: https://github.com/facebook/react/blob/43363e2795393a00fd77312a16d6b80e626c29de/packages/react-reconciler/src/ReactFiberHooks.new.js
 --[[*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
@@ -14,8 +15,10 @@ end
 local Workspace = script.Parent.Parent
 local Packages = Workspace.Parent.Packages
 local LuauPolyfill = require(Packages.LuauPolyfill)
-local console = LuauPolyfill.console
 local Array = LuauPolyfill.Array
+
+-- ROBLOX: use patched console from shared
+local console = require(Workspace.Shared.console)
 
 -- local type {
 --   MutableSource,
@@ -92,7 +95,7 @@ local is = require(Workspace.Shared.objectIs)
 --   runWithPriority,
 --   getCurrentPriorityLevel,
 -- } = require(script.Parent.SchedulerWithReactIntegration.new)
--- local {getIsHydrating} = require(script.Parent.ReactFiberHydrationContext.new)
+local getIsHydrating = require(script.Parent["ReactFiberHydrationContext.new"]).getIsHydrating
 -- local {
 --   makeClientId,
 --   makeClientIdInDEV,
@@ -1563,8 +1566,9 @@ function mountOpaqueIdentifier()
     makeId = makeClientId
   end
 
-  unimplemented("getIsHydrating")
-  -- if getIsHydrating() then
+  if getIsHydrating() then
+    unimplemented("ReactFiberHooks: getIsHydrating() true")
+    return nil
   --   local didUpgrade = false
   --   local fiber = currentlyRenderingFiber
   --   local readValue = function()
@@ -1610,11 +1614,11 @@ function mountOpaqueIdentifier()
   --     )
   --   end
   --   return id
-  -- else
+  else
     local id = makeId()
     mountState(id)
     return id
-  -- end
+  end
 end
 
 -- function updateOpaqueIdentifier(): OpaqueIDType | void {

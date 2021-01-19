@@ -13,9 +13,8 @@ local function unimplemented(message)
 end
 
 local Workspace = script.Parent.Parent
-local Packages = Workspace.Parent.Packages
-local LuauPolyfill = require(Packages.LuauPolyfill)
-local console = LuauPolyfill.console
+-- ROBLOX: use patched console from shared
+local console = require(Workspace.Shared.console)
 
 local ReactTypes = require(Workspace.Shared.ReactTypes)
 type Thenable<T, U> = ReactTypes.Thenable<T, U>;
@@ -95,7 +94,7 @@ local Scheduler = require(Workspace.Scheduler)
 
 -- local {__interactionsRef, __subscriberRef} = require(Workspace.Scheduler.tracing)
 
-local HostConfig = require(script.Parent.ReactFiberHostConfig)
+local ReactFiberHostConfig = require(script.Parent.ReactFiberHostConfig)
 -- deviation: Use properties directly instead of localizing to avoid 200 limit
 -- local prepareForCommit = ReactFiberHostConfig.prepareForCommit
 -- local resetAfterCommit = ReactFiberHostConfig.resetAfterCommit
@@ -183,9 +182,9 @@ local ReactFiberUnwindWork = require(script.Parent["ReactFiberUnwindWork.new"])
 local unwindWork = ReactFiberUnwindWork.unwindWork
 local unwindInterruptedWork = ReactFiberUnwindWork.unwindInterruptedWork
 local ReactFiberThrow = require(script.Parent["ReactFiberThrow.new"])
-local _throwException = ReactFiberThrow.throwException
+local throwException = ReactFiberThrow.throwException
 local createRootErrorUpdate = ReactFiberThrow.createRootErrorUpdate
-local _createClassErrorUpdate = ReactFiberThrow.createClassErrorUpdate
+local createClassErrorUpdate = ReactFiberThrow.createClassErrorUpdate
 local ReactFiberCommitWork = require(script.Parent["ReactFiberCommitWork.new"])
 local commitBeforeMutationEffectOnFiber = ReactFiberCommitWork.commitBeforeMutationLifeCycles
 local commitPlacement = ReactFiberCommitWork.commitPlacement
@@ -830,7 +829,7 @@ mod.performConcurrentWorkOnRoot = function(root)
       -- discard server response and fall back to client side render.
       if root.hydrate then
         root.hydrate = false
-        HostConfig.clearContainer(root.containerInfo)
+        ReactFiberHostConfig.clearContainer(root.containerInfo)
       end
 
       -- If something threw an error, try rendering one more time. We'll render
@@ -1037,32 +1036,30 @@ mod.performSyncWorkOnRoot = function(root)
   end
 
   if root.tag ~= LegacyRoot and exitStatus == RootExitStatus.Errored then
-    unimplemented("error recovery logic")
-    -- executionContext = bit32.bor(executionContext, RetryAfterError)
+    executionContext = bit32.bor(executionContext, RetryAfterError)
 
-    -- -- If an error occurred during hydration,
-    -- -- discard server response and fall back to client side render.
-    -- if root.hydrate then
-    --   root.hydrate = false
-    --   clearContainer(root.containerInfo)
-    -- end
+    -- If an error occurred during hydration,
+    -- discard server response and fall back to client side render.
+    if root.hydrate then
+      root.hydrate = false
+      ReactFiberHostConfig.clearContainer(root.containerInfo)
+    end
 
-    -- -- If something threw an error, try rendering one more time. We'll render
-    -- -- synchronously to block concurrent data mutations, and we'll includes
-    -- -- all pending updates are included. If it still fails after the second
-    -- -- attempt, we'll give up and commit the resulting tree.
-    -- lanes = getLanesToRetrySynchronouslyOnError(root)
-    -- if lanes ~= ReactFiberLane.NoLanes then
-    --   exitStatus = mod.renderRootSync(root, lanes)
-    -- end
+    -- If something threw an error, try rendering one more time. We'll render
+    -- synchronously to block concurrent data mutations, and we'll includes
+    -- all pending updates are included. If it still fails after the second
+    -- attempt, we'll give up and commit the resulting tree.
+    lanes = getLanesToRetrySynchronouslyOnError(root)
+    if lanes ~= ReactFiberLane.NoLanes then
+      exitStatus = mod.renderRootSync(root, lanes)
+    end
   end
 
   if exitStatus == RootExitStatus.FatalErrored then
     local fatalError = workInProgressRootFatalError
-    unimplemented("error recovery logic, error: " .. tostring(fatalError))
-    -- mod.prepareFreshStack(root, ReactFiberLane.NoLanes)
-    -- mod.markRootSuspended(root, lanes)
-    -- ensureRootIsScheduled(root, now())
+    mod.prepareFreshStack(root, ReactFiberLane.NoLanes)
+    mod.markRootSuspended(root, lanes)
+    ensureRootIsScheduled(root, now())
     error(fatalError)
   end
 
@@ -1407,21 +1404,20 @@ mod.prepareFreshStack = function(root: ReactInternalTypes.FiberRoot, lanes: Lane
   root.finishedLanes = ReactFiberLane.NoLanes
 
   local timeoutHandle = root.timeoutHandle
-  if timeoutHandle ~= HostConfig.noTimeout then
+  if timeoutHandle ~= ReactFiberHostConfig.noTimeout then
     -- The root previous suspended and scheduled a timeout to commit a fallback
     -- state. Now that we have additional work, cancel the timeout.
-    root.timeoutHandle = HostConfig.noTimeout
+    root.timeoutHandle = ReactFiberHostConfig.noTimeout
     -- $FlowFixMe Complains noTimeout is not a TimeoutID, despite the check above
-    HostConfig.cancelTimeout(timeoutHandle)
+    ReactFiberHostConfig.cancelTimeout(timeoutHandle)
   end
 
   -- ROBLOX deviation: should be ~= nil check, but need to do this to work around Luau narrowing issue
   if workInProgress then
     local interruptedWork = workInProgress.return_
     while interruptedWork ~= nil do
-      unimplemented("UnwindWork logic")
-      -- unwindInterruptedWork(interruptedWork)
-      -- interruptedWork = interruptedWork.return_
+      unwindInterruptedWork(interruptedWork)
+      interruptedWork = interruptedWork.return_
     end
   end
   workInProgressRoot = root
@@ -1481,14 +1477,17 @@ mod.handleError = function(root, thrownValue)
         -- stopProfilerTimerIfRunningAndRecordDelta(erroredWork, true)
       end
 
-      unimplemented("throwException, thrownValue: " .. tostring(thrownValue))
-      -- throwException(
-      --   root,
-      --   erroredWork.return_,
-      --   erroredWork,
-      --   thrownValue,
-      --   workInProgressRootRenderLanes
-      -- )
+      -- ROBLOX TODO: the "throws when accessing state in componentWillMount" needs this to be perfect
+      unimplemented("WorLoop: completeUnitOfWork: needs resumeMountClassInstance: " .. tostring(thrownValue))
+      -- ROBLOX FIXME: deviation, we do this here since throwException can't call renderDidError due to a cycle
+      exports.renderDidError()
+      throwException(
+        root,
+        erroredWork.return_,
+        erroredWork,
+        thrownValue,
+        workInProgressRootRenderLanes
+      )
       mod.completeUnitOfWork(erroredWork)
     end)
     if not ok then
@@ -2039,7 +2038,7 @@ mod.commitRootImpl = function(root, renderPriorityLevel)
     -- The first phase a "before mutation" phase. We use this phase to read the
     -- state of the host tree right before we mutate it. This is where
     -- getSnapshotBeforeUpdate is called.
-    focusedInstanceHandle = HostConfig.prepareForCommit(root.containerInfo)
+    focusedInstanceHandle = ReactFiberHostConfig.prepareForCommit(root.containerInfo)
     shouldFireAfterActiveInstanceBlur = false
 
     mod.commitBeforeMutationEffects(finishedWork)
@@ -2058,9 +2057,9 @@ mod.commitRootImpl = function(root, renderPriorityLevel)
     mod.commitMutationEffects(finishedWork, root, renderPriorityLevel)
 
     if shouldFireAfterActiveInstanceBlur then
-      HostConfig.afterActiveInstanceBlur()
+      ReactFiberHostConfig.afterActiveInstanceBlur()
     end
-    HostConfig.resetAfterCommit(root.containerInfo)
+    ReactFiberHostConfig.resetAfterCommit(root.containerInfo)
 
     -- The work-in-progress tree is now the current tree. This must come after
     -- the mutation phase, so that the previous tree is still current during
@@ -2361,7 +2360,7 @@ mod.commitBeforeMutationEffectsDeletions = function(deletions: Array<Fiber>)
 
     if doesFiberContain(fiber, focusedInstanceHandle) then
       shouldFireAfterActiveInstanceBlur = true
-      HostConfig.beforeActiveInstanceBlur()
+      ReactFiberHostConfig.beforeActiveInstanceBlur()
     end
   end
 end
@@ -2520,15 +2519,15 @@ mod.commitMutationEffectsDeletions = function(
   end
 end
 
--- exports.schedulePassiveEffectCallback()
---   if !rootDoesHavePassiveEffects)
---     rootDoesHavePassiveEffects = true
---     scheduleCallback(NormalSchedulerPriority, () => {
---       flushPassiveEffects()
---       return nil
---     })
---   end
--- end
+exports.schedulePassiveEffectCallback = function()
+  if not rootDoesHavePassiveEffects then
+    rootDoesHavePassiveEffects = true
+    scheduleCallback(NormalSchedulerPriority, function()
+      exports.flushPassiveEffects()
+      return nil
+    end)
+  end
+end
 
 -- deviation: Pre-declare functions
 local flushPassiveEffectsImpl
@@ -2854,21 +2853,20 @@ exports.captureCommitPhaseError = function(
         (typeof(instance.componentDidCatch) == 'function' and
           not exports.isAlreadyFailedLegacyErrorBoundary(instance))
       then
-        local _errorInfo = createCapturedValue(error_, sourceFiber)
-        unimplemented("createClassErrorUpdate")
-        -- local update = createClassErrorUpdate(
-        --   fiber,
-        --   errorInfo,
-        --   SyncLane
-        -- )
-        -- enqueueUpdate(fiber, update)
-        -- local eventTime = requestEventTime()
-        local _root = mod.markUpdateLaneFromFiberToRoot(fiber, SyncLane)
-        -- if root ~= nil then
-        --   markRootUpdated(root, SyncLane, eventTime)
-        --   ensureRootIsScheduled(root, eventTime)
-        --   mod.schedulePendingInteractions(root, SyncLane)
-        -- end
+        local errorInfo = createCapturedValue(error_, sourceFiber)
+        local update = createClassErrorUpdate(
+          fiber,
+          errorInfo,
+          SyncLane
+        )
+        enqueueUpdate(fiber, update)
+        local eventTime = exports.requestEventTime()
+        local root = mod.markUpdateLaneFromFiberToRoot(fiber, SyncLane)
+        if root ~= nil then
+          markRootUpdated(root, SyncLane, eventTime)
+          ensureRootIsScheduled(root, eventTime)
+          mod.schedulePendingInteractions(root, SyncLane)
+        end
         return
       end
     end
@@ -3393,7 +3391,7 @@ exports.IsThisRendererActing = { current = false }
 exports.warnIfNotScopedWithMatchingAct = function(fiber: Fiber)
   if _G.__DEV__ then
     if
-      HostConfig.warnsIfNotActing == true and
+      ReactFiberHostConfig.warnsIfNotActing == true and
       IsSomeRendererActing.current == true and
       exports.IsThisRendererActing.current ~= true
     then

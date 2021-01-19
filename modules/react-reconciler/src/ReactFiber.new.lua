@@ -13,7 +13,9 @@ local Workspace = script.Parent.Parent
 local Packages = Workspace.Parent.Packages
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local Object = LuauPolyfill.Object
-local console = LuauPolyfill.console
+
+-- ROBLOX: use patched console from shared
+local console = require(Workspace.Shared.console)
 
 local ReactElementType = require(Workspace.Shared.ReactElementType)
 type ReactElement = ReactElementType.ReactElement;
@@ -484,7 +486,7 @@ local function createFiberFromTypeAndProps(
 	-- The resolved type is set if we know what the final type will be. I.e. it's not lazy.
 	-- deviation: FIXME: Account for deviated class v. function component type logic
 	local resolvedType = type
-	if typeof(type) == "function" then
+	if typeof(type) == "function" or typeof(type) == "table" then
 		if shouldConstruct(type) then
 			fiberTag = ClassComponent
 			if _G.__DEV__ then

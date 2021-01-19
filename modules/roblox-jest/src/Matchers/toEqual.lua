@@ -6,12 +6,20 @@
 	This should only be used in tests.
 ]]
 
+local depth = 0
+
 local function deepEqual(a: any, b: any)
+	depth += 1
+	if depth > 7 then
+		depth = 0
+		error("deepEqual recursion limit hit")
+	end
 	if typeof(a) ~= typeof(b) then
 		local message = ("{1}: value of type '%s'\n{2}: value of type '%s'"):format(
 			typeof(a),
 			typeof(b)
 		)
+		depth -= 1
 		return false, message
 	end
 
@@ -27,6 +35,7 @@ local function deepEqual(a: any, b: any)
 					:gsub("{1}", ("{1}[%s]"):format(tostring(key)))
 					:gsub("{2}", ("{2}[%s]"):format(tostring(key)))
 
+				depth -= 1
 				return false, message
 			end
 		end
@@ -40,19 +49,23 @@ local function deepEqual(a: any, b: any)
 						:gsub("{1}", ("{1}[%s]"):format(tostring(key)))
 						:gsub("{2}", ("{2}[%s]"):format(tostring(key)))
 
+					depth -= 1
 					return false, message
 				end
 			end
 		end
 
+		depth -= 1
 		return true
 	end
 
 	if a == b then
+		depth -= 1
 		return true
 	end
 
 	local message = string.format("{1} (%s) ~= {2} (%s)", tostring(a), tostring(b))
+	depth -= 1
 	return false, message
 end
 

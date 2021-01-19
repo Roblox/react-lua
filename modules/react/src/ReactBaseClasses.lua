@@ -8,8 +8,9 @@
 local Workspace = script.Parent.Parent
 local Packages = Workspace.Parent.Packages
 local LuauPolyfill = require(Packages.LuauPolyfill)
-local console = LuauPolyfill.console
 local Object = LuauPolyfill.Object
+-- ROBLOX: use patched console from shared
+local console = require(Workspace.Shared.console)
 
 local invariant = require(Workspace.Shared.invariant)
 local ReactNoopUpdateQueue = require(script.Parent.ReactNoopUpdateQueue)
@@ -73,14 +74,21 @@ function Component:extend(name)
     -- renderer.
     instance.updater = updater or ReactNoopUpdateQueue
 
+    -- ROBLOX TODO: We should consider using a more idiomatic Lua approach for
+    -- warning/blocking lifecycle calls during initialization. For now,
+    -- ReactNoopUpdateQueue accomplishes this, but we might be able to be more
+    -- thorough if we use a dummy metamethod that warns precisely on all sorts
+    -- of misbehavior
+    instance = setmetatable(instance, class)
+
     -- deviation: TODO: revisit this; make sure that we properly initialize
     -- things like `state` if its necessary, consider if we want some sort of
     -- alternate naming or syntax for the constructor equivalent
     if typeof(class.init) == 'function' then
-      class.init(instance)
+      class.init(instance, props, context)
     end
 
-    return setmetatable(instance, class)
+    return instance
   end
 
   setmetatable(class, getmetatable(self))
@@ -118,10 +126,7 @@ function Component:setState(partialState, callback)
     typeof(partialState) == 'table' or typeof(partialState) == 'function' or partialState == nil,
     'setState(...): takes an object of state variables to update or a ' .. 'function which returns an object of state variables.'
   )
-  -- self.updater.enqueueSetState must be called with ':' so that it has access
-  -- to the updater's `self`, but it must also be passed the component instance
-  -- as the next argument (hence, `self` as the first argument)
-  self.updater:enqueueSetState(self, partialState, callback, 'setState')
+  self.updater.enqueueSetState(self, partialState, callback, 'setState')
 end
 
 --[[*
@@ -141,10 +146,7 @@ end
 
 
 function Component:forceUpdate(callback)
-  -- self.updater.enqueueSetState must be called with ':' so that it has access
-  -- to the updater's `self`, but it must also be passed the component instance
-  -- as the next argument (hence, `self` as the first argument)
-  self.updater:enqueueForceUpdate(self, callback, 'forceUpdate')
+  self.updater.enqueueForceUpdate(self, callback, 'forceUpdate')
 end
 --[[*
  * Deprecated APIs. These APIs used to exist on classic React classes but since

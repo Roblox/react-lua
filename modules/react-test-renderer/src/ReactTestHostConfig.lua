@@ -16,10 +16,12 @@ local Cryo = require(Packages.Cryo)
 local LuauPolyfill = require(Packages.LuauPolyfill)
 
 local Array = LuauPolyfill.Array
-local console = LuauPolyfill.console
 local Object = LuauPolyfill.Object
 local setTimeout = LuauPolyfill.setTimeout
 local clearTimeout = LuauPolyfill.clearTimeout
+
+-- ROBLOX: use patched console from shared
+local console = require(Workspace.Shared.console)
 
 -- deviation: strip not-yet-defined types
 -- local ReactTypes = require(Workspace.Shared.ReactTypes)

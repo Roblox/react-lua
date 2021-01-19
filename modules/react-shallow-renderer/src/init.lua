@@ -81,85 +81,83 @@ local function areHookInputsEqual(nextDeps, prevDeps)
   return true
 end
 
-local Updater = {}
-Updater.__index = Updater
-
--- deviation: Lua OOP typically uses static members for constructors
-function Updater.new(renderer)
-  local self = {
+-- deviation: bind functions to upvalue
+function createUpdater(renderer)
+  local updater = {
     _renderer = renderer,
     _callbacks = {},
   }
-
-  return setmetatable(self, Updater)
-end
-
-function Updater:_enqueueCallback(callback, publicInstance)
-  if typeof(callback) == 'function' and publicInstance then
-    table.insert(self._callbacks, {
-      callback = callback,
-      publicInstance = publicInstance,
-    })
+  
+  function updater._enqueueCallback(callback, publicInstance)
+    if typeof(callback) == 'function' and publicInstance then
+      table.insert(updater._callbacks, {
+        callback = callback,
+        publicInstance = publicInstance,
+      })
+    end
   end
-end
-
-function Updater:_invokeCallbacks()
-  local callbacks = self._callbacks
-  self._callbacks = {}
-
-  for _, value in pairs(callbacks) do
-    local callback = value.callback
-    local publicInstance = value.publicInstance
-
-    callback(publicInstance)
+  
+  function updater._invokeCallbacks()
+    local callbacks = updater._callbacks
+    updater._callbacks = {}
+  
+    for _, value in pairs(callbacks) do
+      local callback = value.callback
+      local publicInstance = value.publicInstance
+  
+      callback(publicInstance)
+    end
   end
-end
-
-function Updater:isMounted(publicInstance)
-  return not not self._renderer._element
-end
-
-function Updater:enqueueForceUpdate(publicInstance, callback, _callerName)
-  self:_enqueueCallback(callback, publicInstance)
-  self._renderer._forcedUpdate = true
-  self._renderer:render(self._renderer._element, self._renderer._context)
-end
-
-function Updater:enqueueReplaceState(publicInstance, completeState, callback, _callerName)
-  self:_enqueueCallback(callback, publicInstance)
-  self._renderer._newState = completeState
-  self._renderer:render(self._renderer._element, self._renderer._context)
-end
-
-function Updater:enqueueSetState(publicInstance, partialState, callback, _callerName)
-  self:_enqueueCallback(callback, publicInstance)
-  local currentState = self._renderer._newState or publicInstance.state
-
-  if typeof(partialState) == 'function' then
-    -- deviation: in React, the partial state function is called on the
-    -- publicInstance, meaning that `this` is accessible, and scoped correctly,
-    -- inside of the state updater; with Lua, you would need to define your
-    -- functions differently, by explicitly adding the first argument for 'self'
-    -- for this to work the same way
-    partialState = partialState(
+  
+  function updater.isMounted(publicInstance)
+    return not not updater._renderer._element
+  end
+  
+  function updater.enqueueForceUpdate(publicInstance, callback, _callerName)
+    updater._enqueueCallback(callback, publicInstance)
+    updater._renderer._forcedUpdate = true
+    updater._renderer:render(updater._renderer._element, updater._renderer._context)
+  end
+  
+  function updater.enqueueReplaceState(publicInstance, completeState, callback, _callerName)
+    updater._enqueueCallback(callback, publicInstance)
+    updater._renderer._newState = completeState
+    updater._renderer:render(updater._renderer._element, updater._renderer._context)
+  end
+  
+  function updater.enqueueSetState(publicInstance, partialState, callback, _callerName)
+    updater._enqueueCallback(callback, publicInstance)
+    local currentState = updater._renderer._newState or publicInstance.state
+  
+    if typeof(partialState) == 'function' then
+      -- deviation: in React, the partial state function is called on the
+      -- publicInstance, meaning that `this` is accessible, and scoped correctly,
+      -- inside of the state updater; with Lua, you would need to define your
+      -- functions differently, by explicitly adding the first argument for 'self'
+      -- for this to work the same way
+      partialState = partialState(
+        currentState,
+        publicInstance.props
+      )
+    end
+  
+    -- Null and undefined are treated as no-ops.
+    if partialState == nil then
+      return
+    end
+  
+    updater._renderer._newState = Object.assign(
+      {},
       currentState,
-      publicInstance.props
+      partialState
     )
+  
+    updater._renderer:render(updater._renderer._element, updater._renderer._context)
   end
 
-  -- Null and undefined are treated as no-ops.
-  if partialState == nil then
-    return
-  end
-
-  self._renderer._newState = Object.assign(
-    {},
-    currentState,
-    partialState
-  )
-
-  self._renderer:render(self._renderer._element, self._renderer._context)
+  return updater
 end
+
 
 function createHook()
   return {
@@ -200,7 +198,7 @@ function ReactShallowRenderer:_reset()
   self._rendered = nil
   self._rendering = false
   self._forcedUpdate = false
-  self._updater = Updater.new(self)
+  self._updater = createUpdater(self)
   self._dispatcher = self:_createDispatcher()
   self._workInProgressHook = nil
   self._firstWorkInProgressHook = nil
@@ -691,7 +689,7 @@ function ReactShallowRenderer:render(element, maybeContext)
   end
 
   self._rendering = false
-  self._updater:_invokeCallbacks()
+  self._updater._invokeCallbacks()
 
   return self:getRenderOutput()
 end

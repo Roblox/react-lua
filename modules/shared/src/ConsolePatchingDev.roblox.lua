@@ -3,9 +3,8 @@
 -- `Object.defineProperties` to ensure that properties are modifiable. In Lua,
 -- these operations are as simple as assigning to functions.
 local Workspace = script.Parent.Parent
-local Packages = Workspace.Parent.Packages
-local LuauPolyfill = require(Packages.LuauPolyfill)
-local console = LuauPolyfill.console
+-- ROBLOX: use patched console from shared
+local console = require(Workspace.Shared.console)
 
  -- Helpers to patch console.logs to avoid logging during side-effect free
 -- replaying on render function. This currently only patches the object

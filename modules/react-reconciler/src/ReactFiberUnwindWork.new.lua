@@ -1,3 +1,4 @@
+-- upstream: https://github.com/facebook/react/blob/16654436039dd8f16a63928e71081c7745872e8f/packages/react-reconciler/src/ReactFiberUnwindWork.new.js
 --[[*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
@@ -34,7 +35,7 @@ local ReactFiberHostContext = require(script.Parent["ReactFiberHostContext.new"]
 local popHostContainer = ReactFiberHostContext.popHostContainer
 local popHostContext = ReactFiberHostContext.popHostContext
 local popSuspenseContext = require(script.Parent["ReactFiberSuspenseContext.new"]).popSuspenseContext
--- local resetHydrationState = require(script.Parent["ReactFiberHydrationContext.new"]).resetHydrationState
+local resetHydrationState = require(script.Parent["ReactFiberHydrationContext.new"]).resetHydrationState
 local ReactFiberContext = require(script.Parent["ReactFiberContext.new"])
 local isLegacyContextProvider = ReactFiberContext.isContextProvider
 local popLegacyContext = ReactFiberContext.popContext
@@ -93,8 +94,7 @@ local function unwindWork(workInProgress: Fiber, renderLanes: Lanes)
           'Threw in newly mounted dehydrated component. This is likely a bug in ' ..
             'React. Please file an issue.'
         )
-        unimplemented("ReactFiberHydrationContext")
-        -- resetHydrationState()
+        resetHydrationState()
       end
     end
     local flags = workInProgress.flags

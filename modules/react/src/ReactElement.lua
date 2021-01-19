@@ -8,8 +8,10 @@
 local Workspace = script.Parent.Parent
 local Packages = Workspace.Parent.Packages
 local LuauPolyfill = require(Packages.LuauPolyfill)
-local console = LuauPolyfill.console
 local Object = LuauPolyfill.Object
+
+-- ROBLOX: use patched console from shared
+local console = require(Workspace.Shared.console)
 
 local getComponentName = require(Workspace.Shared.getComponentName)
 local invariant = require(Workspace.Shared.invariant)
@@ -153,10 +155,10 @@ end
  * @internal
  ]]
 
-local function ReactElement(_type, key, ref, self, source, owner, props)
+local function ReactElement(type_, key, ref, self, source, owner, props)
 	local element = {
 		-- Built-in properties that belong on the element
-		type = _type,
+		type = type_,
 		key = key,
 		ref = ref,
 		props = props,
@@ -318,7 +320,7 @@ end
  * See https://reactjs.org/docs/react-api.html#createelement
  ]]
 
-exports.createElement = function(_type, config, ...)
+exports.createElement = function(type_, config, ...)
 	local props = {}
 	local key = nil
 	local ref = nil
@@ -383,8 +385,8 @@ exports.createElement = function(_type, config, ...)
 
 	-- Resolve default props
 	-- deviation: Lua can't index defaultProps on a function
-	if typeof(_type) == "table" and _type.defaultProps then
-		local defaultProps = _type.defaultProps
+	if typeof(type_) == "table" and type_.defaultProps then
+		local defaultProps = type_.defaultProps
 
 		for propName, _ in pairs(defaultProps) do
 			if props[propName] == nil then
@@ -397,12 +399,12 @@ exports.createElement = function(_type, config, ...)
 		if key or ref then
 			local displayName
 
-			if typeof(type) == "function" then
+			if typeof(type_) == "function" then
 				console.warn("Roblox React can't pull displayName for functions")
-				-- displayName = (_type.displayName or _type.name) or "Unknown"
+				-- displayName = (type_.displayName or type_.name) or "Unknown"
 				displayName = "Unknown"
 			else
-				displayName = _type
+				displayName = type_
 			end
 
 			if key then
@@ -415,7 +417,7 @@ exports.createElement = function(_type, config, ...)
 		end
 	end
 
-	return ReactElement(_type, key, ref, self, source, ReactCurrentOwner.current, props)
+	return ReactElement(type_, key, ref, self, source, ReactCurrentOwner.current, props)
 end
 
 ----[[*

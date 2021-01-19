@@ -111,6 +111,14 @@ local function getComponentName(type)
 			end
 
 			return result
+		else
+			-- deviation: Normally, the `typeofType == "function"` check would
+			-- cover this case, but in Lua, class components are tables. We need
+			-- to check for that here and use the name the component was
+			-- assigned.
+			if type.isReactComponent then
+				return tostring(type)
+			end
 		end
 	end
 

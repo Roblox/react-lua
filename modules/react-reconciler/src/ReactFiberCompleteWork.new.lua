@@ -1,3 +1,4 @@
+-- upstream: https://github.com/facebook/react/blob/87c023b1c1b00d6776b7031f6e105913ead355da/packages/react-reconciler/src/ReactFiberCompleteWork.new.js
 --[[*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
@@ -81,7 +82,7 @@ local Update = ReactFiberFlags.Update
 local NoFlags = ReactFiberFlags.NoFlags
 -- local DidCapture = ReactFiberFlags.DidCapture
 local Snapshot = ReactFiberFlags.Snapshot
--- local MutationMask = ReactFiberFlags.MutationMask
+local MutationMask = ReactFiberFlags.MutationMask
 -- local LayoutMask = ReactFiberFlags.LayoutMask
 -- local PassiveMask = ReactFiberFlags.PassiveMask
 local StaticMask = ReactFiberFlags.StaticMask
@@ -90,7 +91,7 @@ local StaticMask = ReactFiberFlags.StaticMask
 local invariant = require(Workspace.Shared.invariant)
 
 local createInstance = ReactFiberHostConfig.createInstance
--- local createTextInstance = ReactFiberHostConfig.createTextInstance
+local createTextInstance = ReactFiberHostConfig.createTextInstance
 local appendInitialChild = ReactFiberHostConfig.appendInitialChild
 local finalizeInitialChildren = ReactFiberHostConfig.finalizeInitialChildren
 local prepareUpdate = ReactFiberHostConfig.prepareUpdate
@@ -106,7 +107,7 @@ local finalizeContainerChildren = ReactFiberHostConfig.finalizeContainerChildren
 -- local mountFundamentalComponent = ReactFiberHostConfig.mountFundamentalComponent
 -- local cloneFundamentalInstance = ReactFiberHostConfig.cloneFundamentalInstance
 -- local shouldUpdateFundamentalComponent = ReactFiberHostConfig.shouldUpdateFundamentalComponent
--- local preparePortalMount = ReactFiberHostConfig.preparePortalMount
+local preparePortalMount = ReactFiberHostConfig.preparePortalMount
 -- local prepareScopeUpdate = ReactFiberHostConfig.prepareScopeUpdate
 local ReactFiberHostContext = require(script.Parent["ReactFiberHostContext.new"])
 local getRootHostContainer = ReactFiberHostContext.getRootHostContainer
@@ -125,18 +126,18 @@ local popHostContainer = ReactFiberHostContext.popHostContainer
 -- } = require(script.Parent.ReactFiberSuspenseContext.new)
 -- local {findFirstSuspended} = require(script.Parent.ReactFiberSuspenseComponent.new)
 local ReactFiberContext = require(script.Parent["ReactFiberContext.new"])
--- local isLegacyContextProvider = ReactFiberContext.isContextProvider
--- local popLegacyContext = ReactFiberContext.popContext
+local isLegacyContextProvider = ReactFiberContext.isContextProvider
+local popLegacyContext = ReactFiberContext.popContext
 local popTopLevelLegacyContextObject = ReactFiberContext.popTopLevelContextObject
--- local {popProvider} = require(script.Parent.ReactFiberNewContext.new)
+local popProvider = require(script.Parent["ReactFiberNewContext.new"]).popProvider
 -- local {
---   prepareToHydrateHostInstance,
---   prepareToHydrateHostTextInstance,
 --   prepareToHydrateHostSuspenseInstance,
---   popHydrationState,
 --   resetHydrationState,
 --   getIsHydrating,
--- } = require(script.Parent.ReactFiberHydrationContext.new)
+local ReactFiberHydrationContext = require(script.Parent["ReactFiberHydrationContext.new"])
+local popHydrationState = ReactFiberHydrationContext.popHydrationState
+local prepareToHydrateHostInstance = ReactFiberHydrationContext.prepareToHydrateHostInstance
+local prepareToHydrateHostTextInstance = ReactFiberHydrationContext.prepareToHydrateHostTextInstance
 local ReactFeatureFlags = require(Workspace.Shared.ReactFeatureFlags)
 -- local enableSchedulerTracing = ReactFeatureFlags.enableSchedulerTracing
 -- local enableSuspenseCallback = ReactFeatureFlags.enableSuspenseCallback
@@ -173,29 +174,31 @@ local function markRef(workInProgress: Fiber)
   workInProgress.flags = bit32.bor(workInProgress.flags, Ref)
 end
 
--- function hadNoMutationsEffects(current: nil | Fiber, completedWork: Fiber)
---   local didBailout = current ~= nil and current.child == completedWork.child
---   if didBailout)
---     return true
---   end
+-- ROBLOX FIXME: type refinement
+-- local function hadNoMutationsEffects(current: nil | Fiber, completedWork: Fiber)
+local function hadNoMutationsEffects(current, completedWork: Fiber)
+  local didBailout = current ~= nil and current.child == completedWork.child
+  if didBailout then
+    return true
+  end
 
---   local child = completedWork.child
---   while (child ~= nil)
---     if (child.flags & MutationMask) ~= NoFlags)
---       return false
---     end
---     if (child.subtreeFlags & MutationMask) ~= NoFlags)
---       return false
---     end
---     child = child.sibling
---   end
---   return true
--- end
+  local child = completedWork.child
+  while child ~= nil do
+    if bit32.band(child.flags, MutationMask) ~= NoFlags then
+      return false
+    end
+    if bit32.band(child.subtreeFlags, MutationMask) ~= NoFlags then
+      return false
+    end
+    child = child.sibling
+  end
+  return true
+end
 
 local appendAllChildren
 local updateHostContainer
 local updateHostComponent
--- local updateHostText
+local updateHostText
 if supportsMutation then
   -- Mutation mode
 
@@ -280,20 +283,19 @@ if supportsMutation then
       markUpdate(workInProgress)
     end
   end
---   updateHostText = function(
---     current: Fiber,
---     workInProgress: Fiber,
---     oldText: string,
---     newText: string,
---   )
---     -- If the text differs, mark it as an update. All the work in done in commitWork.
---     if oldText ~= newText)
---       markUpdate(workInProgress)
---     end
---   end
+  updateHostText = function(
+    current: Fiber,
+    workInProgress: Fiber,
+    oldText: string,
+    newText: string
+  )
+    -- If the text differs, mark it as an update. All the work in done in commitWork.
+    if oldText ~= newText then
+      markUpdate(workInProgress)
+    end
+  end
 elseif supportsPersistence then
---   -- Persistent host tree mode
-
+  -- Persistent host tree mode
   appendAllChildren = function(
     parent: Instance,
     workInProgress: Fiber,
@@ -483,14 +485,16 @@ elseif supportsPersistence then
     -- end
   end
 
-  updateHostContainer = function(workInProgress: Fiber)
+  -- ROBLOX FIXME: type refinement
+  -- updateHostContainer = function(current: nil | Fiber, workInProgress: Fiber)
+  updateHostContainer = function(current, workInProgress: Fiber)
     local portalOrRoot: {
       containerInfo: Container,
       pendingChildren: ChildSet,
       -- ...
       [any]: any,
     } = workInProgress.stateNode
-    local childrenUnchanged = workInProgress.firstEffect == nil
+    local childrenUnchanged = hadNoMutationsEffects(current, workInProgress)
     if childrenUnchanged then
       -- No changes, just reuse the existing instance.
     else
@@ -568,7 +572,7 @@ elseif supportsPersistence then
 --       -- Even though we're not going to use it for anything.
 --       -- Otherwise parents won't know that there are new children to propagate upwards.
 --       markUpdate(workInProgress)
---     } else {
+--     else
 --       -- If children might have changed, we have to add them all to the set.
 --       appendAllChildren(newInstance, workInProgress, false, false)
 --     end
@@ -592,7 +596,7 @@ elseif supportsPersistence then
 --       -- We'll have to mark it as having an effect, even though we won't use the effect for anything.
 --       -- This lets the parents know that at least one of their children has changed.
 --       markUpdate(workInProgress)
---     } else {
+--     else
 --       workInProgress.stateNode = current.stateNode
 --     end
 --   end
@@ -649,7 +653,7 @@ else
 --       if lastTailNode == nil)
 --         -- All remaining items in the tail are insertions.
 --         renderState.tail = nil
---       } else {
+--       else
 --         -- Detach the insertion after the last node that was already
 --         -- inserted.
 --         lastTailNode.sibling = nil
@@ -678,10 +682,10 @@ else
 --           -- We suspended during the head. We want to show at least one
 --           -- row at the tail. So we'll keep on and cut off the rest.
 --           renderState.tail.sibling = nil
---         } else {
+--         else
 --           renderState.tail = nil
 --         end
---       } else {
+--       else
 --         -- Detach the insertion after the last node that was already
 --         -- inserted.
 --         lastTailNode.sibling = nil
@@ -833,13 +837,12 @@ local function completeWork(
     bubbleProperties(workInProgress)
     return nil
   elseif workInProgress.tag == ClassComponent then
-    unimplemented("ClassComponent")
-    -- local Component = workInProgress.type
-    -- if isLegacyContextProvider(Component) then
-    --   popLegacyContext(workInProgress)
-    -- end
-    -- bubbleProperties(workInProgress)
-    -- return nil
+    local Component = workInProgress.type
+    if isLegacyContextProvider(Component) then
+      popLegacyContext(workInProgress)
+    end
+    bubbleProperties(workInProgress)
+    return nil
   elseif workInProgress.tag == HostRoot then
     popHostContainer(workInProgress)
     popTopLevelLegacyContextObject(workInProgress)
@@ -854,14 +857,11 @@ local function completeWork(
     if current == nil or current.child == nil then
       -- If we hydrated, pop so that we can delete any remaining children
       -- that weren't hydrated.
-      warn("Skip unimplemented: hydration-related")
-      -- local wasHydrated = popHydrationState(workInProgress)
-      local wasHydrated = false
+      local wasHydrated = popHydrationState(workInProgress)
       if wasHydrated then
-        warn("Skip marking update during hydration-related logic")
-        -- -- If we hydrated, then we'll need to schedule an update for
-        -- -- the commit side-effects on the root.
-        -- markUpdate(workInProgress)
+        -- If we hydrated, then we'll need to schedule an update for
+        -- the commit side-effects on the root.
+        markUpdate(workInProgress)
       elseif not fiberRoot.hydrate then
         -- Schedule an effect to clear this container at the start of the next commit.
         -- This handles the case of React rendering into a container with previous children.
@@ -897,6 +897,7 @@ local function completeWork(
             "caused by a bug in React. Please file an issue."
         )
         -- This can happen when we abort work.
+        bubbleProperties(workInProgress)
         return nil
       end
 
@@ -905,23 +906,22 @@ local function completeWork(
       -- "stack" as the parent. Then append children as we go in beginWork
       -- or completeWork depending on whether we want to add them top->down or
       -- bottom->up. Top->down is faster in IE11.
-      warn("Skip unimplemented: hydration-related")
-      -- local wasHydrated = popHydrationState(workInProgress)
-      -- if wasHydrated then
-      --   -- TODO: Move this and createInstance step into the beginPhase
-      --   -- to consolidate.
-      --   if
-      --     prepareToHydrateHostInstance(
-      --       workInProgress,
-      --       rootContainerInstance,
-      --       currentHostContext
-      --     )
-      --   then
-      --     -- If changes to the hydrated node need to be applied at the
-      --     -- commit-phase we mark this as such.
-      --     markUpdate(workInProgress)
-      --   end
-      -- else
+      local wasHydrated = popHydrationState(workInProgress)
+      if wasHydrated then
+        -- TODO: Move this and createInstance step into the beginPhase
+        -- to consolidate.
+        if
+          prepareToHydrateHostInstance(
+            workInProgress,
+            rootContainerInstance,
+            currentHostContext
+          )
+        then
+          -- If changes to the hydrated node need to be applied at the
+          -- commit-phase we mark this as such.
+          markUpdate(workInProgress)
+        end
+      else
 
         local instance = createInstance(
           type,
@@ -949,48 +949,49 @@ local function completeWork(
         then
           markUpdate(workInProgress)
         end
-      -- end
+      end
 
       if workInProgress.ref ~= nil then
         -- If there is a ref on a host node we need to schedule a callback
         markRef(workInProgress)
       end
     end
+    bubbleProperties(workInProgress)
     return nil
   elseif workInProgress.tag == HostText then
-    unimplemented("HostText")
-    -- local newText = newProps
-    -- if current and workInProgress.stateNode ~= nil)
-    --   local oldText = current.memoizedProps
-    --   -- If we have an alternate, that means this is an update and we need
-    --   -- to schedule a side-effect to do the updates.
-    --   updateHostText(current, workInProgress, oldText, newText)
-    -- } else {
-    --   if typeof newText ~= 'string')
-    --     invariant(
-    --       workInProgress.stateNode ~= nil,
-    --       'We must have new props for new mounts. This error is likely ' +
-    --         'caused by a bug in React. Please file an issue.',
-    --     )
-    --     -- This can happen when we abort work.
-    --   end
-    --   local rootContainerInstance = getRootHostContainer()
-    --   local currentHostContext = getHostContext()
-    --   local wasHydrated = popHydrationState(workInProgress)
-    --   if wasHydrated)
-    --     if prepareToHydrateHostTextInstance(workInProgress))
-    --       markUpdate(workInProgress)
-    --     end
-    --   } else {
-    --     workInProgress.stateNode = createTextInstance(
-    --       newText,
-    --       rootContainerInstance,
-    --       currentHostContext,
-    --       workInProgress,
-    --     )
-    --   end
-    -- end
-    -- return nil
+    local newText = newProps
+    if current and workInProgress.stateNode ~= nil then
+      local oldText = current.memoizedProps
+      -- If we have an alternate, that means this is an update and we need
+      -- to schedule a side-effect to do the updates.
+      updateHostText(current, workInProgress, oldText, newText)
+    else
+      if typeof(newText) ~= 'string' then
+        invariant(
+          workInProgress.stateNode ~= nil,
+          'We must have new props for new mounts. This error is likely ' ..
+            'caused by a bug in React. Please file an issue.'
+        )
+        -- This can happen when we abort work.
+      end
+      local rootContainerInstance = getRootHostContainer()
+      local currentHostContext = getHostContext()
+      local wasHydrated = popHydrationState(workInProgress)
+      if wasHydrated then
+        if prepareToHydrateHostTextInstance(workInProgress) then
+          markUpdate(workInProgress)
+        end
+      else
+        workInProgress.stateNode = createTextInstance(
+          newText,
+          rootContainerInstance,
+          currentHostContext,
+          workInProgress
+        )
+      end
+    end
+    bubbleProperties(workInProgress)
+    return nil
   elseif workInProgress.tag == Profiler then
     unimplemented("Profiler")
     -- local didBailout = bubbleProperties(workInProgress)
@@ -1037,7 +1038,7 @@ local function completeWork(
     --     newFlags |= OnPostCommitFlag
     --   end
     --   workInProgress.flags = newFlags
-    -- } else {
+    -- else
     --   -- This fiber and its subtree bailed out, so don't fire any callbacks.
     -- end
 
@@ -1075,7 +1076,7 @@ local function completeWork(
     --         end
     --       end
     --       return nil
-    --     } else {
+    --     else
     --       -- We should never have been in a hydration state if we didn't have a current.
     --       -- However, in some of those paths, we might have reentered a hydration state
     --       -- and then we might be inside a hydration state. In that case, we'll need to exit out of it.
@@ -1129,7 +1130,7 @@ local function completeWork(
     --   if workInProgress.memoizedProps.fallback ~= undefined)
     --     popHydrationState(workInProgress)
     --   end
-    -- } else {
+    -- else
     --   local prevState: nil | SuspenseState = current.memoizedState
     --   prevDidTimeout = prevState ~= nil
     -- end
@@ -1161,7 +1162,7 @@ local function completeWork(
     --       -- If this was in an invisible tree or a new render, then showing
     --       -- this boundary is ok.
     --       renderDidSuspend()
-    --     } else {
+    --     else
     --       -- Otherwise, we're going to have to hide content so we should
     --       -- suspend for longer if possible.
     --       renderDidSuspendDelayIfPossible()
@@ -1212,30 +1213,27 @@ local function completeWork(
     -- end
     -- return nil
   elseif workInProgress.tag == HostPortal then
-    unimplemented("HostPortal")
-    -- popHostContainer(workInProgress)
-    -- updateHostContainer(current, workInProgress)
-    -- if current == nil)
-    --   preparePortalMount(workInProgress.stateNode.containerInfo)
-    -- end
-    -- bubbleProperties(workInProgress)
-    -- return nil
+    popHostContainer(workInProgress)
+    updateHostContainer(current, workInProgress)
+    if current == nil then
+      preparePortalMount(workInProgress.stateNode.containerInfo)
+    end
+    bubbleProperties(workInProgress)
+    return nil
   elseif workInProgress.tag == ContextProvider then
-    unimplemented("ContextProvider")
-    -- -- Pop provider fiber
-    -- popProvider(workInProgress)
-    -- bubbleProperties(workInProgress)
-    -- return nil
+    -- Pop provider fiber
+    popProvider(workInProgress)
+    bubbleProperties(workInProgress)
+    return nil
   elseif workInProgress.tag == IncompleteClassComponent then
-    unimplemented("IncompleteClassComponent")
-    -- -- Same as class component case. I put it down here so that the tags are
-    -- -- sequential to ensure this switch is compiled to a jump table.
-    -- local Component = workInProgress.type
-    -- if isLegacyContextProvider(Component))
-    --   popLegacyContext(workInProgress)
-    -- end
-    -- bubbleProperties(workInProgress)
-    -- return nil
+    -- Same as class component case. I put it down here so that the tags are
+    -- sequential to ensure this switch is compiled to a jump table.
+    local Component = workInProgress.type
+    if isLegacyContextProvider(Component) then
+      popLegacyContext(workInProgress)
+    end
+    bubbleProperties(workInProgress)
+    return nil
   elseif workInProgress.tag == SuspenseListComponent then
     unimplemented("SuspenseListComponent")
     -- popSuspenseContext(workInProgress)
@@ -1341,11 +1339,11 @@ local function completeWork(
     --         markSpawnedWork(SomeRetryLane)
     --       end
     --     end
-    --   } else {
+    --   else
     --     cutOffTailIfNeeded(renderState, false)
     --   end
     --   -- Next we're going to render the tail.
-    -- } else {
+    -- else
     --   -- Append the rendered row to the child list.
     --   if !didSuspendAlready)
     --     local suspended = findFirstSuspended(renderedTail)
@@ -1408,11 +1406,11 @@ local function completeWork(
     --     -- Append to the beginning of the list.
     --     renderedTail.sibling = workInProgress.child
     --     workInProgress.child = renderedTail
-    --   } else {
+    --   else
     --     local previousSibling = renderState.last
     --     if previousSibling ~= nil)
     --       previousSibling.sibling = renderedTail
-    --     } else {
+    --     else
     --       workInProgress.child = renderedTail
     --     end
     --     renderState.last = renderedTail
@@ -1437,7 +1435,7 @@ local function completeWork(
     --       suspenseContext,
     --       ForceSuspenseFallback,
     --     )
-    --   } else {
+    --   else
     --     suspenseContext = setDefaultShallowSuspenseContext(suspenseContext)
     --   end
     --   pushSuspenseContext(workInProgress, suspenseContext)
@@ -1479,7 +1477,7 @@ local function completeWork(
     --     end
     --     appendAllChildren(instance, workInProgress, false, false)
     --     mountFundamentalComponent(fundamentalInstance)
-    --   } else {
+    --   else
     --     -- We fire update in commit phase
     --     local prevProps = fundamentalInstance.props
     --     fundamentalInstance.prevProps = prevProps
@@ -1511,7 +1509,7 @@ local function completeWork(
     --       markRef(workInProgress)
     --       markUpdate(workInProgress)
     --     end
-    --   } else {
+    --   else
     --     if workInProgress.ref ~= nil)
     --       markUpdate(workInProgress)
     --     end

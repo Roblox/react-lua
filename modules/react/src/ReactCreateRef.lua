@@ -9,10 +9,10 @@
 
 -- deviation: stripped flow types
 
-local Workspace = script.Parent.Parent
-local Packages = Workspace.Parent.Packages
-local LuauPolyfill = require(Packages.LuauPolyfill)
-local Object = LuauPolyfill.Object
+-- local Workspace = script.Parent.Parent
+-- local Packages = Workspace.Parent.Packages
+-- local LuauPolyfill = require(Packages.LuauPolyfill)
+-- local Object = LuauPolyfill.Object
 
 local exports = {}
 -- an immutable object with a single mutable value
@@ -21,7 +21,10 @@ exports.createRef = function()
     current = nil,
   }
   if _G.__DEV__ then
-    Object.seal(refObject)
+    -- ROBLOX FIXME: We can't do this, since `current` won't be recognized as a
+    -- member if it's nil. We could do this using a sentinel value, but that
+    -- would leak to user space. How should we address this?
+    -- Object.seal(refObject)
   end
   return refObject
 end

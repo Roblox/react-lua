@@ -5,9 +5,6 @@
 
 return function()
 	local Workspace = script.Parent.Parent.Parent
-	-- local Packages = Workspace.Parent.Packages
-	-- local LuauPolyfill = require(Packages.LuauPolyfill)
-	-- local console = LuauPolyfill.console
 
 	local RobloxJest = require(Workspace.RobloxJest)
 	local React = require(Workspace.React)

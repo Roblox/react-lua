@@ -16,8 +16,10 @@ local LuauPolyfill = require(Packages.LuauPolyfill)
 local ReactInternalTypes = require(script.Parent.ReactInternalTypes)
 type FiberRoot = ReactInternalTypes.FiberRoot;
 type ReactPriorityLevel = ReactInternalTypes.ReactPriorityLevel;
-local console = LuauPolyfill.console
 local clz32 = LuauPolyfill.Math.clz32
+
+-- ROBLOX: use patched console from shared
+local console = require(Workspace.Shared.console)
 local ReactFiberSchedulerPriorities = require(script.Parent["ReactFiberSchedulerPriorities.roblox"])
 
 -- deviation: Instead of defining these here, and and re-exporting in

@@ -1,3 +1,4 @@
+-- upstream: https://github.com/facebook/react/blob/702fad4b1b48ac8f626ed3f35e8f86f5ea728084/packages/react-reconciler/src/ReactStrictModeWarnings.new.js
 --[[*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
@@ -8,9 +9,8 @@
  ]]
 
 local Workspace = script.Parent.Parent
-local Packages = Workspace.Parent.Packages
-local LuauPolyfill = require(Packages.LuauPolyfill)
-local console = LuauPolyfill.console
+-- ROBLOX: use patched console from shared
+local console = require(Workspace.Shared.console)
 
 local ReactInternalTypes = require(script.Parent.ReactInternalTypes)
 type Fiber = ReactInternalTypes.Fiber
@@ -52,7 +52,7 @@ if _G.__DEV__ then
   local setToSortedString = function(set)
     local array = {}
     for key, value in pairs(set) do
-      array[key] = value
+      table.insert(array, key)
     end
     table.sort(array)
     return table.concat(array, ', ')
@@ -186,7 +186,8 @@ if _G.__DEV__ then
 
     -- Finally, we flush all the warnings
     -- UNSAFE_ ones before the deprecated ones, since they'll be 'louder'
-    if #UNSAFE_componentWillMountUniqueNames > 0 then
+    -- deviation: use `next` to determine whether set is empty
+    if next(UNSAFE_componentWillMountUniqueNames) ~= nil then
       local sortedNames = setToSortedString(
         UNSAFE_componentWillMountUniqueNames
       )
@@ -199,7 +200,8 @@ if _G.__DEV__ then
       )
     end
 
-    if #UNSAFE_componentWillReceivePropsUniqueNames > 0 then
+    -- deviation: use `next` to determine whether set is empty
+    if next(UNSAFE_componentWillReceivePropsUniqueNames) ~= nil then
       local sortedNames = setToSortedString(
         UNSAFE_componentWillReceivePropsUniqueNames
       )
@@ -216,7 +218,8 @@ if _G.__DEV__ then
       )
     end
 
-    if #UNSAFE_componentWillUpdateUniqueNames > 0 then
+    -- deviation: use `next` to determine whether set is empty
+    if next(UNSAFE_componentWillUpdateUniqueNames) ~= nil then
       local sortedNames = setToSortedString(
         UNSAFE_componentWillUpdateUniqueNames
       )
@@ -230,27 +233,33 @@ if _G.__DEV__ then
       )
     end
 
-    if #componentWillMountUniqueNames > 0 then
+    -- deviation: use `next` to determine whether set is empty
+    if next(componentWillMountUniqueNames) ~= nil then
       local sortedNames = setToSortedString(componentWillMountUniqueNames)
 
+      -- ROBLOX TODO: Make decisions about whether or not we'll support these
+      -- methods in the first place
+      -- deviation: Remove some non-applicable information
       console.warn(
         'componentWillMount has been renamed, and is not recommended for use. ' ..
           'See https://reactjs.org/link/unsafe-component-lifecycles for details.\n\n' ..
           '* Move code with side effects to componentDidMount, and set initial state in the constructor.\n' ..
           '* Rename componentWillMount to UNSAFE_componentWillMount to suppress ' ..
-          'this warning in non-strict mode. In React 18.x, only the UNSAFE_ name will work. ' ..
-          'To rename all deprecated lifecycles to their new names, you can run ' ..
-          '`npx react-codemod rename-unsafe-lifecycles` in your project source folder.\n' ..
+          'this warning in non-strict mode. In React 18.x, only the UNSAFE_ name will work.\n' ..
           '\nPlease update the following components: %s',
         sortedNames
       )
     end
 
-    if #componentWillReceivePropsUniqueNames > 0 then
+    -- deviation: use `next` to determine whether set is empty
+    if next(componentWillReceivePropsUniqueNames) ~= nil then
       local sortedNames = setToSortedString(
         componentWillReceivePropsUniqueNames
       )
 
+      -- ROBLOX TODO: Make decisions about whether or not we'll support these
+      -- methods in the first place
+      -- deviation: Remove some non-applicable information
       console.warn(
         'componentWillReceiveProps has been renamed, and is not recommended for use. ' ..
           'See https://reactjs.org/link/unsafe-component-lifecycles for details.\n\n' ..
@@ -259,25 +268,25 @@ if _G.__DEV__ then
           'code to use memoization techniques or move it to ' ..
           'static getDerivedStateFromProps. Learn more at: https://reactjs.org/link/derived-state\n' ..
           '* Rename componentWillReceiveProps to UNSAFE_componentWillReceiveProps to suppress ' ..
-          'this warning in non-strict mode. In React 18.x, only the UNSAFE_ name will work. ' ..
-          'To rename all deprecated lifecycles to their new names, you can run ' ..
-          '`npx react-codemod rename-unsafe-lifecycles` in your project source folder.\n' ..
+          'this warning in non-strict mode. In React 18.x, only the UNSAFE_ name will work.\n' ..
           '\nPlease update the following components: %s',
         sortedNames
       )
     end
 
-    if #componentWillUpdateUniqueNames > 0 then
+    -- deviation: use `next` to determine whether set is empty
+    if next(componentWillUpdateUniqueNames) ~= nil then
       local sortedNames = setToSortedString(componentWillUpdateUniqueNames)
 
+      -- ROBLOX TODO: Make decisions about whether or not we'll support these
+      -- methods in the first place
+      -- deviation: Remove some non-applicable information
       console.warn(
         'componentWillUpdate has been renamed, and is not recommended for use. ' ..
           'See https://reactjs.org/link/unsafe-component-lifecycles for details.\n\n' ..
           '* Move data fetching code or side effects to componentDidUpdate.\n' ..
           '* Rename componentWillUpdate to UNSAFE_componentWillUpdate to suppress ' ..
-          'this warning in non-strict mode. In React 18.x, only the UNSAFE_ name will work. ' ..
-          'To rename all deprecated lifecycles to their new names, you can run ' ..
-          '`npx react-codemod rename-unsafe-lifecycles` in your project source folder.\n' ..
+          'this warning in non-strict mode. In React 18.x, only the UNSAFE_ name will work.\n' ..
           '\nPlease update the following components: %s',
         sortedNames
       )
@@ -319,12 +328,12 @@ if _G.__DEV__ then
         warningsForRoot = {}
         pendingLegacyContextWarning[strictRoot] = warningsForRoot
       end
-      warningsForRoot.push(fiber)
+      table.insert(warningsForRoot, fiber)
     end
   end
 
   ReactStrictModeWarnings.flushLegacyContextWarning = function()
-    	for strictRoot, fiberArray in pairs(pendingLegacyContextWarning) do
+      for strictRoot, fiberArray in pairs(pendingLegacyContextWarning) do
         if #fiberArray == 0 then
           return
         end
@@ -350,12 +359,12 @@ if _G.__DEV__ then
           )
         end)
 
-				-- finally
+        -- finally
         resetCurrentDebugFiberInDEV()
 
-				if not ok then
-					error(error_)
-				end
+        if not ok then
+          error(error_)
+        end
       end
   end
 

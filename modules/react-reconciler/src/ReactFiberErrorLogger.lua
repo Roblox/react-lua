@@ -1,3 +1,4 @@
+-- upstream: https://github.com/facebook/react/blob/702fad4b1b48ac8f626ed3f35e8f86f5ea728084/packages/react-reconciler/src/ReactFiberErrorLogger.js
 --[[*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
@@ -10,8 +11,10 @@
 local Workspace = script.Parent.Parent
 local Packages = Workspace.Parent.Packages
 local LuauPolyfill = require(Packages.LuauPolyfill)
-local console = LuauPolyfill.console
 local setTimeout = LuauPolyfill.setTimeout
+
+-- ROBLOX: use patched console from shared
+local console = require(Workspace.Shared.console)
 
 local ReactInternalTypes = require(script.Parent.ReactInternalTypes)
 type Fiber = ReactInternalTypes.Fiber

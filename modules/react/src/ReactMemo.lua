@@ -7,9 +7,8 @@
  ]]
 
 local Workspace = script.Parent.Parent
-local Packages = Workspace.Parent.Packages
-local LuauPolyfill = require(Packages.LuauPolyfill)
-local console = LuauPolyfill.console
+-- ROBLOX: use patched console from shared
+local console = require(Workspace.Shared.console)
 
 local REACT_MEMO_TYPE = require(Workspace.Shared.ReactSymbols).REACT_MEMO_TYPE
 local isValidElementType = require(Workspace.Shared.isValidElementType)

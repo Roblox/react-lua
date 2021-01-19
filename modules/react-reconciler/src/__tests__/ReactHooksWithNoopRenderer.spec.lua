@@ -1,3 +1,4 @@
+-- upstream: https://github.com/facebook/react/blob/99cae887f3a8bde760a111516d254c1225242edf/packages/react-reconciler/src/__tests__/ReactHooksWithNoopRenderer-test.js
 --[[*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
@@ -1958,7 +1959,7 @@ return function()
     end)
 
     -- ROBLOX FIXME: this fails because ReactFiberReconciler sets update.payload to nil, which removes the key
-    xit('unmounts on deletion', function()
+    it('unmounts on deletion', function()
       -- FIXME: type of expect
       local expect: any = expect
       local function Counter(props)

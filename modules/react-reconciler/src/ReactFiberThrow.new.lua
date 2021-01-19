@@ -1,3 +1,4 @@
+-- upstream: https://github.com/facebook/react/blob/16654436039dd8f16a63928e71081c7745872e8f/packages/react-reconciler/src/ReactFiberThrow.new.js
 --[[*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
@@ -10,7 +11,10 @@
 local Workspace = script.Parent.Parent
 local Packages = Workspace.Parent.Packages
 local LuauPolyfill = require(Packages.LuauPolyfill)
-local console = LuauPolyfill.console
+local Object = LuauPolyfill.Object
+
+-- ROBLOX: use patched console from shared
+local console = require(Workspace.Shared.console)
 local inspect = require(Workspace.Shared["inspect.roblox"]).inspect
 
 local ReactInternalTypes = require(script.Parent.ReactInternalTypes)
@@ -107,7 +111,7 @@ function createRootErrorUpdate(
   update.tag = CaptureUpdate
   -- Caution: React DevTools currently depends on this property
   -- being called "element".
-  update.payload = {element = nil}
+  update.payload = {element = Object.None}
   local _error = errorInfo.value
   update.callback = function()
     console.warn("onUncaughtError: " .. inspect(errorInfo))
@@ -391,7 +395,8 @@ function throwException(
   -- We didn't find a boundary that could handle this type of exception. Start
   -- over and traverse parent path again, this time treating the exception
   -- as an error.
-  unimplemented("renderDidError")
+  -- ROBLOX FIXME: fix the FiberThrow -> WorkLoop:renderDidError import cycle
+  console.warn("ReactFiberThrow: renderDidError not imported due to cycle")
   -- renderDidError()
 
   value = createCapturedValue(value, sourceFiber)

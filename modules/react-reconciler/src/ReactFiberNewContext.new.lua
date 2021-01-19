@@ -1,3 +1,4 @@
+-- upstream: https://github.com/facebook/react/blob/1eaafc9ade46ba708b2361b324dd907d019e3939/packages/react-reconciler/src/ReactFiberNewContext.new.js
 --[[*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
@@ -14,9 +15,10 @@ end
 local Workspace = script.Parent.Parent
 local Packages = Workspace.Parent.Packages
 local LuauPolyfill = require(Packages.LuauPolyfill)
-local console = LuauPolyfill.console
 local Number = LuauPolyfill.Number
 
+-- ROBLOX: use patched console from shared
+local console = require(Workspace.Shared.console)
 
 local ReactTypes = require(Workspace.Shared.ReactTypes)
 type ReactContext<T> = ReactTypes.ReactContext<T>

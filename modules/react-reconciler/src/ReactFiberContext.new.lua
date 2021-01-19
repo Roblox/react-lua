@@ -13,9 +13,11 @@ local Workspace = script.Parent.Parent
 local Packages = Workspace.Parent.Packages
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local Object = LuauPolyfill.Object
-local console = LuauPolyfill.console
 
 local Cryo = require(Packages.Cryo)
+
+-- ROBLOX: use patched console from shared
+local console = require(Workspace.Shared.console)
 
 local ReactInternalTypes = require(script.Parent.ReactInternalTypes)
 type Fiber = ReactInternalTypes.Fiber;

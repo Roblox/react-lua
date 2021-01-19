@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -ex
+set -x
 
 rojo build --output model.rbxmx
 roblox-cli analyze default.project.json

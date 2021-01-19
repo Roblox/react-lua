@@ -16,8 +16,10 @@ local Packages = Workspace.Parent.Packages
 local Cryo = require(Packages.Cryo)
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local Array = LuauPolyfill.Array
-local console = LuauPolyfill.console
 local Object = LuauPolyfill.Object
+
+-- ROBLOX: use patched console from shared
+local console = require(Workspace.Shared.console)
 
 type Object = { [string]: any };
 type Array<T> = { [number]: T };
@@ -328,6 +330,11 @@ exports.updateContainer = function(
 	end
 
 	local update = createUpdate(eventTime, lane)
+	-- deviation: We need to set element to a placeholder so that it gets
+	-- removed from previous state when merging tables
+	if element == nil then
+		element = Object.None
+	end
 	-- Caution: React DevTools currently depends on this property
 	-- being called "element".
 	update.payload = {

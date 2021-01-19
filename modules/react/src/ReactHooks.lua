@@ -11,9 +11,10 @@
 local Workspace = script.Parent.Parent
 local Packages = Workspace.Parent.Packages
 local LuauPolyfill = require(Packages.LuauPolyfill)
-local console = LuauPolyfill.console
 local Array = LuauPolyfill.Array
 
+-- ROBLOX: use patched console from shared
+local console = require(Workspace.Shared.console)
 local invariant = require(Workspace.Shared.invariant)
 
 local ReactCurrentDispatcher = require(script.Parent.ReactCurrentDispatcher)

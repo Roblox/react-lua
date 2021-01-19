@@ -1235,7 +1235,7 @@ return function()
 
     -- No longer a public API, but we can test that it works internally by
     -- reaching into the updater.
-    shallowRenderer._updater:enqueueReplaceState(
+    shallowRenderer._updater.enqueueReplaceState(
       instance,
       {counter = 1},
       callback

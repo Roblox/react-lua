@@ -46,11 +46,6 @@ return function()
 
 	beforeEach(function()
 		RobloxJest.resetModules()
-		-- deviation: In react, this mock is applied by replacing the
-		-- `SchedulerHostConfig.js` file during build scripts
-		RobloxJest.mock(script.Parent.Parent.SchedulerHostConfig, function()
-			return require(script.Parent.Parent.forks["SchedulerHostConfig.mock"])
-		end)
 		-- deviation: In react, jest mocks Scheduler -> unstable_mock; since
 		-- unstable_mock depends on the real Scheduler, and our mock
 		-- functionality isn't smart enough to prevent self-requires, we simply

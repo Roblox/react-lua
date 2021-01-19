@@ -24,12 +24,13 @@ local Cryo = require(Packages.Cryo)
 local LuauPolyfill = require(Packages.LuauPolyfill)
 
 local Array = LuauPolyfill.Array
-local console = LuauPolyfill.console
 local Error = LuauPolyfill.Error
 local Object = LuauPolyfill.Object
 local setTimeout = LuauPolyfill.setTimeout
 local clearTimeout = LuauPolyfill.clearTimeout
 
+-- ROBLOX: use patched console from shared
+local console = require(Workspace.Shared.console)
 local Scheduler = require(Workspace.Scheduler.unstable_mock)
 -- deviation: These are only used for the JSX logic that's currently omitted
 -- local ReactSymbols = require(Workspace.Shared.ReactSymbols)

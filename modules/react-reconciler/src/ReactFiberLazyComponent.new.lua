@@ -1,0 +1,34 @@
+-- upstream: https://github.com/facebook/react/blob/17f582e0453b808860be59ed3437c6a426ae52de/packages/react-reconciler/src/ReactFiberLazyComponent.new.js
+--[[*
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
+]]
+
+local Packages = script.Parent.Parent.Parent.Packages
+local LuauPolyfill = require(Packages.LuauPolyfill)
+local Object = LuauPolyfill.Object
+
+type Object = { [any]: any }
+
+local function resolveDefaultProps(Component: any, baseProps: Object): Object
+	if Component and Component.defaultProps then
+		-- Resolve default props. Taken from ReactElement
+		local props = Object.assign({}, baseProps)
+		local defaultProps = Component.defaultProps
+		for propName, _ in pairs(defaultProps) do
+			if props[propName] == nil then
+				props[propName] = defaultProps[propName]
+			end
+		end
+		return props
+	end
+	return baseProps
+end
+
+return {
+	resolveDefaultProps = resolveDefaultProps,
+}

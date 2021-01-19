@@ -32,8 +32,7 @@ return function()
     Scheduler = require(Workspace.Scheduler.unstable_mock)
   end)
 
-  -- TODO: Enable when the reconciler is implemented
-  itSKIP("should render a simple fragment at the top of a component", function()
+  it("should render a simple fragment at the top of a component", function()
     -- FIXME: expect coercion
     local expect: any = expect
     local function Fragment()
@@ -50,7 +49,7 @@ return function()
     expect(Scheduler).toFlushWithoutYielding()
   end)
 
-  itSKIP("should preserve state when switching from a single child", function()
+  it("should preserve state when switching from a single child", function()
     -- FIXME: expect coercion
     local expect: any = expect
     local instance = nil
@@ -86,10 +85,10 @@ return function()
 
     local instanceB = instance
 
-    expect(instanceB).toBe(instanceA)
+    expect(instanceB).to.equal(instanceA)
   end)
 
-  itSKIP("should not preserve state when switching to a nested array", function()
+  it("should not preserve state when switching to a nested array", function()
     -- FIXME: expect coercion
     local expect: any = expect
     local instance = nil
@@ -125,10 +124,11 @@ return function()
 
     local instanceB = instance
 
-    expect(instanceB).never.toBe(instanceA)
+    expect(instanceB).never.to.equal(instanceA)
   end)
 
-  itSKIP("preserves state if an implicit key slot switches from/to nil", function()
+  -- ROBLOX FIXME: currently fails on the very last expect
+  xit("preserves state if an implicit key slot switches from/to nil", function()
     -- FIXME: expect coercion
     local expect: any = expect
     local instance = nil
@@ -136,7 +136,7 @@ return function()
     local Stateful = React.Component:extend("Stateful")
     function Stateful:render()
         instance = self
-        return React.createElement("TextLabel", {Text="Wold"})
+        return React.createElement("TextLabel", {Text="World"})
     end
 
     local function Fragment(props)
@@ -159,6 +159,7 @@ return function()
     expect(Scheduler).toFlushWithoutYielding()
 
     local instanceA = instance
+
     expect(instanceA).never.to.equal(nil)
 
     ReactNoop.render(React.createElement(Fragment, {condition = true}))
@@ -166,17 +167,17 @@ return function()
 
     local instanceB = instance
 
-    expect(instanceB).toBe(instanceA)
+    expect(instanceB).to.equal(instanceA)
 
     ReactNoop.render(React.createElement(Fragment, {condition = false}))
     expect(Scheduler).toFlushWithoutYielding()
 
     local instanceC = instance
 
-    expect(instanceC == instanceA).toBe(true)
+    expect(instanceC).to.equal(instanceA)
   end)
 
-  itSKIP("should preserve state in a reorder", function()
+  it("should preserve state in a reorder", function()
     -- FIXME: expect coercion
     local expect: any = expect
     local instance = nil
@@ -217,6 +218,6 @@ return function()
 
     local instanceB = instance
 
-    expect(instanceB).toBe(instanceA)
+    expect(instanceB).to.equal(instanceA)
   end)
 end
