@@ -3275,7 +3275,6 @@ if _G.__DEV__ and ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallb
     end)
     if not ok then
       local originalError = result
-      warn(originalError)
       if
         originalError ~= nil and
         typeof(originalError) == "table" and
