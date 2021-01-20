@@ -1074,8 +1074,6 @@ local function ChildReconciler(shouldTrackSideEffects)
 
     local step = newChildren.next()
     while oldFiber ~= nil and not step.done do
-      newIdx += 1
-      step = newChildren.next()
       if oldFiber.index > newIdx then
         nextOldFiber = oldFiber
         oldFiber = nil
@@ -1113,6 +1111,9 @@ local function ChildReconciler(shouldTrackSideEffects)
       end
       previousNewFiber = newFiber
       oldFiber = nextOldFiber
+
+      newIdx += 1
+      step = newChildren.next()
     end
 
     if step.done then
@@ -1125,8 +1126,6 @@ local function ChildReconciler(shouldTrackSideEffects)
       -- If we don't have any more existing children we can choose a fast path
       -- since the rest will all be insertions.
       while not step.done do
-        newIdx+= 1
-        step = newChildren.next()
         local newFiber = createChild(returnFiber, step.value, lanes)
         if newFiber == nil then
           continue
@@ -1139,6 +1138,9 @@ local function ChildReconciler(shouldTrackSideEffects)
           previousNewFiber.sibling = newFiber
         end
         previousNewFiber = newFiber
+
+        newIdx += 1
+        step = newChildren.next()
       end
       return resultingFirstChild
     end
@@ -1148,8 +1150,6 @@ local function ChildReconciler(shouldTrackSideEffects)
 
     -- Keep scanning and use the map to restore deleted items as moves.
     while not step.done do
-      newIdx+= 1
-      step = newChildren.next()
       local newFiber = updateFromMap(
         existingChildren,
         returnFiber,
@@ -1179,6 +1179,9 @@ local function ChildReconciler(shouldTrackSideEffects)
         end
         previousNewFiber = newFiber
       end
+
+      newIdx += 1
+      step = newChildren.next()
     end
 
     if shouldTrackSideEffects then

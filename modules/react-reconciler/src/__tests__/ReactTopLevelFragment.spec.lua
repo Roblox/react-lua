@@ -127,8 +127,7 @@ return function()
     expect(instanceB).never.to.equal(instanceA)
   end)
 
-  -- ROBLOX FIXME: currently fails on the very last expect
-  xit("preserves state if an implicit key slot switches from/to nil", function()
+  it("preserves state if an implicit key slot switches from/to nil", function()
     -- FIXME: expect coercion
     local expect: any = expect
     local instance = nil
