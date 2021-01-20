@@ -90,11 +90,6 @@ return function()
     return instance.updater.isMounted(instance) and "MOUNTED" or "UNMOUNTED"
   end
 
-  local itSkipIfDev = it
-  if _G.__DEV__ then
-    itSkipIfDev = xit
-  end
-
   beforeEach(function()
     RobloxJest.resetModules()
     RobloxJest.useFakeTimers()
@@ -283,7 +278,7 @@ return function()
     end)
   end)
 
-  itSkipIfDev('should correctly determine if a component is mounted', function()
+  it('should correctly determine if a component is mounted', function()
     -- ROBLOX FIXME: expect type
     local expect: any = expect
 
@@ -315,10 +310,16 @@ return function()
         ReactNoop.render(element)
       end)
       expect(isMounted()).to.equal(true)
-    end).toErrorDev("Component is accessing isMounted inside its render()")
+    end).toErrorDev(
+      {
+        "Component is accessing isMounted inside its render()",
+        "UNSAFE_componentWillMount in strict mode is not recommended",
+      },
+      {withoutStack = 1}
+    )
   end)
 
-  itSkipIfDev('should correctly determine if a nil component is mounted', function()
+  it('should correctly determine if a nil component is mounted', function()
     -- ROBLOX FIXME: expect type
     local expect: any = expect
 
@@ -350,7 +351,13 @@ return function()
         ReactNoop.render(element)
       end)
       expect(isMounted()).to.equal(true)
-    end).toErrorDev("Component is accessing isMounted inside its render()")
+    end).toErrorDev(
+      {
+        "Component is accessing isMounted inside its render()",
+        "UNSAFE_componentWillMount in strict mode is not recommended",
+      },
+      {withoutStack = 1}
+    )
   end)
 
   it('isMounted should return false when unmounted', function()
@@ -402,7 +409,7 @@ return function()
 --     }).toErrorDev('Component is accessing findDOMNode inside its render()')
 --   })
 
-  itSkipIfDev('should carry through each of the phases of setup', function()
+  it('should carry through each of the phases of setup', function()
     -- ROBLOX FIXME: expect type
     local expect: any = expect
 
@@ -469,7 +476,11 @@ return function()
         ReactNoop.render(React.createElement(LifeCycleComponent))
       end)
     end).toErrorDev(
-      "LifeCycleComponent is accessing isMounted inside its render() function"
+      {
+        "LifeCycleComponent is accessing isMounted inside its render() function",
+        "UNSAFE_componentWillMount in strict mode is not recommended",
+      },
+      {withoutStack = 1}
     )
 
     -- getInitialState
@@ -803,7 +814,7 @@ xit('should not throw when updating an auxiliary component', function()
     })
   end)
 
-  itSkipIfDev('should not invoke deprecated lifecycles (cWM/cWRP/cWU) if new static gDSFP is present', function()
+  it('should not invoke deprecated lifecycles (cWM/cWRP/cWU) if new static gDSFP is present', function()
     -- ROBLOX FIXME: expect type
     local expect: any = expect
 
@@ -831,10 +842,10 @@ xit('should not throw when updating an auxiliary component', function()
       expect(function()
         ReactNoop.act(function()
           ReactNoop.render(React.createElement(Component))
-        end).toErrorDev(
-          'Unsafe legacy lifecycles will not be called for components using new component APIs.'
-        )
-      end)
+        end)
+      end).toErrorDev(
+        'Unsafe legacy lifecycles will not be called for components using new component APIs.'
+      )
     end).toWarnDev(
       -- We should consider removing this altogether; the old behavior referred
       -- to here is unique to React. None of Roact's old behavior is reflected
@@ -849,7 +860,7 @@ xit('should not throw when updating an auxiliary component', function()
   end)
 
   -- ROBLOX FIXME: outputs none of the toWarnDev() expected messages in DEV mode
-  itSkipIfDev('should not invoke deprecated lifecycles (cWM/cWRP/cWU) if new getSnapshotBeforeUpdate is present', function()
+  it('should not invoke deprecated lifecycles (cWM/cWRP/cWU) if new getSnapshotBeforeUpdate is present', function()
     -- ROBLOX FIXME: expect type
     local expect: any = expect
 
@@ -878,10 +889,10 @@ xit('should not throw when updating an auxiliary component', function()
       expect(function()
         ReactNoop.act(function()
           ReactNoop.render(React.createElement(Component, {value=1}))
-        end).toErrorDev(
-          'Unsafe legacy lifecycles will not be called for components using new component APIs.'
-        )
-      end)
+        end)
+      end).toErrorDev(
+        'Unsafe legacy lifecycles will not be called for components using new component APIs.'
+      )
     end).toWarnDev(
       {
         'componentWillMount has been renamed',
@@ -895,7 +906,7 @@ xit('should not throw when updating an auxiliary component', function()
     end)
   end)
 
-  itSkipIfDev('should not invoke new unsafe lifecycles (cWM/cWRP/cWU) if static gDSFP is present', function()
+  it('should not invoke new unsafe lifecycles (cWM/cWRP/cWU) if static gDSFP is present', function()
     -- ROBLOX FIXME: expect type
     local expect: any = expect
 
@@ -923,15 +934,19 @@ xit('should not throw when updating an auxiliary component', function()
       ReactNoop.act(function()
         ReactNoop.render(React.createElement(Component, {value = 1}))
       end)
-    end).toErrorDev(
-      "Unsafe legacy lifecycles will not be called for components using new component APIs."
-    )
+    end).toErrorDev({
+      "Unsafe legacy lifecycles will not be called for components using new component APIs.",
+      -- deviation: ReactNoop runs with a StrictMode root and logs more warnings
+      "Using UNSAFE_componentWillMount in strict mode is not recommended",
+      "Using UNSAFE_componentWillReceiveProps in strict mode is not recommended",
+      "Using UNSAFE_componentWillUpdate in strict mode is not recommended",
+    }, {withoutStack = 3})
     ReactNoop.act(function()
       ReactNoop.render(React.createElement(Component, {value = 2}))
     end)
   end)
 
-  itSkipIfDev('should warn about deprecated lifecycles (cWM/cWRP/cWU) if new static gDSFP is present', function()
+  it('should warn about deprecated lifecycles (cWM/cWRP/cWU) if new static gDSFP is present', function()
     -- ROBLOX FIXME: expect type
     local expect: any = expect
 
@@ -955,13 +970,17 @@ xit('should not throw when updating an auxiliary component', function()
           ReactNoop.render(React.createElement(AllLegacyLifecycles))
         end)
       end).toErrorDev(
-        "Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n" ..
-          "AllLegacyLifecycles uses getDerivedStateFromProps() but also contains the following legacy lifecycles:\n" ..
-          "  componentWillMount\n" ..
-          "  UNSAFE_componentWillReceiveProps\n" ..
-          "  componentWillUpdate\n\n" ..
-          "The above lifecycles should be removed. Learn more about this warning here:\n" ..
-          "https://reactjs.org/link/unsafe-component-lifecycles"
+        {
+          "Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n" ..
+            "AllLegacyLifecycles uses getDerivedStateFromProps() but also contains the following legacy lifecycles:\n" ..
+            "  componentWillMount\n" ..
+            "  UNSAFE_componentWillReceiveProps\n" ..
+            "  componentWillUpdate\n\n" ..
+            "The above lifecycles should be removed. Learn more about this warning here:\n" ..
+            "https://reactjs.org/link/unsafe-component-lifecycles",
+          "UNSAFE_componentWillReceiveProps in strict mode is not recommended",
+        },
+        {withoutStack = 1}
       )
     end).toWarnDev(
       {
@@ -987,11 +1006,15 @@ xit('should not throw when updating an auxiliary component', function()
       ReactNoop.act(function()
         ReactNoop.render(React.createElement(WillMount))
       end).toErrorDev(
-        "Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n" ..
-          "WillMount uses getDerivedStateFromProps() but also contains the following legacy lifecycles:\n" ..
-          "  UNSAFE_componentWillMount\n\n" ..
-          "The above lifecycles should be removed. Learn more about this warning here:\n" ..
-          "https://reactjs.org/link/unsafe-component-lifecycles"
+        {
+          "Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n" ..
+            "WillMount uses getDerivedStateFromProps() but also contains the following legacy lifecycles:\n" ..
+            "  UNSAFE_componentWillMount\n\n" ..
+            "The above lifecycles should be removed. Learn more about this warning here:\n" ..
+            "https://reactjs.org/link/unsafe-component-lifecycles",
+          "UNSAFE_componentWillMount in strict mode is not recommended",
+        },
+        {withoutStack = 1}
       )
     end)
 
@@ -1014,12 +1037,16 @@ xit('should not throw when updating an auxiliary component', function()
           ReactNoop.render(React.createElement(WillMountAndUpdate))
         end)
       end).toErrorDev(
-        "Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n" ..
-          "WillMountAndUpdate uses getDerivedStateFromProps() but also contains the following legacy lifecycles:\n" ..
-          "  componentWillMount\n" ..
-          "  UNSAFE_componentWillUpdate\n\n" ..
-          "The above lifecycles should be removed. Learn more about this warning here:\n" ..
-          "https://reactjs.org/link/unsafe-component-lifecycles"
+        {
+          "Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n" ..
+            "WillMountAndUpdate uses getDerivedStateFromProps() but also contains the following legacy lifecycles:\n" ..
+            "  componentWillMount\n" ..
+            "  UNSAFE_componentWillUpdate\n\n" ..
+            "The above lifecycles should be removed. Learn more about this warning here:\n" ..
+            "https://reactjs.org/link/unsafe-component-lifecycles",
+          "UNSAFE_componentWillUpdate in strict mode is not recommended",
+        },
+        {withoutStack = 1}
       )
     end).toWarnDev({"componentWillMount has been renamed"}, {
       withoutStack = true,
@@ -1054,8 +1081,7 @@ xit('should not throw when updating an auxiliary component', function()
     })
   end)
 
-  -- ROBLOX FIXME: fails in DEV mode, due to "Lua functions can"t have properties"
-  xit('should warn about deprecated lifecycles (cWM/cWRP/cWU) if new getSnapshotBeforeUpdate is present', function()
+  it('should warn about deprecated lifecycles (cWM/cWRP/cWU) if new getSnapshotBeforeUpdate is present', function()
     -- ROBLOX FIXME: expect type
     local expect: any = expect
 
@@ -1078,18 +1104,22 @@ xit('should not throw when updating an auxiliary component', function()
           ReactNoop.render(React.createElement(AllLegacyLifecycles))
         end)
       end).toErrorDev(
-        'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' ..
-          'AllLegacyLifecycles uses getSnapshotBeforeUpdate() but also contains the following legacy lifecycles:\n' ..
-          '  componentWillMount\n' ..
-          '  UNSAFE_componentWillReceiveProps\n' ..
-          '  componentWillUpdate\n\n' ..
-          'The above lifecycles should be removed. Learn more about this warning here:\n' ..
-          'https://reactjs.org/link/unsafe-component-lifecycles'
+        {
+          "Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n" ..
+            "AllLegacyLifecycles uses getSnapshotBeforeUpdate() but also contains the following legacy lifecycles:\n" ..
+            "  componentWillMount\n" ..
+            "  UNSAFE_componentWillReceiveProps\n" ..
+            "  componentWillUpdate\n\n" ..
+            "The above lifecycles should be removed. Learn more about this warning here:\n" ..
+            "https://reactjs.org/link/unsafe-component-lifecycles",
+          "UNSAFE_componentWillReceiveProps in strict mode is not recommended",
+        },
+        {withoutStack = 1}
       )
     end).toWarnDev(
       {
-        'componentWillMount has been renamed',
-        'componentWillUpdate has been renamed'
+        "componentWillMount has been renamed",
+        "componentWillUpdate has been renamed"
       },
       {withoutStack = true}
     )
@@ -1110,11 +1140,15 @@ xit('should not throw when updating an auxiliary component', function()
         ReactNoop.render(React.createElement(WillMount))
       end)
     end).toErrorDev(
-      'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' ..
-        'WillMount uses getSnapshotBeforeUpdate() but also contains the following legacy lifecycles:\n' ..
-        '  UNSAFE_componentWillMount\n\n' ..
-        'The above lifecycles should be removed. Learn more about this warning here:\n' ..
-        'https://reactjs.org/link/unsafe-component-lifecycles'
+      {
+        "Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n" ..
+          "WillMount uses getSnapshotBeforeUpdate() but also contains the following legacy lifecycles:\n" ..
+          "  UNSAFE_componentWillMount\n\n" ..
+          "The above lifecycles should be removed. Learn more about this warning here:\n" ..
+          "https://reactjs.org/link/unsafe-component-lifecycles",
+        "UNSAFE_componentWillMount in strict mode is not recommended",
+      },
+      {withoutStack = 1}
     )
 
     local WillMountAndUpdate = React.Component:extend("WillMountAndUpdate")
@@ -1135,14 +1169,18 @@ xit('should not throw when updating an auxiliary component', function()
           ReactNoop.render(React.createElement(WillMountAndUpdate))
         end)
       end).toErrorDev(
-        'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' ..
-          'WillMountAndUpdate uses getSnapshotBeforeUpdate() but also contains the following legacy lifecycles:\n' ..
-          '  componentWillMount\n' ..
-          '  UNSAFE_componentWillUpdate\n\n' ..
-          'The above lifecycles should be removed. Learn more about this warning here:\n' ..
-          'https://reactjs.org/link/unsafe-component-lifecycles'
+        {
+          "Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n" ..
+            "WillMountAndUpdate uses getSnapshotBeforeUpdate() but also contains the following legacy lifecycles:\n" ..
+            "  componentWillMount\n" ..
+            "  UNSAFE_componentWillUpdate\n\n" ..
+            "The above lifecycles should be removed. Learn more about this warning here:\n" ..
+            "https://reactjs.org/link/unsafe-component-lifecycles",
+          "UNSAFE_componentWillUpdate in strict mode is not recommended",
+        },
+        {withoutStack = 1}
       )
-    end).toWarnDev({'componentWillMount has been renamed'}, {
+    end).toWarnDev({"componentWillMount has been renamed"}, {
       withoutStack = true
     })
 

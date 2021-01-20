@@ -163,10 +163,11 @@ local isHostParent, getHostSibling, insertOrAppendPlacementNode,
 -- -- Used to avoid traversing the return path to find the nearest Profiler ancestor during commit.
 -- local nearestProfilerOnStack: Fiber | nil = nil
 
-local didWarnAboutUndefinedSnapshotBeforeUpdate: Set<any>? = nil
-if _G.__DEV__ then
-  didWarnAboutUndefinedSnapshotBeforeUpdate = {}
-end
+-- deviation: Not possible to return `undefined` in lua
+-- local didWarnAboutUndefinedSnapshotBeforeUpdate: Set<any>? = nil
+-- if _G.__DEV__ then
+--   didWarnAboutUndefinedSnapshotBeforeUpdate = {}
+-- end
 
 -- local PossiblyWeakSet = typeof WeakSet == 'function' ? WeakSet : Set
 
@@ -331,17 +332,16 @@ local function commitBeforeMutationLifeCycles(
           prevState
         )
         if _G.__DEV__ then
-          -- deviation: type coercion
+          -- deviation: not possible to return `undefined` in Lua
           -- local didWarnSet = ((didWarnAboutUndefinedSnapshotBeforeUpdate: any): Set<mixed>)
-          local didWarnSet: any = didWarnAboutUndefinedSnapshotBeforeUpdate
-          if snapshot == nil and not didWarnSet[finishedWork.type] then
-            didWarnSet.add(finishedWork.type)
-            console.error(
-              "%s.getSnapshotBeforeUpdate(): A snapshot value (or nil) " ..
-                "must be returned. You have returned undefined.",
-              getComponentName(finishedWork.type)
-            )
-          end
+          -- if snapshot == nil and not didWarnSet[finishedWork.type] then
+          --   didWarnSet[finishedWork.type] = true
+          --   console.error(
+          --     "%s.getSnapshotBeforeUpdate(): A snapshot value (or nil) " ..
+          --       "must be returned. You have returned undefined.",
+          --     getComponentName(finishedWork.type)
+          --   )
+          -- end
         end
         instance.__reactInternalSnapshotBeforeUpdate = snapshot
       end
@@ -1026,7 +1026,12 @@ function commitAttachRef(finishedWork: Fiber)
       ref(instanceToUse)
     else
       if _G.__DEV__ then
-        if not ref.current then
+        -- ROBLOX FIXME: We won't be able to recognize a ref object by checking
+        -- for the existence of the `current` key, since it won't be initialized
+        -- at this point. We might consider using a symbol to uniquely identify
+        -- ref objects, or relying more heavily on Luau types
+        -- if not ref.current then
+        if typeof(ref) ~= "table" then
           console.error(
             'Unexpected ref object provided for %s. ' ..
               'Use either a ref-setter function or React.createRef().',
@@ -1035,8 +1040,6 @@ function commitAttachRef(finishedWork: Fiber)
         end
       end
 
-      -- ROBLOX FIXME: this assignment fails, ref is {}, and ref.current is nil. is ref frozen?
-      -- exception thrown is ` \"current\" (string) is not a valid member of table: 0xca17011e37c668fa)`
       ref.current = instanceToUse
     end
   end
