@@ -52,6 +52,7 @@ Projects not in the react repo:
 
 You need to create a GitHub Access Token:
 * GitHub.com -> Settings -> Developer Settings -> Personal Access Tokens
+* Your token must have the `repo` and read:packages` scopes
 * On that same page, you then need to click Enable SSO
 * BE SURE TO COPY THE ACCESS TOKEN SOMEWHERE 
 
@@ -71,27 +72,42 @@ mkdir ~/bin
 rbx-aged-cli download roblox-cli --dst ~/bin
 export PATH=$PATH:~/bin
 roblox-cli --help
-git clone git@github.com:Roblox/roact-alignment.git
-cd roact-alignment
-roblox-cli analyze modules/scheduler/default.project.json
 ```
 
-Foreman uses Rust, so you'll have to install Rust first.
+You should see roblox-cli output its help text. The next step is to clone the repo.
+
+```
+git clone git@github.com:Roblox/roact-alignment.git
+cd roact-alignment
+roblox-cli analyze default.project.json
+```
+
+Foreman is an un-package manager that retrieves code directly from GitHub repositories. We'll use this to get a Lua package manager and other utilities. The Foreman packages are listed in `foreman.toml`. Foreman uses Rust, so you'll have to install Rust first.
 
 ```
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 export PATH=$PATH:$HOME/.cargo/bin
 cargo install foreman
-foreman github-auth  # your auth token should be in your ~/.npmrc
+foreman github-auth <your GitHub API token that you used for npm login above>
 foreman install
 export PATH=$PATH:~/.foreman/bin/
 ```
 
-Now you can run the tests, edit code, and contribute!
+Now you can run the tests, edit code, and contribute! Next we need to install our Lua package dependencies. We do this with a tool called Rotriever, which Foreman just installed for us. The package dependencies are listed in `rotriever.toml`. 
 
 ```
-rotrieve install
+rotrieve install —git-auth <github username>@<github API TOKEN>
+```
+
+Next we're going to use Rojo (installed by Foreman above) to compile and package our Lua code into a format that Roblox understands.
+
+```
 rojo build --output model.rbxmx
+```
+
+Now we can use `roblox-cli` to run our tests. We specify the Rojo build output file and our test runner file.
+
+```
 roblox-cli run --load.model model.rbxmx --run bin/spec.lua
 ```
 
@@ -158,5 +174,4 @@ Shortly after you see the status bar change colors to indicate an active debugge
 ![image](https://user-images.githubusercontent.com/1550766/104785584-b4095a00-573f-11eb-8363-3b73a612e2a2.png)
 
 Note that VS Code even tells you the value of the variables on the line. Pretty cool!
-
 
