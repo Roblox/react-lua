@@ -61,7 +61,7 @@ exports.logCapturedError = function(
         -- so we'll print it first, and then print the stack addendum.
         console['error'](error_); -- Don't transform to our wrapper
         -- For a more detailed description of this block, see:
-        -- https:--github.com/facebook/react/pull/13384
+        -- https://github.com/facebook/react/pull/13384
       end
 
       local componentName
