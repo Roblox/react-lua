@@ -316,7 +316,7 @@ end
 -- 	return not not (prototype and prototype.isReactComponent)
 -- end
 
-local function describeUnknownElementTypeFrameInDEV(type, source, ownerFn)
+local function describeUnknownElementTypeFrameInDEV(type, source, ownerFn):string
 	if not _G.__DEV__ then
 		return ""
 	end

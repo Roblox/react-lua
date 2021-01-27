@@ -72,7 +72,7 @@ local ContentReset = ReactFiberFlags.ContentReset
 local DidCapture = ReactFiberFlags.DidCapture
 -- local Update = ReactFiberFlags.Update
 local Ref = ReactFiberFlags.Ref
--- local Deletion = ReactFiberFlags.Deletion
+local Deletion = ReactFiberFlags.Deletion
 local ForceUpdateForLegacySuspense = ReactFiberFlags.ForceUpdateForLegacySuspense
 local ReactSharedInternals = require(Workspace.Shared.ReactSharedInternals)
 local ReactFeatureFlags = require(Workspace.Shared.ReactFeatureFlags)
@@ -183,18 +183,18 @@ local adoptClassInstance = ReactFiberClassComponent.adoptClassInstance
 local applyDerivedStateFromProps = ReactFiberClassComponent.applyDerivedStateFromProps
 local constructClassInstance = ReactFiberClassComponent.constructClassInstance
 local mountClassInstance = ReactFiberClassComponent.mountClassInstance
--- local resumeMountClassInstance = ReactFiberClassComponent.resumeMountClassInstance
+local resumeMountClassInstance = ReactFiberClassComponent.resumeMountClassInstance
 local updateClassInstance = ReactFiberClassComponent.updateClassInstance
 
 local resolveDefaultProps = require(script.Parent["ReactFiberLazyComponent.new"]).resolveDefaultProps
 -- local {
 --   resolveLazyComponentTag,
---   createFiberFromTypeAndProps,
 --   createFiberFromFragment,
 --   createFiberFromOffscreen,
 --   createWorkInProgress,
 --   isSimpleFunctionComponent,
--- } = require(script.Parent.ReactFiber.new)
+local ReactFiber = require(script.Parent["ReactFiber.new"])
+local createFiberFromTypeAndProps = ReactFiber.createFiberFromTypeAndProps
 -- local {
 --   markSpawnedWork,
 --   retryDehydratedSuspenseBoundary,
@@ -236,13 +236,13 @@ local didWarnAboutDefaultPropsOnFunctionComponent
 if _G.__DEV__ then
   didWarnAboutBadClass = {}
   didWarnAboutModulePatternComponent = {}
---   didWarnAboutContextTypeOnFunctionComponent = {}
---   didWarnAboutGetDerivedStateOnFunctionComponent = {}
---   didWarnAboutFunctionRefs = {}
+  didWarnAboutContextTypeOnFunctionComponent = {}
+  didWarnAboutGetDerivedStateOnFunctionComponent = {}
+  didWarnAboutFunctionRefs = {}
   exports.didWarnAboutReassigningProps = false
 --   didWarnAboutRevealOrder = {}
 --   didWarnAboutTailOptions = {}
---   didWarnAboutDefaultPropsOnFunctionComponent = {}
+  didWarnAboutDefaultPropsOnFunctionComponent = {}
 end
 
 -- FIXME (roblox): type refinements, reintroduce parameter annotation
@@ -375,7 +375,7 @@ end
 --       end
 --     end
 --     setIsRendering(false)
---   } else {
+--   else
 --     nextChildren = renderWithHooks(
 --       current,
 --       workInProgress,
@@ -610,7 +610,7 @@ end
 --       if prevState ~= nil)
 --         local prevBaseLanes = prevState.baseLanes
 --         nextBaseLanes = mergeLanes(prevBaseLanes, renderLanes)
---       } else {
+--       else
 --         nextBaseLanes = renderLanes
 --       end
 
@@ -629,7 +629,7 @@ end
 --       -- to avoid a push/pop misalignment.
 --       pushRenderLanes(workInProgress, nextBaseLanes)
 --       return nil
---     } else {
+--     else
 --       -- Rendering at offscreen, so we can clear the base lanes.
 --       local nextState: OffscreenState = {
 --         baseLanes: NoLanes,
@@ -640,13 +640,13 @@ end
 --         prevState ~= nil ? prevState.baseLanes : renderLanes
 --       pushRenderLanes(workInProgress, subtreeRenderLanes)
 --     end
---   } else {
+--   else
 --     local subtreeRenderLanes
 --     if prevState ~= nil)
 --       subtreeRenderLanes = mergeLanes(prevState.baseLanes, renderLanes)
 --       -- Since we're not hidden anymore, reset the state
 --       workInProgress.memoizedState = nil
---     } else {
+--     else
 --       -- We weren't previously hidden, and we still aren't, so there's nothing
 --       -- special to do. Need to push to the stack regardless, though, to avoid
 --       -- a push/pop misalignment.
@@ -759,7 +759,7 @@ updateFunctionComponent = function(
     )
     if
       debugRenderPhaseSideEffectsForStrictMode and
-      bit32.band(workInProgress.mode, StrictMode)
+      bit32.band(workInProgress.mode, StrictMode) ~= 0
     then
       disableLogs()
       local ok, result = pcall(function()
@@ -848,7 +848,7 @@ end
 --       end
 --     end
 --     setIsRendering(false)
---   } else {
+--   else
 --     nextChildren = renderWithHooks(
 --       current,
 --       workInProgress,
@@ -928,14 +928,13 @@ local function updateClassComponent(
     mountClassInstance(workInProgress, Component, nextProps, renderLanes)
     shouldUpdate = true
   elseif current == nil then
-    unimplemented("resumeMountClassInstance")
-    -- -- In a resume, we'll already have an instance we can reuse.
-    -- shouldUpdate = resumeMountClassInstance(
-    --   workInProgress,
-    --   Component,
-    --   nextProps,
-    --   renderLanes
-    -- )
+    -- In a resume, we'll already have an instance we can reuse.
+    shouldUpdate = resumeMountClassInstance(
+      workInProgress,
+      Component,
+      nextProps,
+      renderLanes
+    )
   else
     shouldUpdate = updateClassInstance(
       current,
@@ -1018,7 +1017,7 @@ function finishClassComponent(
       nextChildren = instance:render()
       if
         debugRenderPhaseSideEffectsForStrictMode and
-        bit32.band(workInProgress.mode, StrictMode)
+        bit32.band(workInProgress.mode, StrictMode) ~= 0
       then
         disableLogs()
         local ok, result = pcall(function()
@@ -1376,7 +1375,7 @@ end
 --   if isLegacyContextProvider(Component))
 --     hasContext = true
 --     pushLegacyContextProvider(workInProgress)
---   } else {
+--   else
 --     hasContext = false
 --   end
 --   prepareToReadContext(workInProgress, renderLanes)
@@ -1445,7 +1444,7 @@ local function mountIndeterminateComponent(
       end
     end
 
-    if bit32.band(workInProgress.mode, StrictMode) then
+    if bit32.band(workInProgress.mode, StrictMode) ~= 0 then
       ReactStrictModeWarnings.recordLegacyContextWarning(workInProgress, nil)
     end
 
@@ -1581,7 +1580,7 @@ local function mountIndeterminateComponent(
 
       if
         debugRenderPhaseSideEffectsForStrictMode and
-        bit32.band(workInProgress.mode, StrictMode)
+        bit32.band(workInProgress.mode, StrictMode) ~= 0
       then
         disableLogs()
         local ok, result = pcall(function()
@@ -1773,7 +1772,7 @@ end
 --     -- rendering the fallback children.
 --     showFallback = true
 --     workInProgress.flags &= ~DidCapture
---   } else {
+--   else
 --     -- Attempting the main content
 --     if
 --       current == nil or
@@ -1889,14 +1888,14 @@ end
 --         markSpawnedWork(SomeRetryLane)
 --       end
 --       return fallbackFragment
---     } else {
+--     else
 --       return mountSuspensePrimaryChildren(
 --         workInProgress,
 --         nextPrimaryChildren,
 --         renderLanes,
 --       )
 --     end
---   } else {
+--   else
 --     -- This is an update.
 
 --     -- If the current fiber has a SuspenseState, that means it's already showing
@@ -1927,7 +1926,7 @@ end
 --             -- but the normal suspense pass doesn't.
 --             workInProgress.flags |= DidCapture
 --             return nil
---           } else {
+--           else
 --             -- Suspended but we should no longer be in dehydrated mode.
 --             -- Therefore we now have to render the fallback.
 --             local nextPrimaryChildren = nextProps.children
@@ -1972,7 +1971,7 @@ end
 --         )
 --         workInProgress.memoizedState = SUSPENDED_MARKER
 --         return fallbackChildFragment
---       } else {
+--       else
 --         local nextPrimaryChildren = nextProps.children
 --         local primaryChildFragment = updateSuspensePrimaryChildren(
 --           current,
@@ -1983,7 +1982,7 @@ end
 --         workInProgress.memoizedState = nil
 --         return primaryChildFragment
 --       end
---     } else {
+--     else
 --       -- The current tree is not already showing a fallback.
 --       if showFallback)
 --         -- Timed out.
@@ -2011,7 +2010,7 @@ end
 --         -- fallback children.
 --         workInProgress.memoizedState = SUSPENDED_MARKER
 --         return fallbackChildFragment
---       } else {
+--       else
 --         -- Still haven't timed out. Continue rendering the children, like we
 --         -- normally do.
 --         local nextPrimaryChildren = nextProps.children
@@ -2089,7 +2088,7 @@ end
 --       renderLanes,
 --       nil,
 --     )
---   } else {
+--   else
 --     primaryChildFragment = createFiberFromOffscreen(
 --       primaryChildProps,
 --       mode,
@@ -2149,7 +2148,7 @@ end
 --       workInProgress.deletions = [currentFallbackChildFragment]
 --       -- TODO (effects) Rename this to better reflect its new usage (e.g. ChildDeletions)
 --       workInProgress.flags |= Deletion
---     } else {
+--     else
 --       deletions.push(currentFallbackChildFragment)
 --     end
 --   end
@@ -2210,7 +2209,7 @@ end
 --     -- However, since we're going to remain on the fallback, we no longer want
 --     -- to delete it.
 --     workInProgress.deletions = nil
---   } else {
+--   else
 --     primaryChildFragment = createWorkInProgressOffscreenFiber(
 --       currentPrimaryChildFragment,
 --       primaryChildProps,
@@ -2228,7 +2227,7 @@ end
 --       currentFallbackChildFragment,
 --       fallbackChildren,
 --     )
---   } else {
+--   else
 --     fallbackChildFragment = createFiberFromFragment(
 --       fallbackChildren,
 --       mode,
@@ -2345,7 +2344,7 @@ end
 --       markSpawnedWork(DefaultHydrationLane)
 --     end
 --     workInProgress.lanes = laneToLanes(DefaultHydrationLane)
---   } else {
+--   else
 --     -- We'll continue hydrating the rest at offscreen priority since we'll already
 --     -- be showing the right content coming from the server, it is no rush.
 --     workInProgress.lanes = laneToLanes(OffscreenLane)
@@ -2416,7 +2415,7 @@ end
 --         -- TODO: Ideally this would inherit the event time of the current render
 --         local eventTime = NoTimestamp
 --         scheduleUpdateOnFiber(current, attemptHydrationAtLane, eventTime)
---       } else {
+--       else
 --         -- We have already tried to ping at a higher priority than we're rendering with
 --         -- so if we got here, we must have failed to hydrate at those levels. We must
 --         -- now give up. Instead, we're going to delete the whole subtree and instead inject
@@ -2457,7 +2456,7 @@ end
 --     end
 --     registerSuspenseInstanceRetry(suspenseInstance, retry)
 --     return nil
---   } else {
+--   else
 --     -- This is the first attempt.
 --     reenterHydrationStateFromDehydratedSuspenseInstance(
 --       workInProgress,
@@ -2595,7 +2594,7 @@ end
 --             )
 --             break
 --         end
---       } else {
+--       else
 --         console.error(
 --           '%s is not a supported value for revealOrder on <SuspenseList />. ' +
 --             'Did you mean "together", "forwards" or "backwards"?',
@@ -2672,7 +2671,7 @@ end
 --             return
 --           end
 --         end
---       } else {
+--       else
 --         local iteratorFn = getIteratorFn(children)
 --         if typeof iteratorFn == 'function')
 --           local childrenIterator = iteratorFn.call(children)
@@ -2686,7 +2685,7 @@ end
 --               i++
 --             end
 --           end
---         } else {
+--         else
 --           console.error(
 --             'A single row was passed to a <SuspenseList revealOrder="%s" />. ' +
 --               'This is not useful since it needs multiple rows. ' +
@@ -2717,7 +2716,7 @@ end
 --       tail: tail,
 --       tailMode: tailMode,
 --     }: SuspenseListRenderState)
---   } else {
+--   else
 --     -- We can reuse the existing object from previous renders.
 --     renderState.isBackwards = isBackwards
 --     renderState.rendering = nil
@@ -2763,7 +2762,7 @@ end
 --       ForceSuspenseFallback,
 --     )
 --     workInProgress.flags |= DidCapture
---   } else {
+--   else
 --     local didSuspendBefore =
 --       current ~= nil and (current.flags & DidCapture) ~= NoFlags
 --     if didSuspendBefore)
@@ -2784,7 +2783,7 @@ end
 --     -- In legacy mode, SuspenseList doesn't work so we just
 --     -- use make it a noop by treating it as the default revealOrder.
 --     workInProgress.memoizedState = nil
---   } else {
+--   else
 --     switch (revealOrder)
 --       case 'forwards': {
 --         local lastContentRow = findLastContentRow(workInProgress.child)
@@ -2794,7 +2793,7 @@ end
 --           -- TODO: We could fast path by just rendering the tail now.
 --           tail = workInProgress.child
 --           workInProgress.child = nil
---         } else {
+--         else
 --           -- Disconnect the tail rows after the content row.
 --           -- We're going to render them separately later.
 --           tail = lastContentRow.sibling
@@ -2879,7 +2878,7 @@ end
 --       nextChildren,
 --       renderLanes,
 --     )
---   } else {
+--   else
 --     reconcileChildren(current, workInProgress, nextChildren, renderLanes)
 --   end
 --   return workInProgress.child
@@ -2933,7 +2932,7 @@ end
 --           renderLanes,
 --         )
 --       end
---     } else {
+--     else
 --       -- The context value changed. Search for matching consumers and schedule
 --       -- them to update.
 --       propagateContextChange(workInProgress, context, changedBits, renderLanes)
@@ -2974,7 +2973,7 @@ end
 --           )
 --         end
 --       end
---     } else {
+--     else
 --       context = (context: any)._context
 --     end
 --   end
@@ -3000,7 +2999,7 @@ end
 --     setIsRendering(true)
 --     newChildren = render(newValue)
 --     setIsRendering(false)
---   } else {
+--   else
 --     newChildren = render(newValue)
 --   end
 
@@ -3066,67 +3065,67 @@ bailoutOnAlreadyFinishedWork = function(
   end
 end
 
--- function remountFiber(
---   current: Fiber,
---   oldWorkInProgress: Fiber,
---   newWorkInProgress: Fiber,
--- ): Fiber | nil {
---   if  _G.__DEV__ then
---     local returnFiber = oldWorkInProgress.return
---     if returnFiber == nil)
---       throw new Error('Cannot swap the root fiber.')
---     end
+function remountFiber(
+  current: Fiber,
+  oldWorkInProgress: Fiber,
+  newWorkInProgress: Fiber
+): Fiber | nil
+  if  _G.__DEV__ then
+    local returnFiber = oldWorkInProgress.return_
+    if returnFiber == nil then
+      error('Cannot swap the root fiber.')
+    end
 
---     -- Disconnect from the old current.
---     -- It will get deleted.
---     current.alternate = nil
---     oldWorkInProgress.alternate = nil
+    -- Disconnect from the old current.
+    -- It will get deleted.
+    current.alternate = nil
+    oldWorkInProgress.alternate = nil
 
---     -- Connect to the new tree.
---     newWorkInProgress.index = oldWorkInProgress.index
---     newWorkInProgress.sibling = oldWorkInProgress.sibling
---     newWorkInProgress.return = oldWorkInProgress.return
---     newWorkInProgress.ref = oldWorkInProgress.ref
+    -- Connect to the new tree.
+    newWorkInProgress.index = oldWorkInProgress.index
+    newWorkInProgress.sibling = oldWorkInProgress.sibling
+    newWorkInProgress.return_ = oldWorkInProgress.return_
+    newWorkInProgress.ref = oldWorkInProgress.ref
 
---     -- Replace the child/sibling pointers above it.
---     if oldWorkInProgress == returnFiber.child)
---       returnFiber.child = newWorkInProgress
---     } else {
---       local prevSibling = returnFiber.child
---       if prevSibling == nil)
---         throw new Error('Expected parent to have a child.')
---       end
---       while (prevSibling.sibling ~= oldWorkInProgress)
---         prevSibling = prevSibling.sibling
---         if prevSibling == nil)
---           throw new Error('Expected to find the previous sibling.')
---         end
---       end
---       prevSibling.sibling = newWorkInProgress
---     end
+    -- Replace the child/sibling pointers above it.
+    if oldWorkInProgress == returnFiber.child then
+      returnFiber.child = newWorkInProgress
+    else
+      local prevSibling = returnFiber.child
+      if prevSibling == nil then
+        error('Expected parent to have a child.')
+      end
+      while prevSibling.sibling ~= oldWorkInProgress do
+        prevSibling = prevSibling.sibling
+        if prevSibling == nil then
+          error('Expected to find the previous sibling.')
+        end
+      end
+      prevSibling.sibling = newWorkInProgress
+    end
 
---     -- Delete the old fiber and place the new one.
---     -- Since the old fiber is disconnected, we have to schedule it manually.
---     local deletions = returnFiber.deletions
---     if deletions == nil)
---       returnFiber.deletions = [current]
---       -- TODO (effects) Rename this to better reflect its new usage (e.g. ChildDeletions)
---       returnFiber.flags |= Deletion
---     } else {
---       deletions.push(current)
---     end
+    -- Delete the old fiber and place the new one.
+    -- Since the old fiber is disconnected, we have to schedule it manually.
+    local deletions = returnFiber.deletions
+    if deletions == nil then
+      returnFiber.deletions = {current}
+      -- TODO (effects) Rename this to better reflect its new usage (e.g. ChildDeletions)
+      returnFiber.flags = bit32.bor(returnFiber.flags, Deletion)
+    else
+      deletions.push(current)
+    end
 
---     newWorkInProgress.flags |= Placement
+    newWorkInProgress.flags = bit32.bor(newWorkInProgress.flags, Placement)
 
---     -- Restart work from the new fiber.
---     return newWorkInProgress
---   } else {
---     throw new Error(
---       'Did not expect this call in production. ' +
---         'This is a bug in React. Please file an issue.',
---     )
---   end
--- end
+    -- Restart work from the new fiber.
+    return newWorkInProgress
+  else
+    error(
+      'Did not expect this call in production. ' ..
+        'This is a bug in React. Please file an issue.'
+    )
+  end
+end
 
 -- FIXME (roblox): restore types when refinement is better:
 -- current: Fiber | nil,
@@ -3140,26 +3139,25 @@ exports.beginWork = function(
   if _G.__DEV__ then
     if workInProgress._debugNeedsRemount and current ~= nil then
       -- This will restart the begin phase with a new fiber.
-      unimplemented("ReactFiberBeginWork: beginWork(): remountFiber")
-      -- return remountFiber(
-      --   current,
-      --   workInProgress,
-      --   createFiberFromTypeAndProps(
-      --     workInProgress.type,
-      --     workInProgress.key,
-      --     workInProgress.pendingProps,
-      --     workInProgress._debugOwner or nil,
-      --     workInProgress.mode,
-      --     workInProgress.lanes
-      --   )
-      -- )
+      return remountFiber(
+        current,
+        workInProgress,
+        createFiberFromTypeAndProps(
+          workInProgress.type,
+          workInProgress.key,
+          workInProgress.pendingProps,
+          workInProgress._debugOwner or nil,
+          workInProgress.mode,
+          workInProgress.lanes
+        )
+      )
     end
   end
 
   if current ~= nil then
     local oldProps = current.memoizedProps
     local newProps = workInProgress.pendingProps
-
+    -- ROBLOX FIXME: re-compare to upstream
     -- deviation: cannot translate ternary
     local didHotReload = false
     if _G.__DEV__ then

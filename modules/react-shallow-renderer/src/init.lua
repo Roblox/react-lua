@@ -41,7 +41,8 @@ if _G.__DEV__ then
 end
 
 -- In DEV, self is the name of the currently executing primitive hook
-local currentHookNameInDev
+-- ROBLOX deviation: this is a weird unassigned variable bug present in upstream
+local currentHookNameInDev = "currentHookNameInDev"
 
 local function areHookInputsEqual(nextDeps, prevDeps)
   if prevDeps == nil then
@@ -87,7 +88,7 @@ function createUpdater(renderer)
     _renderer = renderer,
     _callbacks = {},
   }
-  
+
   function updater._enqueueCallback(callback, publicInstance)
     if typeof(callback) == 'function' and publicInstance then
       table.insert(updater._callbacks, {
@@ -96,39 +97,39 @@ function createUpdater(renderer)
       })
     end
   end
-  
+
   function updater._invokeCallbacks()
     local callbacks = updater._callbacks
     updater._callbacks = {}
-  
+
     for _, value in pairs(callbacks) do
       local callback = value.callback
       local publicInstance = value.publicInstance
-  
+
       callback(publicInstance)
     end
   end
-  
+
   function updater.isMounted(publicInstance)
     return not not updater._renderer._element
   end
-  
+
   function updater.enqueueForceUpdate(publicInstance, callback, _callerName)
     updater._enqueueCallback(callback, publicInstance)
     updater._renderer._forcedUpdate = true
     updater._renderer:render(updater._renderer._element, updater._renderer._context)
   end
-  
+
   function updater.enqueueReplaceState(publicInstance, completeState, callback, _callerName)
     updater._enqueueCallback(callback, publicInstance)
     updater._renderer._newState = completeState
     updater._renderer:render(updater._renderer._element, updater._renderer._context)
   end
-  
+
   function updater.enqueueSetState(publicInstance, partialState, callback, _callerName)
     updater._enqueueCallback(callback, publicInstance)
     local currentState = updater._renderer._newState or publicInstance.state
-  
+
     if typeof(partialState) == 'function' then
       -- deviation: in React, the partial state function is called on the
       -- publicInstance, meaning that `this` is accessible, and scoped correctly,
@@ -140,18 +141,18 @@ function createUpdater(renderer)
         publicInstance.props
       )
     end
-  
+
     -- Null and undefined are treated as no-ops.
     if partialState == nil then
       return
     end
-  
+
     updater._renderer._newState = Object.assign(
       {},
       currentState,
       partialState
     )
-  
+
     updater._renderer:render(updater._renderer._element, updater._renderer._context)
   end
 

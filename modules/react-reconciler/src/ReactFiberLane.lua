@@ -185,7 +185,7 @@ local function getHighestPriorityLanes(lanes: Lanes | Lane) : Lanes
 		return_highestLanePriority = RetryLanePriority
 		return retryLanes
 	end
-	if bit32.band(lanes, SelectiveHydrationLane) then
+	if bit32.band(lanes, SelectiveHydrationLane) ~= 0 then
 		return_highestLanePriority = SelectiveHydrationLanePriority
 		return SelectiveHydrationLane
 	end
@@ -489,7 +489,7 @@ local function getLanesToRetrySynchronouslyOnError(root: FiberRoot): Lanes
 	if everythingButOffscreen ~= NoLanes then
 		return everythingButOffscreen
 	end
-	if bit32.band(everythingButOffscreen, OffscreenLane) then
+	if bit32.band(everythingButOffscreen, OffscreenLane) ~= 0 then
 		return OffscreenLane
 	end
 	return NoLanes

@@ -7,7 +7,18 @@
 *
 ]]
 
+local SchedulerFeatureFlags = require(script.Parent.SchedulerFeatureFlags)
+local enableSchedulerDebugging = SchedulerFeatureFlags.enableSchedulerDebugging
+local enableProfiling = SchedulerFeatureFlags.enableProfiling
+
 local SchedulerHostConfig = require(script.Parent.SchedulerHostConfig)
+local requestHostCallback = SchedulerHostConfig.requestHostCallback
+local requestHostTimeout = SchedulerHostConfig.requestHostTimeout
+local cancelHostTimeout = SchedulerHostConfig.cancelHostTimeout
+local shouldYieldToHost = SchedulerHostConfig.shouldYieldToHost
+local getCurrentTime = SchedulerHostConfig.getCurrentTime
+local forceFrameRate = SchedulerHostConfig.forceFrameRate
+local requestPaint = SchedulerHostConfig.requestPaint
 
 local SchedulerMinHeap = require(script.Parent.SchedulerMinHeap)
 local push = SchedulerMinHeap.push
@@ -16,20 +27,23 @@ local pop = SchedulerMinHeap.pop
 
 -- TODO: Use symbols?
 local SchedulerPriorities = require(script.Parent.SchedulerPriorities)
-
 local ImmediatePriority = SchedulerPriorities.ImmediatePriority
 local UserBlockingPriority = SchedulerPriorities.UserBlockingPriority
 local NormalPriority = SchedulerPriorities.NormalPriority
 local LowPriority = SchedulerPriorities.LowPriority
 local IdlePriority = SchedulerPriorities.IdlePriority
 
-local requestHostCallback = SchedulerHostConfig.requestHostCallback
-local requestHostTimeout = SchedulerHostConfig.requestHostTimeout
-local cancelHostTimeout = SchedulerHostConfig.cancelHostTimeout
-local shouldYieldToHost = SchedulerHostConfig.shouldYieldToHost
-local getCurrentTime = SchedulerHostConfig.getCurrentTime
-local forceFrameRate = SchedulerHostConfig.forceFrameRate
-local requestPaint = SchedulerHostConfig.requestPaint
+local SchedulerProfiling = require(script.Parent.SchedulerProfiling)
+local markTaskRun = SchedulerProfiling.markTaskRun
+local markTaskYield = SchedulerProfiling.markTaskYield
+local markTaskCompleted = SchedulerProfiling.markTaskCompleted
+local markTaskCanceled = SchedulerProfiling.markTaskCanceled
+local markTaskErrored = SchedulerProfiling.markTaskErrored
+local markSchedulerSuspended = SchedulerProfiling.markSchedulerSuspended
+local markSchedulerUnsuspended = SchedulerProfiling.markSchedulerUnsuspended
+local markTaskStart = SchedulerProfiling.markTaskStart
+-- local stopLoggingProfilingEvents = SchedulerProfiling.stopLoggingProfilingEvents
+-- local startLoggingProfilingEvents = SchedulerProfiling.startLoggingProfilingEvents
 
 -- Max 31 bit integer. The max integer size in V8 for 32-bit systems.
 -- Math.pow(2, 30) - 1
@@ -79,8 +93,11 @@ local function advanceTimers(currentTime)
 			-- Timer fired. Transfer to the task queue.
 			pop(timerQueue)
 			timer.sortIndex = timer.expirationTime
-
 			push(taskQueue, timer)
+			if enableProfiling then
+				markTaskStart(timer, currentTime);
+				timer.isQueued = true;
+			end
 		else
 			-- Remaining timers are pending.
 			return;
@@ -108,6 +125,10 @@ handleTimeout = function(currentTime)
 end
 
 flushWork = function(hasTimeRemaining, initialTime)
+	if enableProfiling then
+		markSchedulerUnsuspended(initialTime)
+	end
+
 	-- We'll need a host callback the next time work is scheduled.
 	isHostCallbackScheduled = false
 	if isHostTimeoutScheduled then
@@ -118,15 +139,38 @@ flushWork = function(hasTimeRemaining, initialTime)
 
 	isPerformingWork = true
 	local previousPriorityLevel = currentPriorityLevel
-	-- TODO(align): Does this really just not care about the failure case?
+
 	local ok, result = pcall(function()
-		-- No catch in prod code path.
-		return workLoop(hasTimeRemaining, initialTime)
+		if enableProfiling then
+			local ok, result = pcall(function()
+				return workLoop(hasTimeRemaining, initialTime)
+			end)
+
+			if not ok then
+				local error_ = result
+				if currentTask ~= nil then
+					local currentTime = getCurrentTime()
+					markTaskErrored(currentTask, currentTime)
+					currentTask.isQueued = false
+				end
+				error(error_)
+			end
+			-- ROBLOX FIXME: workaround for Luau not understanding error is a no-return
+			return nil
+		else
+			-- No catch in prod code path.
+			return workLoop(hasTimeRemaining, initialTime)
+		end
 	end)
 
+	-- ROBLOX: finally
 	currentTask = nil
 	currentPriorityLevel = previousPriorityLevel
 	isPerformingWork = false
+	if enableProfiling then
+		local currentTime = getCurrentTime()
+		markSchedulerSuspended(currentTime)
+	end
 
 	if not ok then
 		error(result)
@@ -139,32 +183,33 @@ workLoop = function(hasTimeRemaining, initialTime)
 	local currentTime = initialTime
 	advanceTimers(currentTime)
 	currentTask = peek(taskQueue)
-	while currentTask ~= nil and not isSchedulerPaused do
+	while currentTask ~= nil and
+		not (enableSchedulerDebugging and isSchedulerPaused) do
 		if
 			currentTask.expirationTime > currentTime and
 			(not hasTimeRemaining or shouldYieldToHost())
 		then
 			-- This currentTask hasn't expired, and we've reached the deadline.
-			break;
+			break
 		end
 
 		local callback = currentTask.callback
 		if typeof(callback) == "function" then
 			currentTask.callback = nil
 			currentPriorityLevel = currentTask.priorityLevel
-
 			local didUserCallbackTimeout = currentTask.expirationTime <= currentTime
-			-- With `enableProfiling` flag logic removed, this is a no-op
-			-- markTaskRun(currentTask, currentTime)
-
+			markTaskRun(currentTask, currentTime);
 			local continuationCallback = callback(didUserCallbackTimeout)
 			currentTime = getCurrentTime()
-
 			if typeof(continuationCallback) == "function" then
 				currentTask.callback = continuationCallback
-				-- With `enableProfiling` flag logic removed, this is a no-op
-				-- markTaskYield(currentTask, currentTime)
+				markTaskYield(currentTask, currentTime)
 			else
+				if enableProfiling then
+					markTaskCompleted(currentTask, currentTime)
+					currentTask.isQueued = false
+				end
+
 				if currentTask == peek(taskQueue) then
 					pop(taskQueue)
 				end
@@ -207,6 +252,8 @@ local function unstable_runWithPriority(priorityLevel, eventHandler)
 	currentPriorityLevel = priorityLevel
 
 	local ok, result = pcall(eventHandler)
+
+	-- ROBLOX: finally
 	currentPriorityLevel = previousPriorityLevel
 
 	if not ok then
@@ -234,6 +281,8 @@ local function unstable_next(eventHandler)
 	currentPriorityLevel = priorityLevel
 
 	local ok, result = pcall(eventHandler)
+
+	-- ROBLOX: finally
 	currentPriorityLevel = previousPriorityLevel
 
 	if not ok then
@@ -255,6 +304,7 @@ local function unstable_wrapCallback(callback)
 			return callback(...)
 		end, ...)
 
+		-- ROBLOX: finally
 		currentPriorityLevel = previousPriorityLevel
 
 		if not ok then
@@ -271,9 +321,9 @@ local function unstable_scheduleCallback(priorityLevel, callback, options)
 	local startTime
 
 	if typeof(options) == "table" then
-		local delayMillis = options.delay
-		if typeof(delayMillis) == "number" and delayMillis > 0 then
-			startTime = currentTime + delayMillis
+		local delay_ = options.delay
+		if typeof(delay_) == "number" and delay_ > 0 then
+			startTime = currentTime + delay_
 		else
 			startTime = currentTime
 		end
@@ -304,12 +354,15 @@ local function unstable_scheduleCallback(priorityLevel, callback, options)
 		expirationTime = expirationTime,
 		sortIndex = -1,
 	}
-	taskIdCounter = taskIdCounter + 1
+	taskIdCounter += 1
+
+	if enableProfiling then
+		newTask.isQueued = false;
+	end
 
 	if startTime > currentTime then
 		-- This is a delayed task.
 		newTask.sortIndex = startTime
-
 		push(timerQueue, newTask)
 		-- TODO(align): VALIDATE conversion from `peek(taskQueue) === null && newTask === peek(timerQueue)`
 		if #taskQueue == 0 and newTask == peek(timerQueue) then
@@ -326,6 +379,11 @@ local function unstable_scheduleCallback(priorityLevel, callback, options)
 	else
 		newTask.sortIndex = expirationTime
 		push(taskQueue, newTask)
+		if enableProfiling then
+			markTaskStart(newTask, currentTime)
+			newTask.isQueued = true
+		end
+
 		-- Schedule a host callback, if needed. If we're already performing work,
 		-- wait until the next time we yield.
 		if not isHostCallbackScheduled and not isPerformingWork then
@@ -354,6 +412,14 @@ local function unstable_getFirstCallbackNode()
 end
 
 local function unstable_cancelCallback(task)
+	if enableProfiling then
+		if task.isQueued then
+		  local currentTime = getCurrentTime()
+		  markTaskCanceled(task, currentTime)
+		  task.isQueued = false;
+		end
+	end
+
 	-- Null out the callback to indicate the task has been canceled. (Can't
 	-- remove from the queue because you can't remove arbitrary nodes from an
 	-- array based heap, only the first one.)

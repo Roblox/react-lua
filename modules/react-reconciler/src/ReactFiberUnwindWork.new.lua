@@ -55,7 +55,7 @@ local function unwindWork(workInProgress: Fiber, renderLanes: Lanes)
       popLegacyContext(workInProgress)
     end
     local flags = workInProgress.flags
-    if bit32.band(flags, ReactFiberFlags.ShouldCapture) then
+    if bit32.band(flags, ReactFiberFlags.ShouldCapture) ~= 0 then
       workInProgress.flags = bit32.bor(bit32.band(flags, bit32.bnot(ReactFiberFlags.ShouldCapture)), ReactFiberFlags.DidCapture)
       if
         enableProfilerTimer and
@@ -98,7 +98,7 @@ local function unwindWork(workInProgress: Fiber, renderLanes: Lanes)
       end
     end
     local flags = workInProgress.flags
-    if bit32.band(flags, ReactFiberFlags.ShouldCapture) then
+    if bit32.band(flags, ReactFiberFlags.ShouldCapture) ~= 0 then
       workInProgress.flags = bit32.bor(bit32.band(flags, bit32.bnot(ReactFiberFlags.ShouldCapture)), ReactFiberFlags.DidCapture)
       -- Captured a suspense effect. Re-render the boundary.
       if

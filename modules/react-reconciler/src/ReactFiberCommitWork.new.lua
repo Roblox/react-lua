@@ -139,7 +139,8 @@ local clearContainer = ReactFiberHostConfig.clearContainer
 --   schedulePassiveEffectCallback,
 -- } = require(script.Parent.ReactFiberWorkLoop.new)
 
-local function captureCommitPhaseError(current, parent, error_)
+local captureCommitPhaseError
+captureCommitPhaseError = function(current, parent, error_)
   console.warn("ReactFiberCommitWork: captureCommitPhaseError causes a dependency cycle")
   error(error_)
 end
@@ -177,7 +178,7 @@ local callComponentWillUnmountWithTimer = function(current, instance)
   if
     enableProfilerTimer and
     enableProfilerCommitHooks and
-    bit32.band(current.mode, ProfileMode)
+    bit32.band(current.mode, ProfileMode) ~= 0
   then
     local ok, exception = pcall(function()
       -- unimplemented("profiler timer logic")
@@ -289,7 +290,7 @@ local function commitBeforeMutationLifeCycles(
   then
     return
   elseif finishedWork.tag == ClassComponent then
-    if bit32.band(finishedWork.flags, Snapshot) then
+    if bit32.band(finishedWork.flags, Snapshot) ~= 0 then
       if current ~= nil then
         local prevProps = current.memoizedProps
         local prevState = current.memoizedState
@@ -349,7 +350,7 @@ local function commitBeforeMutationLifeCycles(
     return
   elseif finishedWork.tag == HostRoot then
     if supportsMutation then
-      if bit32.band(finishedWork.flags, Snapshot) then
+      if bit32.band(finishedWork.flags, Snapshot) ~= 0 then
         local root = finishedWork.stateNode
         clearContainer(root.containerInfo)
       end
@@ -491,8 +492,13 @@ end
 
 local function recursivelyCommitLayoutEffects(
   finishedWork: Fiber,
-  finishedRoot: FiberRoot
+  finishedRoot: FiberRoot,
+  -- ROBLOX deviation: pass in this function to avoid dependency cycle
+  _captureCommitPhaseError: (any, Fiber, any) -> ()
 )
+  if _captureCommitPhaseError ~= nil then
+    captureCommitPhaseError = _captureCommitPhaseError
+  end
   local flags = finishedWork.flags
   local tag = finishedWork.tag
   if tag == Profiler then
@@ -516,6 +522,9 @@ local function recursivelyCommitLayoutEffects(
     --         nil,
     --         child,
     --         finishedRoot,
+        -- ROBLOX deviation: pass in this function to avoid dependency cycle
+
+    --         captureCommitPhaseError
     --       )
     --       if hasCaughtError())
     --         local error = clearCaughtError()
@@ -528,7 +537,9 @@ local function recursivelyCommitLayoutEffects(
     --       end
     --     } else {
     --       try {
-    --         recursivelyCommitLayoutEffects(child, finishedRoot)
+        -- ROBLOX deviation: pass in this function to avoid dependency cycle
+
+    --         recursivelyCommitLayoutEffects(child, finishedRoot, captureCommitPhaseError)
     --       } catch (error)
     --         captureCommitPhaseError(child, finishedWork, error)
     --       end
@@ -596,7 +607,9 @@ local function recursivelyCommitLayoutEffects(
             recursivelyCommitLayoutEffects,
             nil,
             child,
-            finishedRoot
+            finishedRoot,
+            -- ROBLOX deviation: pass in this function to avoid dependency cycle
+            captureCommitPhaseError
           )
           if hasCaughtError() then
             local error_ = clearCaughtError()
@@ -609,7 +622,8 @@ local function recursivelyCommitLayoutEffects(
           end
         else
           local ok, error_ = pcall(function()
-            recursivelyCommitLayoutEffects(child, finishedRoot)
+          -- ROBLOX deviation: pass in this function to avoid dependency cycle
+            recursivelyCommitLayoutEffects(child, finishedRoot, captureCommitPhaseError)
           end)
 
           if not ok then
@@ -765,7 +779,7 @@ end
 commitLayoutEffectsForClassComponent = function(finishedWork: Fiber)
   local instance = finishedWork.stateNode
   local current = finishedWork.alternate
-  if bit32.band(finishedWork.flags, Update) then
+  if bit32.band(finishedWork.flags, Update) ~= 0 then
     if current == nil then
       -- We could update instance props and state here,
       -- but instead we rely on them being set during last render.
@@ -800,7 +814,7 @@ commitLayoutEffectsForClassComponent = function(finishedWork: Fiber)
       if
         enableProfilerTimer and
         enableProfilerCommitHooks and
-        bit32.band(finishedWork.mode, ProfileMode)
+        bit32.band(finishedWork.mode, ProfileMode) ~= 0
       then
         unimplemented("profiler timer logic")
         -- local ok, result = pcall(function()
@@ -856,7 +870,7 @@ commitLayoutEffectsForClassComponent = function(finishedWork: Fiber)
       if
         enableProfilerTimer and
         enableProfilerCommitHooks and
-        bit32.band(finishedWork.mode, ProfileMode)
+        bit32.band(finishedWork.mode, ProfileMode) ~= 0
       then
         unimplemented("profiler timer logic")
         -- local ok, result = pcall(function()
@@ -953,7 +967,7 @@ commitLayoutEffectsForHostComponent = function(finishedWork: Fiber)
   -- (eg DOM renderer may schedule auto-focus for inputs and form controls).
   -- These effects should only be committed when components are first mounted,
   -- aka when there is no current/alternate.
-  if current == nil and bit32.band(finishedWork.flags, Update) then
+  if current == nil and bit32.band(finishedWork.flags, Update) ~= 0 then
     local type = finishedWork.type
     local props = finishedWork.memoizedProps
     commitMount(instance, type, props, finishedWork)
@@ -1089,7 +1103,7 @@ commitUnmount = function(
               if
                 enableProfilerTimer and
                 enableProfilerCommitHooks and
-                bit32.band(current.mode, ProfileMode)
+                bit32.band(current.mode, ProfileMode) ~= 0
               then
                 unimplemented("profiler timer logic")
                 -- startLayoutEffectTimer()
@@ -1336,7 +1350,7 @@ getHostSibling = function(fiber)
     do
       -- If it is not host node and, we might have a host node inside it.
       -- Try to search down until we find one.
-      if bit32.band(node.flags, Placement) then
+      if bit32.band(node.flags, Placement) ~= 0 then
         -- If we don't have a child, try the siblings instead.
         continueOuter = true
         break
@@ -1396,7 +1410,7 @@ local function commitPlacement(finishedWork: Fiber)
         "in React. Please file an issue."
     )
   end
-  if bit32.band(parentFiber.flags, ContentReset) then
+  if bit32.band(parentFiber.flags, ContentReset) ~= 0 then
     -- Reset the text content of the parent before doing any insertions
     resetTextContent(parent)
     -- Clear ContentReset from the effect tag
@@ -1768,7 +1782,7 @@ end
     if
       enableProfilerTimer and
       enableProfilerCommitHooks and
-      bit32.band(finishedWork.mode, ProfileMode)
+      bit32.band(finishedWork.mode, ProfileMode) ~= 0
     then
       unimplemented("profiler timer logic")
       -- local ok, result = pcall(function()
@@ -2029,7 +2043,7 @@ local function commitPassiveUnmount(finishedWork: Fiber)
     if
       enableProfilerTimer and
       enableProfilerCommitHooks and
-      bit32.band(finishedWork.mode, ProfileMode)
+      bit32.band(finishedWork.mode, ProfileMode) ~= 0
     then
       unimplemented("profiler timer logic")
       -- startPassiveEffectTimer()
@@ -2062,7 +2076,7 @@ local function commitPassiveUnmountInsideDeletedTree(
     if
       enableProfilerTimer and
       enableProfilerCommitHooks and
-      bit32.band(current.mode, ProfileMode)
+      bit32.band(current.mode, ProfileMode) ~= 0
     then
       unimplemented("profiler timer logic")
       -- startPassiveEffectTimer()

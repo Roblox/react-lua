@@ -196,7 +196,7 @@ local function applyDerivedStateFromProps(
   if _G.__DEV__ then
     if
       debugRenderPhaseSideEffectsForStrictMode and
-      bit32.band(workInProgress.mode, StrictMode)
+      bit32.band(workInProgress.mode, StrictMode) ~= 0
     then
       disableLogs()
       local ok, result = pcall(function()
@@ -263,7 +263,7 @@ local function initializeClassComponentUpdater()
 
       if _G.__DEV__ then
         if enableDebugTracing then
-          if bit32.band(fiber.mode, DebugTracingMode) then
+          if bit32.band(fiber.mode, DebugTracingMode) ~= 0 then
             local _name = getComponentName(fiber.type) or "Unknown"
             warn("Skip unimplemented: logStateUpdateScheduled")
             -- logStateUpdateScheduled(name, lane, payload)
@@ -297,7 +297,7 @@ local function initializeClassComponentUpdater()
 
       if _G.__DEV__ then
         if enableDebugTracing then
-          if bit32.band(fiber.mode, DebugTracingMode) then
+          if bit32.band(fiber.mode, DebugTracingMode) ~= 0 then
             local _name = getComponentName(fiber.type) or "Unknown"
             warn("Skip unimplemented: logStateUpdateScheduled")
             -- logStateUpdateScheduled(name, lane, payload)
@@ -330,7 +330,7 @@ local function initializeClassComponentUpdater()
 
       if _G.__DEV__ then
         if enableDebugTracing then
-          if bit32.band(fiber.mode, DebugTracingMode) then
+          if bit32.band(fiber.mode, DebugTracingMode) ~= 0 then
             local _name = getComponentName(fiber.type) or "Unknown"
             warn("Skip unimplemented: logStateUpdateScheduled")
             -- logForceUpdateScheduled(name, lane)
@@ -367,7 +367,7 @@ function checkShouldComponentUpdate(
     if _G.__DEV__ then
       if
         debugRenderPhaseSideEffectsForStrictMode and
-        bit32.band(workInProgress.mode, StrictMode)
+        bit32.band(workInProgress.mode, StrictMode) ~= 0
       then
         disableLogs()
         local ok, result = pcall(function()
@@ -721,7 +721,7 @@ local function constructClassInstance(
   if _G.__DEV__ then
     if
       debugRenderPhaseSideEffectsForStrictMode and
-      bit32.band(workInProgress.mode, StrictMode)
+      bit32.band(workInProgress.mode, StrictMode) ~= 0
     then
       disableLogs()
       local ok, result = pcall(function()
@@ -799,7 +799,7 @@ local function constructClassInstance(
       then
         foundWillReceivePropsName = "UNSAFE_componentWillReceiveProps"
       end
-      if 
+      if
         -- ROBLOX FIXME: This won't work! Lua functions can't have properties
         typeof(instance.componentWillUpdate) == "function" -- and
         -- instance.componentWillUpdate.__suppressDeprecationWarning ~= true
@@ -949,7 +949,7 @@ local function mountClassInstance(
       end
     end
 
-    if bit32.band(workInProgress.mode, StrictMode) then
+    if bit32.band(workInProgress.mode, StrictMode) ~= 0 then
       ReactStrictModeWarnings.recordLegacyContextWarning(
         workInProgress,
         instance
@@ -1002,150 +1002,150 @@ local function mountClassInstance(
   end
 end
 
--- function resumeMountClassInstance(
---   workInProgress: Fiber,
---   ctor: any,
---   newProps: any,
---   renderLanes: Lanes,
--- ): boolean {
---   local instance = workInProgress.stateNode
+function resumeMountClassInstance(
+  workInProgress: Fiber,
+  ctor: any,
+  newProps: any,
+  renderLanes: Lanes
+): boolean
+  local instance = workInProgress.stateNode
 
---   local oldProps = workInProgress.memoizedProps
---   instance.props = oldProps
+  local oldProps = workInProgress.memoizedProps
+  instance.props = oldProps
 
---   local oldContext = instance.context
---   local contextType = ctor.contextType
---   local nextContext = emptyContextObject
---   if typeof contextType == 'table’' and contextType ~= nil)
---     nextContext = readContext(contextType)
---   } else if !disableLegacyContext)
---     local nextLegacyUnmaskedContext = getUnmaskedContext(
---       workInProgress,
---       ctor,
---       true,
---     )
---     nextContext = getMaskedContext(workInProgress, nextLegacyUnmaskedContext)
---   end
+  local oldContext = instance.context
+  local contextType = ctor.contextType
+  local nextContext = emptyContextObject
+  if typeof(contextType) == 'table' and contextType ~= nil then
+    nextContext = readContext(contextType)
+  elseif not disableLegacyContext then
+    local nextLegacyUnmaskedContext = getUnmaskedContext(
+      workInProgress,
+      ctor,
+      true
+    )
+    nextContext = getMaskedContext(workInProgress, nextLegacyUnmaskedContext)
+  end
 
---   local getDerivedStateFromProps = ctor.getDerivedStateFromProps
---   local hasNewLifecycles =
---     typeof getDerivedStateFromProps == 'function' or
---     typeof instance.getSnapshotBeforeUpdate == 'function'
+  local getDerivedStateFromProps = ctor.getDerivedStateFromProps
+  local hasNewLifecycles =
+    typeof(getDerivedStateFromProps) == 'function' or
+    typeof(instance.getSnapshotBeforeUpdate) == 'function'
 
---   -- Note: During these life-cycles, instance.props/instance.state are what
---   -- ever the previously attempted to render - not the "current". However,
---   -- during componentDidUpdate we pass the "current" props.
+  -- Note: During these life-cycles, instance.props/instance.state are what
+  -- ever the previously attempted to render - not the "current". However,
+  -- during componentDidUpdate we pass the "current" props.
 
---   -- In order to support react-lifecycles-compat polyfilled components,
---   -- Unsafe lifecycles should not be invoked for components using the new APIs.
---   if 
---     !hasNewLifecycles and
---     (typeof instance.UNSAFE_componentWillReceiveProps == 'function' or
---       typeof instance.componentWillReceiveProps == 'function')
---   )
---     if oldProps ~= newProps or oldContext ~= nextContext)
---       callComponentWillReceiveProps(
---         workInProgress,
---         instance,
---         newProps,
---         nextContext,
---       )
---     end
---   end
+  -- In order to support react-lifecycles-compat polyfilled components,
+  -- Unsafe lifecycles should not be invoked for components using the new APIs.
+  if
+    not hasNewLifecycles and
+    (typeof(instance.UNSAFE_componentWillReceiveProps) == 'function' or
+      typeof(instance.componentWillReceiveProps) == 'function') then
+    if oldProps ~= newProps or oldContext ~= nextContext then
+      callComponentWillReceiveProps(
+        workInProgress,
+        instance,
+        newProps,
+        nextContext
+      )
+    end
+  end
 
---   resetHasForceUpdateBeforeProcessing()
+  resetHasForceUpdateBeforeProcessing()
 
---   local oldState = workInProgress.memoizedState
---   local newState = (instance.state = oldState)
---   processUpdateQueue(workInProgress, newProps, instance, renderLanes)
---   newState = workInProgress.memoizedState
---   if 
---     oldProps == newProps and
---     oldState == newState and
---     !hasContextChanged() and
---     !checkHasForceUpdateAfterProcessing()
---   )
---     -- If an update was already in progress, we should schedule an Update
---     -- effect even though we're bailing out, so that cWU/cDU are called.
---     if typeof instance.componentDidMount == 'function')
---       if __DEV__ and enableDoubleInvokingEffects)
---         workInProgress.flags |= MountLayoutDev | Update
---       } else {
---         workInProgress.flags |= Update
---       end
---     end
---     return false
---   end
+  local oldState = workInProgress.memoizedState
+  instance.state = oldState
+  local newState = oldState
+  processUpdateQueue(workInProgress, newProps, instance, renderLanes)
+  newState = workInProgress.memoizedState
+  if
+    oldProps == newProps and
+    oldState == newState and
+     not hasContextChanged() and
+     not checkHasForceUpdateAfterProcessing()
+  then
+    -- If an update was already in progress, we should schedule an Update
+    -- effect even though we're bailing out, so that cWU/cDU are called.
+    if typeof(instance.componentDidMount) == 'function' then
+      if _G.__DEV__ and enableDoubleInvokingEffects then
+        workInProgress.flags = bit32.bor(workInProgress.flags, MountLayoutDev, Update)
+      else
+        workInProgress.flags = bit32.bor(workInProgress.flags, Update)
+      end
+    end
+    return false
+  end
 
---   if typeof getDerivedStateFromProps == 'function')
---     applyDerivedStateFromProps(
---       workInProgress,
---       ctor,
---       getDerivedStateFromProps,
---       newProps,
---     )
---     newState = workInProgress.memoizedState
---   end
+  if typeof(getDerivedStateFromProps) == 'function' then
+    applyDerivedStateFromProps(
+      workInProgress,
+      ctor,
+      getDerivedStateFromProps,
+      newProps
+    )
+    newState = workInProgress.memoizedState
+  end
 
---   local shouldUpdate =
---     checkHasForceUpdateAfterProcessing() or
---     checkShouldComponentUpdate(
---       workInProgress,
---       ctor,
---       oldProps,
---       newProps,
---       oldState,
---       newState,
---       nextContext,
---     )
+  local shouldUpdate =
+    checkHasForceUpdateAfterProcessing() or
+    checkShouldComponentUpdate(
+      workInProgress,
+      ctor,
+      oldProps,
+      newProps,
+      oldState,
+      newState,
+      nextContext
+    )
 
---   if shouldUpdate)
---     -- In order to support react-lifecycles-compat polyfilled components,
---     -- Unsafe lifecycles should not be invoked for components using the new APIs.
---     if 
---       !hasNewLifecycles and
---       (typeof instance.UNSAFE_componentWillMount == 'function' or
---         typeof instance.componentWillMount == 'function')
---     )
---       if typeof instance.componentWillMount == 'function')
---         instance.componentWillMount()
---       end
---       if typeof instance.UNSAFE_componentWillMount == 'function')
---         instance.UNSAFE_componentWillMount()
---       end
---     end
---     if typeof instance.componentDidMount == 'function')
---       if __DEV__ and enableDoubleInvokingEffects)
---         workInProgress.flags |= MountLayoutDev | Update
---       } else {
---         workInProgress.flags |= Update
---       end
---     end
---   } else {
---     -- If an update was already in progress, we should schedule an Update
---     -- effect even though we're bailing out, so that cWU/cDU are called.
---     if typeof instance.componentDidMount == 'function')
---       if __DEV__ and enableDoubleInvokingEffects)
---         workInProgress.flags |= MountLayoutDev | Update
---       } else {
---         workInProgress.flags |= Update
---       end
---     end
+  if shouldUpdate then
+    -- In order to support react-lifecycles-compat polyfilled components,
+    -- Unsafe lifecycles should not be invoked for components using the new APIs.
+    if
+      not hasNewLifecycles and
+      (typeof(instance.UNSAFE_componentWillMount) == 'function' or
+        typeof(instance.componentWillMount) == 'function')
+    then
+      if typeof(instance.componentWillMount) == 'function' then
+        instance.componentWillMount()
+      end
+      if typeof(instance.UNSAFE_componentWillMount) == 'function' then
+        instance.UNSAFE_componentWillMount()
+      end
+    end
+    if typeof(instance.componentDidMount) == 'function' then
+      if _G.__DEV__ and enableDoubleInvokingEffects then
+        workInProgress.flags = bit32.bor(workInProgress.flags, MountLayoutDev, Update)
+      else
+        workInProgress.flags = bit32.bor(workInProgress.flags, Update)
+      end
+    end
+  else
+    -- If an update was already in progress, we should schedule an Update
+    -- effect even though we're bailing out, so that cWU/cDU are called.
+    if typeof(instance.componentDidMount) == 'function' then
+      if _G.__DEV__ and enableDoubleInvokingEffects then
+        workInProgress.flags = bit32.bor(workInProgress.flags, MountLayoutDev, Update)
+      else
+        workInProgress.flags = bit32.bor(workInProgress.flags, Update)
+      end
+    end
 
---     -- If shouldComponentUpdate returned false, we should still update the
---     -- memoized state to indicate that this work can be reused.
---     workInProgress.memoizedProps = newProps
---     workInProgress.memoizedState = newState
---   end
+    -- If shouldComponentUpdate returned false, we should still update the
+    -- memoized state to indicate that this work can be reused.
+    workInProgress.memoizedProps = newProps
+    workInProgress.memoizedState = newState
+  end
 
---   -- Update the existing instance's state, props, and context pointers even
---   -- if shouldComponentUpdate returns false.
---   instance.props = newProps
---   instance.state = newState
---   instance.context = nextContext
+  -- Update the existing instance's state, props, and context pointers even
+  -- if shouldComponentUpdate returns false.
+  instance.props = newProps
+  instance.state = newState
+  instance.context = nextContext
 
---   return shouldUpdate
--- end
+  return shouldUpdate
+end
 
 -- Invokes the update life-cycles and returns false if it shouldn't rerender.
 local function updateClassInstance(
@@ -1322,10 +1322,10 @@ local function updateClassInstance(
 end
 
 return {
-  -- adoptClassInstance = adoptClassInstance,
+  adoptClassInstance = adoptClassInstance,
   constructClassInstance = constructClassInstance,
   mountClassInstance = mountClassInstance,
-  -- resumeMountClassInstance = resumeMountClassInstance,
+  resumeMountClassInstance = resumeMountClassInstance,
   updateClassInstance = updateClassInstance,
 
   applyDerivedStateFromProps = applyDerivedStateFromProps,

@@ -10,10 +10,11 @@ return function()
 	local Workspace = script.Parent.Parent.Parent
 	local RobloxJest = require(Workspace.RobloxJest)
 
-	local PropTypes
 	local React
-	local ReactTestUtils
 	local ReactFeatureFlags
+	-- ROBLOX deviation: the tests using these are currently SKIPped
+	local PropTypes = nil
+	local ReactTestUtils = nil
 
 	describe("ReactElementValidator", function()
 		local ComponentClass

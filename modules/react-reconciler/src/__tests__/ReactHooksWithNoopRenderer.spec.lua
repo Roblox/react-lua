@@ -157,7 +157,6 @@ return function()
   --   return Promise.resolve().then(function()})
   -- end
 
-  -- ROBLOX FIXME: fails due to commitAttachRef is unimplemented
   xit('resumes after an interruption', function()
     -- FIXME: type of expect
     local expect: any = expect
@@ -1197,7 +1196,7 @@ return function()
         })
       end)
 
-    -- ROBLOX TODO: requires throwException from ReactFiberThrow.js
+    -- ROBLOX TODO: Child gets nil props, which causes a failure
     xit('defers passive effect destroy functions during unmount', function()
       -- FIXME: type of expect
       local expect: any = expect
@@ -1292,6 +1291,7 @@ return function()
       end)
     end)
 
+    -- ROBLOX TODO: needs mountState
     xit('does not warn about state updates for unmounted components with pending passive unmounts', function()
       -- FIXME: type of expect
       local expect: any = expect

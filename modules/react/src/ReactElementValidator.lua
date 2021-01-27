@@ -71,7 +71,7 @@ local function hasOwnProperty(object, key)
 	return object[key] ~= nil
 end
 
-local function getDeclarationErrorAddendum()
+local function getDeclarationErrorAddendum():string
 	if ReactCurrentOwner.current then
 		local name = getComponentName(ReactCurrentOwner.current.type)
 		if name then
@@ -81,7 +81,7 @@ local function getDeclarationErrorAddendum()
 	return ""
 end
 
-local function getSourceInfoErrorAddendum(source)
+local function getSourceInfoErrorAddendum(source):string
 	if source ~= nil then
 		local fileName = source.fileName:gsub("^.*[\\/]", "")
 		local lineNumber = source.lineNumber
@@ -90,7 +90,7 @@ local function getSourceInfoErrorAddendum(source)
 	return ""
 end
 
-local function getSourceInfoErrorAddendumForProps(elementProps)
+local function getSourceInfoErrorAddendumForProps(elementProps):string
 	if elementProps ~= nil then
 		return getSourceInfoErrorAddendum(elementProps.__source)
 	end
@@ -104,7 +104,7 @@ end
 --  */
 local ownerHasKeyUseWarning = {}
 
-local function getCurrentComponentErrorInfo(parentType)
+local function getCurrentComponentErrorInfo(parentType):string
 	local info = getDeclarationErrorAddendum()
 
 	if not info or info == "" then

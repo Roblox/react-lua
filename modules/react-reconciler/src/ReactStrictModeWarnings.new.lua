@@ -40,7 +40,7 @@ if _G.__DEV__ then
 
     local node = fiber
     while node ~= nil do
-      if bit32.band(node.mode, StrictMode) then
+      if bit32.band(node.mode, StrictMode) ~= 0 then
         maybeStrictRoot = node
       end
       node = node.return_
@@ -87,7 +87,7 @@ if _G.__DEV__ then
     end
 
     if
-      bit32.band(fiber.mode, StrictMode) and
+      bit32.band(fiber.mode, StrictMode) ~= 0 and
       typeof(instance.UNSAFE_componentWillMount) == 'function'
     then
       table.insert(pendingUNSAFE_ComponentWillMountWarnings, fiber)
@@ -102,7 +102,7 @@ if _G.__DEV__ then
     end
 
     if
-      bit32.band(fiber.mode, StrictMode) and
+      bit32.band(fiber.mode, StrictMode) ~= 0 and
       typeof(instance.UNSAFE_componentWillReceiveProps) == 'function'
     then
       table.insert(pendingUNSAFE_ComponentWillReceivePropsWarnings, fiber)
@@ -117,7 +117,7 @@ if _G.__DEV__ then
     end
 
     if
-      bit32.band(fiber.mode, StrictMode) and
+      bit32.band(fiber.mode, StrictMode) ~= 0 and
       typeof(instance.UNSAFE_componentWillUpdate) == 'function'
     then
       table.insert(pendingUNSAFE_ComponentWillUpdateWarnings, fiber)

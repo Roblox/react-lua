@@ -388,7 +388,7 @@ local function getStateFromUpdate(
 			if _G.__DEV__ then
 				if
 					debugRenderPhaseSideEffectsForStrictMode and
-					bit32.band(workInProgress.mode, StrictMode)
+					bit32.band(workInProgress.mode, StrictMode) ~= 0
 				then
 					disableLogs()
 					local ok, result = pcall(function()
@@ -424,7 +424,7 @@ local function getStateFromUpdate(
 			if _G.__DEV__ then
 				if
 					debugRenderPhaseSideEffectsForStrictMode and
-					bit32.band(workInProgress.mode, StrictMode)
+					bit32.band(workInProgress.mode, StrictMode) ~= 0
 				then
 					disableLogs()
 					local ok, result = pcall(function()

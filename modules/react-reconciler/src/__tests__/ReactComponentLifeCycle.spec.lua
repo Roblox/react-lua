@@ -561,7 +561,7 @@ return function()
 -- LoadedCode.RoactAlignment.Modules.Scheduler.forks.SchedulerHostConfig.mock:180
 -- LoadedCode.RoactAlignment.Modules.ReactNoopRenderer.createReactNoop:1242 function noopAct
 -- LoadedCode.RoactAlignment.Modules.ReactReconciler.__tests__.ReactComponentLifeCycle.spec:575
-xit('should not throw when updating an auxiliary component', function()
+it('should not throw when updating an auxiliary component', function()
     local Tooltip = React.Component:extend("Tooltip")
     function Tooltip:render()
       return React.createElement("div", nil, self.props.children)

@@ -193,8 +193,8 @@ local commitDeletion = ReactFiberCommitWork.commitDeletion
 local commitPassiveUnmountOnFiber = ReactFiberCommitWork.commitPassiveUnmount
 local commitPassiveUnmountInsideDeletedTreeOnFiber = ReactFiberCommitWork.commitPassiveUnmountInsideDeletedTree
 local commitPassiveMountOnFiber = ReactFiberCommitWork.commitPassiveMount
--- local commitDetachRef = ReactFiberCommitWork.commitDetachRef
--- local commitAttachRef = ReactFiberCommitWork.commitAttachRef
+local commitDetachRef = ReactFiberCommitWork.commitDetachRef
+local commitAttachRef = ReactFiberCommitWork.commitAttachRef
 -- local commitResetTextContent = ReactFiberCommitWork.commitResetTextContent
 -- local isSuspenseBoundaryBeingHidden = ReactFiberCommitWork.isSuspenseBoundaryBeingHidden
 local invokeLayoutEffectMountInDEV = ReactFiberCommitWork.invokeLayoutEffectMountInDEV
@@ -1469,7 +1469,7 @@ mod.handleError = function(root, thrownValue)
         return
       end
 
-      if enableProfilerTimer and bit32.band(erroredWork.mode, ReactTypeOfMode.ProfileMode) then
+      if enableProfilerTimer and bit32.band(erroredWork.mode, ReactTypeOfMode.ProfileMode) ~= 0 then
         -- Record the time spent rendering before an error was thrown. This
         -- avoids inaccurate Profiler durations in the case of a
         -- suspended render.
@@ -1477,16 +1477,15 @@ mod.handleError = function(root, thrownValue)
         -- stopProfilerTimerIfRunningAndRecordDelta(erroredWork, true)
       end
 
-      -- ROBLOX TODO: the "throws when accessing state in componentWillMount" needs this to be perfect
-      unimplemented("WorLoop: completeUnitOfWork: needs resumeMountClassInstance: " .. tostring(thrownValue))
-      -- ROBLOX FIXME: deviation, we do this here since throwException can't call renderDidError due to a cycle
-      exports.renderDidError()
+      -- ROBLOX deviation, we pass in onUncaughtError and renderDidError here since throwException can't call them due to a require cycle
       throwException(
         root,
         erroredWork.return_,
         erroredWork,
         thrownValue,
-        workInProgressRootRenderLanes
+        workInProgressRootRenderLanes,
+        exports.onUncaughtError,
+        exports.renderDidError
       )
       mod.completeUnitOfWork(erroredWork)
     end)
@@ -1841,7 +1840,7 @@ mod.completeUnitOfWork = function(unitOfWork: Fiber)
 
       -- Because this fiber did not complete, don't reset its expiration time.
 
-      if next_ ~= nil then
+       if next_ ~= nil then
         -- If completing this work spawned new work, do that next. We'll come
         -- back here again.
         -- Since we're restarting, remove anything that is not a host effect
@@ -2088,7 +2087,9 @@ mod.commitRootImpl = function(root, renderPriorityLevel)
         recursivelyCommitLayoutEffects,
         nil,
         finishedWork,
-        root
+        root,
+        -- ROBLOX deviation: pass in this function to avoid dependency cycle
+        exports.captureCommitPhaseError
       )
       if hasCaughtError() then
         local err = clearCaughtError()
@@ -2097,7 +2098,8 @@ mod.commitRootImpl = function(root, renderPriorityLevel)
       resetCurrentDebugFiberInDEV()
     else
       local ok, result = pcall(function()
-        recursivelyCommitLayoutEffects(finishedWork, root)
+        -- ROBLOX deviation: pass in this function to avoid dependency cycle
+        recursivelyCommitLayoutEffects(finishedWork, root, exports.captureCommitPhaseError)
       end)
 
       if not ok then
@@ -2430,15 +2432,13 @@ mod.commitMutationEffectsImpl = function(
   if bit32.band(flags, ReactFiberFlags.Ref) ~= 0 then
     local current = fiber.alternate
     if current ~= nil then
-      unimplemented("commitDetachRef")
-      -- commitDetachRef(current)
+      commitDetachRef(current)
     end
     if ReactFeatureFlags.enableScopeAPI then
-      unimplemented("enableScopeAPI")
-      -- -- TODO: This is a temporary solution that allowed us to transition away from React Flare on www.
-      -- if fiber.tag == ScopeComponent then
-      --   commitAttachRef(fiber)
-      -- end
+      -- TODO: This is a temporary solution that allowed us to transition away from React Flare on www.
+      if fiber.tag == ReactWorkTags.ScopeComponent then
+        commitAttachRef(fiber)
+      end
     end
   end
 
@@ -3280,7 +3280,7 @@ if _G.__DEV__ and ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallb
         typeof(originalError) == "table" and
         typeof(originalError.then_) == "function"
       then
-        -- Don't replay pro mises. Treat everything else like an error.
+        -- Don't replay promises. Treat everything else like an error.
         error(originalError)
       end
 
@@ -3297,7 +3297,8 @@ if _G.__DEV__ and ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallb
       -- Restore the original properties of the fiber.
       ReactFiber.assignFiberPropertiesInDEV(unitOfWork, originalWorkInProgressCopy)
 
-      if enableProfilerTimer and bit32.band(unitOfWork.mode, ReactTypeOfMode.ProfileMode) then
+      if enableProfilerTimer and
+        bit32.band(unitOfWork.mode, ReactTypeOfMode.ProfileMode) ~= 0 then
         unimplemented("profiler timer")
         -- -- Reset the profiler timer.
         -- startProfilerTimer(unitOfWork)

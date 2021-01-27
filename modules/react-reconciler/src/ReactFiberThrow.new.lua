@@ -15,7 +15,6 @@ local Object = LuauPolyfill.Object
 
 -- ROBLOX: use patched console from shared
 local console = require(Workspace.Shared.console)
-local inspect = require(Workspace.Shared["inspect.roblox"]).inspect
 
 local ReactInternalTypes = require(script.Parent.ReactInternalTypes)
 type Fiber = ReactInternalTypes.Fiber;
@@ -45,7 +44,7 @@ local IncompleteClassComponent = ReactWorkTags.IncompleteClassComponent
 local ReactFiberFlags = require(script.Parent.ReactFiberFlags)
 local DidCapture = ReactFiberFlags.DidCapture
 local Incomplete = ReactFiberFlags.Incomplete
-local _NoFlags = ReactFiberFlags.NoFlags
+local NoFlags = ReactFiberFlags.NoFlags
 local ShouldCapture = ReactFiberFlags.ShouldCapture
 local LifecycleEffectMask = ReactFiberFlags.LifecycleEffectMask
 local ForceUpdateForLegacySuspense = ReactFiberFlags.ForceUpdateForLegacySuspense
@@ -82,6 +81,11 @@ local enqueueUpdate = ReactUpdateQueue.enqueueUpdate
 --   pingSuspendedRoot,
 -- } = require(Workspace../ReactFiberWorkLoop.new'
 
+-- ROBLOX FIXME: workaround temporary
+local isAlreadyFailedLegacyErrorBoundary = function(instance)
+  return false
+end
+
 local logCapturedError = require(script.Parent.ReactFiberErrorLogger).logCapturedError
 -- local {logComponentSuspended} = require(Workspace../DebugTracing'
 -- local {markComponentSuspended} = require(Workspace../SchedulingProfiler'
@@ -104,7 +108,8 @@ type Set<T> = { [T]: boolean }
 function createRootErrorUpdate(
   fiber: Fiber,
   errorInfo: CapturedValue<any>,
-  lane: Lane
+  lane: Lane,
+  onUncaughtError
 ): Update<any>
   local update = createUpdate(NoTimestamp, lane)
   -- Unmount the root by rendering nil.
@@ -114,8 +119,9 @@ function createRootErrorUpdate(
   update.payload = {element = Object.None}
   local _error = errorInfo.value
   update.callback = function()
-    console.warn("onUncaughtError: " .. inspect(errorInfo))
-    -- onUncaughtError(error)
+    if onUncaughtError ~= nil then
+      onUncaughtError(_error)
+    end
     logCapturedError(fiber, errorInfo)
   end
   return update
@@ -218,7 +224,9 @@ function throwException(
   returnFiber: Fiber,
   sourceFiber: Fiber,
   value: any,
-  rootRenderLanes: Lanes
+  rootRenderLanes: Lanes,
+  onUncaughtError,
+  renderDidError
 )
   -- The source fiber did not complete.
   sourceFiber.flags = bit32.bor(sourceFiber.flags, Incomplete)
@@ -233,7 +241,7 @@ function throwException(
 
     if _G.__DEV__ then
       if enableDebugTracing then
-        if bit32.band(sourceFiber.mode, DebugTracingMode) then
+        if bit32.band(sourceFiber.mode, DebugTracingMode) ~= 0 then
           local _name = getComponentName(sourceFiber.type) or 'Unknown'
           unimplemented("logComponentSuspended")
           -- logComponentSuspended(name, wakeable)
@@ -260,8 +268,9 @@ function throwException(
       end
     end
 
+    -- ROBLOX FIXME: hasSuspenseContext
     console.warn("throwException: hasSuspenseContext unimplemented")
-    local hasInvisibleParentBoundary
+    local hasInvisibleParentBoundary = false
     -- local hasInvisibleParentBoundary = hasSuspenseContext(
     --   suspenseStackCursor.current,
     --   (InvisibleParentSuspenseContext: SuspenseContext),
@@ -396,8 +405,7 @@ function throwException(
   -- over and traverse parent path again, this time treating the exception
   -- as an error.
   -- ROBLOX FIXME: fix the FiberThrow -> WorkLoop:renderDidError import cycle
-  console.warn("ReactFiberThrow: renderDidError not imported due to cycle")
-  -- renderDidError()
+  renderDidError()
 
   value = createCapturedValue(value, sourceFiber)
   local workInProgress = returnFiber
@@ -407,34 +415,33 @@ function throwException(
       workInProgress.flags = bit32.bor(workInProgress.flags, ShouldCapture)
       local lane = pickArbitraryLane(rootRenderLanes)
       workInProgress.lanes = mergeLanes(workInProgress.lanes, lane)
-      local update = createRootErrorUpdate(workInProgress, errorInfo, lane)
+      local update = createRootErrorUpdate(workInProgress, errorInfo, lane, onUncaughtError)
       enqueueCapturedUpdate(workInProgress, update)
       return
     elseif workInProgress.tag == ClassComponent then
       -- Capture and retry
-      local _errorInfo = value
-      local _ctor = workInProgress.type
-      local _instance = workInProgress.stateNode
-      unimplemented("isAlreadyFailedLegacyErrorBoundary")
-      -- if
-      -- 	bit32.band(workInProgress.flags, DidCapture) == NoFlags and
-      -- 	(typeof(ctor.getDerivedStateFromError) == 'function' or
-      -- 		(instance ~= nil and
-      -- 			typeof(instance.componentDidCatch) == 'function' and
-      -- 			not isAlreadyFailedLegacyErrorBoundary(instance)))
-      -- then
-      -- 	workInProgress.flags |= ShouldCapture
-      -- 	local lane = pickArbitraryLane(rootRenderLanes)
-      -- 	workInProgress.lanes = mergeLanes(workInProgress.lanes, lane)
-      -- 	-- Schedule the error boundary to re-render using updated state
-      -- 	local update = createClassErrorUpdate(
-      -- 		workInProgress,
-      -- 		errorInfo,
-      -- 		lane,
-      -- 	)
-      -- 	enqueueCapturedUpdate(workInProgress, update)
-      -- 	return
-      -- end
+      local errorInfo = value
+      local ctor = workInProgress.type
+      local instance = workInProgress.stateNode
+      if
+      	bit32.band(workInProgress.flags, DidCapture) == NoFlags and
+      	(typeof(ctor.getDerivedStateFromError) == 'function' or
+      		(instance ~= nil and
+      			typeof(instance.componentDidCatch) == 'function' and
+      			not isAlreadyFailedLegacyErrorBoundary(instance)))
+      then
+      	workInProgress.flags = bit32.bor(workInProgress.flags, ShouldCapture)
+      	local lane = pickArbitraryLane(rootRenderLanes)
+      	workInProgress.lanes = mergeLanes(workInProgress.lanes, lane)
+      	-- Schedule the error boundary to re-render using updated state
+      	local update = createClassErrorUpdate(
+      		workInProgress,
+      		errorInfo,
+      		lane
+      	)
+      	enqueueCapturedUpdate(workInProgress, update)
+      	return
+      end
     end
     workInProgress = workInProgress.return_
   until workInProgress ~= nil

@@ -11,12 +11,12 @@
 local Workspace = script.Parent.Parent
 
 local ReactInternalTypes = require(script.Parent.ReactInternalTypes)
-type Fiber = ReactInternalTypes.Fiber;
+type Fiber = ReactInternalTypes.Fiber
 local ReactFiberStack = require(script.Parent["ReactFiberStack.new"])
-type StackCursor<T> = ReactFiberStack.StackCursor<T>;
+type StackCursor<T> = ReactFiberStack.StackCursor<T>
 local ReactFiberHostConfig = require(script.Parent.ReactFiberHostConfig)
-type Container = ReactFiberHostConfig.Container;
-type HostContext = ReactFiberHostConfig.HostContext;
+type Container = ReactFiberHostConfig.Container
+type HostContext = ReactFiberHostConfig.HostContext
 
 local invariant = require(Workspace.Shared.invariant)
 

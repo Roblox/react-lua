@@ -219,7 +219,7 @@ local function findHostInstanceWithWarning(
 		if hostFiber == nil then
 			return nil
 		end
-		if bit32.band(hostFiber.mode, StrictMode) then
+		if bit32.band(hostFiber.mode, StrictMode) ~= 0 then
 			local componentName = getComponentName(fiber.type) or "Component"
 			if not didWarnAboutFindNodeInStrictMode[componentName] then
 				didWarnAboutFindNodeInStrictMode[componentName] = true
@@ -227,7 +227,7 @@ local function findHostInstanceWithWarning(
 				local previousFiber = ReactCurrentFiber.current
 				local ok, result = pcall(function()
 					setCurrentDebugFiberInDEV(hostFiber)
-					if bit32.band(fiber.mode, StrictMode) then
+					if bit32.band(fiber.mode, StrictMode) ~= 0 then
 						console.error(
 							"%s is deprecated in StrictMode. " ..
 								"%s was passed an instance of %s which is inside StrictMode. " ..
@@ -528,7 +528,7 @@ local setSuspenseHandler = nil
 if _G.__DEV__ then
 	-- deviation: FIXME: obj: `Object | Array<any>`, narrowing not possible with `isArray`
 	local function copyWithDeleteImpl(
-		obj: Object, 
+		obj: Object,
 		path: Array<string | number>,
 		index: number
 	)
