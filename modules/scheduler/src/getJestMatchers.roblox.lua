@@ -77,11 +77,21 @@ return function(expect)
 		end)
 	end
 
+	local function expectToFlushAndThrow(scheduler, rest)
+		assertYieldsWereCleared(scheduler)
+		return captureAssertion(function()
+			expect(function()
+				scheduler.unstable_flushAllWithoutAsserting()
+			end).toThrow(rest)
+		end)
+	end
+
 	return {
 		toFlushAndYield = expectToFlushAndYield,
 		toFlushAndYieldThrough = expectToFlushAndYieldThrough,
 		toFlushWithoutYielding = expectToFlushWithoutYielding,
 		toFlushExpired = expectToFlushExpired,
 		toHaveYielded = expectToHaveYielded,
+		toFlushAndThrow = expectToFlushAndThrow
 	}
 end

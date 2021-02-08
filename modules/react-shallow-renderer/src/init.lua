@@ -306,7 +306,7 @@ function ReactShallowRenderer:_createDispatcher()
     self:_validateCurrentlyRenderingComponent()
     self:_createWorkInProgressHook()
 
-    local nextDeps = deps ~= nil and deps or nil
+    local nextDeps = deps
 
     if
       self._workInProgressHook ~= nil and
@@ -557,7 +557,13 @@ function ReactShallowRenderer:render(element, maybeContext)
     self:_reset()
   end
 
-  local elementType = isMemo(element) and element.type.type or element.type
+  local elementType
+  if isMemo(element) then
+    elementType = element.type.type
+  else
+    elementType = element.type
+  end
+
   local previousElement = self._element
   self._rendering = true
   self._element = element
@@ -565,7 +571,10 @@ function ReactShallowRenderer:render(element, maybeContext)
   -- `contextTypes` if `elementType` is a function; as far as I can tell, React
   -- doesn't support `contextTypes` on function components anyways, so the
   -- behavior should be compatible
-  local contextTypes = typeof(elementType) == "table" and elementType.contextTypes or nil
+  local contextTypes
+  if typeof(elementType) == "table" then
+     contextTypes = elementType.contextTypes
+  end
   self._context = getMaskedContext(contextTypes, context)
 
   -- Inner memo component props aren't currently validated in createElement.
@@ -831,7 +840,12 @@ function getDisplayName(element)
   elseif typeof(element.type) == 'string' then
     return element.type
   else
-    local elementType = isMemo(element) and element.type.type or element.type
+    local elementType
+    if isMemo(element) then 
+      elementType = element.type.type
+    else
+      elementType = element.type
+    end
     return elementType.displayName or elementType.name or 'Unknown'
   end
 end

@@ -1,0 +1,144 @@
+-- ROBLOX upstream: https://github.com/facebook/react/blob/ea2af878cc3fb139b0e08cf9bc4b2f4178429d69/packages/react-reconciler/src/__tests__/ReactFiberHostContext-test.internal.js
+--[[*
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @emails react-core
+ * @jest-environment node
+ ]]
+
+return function()
+  describe('ReactFiberHostContext', function()
+    local Workspace = script.Parent.Parent.Parent
+    local RobloxJest = require(Workspace.RobloxJest)
+
+    local ReactFiberReconciler
+    local ConcurrentRoot
+    local React
+
+    beforeEach(function()
+      RobloxJest.resetModules()
+      React = require(Workspace.React)
+      ReactFiberReconciler = function(config)
+        -- deviation: upstream has jest.mock return a function via
+        -- scripts/setupHostConfigs.js, but it's easier for us to do it here
+        RobloxJest.mock(Workspace.ReactReconciler.ReactFiberHostConfig, function()
+          return config
+        end)
+        return require(Workspace.ReactReconciler.ReactFiberReconciler)
+      end
+      ConcurrentRoot = require(script.Parent.Parent.ReactRootTags)
+    end)
+
+    it('works with nil host context', function()
+      local expect: any = expect
+      local creates = 0
+      local Renderer = ReactFiberReconciler({
+        prepareForCommit = function()
+          return nil
+        end,
+        resetAfterCommit = function() end,
+        getRootHostContext = function()
+          return nil
+        end,
+        getChildHostContext = function()
+          return nil
+        end,
+        shouldSetTextContent = function()
+          return false
+        end,
+        createInstance = function()
+          creates += 1
+        end,
+        finalizeInitialChildren = function()
+          return nil
+        end,
+        appendInitialChild = function()
+          return nil
+        end,
+        now = function()
+          return 0
+        end,
+        appendChildToContainer = function()
+          return nil
+        end,
+        clearContainer= function() end,
+        supportsMutation= true
+      })
+
+      local container = Renderer.createContainer(
+        --[[ root: ]] nil,
+        ConcurrentRoot,
+        false,
+        nil
+      )
+      Renderer.updateContainer(
+        React.createElement("a", nil,
+          React.createElement("b")
+        ),
+        container,
+        --[[ parentComponent: ]] nil,
+        --[[ callback: ]] nil
+      )
+
+      expect(creates).to.equal(2)
+    end)
+
+    it('should send the context to prepareForCommit and resetAfterCommit', function()
+				local expect: any = expect
+        local rootContext = {}
+      local Renderer = ReactFiberReconciler({
+        prepareForCommit= function(hostContext)
+          expect(hostContext).to.equal(rootContext)
+          return nil
+        end,
+        resetAfterCommit= function(hostContext)
+          expect(hostContext).to.equal(rootContext)
+        end,
+        getRootHostContext= function()
+          return nil
+        end,
+        getChildHostContext= function()
+          return nil
+        end,
+        shouldSetTextContent= function()
+          return false
+        end,
+        createInstance= function()
+          return nil
+        end,
+        finalizeInitialChildren= function()
+          return nil
+        end,
+        appendInitialChild= function()
+          return nil
+        end,
+        now= function()
+          return 0
+        end,
+        appendChildToContainer= function()
+          return nil
+        end,
+        clearContainer= function() end,
+        supportsMutation= true
+      })
+
+      local container = Renderer.createContainer(
+        rootContext,
+        ConcurrentRoot,
+        false,
+        nil
+      )
+      Renderer.updateContainer(
+        React.createElement("a", nil,
+          React.createElement("b")
+        ),
+        container,
+        --[[ parentComponent= ]] nil,
+        --[[ callback= ]] nil
+      )
+    end)
+  end)
+end

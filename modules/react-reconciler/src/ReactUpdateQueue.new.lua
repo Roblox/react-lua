@@ -107,9 +107,9 @@ local NoLane = ReactFiberLane.NoLane
 local NoLanes = ReactFiberLane.NoLanes
 local isSubsetOfLanes = ReactFiberLane.isSubsetOfLanes
 local mergeLanes = ReactFiberLane.mergeLanes
-local ReactFiberNewContext = require(script.Parent["ReactFiberNewContext.new"])
-local enterDisallowedContextReadInDEV = ReactFiberNewContext.enterDisallowedContextReadInDEV
-local exitDisallowedContextReadInDEV = ReactFiberNewContext.exitDisallowedContextReadInDEV
+-- local ReactFiberNewContext = require(script.Parent["ReactFiberNewContext.new"])
+-- local enterDisallowedContextReadInDEV = ReactFiberNewContext.enterDisallowedContextReadInDEV
+-- local exitDisallowedContextReadInDEV = ReactFiberNewContext.exitDisallowedContextReadInDEV
 local ReactFiberFlags = require(script.Parent.ReactFiberFlags)
 local Callback = ReactFiberFlags.Callback
 local ShouldCapture = ReactFiberFlags.ShouldCapture
@@ -382,7 +382,8 @@ local function getStateFromUpdate(
 		if typeof(payload) == "function" then
 			-- Updater function
 			if _G.__DEV__ then
-				enterDisallowedContextReadInDEV()
+				warn("Skip `enterDisallowedContextReadInDEV` (cycles)")
+				-- enterDisallowedContextReadInDEV()
 			end
 			local nextState = payload(instance, prevState, nextProps)
 			if _G.__DEV__ then
@@ -401,7 +402,8 @@ local function getStateFromUpdate(
 						error(result)
 					end
 				end
-				exitDisallowedContextReadInDEV()
+				warn("Skip `exitDisallowedContextReadInDEV` (cycles)")
+				-- exitDisallowedContextReadInDEV()
 			end
 			return nextState
 		end
@@ -418,7 +420,8 @@ local function getStateFromUpdate(
 		if typeof(payload) == "function" then
 			-- Updater function
 			if _G.__DEV__ then
-				enterDisallowedContextReadInDEV()
+				warn("Skip `enterDisallowedContextReadInDEV` (cycles)")
+				-- enterDisallowedContextReadInDEV()
 			end
 			partialState = payload(instance, prevState, nextProps)
 			if _G.__DEV__ then
@@ -437,7 +440,8 @@ local function getStateFromUpdate(
 						error(result)
 					end
 				end
-				exitDisallowedContextReadInDEV()
+				warn("Skip `exitDisallowedContextReadInDEV` (cycles)")
+				-- exitDisallowedContextReadInDEV()
 			end
 		else
 			-- Partial state object

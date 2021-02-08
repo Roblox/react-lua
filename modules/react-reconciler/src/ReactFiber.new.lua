@@ -486,59 +486,65 @@ local function createFiberFromTypeAndProps(
 	-- The resolved type is set if we know what the final type will be. I.e. it's not lazy.
 	-- deviation: FIXME: Account for deviated class v. function component type logic
 	local resolvedType = type
-	if typeof(type) == "function" or typeof(type) == "table" then
-		if shouldConstruct(type) then
-			fiberTag = ClassComponent
-			if _G.__DEV__ then
-				resolvedType = resolveClassForHotReloading(resolvedType)
-			end
-		else
-			if _G.__DEV__ then
-				resolvedType = resolveFunctionForHotReloading(resolvedType)
-			end
+	-- deviation: since our class components aren't functions, we have to look
+	-- for them more explicitly (inlines logic from `shouldConstruct`)
+	if typeof(type) == "function" then
+		if _G.__DEV__ then
+			resolvedType = resolveFunctionForHotReloading(resolvedType)
+		end
+	elseif typeof(type) == "table" and (not not type.isReactComponent) then
+		fiberTag = ClassComponent
+		if _G.__DEV__ then
+			resolvedType = resolveClassForHotReloading(resolvedType)
 		end
 	elseif typeof(type) == "string" then
 		fiberTag = HostComponent
 	else
 		if type == REACT_FRAGMENT_TYPE then
 			return createFiberFromFragment(pendingProps.children, mode, lanes, key)
-		elseif REACT_DEBUG_TRACING_MODE_TYPE then
+		elseif type == REACT_DEBUG_TRACING_MODE_TYPE then
 			fiberTag = Mode
 			mode = bit32.bor(mode, DebugTracingMode)
-		elseif REACT_STRICT_MODE_TYPE then
+		elseif type == REACT_STRICT_MODE_TYPE then
 			fiberTag = Mode
 			mode = bit32.bor(mode, StrictMode)
-		elseif REACT_PROFILER_TYPE then
+		elseif type == REACT_PROFILER_TYPE then
 			return createFiberFromProfiler(pendingProps, mode, lanes, key)
-		elseif REACT_SUSPENSE_TYPE then
+		elseif type == REACT_SUSPENSE_TYPE then
 			return createFiberFromSuspense(pendingProps, mode, lanes, key)
-		elseif REACT_SUSPENSE_LIST_TYPE then
+		elseif type == REACT_SUSPENSE_LIST_TYPE then
 			return createFiberFromSuspenseList(pendingProps, mode, lanes, key)
-		elseif REACT_OFFSCREEN_TYPE then
+		elseif type == REACT_OFFSCREEN_TYPE then
 			return createFiberFromOffscreen(pendingProps, mode, lanes, key)
-		elseif REACT_LEGACY_HIDDEN_TYPE then
+		elseif type == REACT_LEGACY_HIDDEN_TYPE then
 			return createFiberFromLegacyHidden(pendingProps, mode, lanes, key)
-		elseif REACT_SCOPE_TYPE then
+		elseif type == REACT_SCOPE_TYPE then
 			if enableScopeAPI then
 				return createFiberFromScope(type, pendingProps, mode, lanes, key)
 			end
 		else
-			if typeof(type) == "table" and type ~= nil then
+			local shouldBreak = false;
+			if typeof(type) == "table" then
 				if type["$$typeof"] == REACT_PROVIDER_TYPE then
 					fiberTag = ContextProvider
+					shouldBreak = true
 				elseif type["$$typeof"] == REACT_CONTEXT_TYPE then
 					-- This is a consumer
 					fiberTag = ContextConsumer
+					shouldBreak = true
 				elseif type["$$typeof"] == REACT_FORWARD_REF_TYPE then
 					fiberTag = ForwardRef
 					if _G.__DEV__ then
 						resolvedType = resolveForwardRefForHotReloading(resolvedType)
 					end
+					shouldBreak = true
 				elseif type["$$typeof"] == REACT_MEMO_TYPE then
 					fiberTag = MemoComponent
+					shouldBreak = true
 				elseif type["$$typeof"] == REACT_LAZY_TYPE then
 					fiberTag = LazyComponent
 					resolvedType = nil
+					shouldBreak = true
 				elseif type["$$typeof"] == REACT_FUNDAMENTAL_TYPE then
 					if enableFundamentalAPI then
 						return createFiberFromFundamental(
@@ -551,31 +557,36 @@ local function createFiberFromTypeAndProps(
 					end
 				end
 			end
-			local info = ""
-			if _G.__DEV__ then
-				if
-					type == nil or
-					(typeof(type) == "table" and
-						#Object.keys(type) == 0)
-				then
-					info ..=
-						" You likely forgot to export your component from the file " ..
-						"it's defined in, or you might have mixed up default and " ..
-						"named imports."
+			if not shouldBreak then
+				local info = ""
+				if _G.__DEV__ then
+					if
+						type == nil or
+						(typeof(type) == "table" and
+							#Object.keys(type) == 0)
+					then
+						info ..=
+							" You likely forgot to export your component from the file " ..
+							"it's defined in, or you might have mixed up default and " ..
+							"named imports."
+					end
+					local ownerName
+					if owner then
+						ownerName = getComponentName(owner.type)
+					end
+					if ownerName then
+						info ..= "\n\nCheck the render method of `" .. ownerName .. "`."
+					end
 				end
-				local ownerName = owner and getComponentName(owner.type) or nil
-				if ownerName then
-					info ..= "\n\nCheck the render method of `" .. ownerName .. "`."
-				end
+				invariant(
+					false,
+					"Element type is invalid: expected a string (for built-in " ..
+						"components) or a class/function (for composite components) " ..
+						"but got: %s.%s",
+					typeof(type),
+					info
+				)
 			end
-			invariant(
-				false,
-				"Element type is invalid: expected a string (for built-in " ..
-					"components) or a class/function (for composite components) " ..
-					"but got: %s.%s",
-				typeof(type),
-				info
-			)
 		end
 	end
 
@@ -788,7 +799,7 @@ local function createFiberFromPortal(
 	mode: TypeOfMode,
 	lanes: Lanes
 ): Fiber
-	local pendingProps = portal.children ~= nil and portal.children or {}
+	local pendingProps = portal.children or {}
 	local fiber = createFiber(HostPortal, pendingProps, portal.key, mode)
 	fiber.lanes = lanes
 	fiber.stateNode = {

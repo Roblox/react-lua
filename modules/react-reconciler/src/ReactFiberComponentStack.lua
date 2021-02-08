@@ -39,7 +39,10 @@ local function describeFiber(fiber: Fiber): string
 			owner = debugOwner.type
 		end
 	end
-	local source = _G.__DEV__ and fiber._debugSource or nil
+	local source
+	if  _G.__DEV__ then
+		source = fiber._debugSource
+	end
 	if fiber.tag == HostComponent then
 		return describeBuiltInComponentFrame(fiber.type, source, owner)
 	elseif fiber.tag == LazyComponent then

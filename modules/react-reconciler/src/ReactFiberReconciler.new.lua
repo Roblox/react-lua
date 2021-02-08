@@ -533,7 +533,12 @@ if _G.__DEV__ then
 		index: number
 	)
 		local key = path[index]
-		local updated = Array.isArray(obj) and Array.slice(obj) or Object.assign({}, obj)
+		local updated
+		if Array.isArray(obj) then
+			updated = Array.slice(obj)
+		else
+			updated = Object.assign({}, obj)
+		end
 		if index + 1 == #path then
 			if Array.isArray(updated) then
 				-- Narrow type
@@ -565,7 +570,12 @@ if _G.__DEV__ then
 		index: number
 	)
 		local oldKey = oldPath[index]
-		local updated = Array.isArray(obj) and Array.slice(obj) or Object.assign({}, obj)
+		local updated
+		if Array.isArray(obj) then
+			updated = Array.slice(obj)
+		else
+			updated = Object.assign({}, obj)
+		end
 		if index + 1 == #oldPath then
 			local newKey = newPath[index]
 			-- $FlowFixMe number or string is fine here
@@ -621,7 +631,12 @@ if _G.__DEV__ then
 			return value
 		end
 		local key = path[index]
-		local updated = Array.isArray(obj) and Array.slice(obj) or Object.assign({}, obj)
+		local updated
+		if Array.isArray(obj) then
+			updated = Array.slice(obj)
+		else
+			updated = Object.assign({}, obj)
+		end
 		-- $FlowFixMe number or string is fine here
 		updated[key] = copyWithSetImpl(obj[key], path, index + 1, value)
 		return updated

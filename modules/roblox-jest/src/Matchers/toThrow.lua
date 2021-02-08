@@ -39,7 +39,7 @@ local function toThrow(fn: () -> any, errorString: string?)
 				pass = false,
 				message = string.format(
 					"Expected function to throw with '%s'",
-					errorString
+					tostring(errorString)
 				),
 			}
 		end

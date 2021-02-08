@@ -966,7 +966,7 @@ local function ChildReconciler(shouldTrackSideEffects)
             -- it from the child list so that we don't add it to the deletion
             -- list.
             -- deviation: Split out ternary into safer/more readable logic
-            local key = newFiber.key == nil and newIdx or newFiber.key
+            local key = newFiber.key or newIdx
             existingChildren[key] = nil
           end
         end
@@ -1128,6 +1128,8 @@ local function ChildReconciler(shouldTrackSideEffects)
       while not step.done do
         local newFiber = createChild(returnFiber, step.value, lanes)
         if newFiber == nil then
+          newIdx += 1
+          step = newChildren.next()
           continue
         end
         lastPlacedIndex = placeChild(newFiber, lastPlacedIndex, newIdx)
@@ -1536,11 +1538,11 @@ exports.cloneChildFibers = function(
   newChild.return_ = workInProgress
   while currentChild.sibling ~= nil do
     currentChild = currentChild.sibling
-    newChild = createWorkInProgress(
+    newChild.sibling = createWorkInProgress(
       currentChild,
       currentChild.pendingProps
     )
-    newChild.sibling = newChild
+    newChild = newChild.sibling
     newChild.return_ = workInProgress
   end
   newChild.sibling = nil

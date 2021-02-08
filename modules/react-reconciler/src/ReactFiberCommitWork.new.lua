@@ -380,7 +380,10 @@ local function commitHookEffectListUnmount(
   -- FIXME (roblox): type coercion
   -- local updateQueue: FunctionComponentUpdateQueue | nil = (finishedWork.updateQueue: any)
   local updateQueue = finishedWork.updateQueue
-  local lastEffect = updateQueue ~= nil and updateQueue.lastEffect or nil
+  local lastEffect
+  if updateQueue ~= nil then
+    lastEffect = updateQueue.lastEffect
+  end
   if lastEffect ~= nil then
     local firstEffect = lastEffect.next
     local effect = firstEffect
@@ -402,7 +405,10 @@ local function commitHookEffectListMount(flags: HookFlags, finishedWork: Fiber)
   -- FIXME (roblox): type coercion
   -- local updateQueue: FunctionComponentUpdateQueue | nil = (finishedWork.updateQueue: any)
   local updateQueue = finishedWork.updateQueue
-  local lastEffect = updateQueue ~= nil and updateQueue.lastEffect or nil
+  local lastEffect
+  if updateQueue ~= nil then
+    lastEffect = updateQueue.lastEffect
+  end
   if lastEffect ~= nil then
     local firstEffect = lastEffect.next
     local effect = firstEffect
@@ -1435,7 +1441,12 @@ insertOrAppendPlacementNodeIntoContainer = function(
   local tag = node.tag
   local isHost = tag == HostComponent or tag == HostText
   if isHost or (enableFundamentalAPI and tag == FundamentalComponent) then
-    local stateNode = isHost and node.stateNode or node.stateNode.instance
+    local stateNode
+    if isHost then
+      stateNode = node.stateNode
+    else
+      stateNode = node.stateNode.instance
+    end
     if before then
       insertInContainerBefore(parent, stateNode, before)
     else
@@ -1466,7 +1477,12 @@ insertOrAppendPlacementNode = function(
   local tag = node.tag
   local isHost = tag == HostComponent or tag == HostText
   if isHost or (enableFundamentalAPI and tag == FundamentalComponent) then
-    local stateNode = isHost and node.stateNode or node.stateNode.instance
+    local stateNode
+    if isHost then
+      stateNode = node.stateNode
+    else
+      stateNode = node.stateNode.instance
+    end
     if before then
       insertBefore(parent, stateNode, before)
     else

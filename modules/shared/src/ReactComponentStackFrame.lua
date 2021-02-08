@@ -51,7 +51,11 @@ local function describeBuiltInComponentFrame(
 		-- 	local _, x = pcall(error, debug.traceback())
 
 		-- 	local match = x.stack.trim().match("\n00:00:00.000 - ")
-		-- 	prefix = match and match[1] or ''
+		-- 	if match then
+		-- 		prefix = match[1]
+		-- 	else
+		-- 		prefix = ''
+		-- 	end
 		-- end
 		-- We use the prefix to ensure our stacks line up with native stack frames.
 		return '\n' .. prefix .. name

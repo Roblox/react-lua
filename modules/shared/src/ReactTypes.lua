@@ -45,11 +45,13 @@ export type ReactNodeList = ReactEmpty | React_Node;
 --   ...
 -- };
 
--- export type ReactProviderType<T> = {
---   $$typeof: Symbol | number,
---   _context: ReactContext<T>,
---   ...
--- };
+export type ReactProviderType<T> = {
+  -- $$typeof: Symbol | number,
+  -- _context: ReactContext<T>,
+  _context: any, -- 
+  -- [any]: any,
+  -- ...
+};
 
 -- export type ReactConsumer<T> = {
 --   $$typeof: Symbol | number,
@@ -68,8 +70,7 @@ export type ReactContext<T> = {
   -- $$typeof: Symbol | number,
   -- Consumer: ReactContext<T>,
   Consumer: any,
-  -- Provider: ReactProviderType<T>,
-  Provider: any,
+  Provider: ReactProviderType<T>,
   _calculateChangedBits: ((T, T) -> number)?,
   _currentValue: T,
   _currentValue2: T,

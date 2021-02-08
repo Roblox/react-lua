@@ -17,7 +17,9 @@ local Workspace = script.Parent.Parent
 -- ROBLOX: use patched console from shared
 local console = require(Workspace.Shared.console)
 
--- local type {ReactProviderType, ReactContext} = require(Workspace.Shared.ReactTypes)
+local ReactTypes = require(Workspace.Shared.ReactTypes)
+type ReactProviderType<T> = ReactTypes.ReactProviderType<T>;
+type ReactContext<T> = ReactTypes.ReactContext<T>;
 -- local type {LazyComponent as LazyComponentType} = require(Workspace.react/src/ReactLazy'
 local ReactInternalTypes = require(script.Parent.ReactInternalTypes)
 type Fiber = ReactInternalTypes.Fiber;
@@ -82,9 +84,9 @@ local disableModulePatternComponents = ReactFeatureFlags.disableModulePatternCom
 local enableProfilerTimer = ReactFeatureFlags.enableProfilerTimer
 -- local enableSchedulerTracing = ReactFeatureFlags.enableSchedulerTracing
 -- local enableSuspenseServerRenderer = ReactFeatureFlags.enableSuspenseServerRenderer
--- local enableFundamentalAPI = ReactFeatureFlags.enableFundamentalAPI
+local enableFundamentalAPI = ReactFeatureFlags.enableFundamentalAPI
 local warnAboutDefaultPropsOnFunctionComponents = ReactFeatureFlags.warnAboutDefaultPropsOnFunctionComponents
--- local enableScopeAPI = ReactFeatureFlags.enableScopeAPI
+local enableScopeAPI = ReactFeatureFlags.enableScopeAPI
 local invariant = require(Workspace.Shared.invariant)
 -- local shallowEqual = require(Workspace.Shared.shallowEqual)
 local getComponentName = require(Workspace.Shared.getComponentName)
@@ -149,13 +151,11 @@ local pushHostContainer = ReactFiberHostContext.pushHostContainer
 -- local {findFirstSuspended} = require(script.Parent.ReactFiberSuspenseComponent.new)
 -- local {
 --   ,
---   propagateContextChange,
---   readContext,
---   prepareToReadContext,
---   calculateChangedBits,
---   scheduleWorkOnParentPath,
--- } = require(script.Parent.ReactFiberNewContext.new)
 local ReactFiberNewContext = require(script.Parent["ReactFiberNewContext.new"])
+local propagateContextChange = ReactFiberNewContext.propagateContextChange
+local readContext = ReactFiberNewContext.readContext
+local calculateChangedBits = ReactFiberNewContext.calculateChangedBits
+-- local scheduleWorkOnParentPath = ReactFiberNewContext.scheduleWorkOnParentPath
 local prepareToReadContext = ReactFiberNewContext.prepareToReadContext
 local pushProvider = ReactFiberNewContext.pushProvider
 
@@ -216,7 +216,7 @@ local reenableLogs = ConsolePatchingDev.reenableLogs
 
 local ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner
 
-local exports = {}
+local exports: {[string]: any} = {}
 
 -- deviation: Pre-declare functions
 local bailoutOnAlreadyFinishedWork, updateFunctionComponent
@@ -344,7 +344,7 @@ end
 
 --   -- The rest is a fork of updateFunctionComponent
 --   local nextChildren
---   prepareToReadContext(workInProgress, renderLanes)
+--   prepareToReadContext(workInProgress, renderLanes, exports.markWorkInProgressReceivedUpdate)
 --   if  _G.__DEV__ then
 --     ReactCurrentOwner.current = workInProgress
 --     setIsRendering(true)
@@ -745,7 +745,7 @@ updateFunctionComponent = function(
   end
 
   local nextChildren
-  prepareToReadContext(workInProgress, renderLanes)
+  prepareToReadContext(workInProgress, renderLanes, exports.markWorkInProgressReceivedUpdate)
   if _G.__DEV__ then
     ReactCurrentOwner.current = workInProgress
     setIsRendering(true)
@@ -817,7 +817,7 @@ end
 
 --   -- The rest is a fork of updateFunctionComponent
 --   local nextChildren
---   prepareToReadContext(workInProgress, renderLanes)
+--   prepareToReadContext(workInProgress, renderLanes, exports.markWorkInProgressReceivedUpdate)
 --   if  _G.__DEV__ then
 --     ReactCurrentOwner.current = workInProgress
 --     setIsRendering(true)
@@ -908,7 +908,7 @@ local function updateClassComponent(
   else
     hasContext = false
   end
-  prepareToReadContext(workInProgress, renderLanes)
+  prepareToReadContext(workInProgress, renderLanes, exports.markWorkInProgressReceivedUpdate)
 
   local instance = workInProgress.stateNode
   local shouldUpdate
@@ -1094,7 +1094,10 @@ local function updateHostRoot(current, workInProgress, renderLanes)
   )
   local nextProps = workInProgress.pendingProps
   local prevState = workInProgress.memoizedState
-  local prevChildren = prevState ~= nil and prevState.element or nil
+  local prevChildren
+  if prevState ~= nil then
+    prevChildren = prevState.element
+  end
   cloneUpdateQueue(current, workInProgress)
   processUpdateQueue(workInProgress, nextProps, nil, renderLanes)
   local nextState = workInProgress.memoizedState
@@ -1175,8 +1178,10 @@ local function updateHostComponent(
 
   local type = workInProgress.type
   local nextProps = workInProgress.pendingProps
-  local prevProps = current ~= nil and current.memoizedProps or nil
-
+  local prevProps
+  if current ~= nil then
+    prevProps = current.memoizedProps
+  end
   local nextChildren = nextProps.children
   local isDirectTextChild = shouldSetTextContent(type, nextProps)
 
@@ -1378,7 +1383,7 @@ end
 --   else
 --     hasContext = false
 --   end
---   prepareToReadContext(workInProgress, renderLanes)
+--   prepareToReadContext(workInProgress, renderLanes, exports.markWorkInProgressReceivedUpdate)
 
 --   constructClassInstance(workInProgress, Component, nextProps)
 --   mountClassInstance(workInProgress, Component, nextProps, renderLanes)
@@ -1421,7 +1426,7 @@ local function mountIndeterminateComponent(
     context = getMaskedContext(workInProgress, unmaskedContext)
   end
 
-  prepareToReadContext(workInProgress, renderLanes)
+  prepareToReadContext(workInProgress, renderLanes, exports.markWorkInProgressReceivedUpdate)
   local value
 
   if _G.__DEV__ then
@@ -2886,152 +2891,153 @@ end
 
 -- local hasWarnedAboutUsingNoValuePropOnContextProvider = false
 
--- function updateContextProvider(
---   current: Fiber | nil,
---   workInProgress: Fiber,
---   renderLanes: Lanes,
--- )
---   local providerType: ReactProviderType<any> = workInProgress.type
---   local context: ReactContext<any> = providerType._context
+local function updateContextProvider(
+  current: Fiber | nil,
+  workInProgress: Fiber,
+  renderLanes: Lanes
+)
+  local providerType: ReactProviderType<any> = workInProgress.type
+  local context: ReactContext<any> = providerType._context
 
---   local newProps = workInProgress.pendingProps
---   local oldProps = workInProgress.memoizedProps
+  local newProps = workInProgress.pendingProps
+  local oldProps = workInProgress.memoizedProps
 
---   local newValue = newProps.value
+  local newValue = newProps.value
 
---   if  _G.__DEV__ then
---     if not ('value' in newProps))
---       if not hasWarnedAboutUsingNoValuePropOnContextProvider)
---         hasWarnedAboutUsingNoValuePropOnContextProvider = true
---         console.error(
---           'The `value` prop is required for the `<Context.Provider>`. Did you misspell it or forget to pass it?',
---         )
---       end
---     end
---     local providerPropTypes = workInProgress.type.propTypes
+  if  _G.__DEV__ then
+    -- deviation: No distinction between
+    -- if not newProps('value' in newProps))
+    --   if not hasWarnedAboutUsingNoValuePropOnContextProvider)
+    --     hasWarnedAboutUsingNoValuePropOnContextProvider = true
+    --     console.error(
+    --       'The `value` prop is required for the `<Context.Provider>`. Did you misspell it or forget to pass it?',
+    --     )
+    --   end
+    -- end
+    local providerPropTypes = workInProgress.type.propTypes
 
---     if providerPropTypes)
---       checkPropTypes(providerPropTypes, newProps, 'prop', 'Context.Provider')
---     end
---   end
+    if providerPropTypes then
+      checkPropTypes(providerPropTypes, newProps, 'prop', 'Context.Provider')
+    end
+  end
 
---   pushProvider(workInProgress, newValue)
+  pushProvider(workInProgress, newValue)
 
---   if oldProps ~= nil)
---     local oldValue = oldProps.value
---     local changedBits = calculateChangedBits(context, newValue, oldValue)
---     if changedBits == 0)
---       -- No change. Bailout early if children are the same.
---       if
---         oldProps.children == newProps.children and
---         !hasLegacyContextChanged()
---       )
---         return bailoutOnAlreadyFinishedWork(
---           current,
---           workInProgress,
---           renderLanes,
---         )
---       end
---     else
---       -- The context value changed. Search for matching consumers and schedule
---       -- them to update.
---       propagateContextChange(workInProgress, context, changedBits, renderLanes)
---     end
---   end
+  if oldProps ~= nil then
+    local oldValue = oldProps.value
+    local changedBits = calculateChangedBits(context, newValue, oldValue)
+    if changedBits == 0 then
+      -- No change. Bailout early if children are the same.
+      if
+        oldProps.children == newProps.children and
+        not hasLegacyContextChanged()
+      then
+        return bailoutOnAlreadyFinishedWork(
+          current,
+          workInProgress,
+          renderLanes
+        )
+      end
+    else
+      -- The context value changed. Search for matching consumers and schedule
+      -- them to update.
+      propagateContextChange(workInProgress, context, changedBits, renderLanes)
+    end
+  end
 
---   local newChildren = newProps.children
---   reconcileChildren(current, workInProgress, newChildren, renderLanes)
---   return workInProgress.child
--- end
+  local newChildren = newProps.children
+  reconcileChildren(current, workInProgress, newChildren, renderLanes)
+  return workInProgress.child
+end
 
--- local hasWarnedAboutUsingContextAsConsumer = false
+local hasWarnedAboutUsingContextAsConsumer = false
 
--- function updateContextConsumer(
---   current: Fiber | nil,
---   workInProgress: Fiber,
---   renderLanes: Lanes,
--- )
---   local context: ReactContext<any> = workInProgress.type
---   -- The logic below for Context differs depending on PROD or DEV mode. In
---   -- DEV mode, we create a separate object for Context.Consumer that acts
---   -- like a proxy to Context. This proxy object adds unnecessary code in PROD
---   -- so we use the old behaviour (Context.Consumer references Context) to
---   -- reduce size and overhead. The separate object references context via
---   -- a property called "_context", which also gives us the ability to check
---   -- in DEV mode if this property exists or not and warn if it does not.
---   if  _G.__DEV__ then
---     if (context: any)._context == undefined)
---       -- This may be because it's a Context (rather than a Consumer).
---       -- Or it may be because it's older React where they're the same thing.
---       -- We only want to warn if we're sure it's a new React.
---       if context ~= context.Consumer)
---         if not hasWarnedAboutUsingContextAsConsumer)
---           hasWarnedAboutUsingContextAsConsumer = true
---           console.error(
---             'Rendering <Context> directly is not supported and will be removed in ' +
---               'a future major release. Did you mean to render <Context.Consumer> instead?',
---           )
---         end
---       end
---     else
---       context = (context: any)._context
---     end
---   end
---   local newProps = workInProgress.pendingProps
---   local render = newProps.children
+function updateContextConsumer(
+  current: Fiber | nil,
+  workInProgress: Fiber,
+  renderLanes: Lanes
+)
+  local context: ReactContext<any> = workInProgress.type
+  -- The logic below for Context differs depending on PROD or DEV mode. In
+  -- DEV mode, we create a separate object for Context.Consumer that acts
+  -- like a proxy to Context. This proxy object adds unnecessary code in PROD
+  -- so we use the old behaviour (Context.Consumer references Context) to
+  -- reduce size and overhead. The separate object references context via
+  -- a property called "_context", which also gives us the ability to check
+  -- in DEV mode if this property exists or not and warn if it does not.
+  if  _G.__DEV__ then
+    if context._context == nil then
+      -- This may be because it's a Context (rather than a Consumer).
+      -- Or it may be because it's older React where they're the same thing.
+      -- We only want to warn if we're sure it's a new React.
+      if context ~= context.Consumer then
+        if not hasWarnedAboutUsingContextAsConsumer then
+          hasWarnedAboutUsingContextAsConsumer = true
+          console.error(
+            'Rendering <Context> directly is not supported and will be removed in ' ..
+              'a future major release. Did you mean to render <Context.Consumer> instead?'
+          )
+        end
+      end
+    else
+      context = context._context
+    end
+  end
+  local newProps = workInProgress.pendingProps
+  local render = newProps.children
 
---   if  _G.__DEV__ then
---     if typeof render ~= 'function')
---       console.error(
---         'A context consumer was rendered with multiple children, or a child ' +
---           "that isn't a function. A context consumer expects a single child " +
---           'that is a function. If you did pass a function, make sure there ' +
---           'is no trailing or leading whitespace around it.',
---       )
---     end
---   end
+  if  _G.__DEV__ then
+    if typeof(render) ~= 'function' then
+      console.error(
+        'A context consumer was rendered with multiple children, or a child ' ..
+          "that isn't a function. A context consumer expects a single child " ..
+          'that is a function. If you did pass a function, make sure there ' ..
+          'is no trailing or leading whitespace around it.'
+      )
+    end
+  end
 
---   prepareToReadContext(workInProgress, renderLanes)
---   local newValue = readContext(context, newProps.unstable_observedBits)
---   local newChildren
---   if  _G.__DEV__ then
---     ReactCurrentOwner.current = workInProgress
---     setIsRendering(true)
---     newChildren = render(newValue)
---     setIsRendering(false)
---   else
---     newChildren = render(newValue)
---   end
+  prepareToReadContext(workInProgress, renderLanes, exports.markWorkInProgressReceivedUpdate)
+  local newValue = readContext(context, newProps.unstable_observedBits)
+  local newChildren
+  if _G.__DEV__ then
+    ReactCurrentOwner.current = workInProgress
+    setIsRendering(true)
+    newChildren = render(newValue)
+    setIsRendering(false)
+  else
+    newChildren = render(newValue)
+  end
 
---   -- React DevTools reads this flag.
---   workInProgress.flags |= PerformedWork
---   reconcileChildren(current, workInProgress, newChildren, renderLanes)
---   return workInProgress.child
--- end
+  -- React DevTools reads this flag.
+  workInProgress.flags = bit32.bor(workInProgress.flags, PerformedWork)
+  reconcileChildren(current, workInProgress, newChildren, renderLanes)
+  return workInProgress.child
+end
 
--- function updateFundamentalComponent(current, workInProgress, renderLanes)
---   local fundamentalImpl = workInProgress.type.impl
---   if fundamentalImpl.reconcileChildren == false)
---     return nil
---   end
---   local nextProps = workInProgress.pendingProps
---   local nextChildren = nextProps.children
+function updateFundamentalComponent(current, workInProgress, renderLanes)
+  local fundamentalImpl = workInProgress.type.impl
+  if fundamentalImpl.reconcileChildren == false then
+    return nil
+  end
+  local nextProps = workInProgress.pendingProps
+  local nextChildren = nextProps.children
 
---   reconcileChildren(current, workInProgress, nextChildren, renderLanes)
---   return workInProgress.child
--- end
+  reconcileChildren(current, workInProgress, nextChildren, renderLanes)
+  return workInProgress.child
+end
 
--- function updateScopeComponent(current, workInProgress, renderLanes)
---   local nextProps = workInProgress.pendingProps
---   local nextChildren = nextProps.children
+function updateScopeComponent(current, workInProgress, renderLanes)
+  local nextProps = workInProgress.pendingProps
+  local nextChildren = nextProps.children
 
---   reconcileChildren(current, workInProgress, nextChildren, renderLanes)
---   return workInProgress.child
--- end
+  reconcileChildren(current, workInProgress, nextChildren, renderLanes)
+  return workInProgress.child
+end
 
--- exports.markWorkInProgressReceivedUpdate()
---   didReceiveUpdate = true
--- end
+exports.markWorkInProgressReceivedUpdate = function()
+  didReceiveUpdate = true
+end
 
 bailoutOnAlreadyFinishedWork = function(
   current: Fiber | nil,
@@ -3437,11 +3443,9 @@ exports.beginWork = function(
     unimplemented("beginWork: Profiler")
     -- return updateProfiler(current, workInProgress, renderLanes)
   elseif workInProgress.tag == ContextProvider then
-    unimplemented("beginWork: ContextProvider")
-    -- return updateContextProvider(current, workInProgress, renderLanes)
+    return updateContextProvider(current, workInProgress, renderLanes)
   elseif workInProgress.tag == ContextConsumer then
-    unimplemented("beginWork: ContextConsumer")
-    -- return updateContextConsumer(current, workInProgress, renderLanes)
+    return updateContextConsumer(current, workInProgress, renderLanes)
   elseif workInProgress.tag == MemoComponent then
     unimplemented("beginWork: MemoComponent")
     -- local type = workInProgress.type
@@ -3499,15 +3503,13 @@ exports.beginWork = function(
     unimplemented("beginWork: SuspenseListComponent")
     -- return updateSuspenseListComponent(current, workInProgress, renderLanes)
   elseif workInProgress.tag == FundamentalComponent then
-    unimplemented("beginWork: FundamentalComponent")
-    -- if enableFundamentalAPI then
-    --   return updateFundamentalComponent(current, workInProgress, renderLanes)
-    -- end
+    if enableFundamentalAPI then
+      return updateFundamentalComponent(current, workInProgress, renderLanes)
+    end
   elseif workInProgress.tag == ScopeComponent then
-    unimplemented("beginWork: ScopeComponent")
-    -- if enableScopeAPI then
-    --   return updateScopeComponent(current, workInProgress, renderLanes)
-    -- end
+    if enableScopeAPI then
+      return updateScopeComponent(current, workInProgress, renderLanes)
+    end
   elseif workInProgress.tag == OffscreenComponent then
     unimplemented("beginWork: OffscreenComponent")
     -- return updateOffscreenComponent(current, workInProgress, renderLanes)

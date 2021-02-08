@@ -1,5 +1,5 @@
 [tools]
 rotrieve = { source = "roblox/rotriever", version = "0.4.2" }
-rojo = { source = "rojo-rbx/rojo", version = "6.0.0-rc.1" }
-selene = { source = "Kampfkarren/selene", version = "0.9.2" }
+rojo = { source = "rojo-rbx/rojo", version = "6.0.1" }
+selene = { source = "Kampfkarren/selene", version = "0.11.0" }
 testez = { source = "roblox/testez", version = "0.3.2" }

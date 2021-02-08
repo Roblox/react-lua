@@ -167,8 +167,12 @@ return function()
 						next = function()
 							i = i + 1
 							local done = i > 2
+							local value
+							if not done then
+								value = React.createElement(ComponentClass)
+							end
 							return {
-								value = (not done) and React.createElement(ComponentClass) or nil,
+								value = value,
 								done = done,
 							}
 						end,

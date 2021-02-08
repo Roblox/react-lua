@@ -26,6 +26,8 @@ local console = require(Workspace.Shared.console)
 --   MutableSourceSubscribeFn,
 --   ReactContext,
 -- } = require(Workspace.Shared.ReactTypes)
+local ReactTypes = require(Workspace.Shared.ReactTypes)
+type ReactContext<T> = ReactTypes.ReactContext<T>
 local ReactInternalTypes = require(script.Parent.ReactInternalTypes)
 type Fiber = ReactInternalTypes.Fiber;
 -- type Dispatcher = ReactInternalTypes.Dispatcher;
@@ -1248,7 +1250,7 @@ end
 
 -- function imperativeHandleEffect<T>(
 --   create: () => T,
---   ref: {|current: T | nil|} | ((inst: T | nil) => mixed) | nil | void,
+--   ref: {|current: T | nil|} | ((inst: T | nil) => mixed) | nil,
 -- )
 --   if typeof ref == 'function')
 --     local refCallback = ref
@@ -1277,9 +1279,9 @@ end
 -- end
 
 -- function mountImperativeHandle<T>(
---   ref: {|current: T | nil|} | ((inst: T | nil) => mixed) | nil | void,
+--   ref: {|current: T | nil|} | ((inst: T | nil) => mixed) | nil,
 --   create: () => T,
---   deps: Array<mixed> | void | nil,
+--   deps: Array<any> | nil,
 -- ): void {
 --   if _G.__DEV__ then
 --     if typeof create ~= 'function')
@@ -1313,9 +1315,9 @@ end
 -- end
 
 -- function updateImperativeHandle<T>(
---   ref: {|current: T | nil|} | ((inst: T | nil) => mixed) | nil | void,
+--   ref: {|current: T | nil|} | ((inst: T | nil) => mixed) | nil,
 --   create: () => T,
---   deps: Array<mixed> | void | nil,
+--   deps: Array<any> | nil,
 -- ): void {
 --   if _G.__DEV__ then
 --     if typeof create ~= 'function')
@@ -1339,40 +1341,40 @@ end
 --   )
 -- end
 
--- function mountDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void {
---   -- This hook is normally a no-op.
---   -- The react-debug-hooks package injects its own implementation
---   -- so that e.g. DevTools can display custom hook values.
--- end
+function mountDebugValue(value, formatterFn: nil | (any) -> any)
+  -- This hook is normally a no-op.
+  -- The react-debug-hooks package injects its own implementation
+  -- so that e.g. DevTools can display custom hook values.
+end
 
--- local updateDebugValue = mountDebugValue
+local updateDebugValue = mountDebugValue
 
--- function mountCallback<T>(callback: T, deps: Array<mixed> | void | nil): T {
---   local hook = mountWorkInProgressHook()
---   local nextDeps = deps == undefined ? nil : deps
---   hook.memoizedState = [callback, nextDeps]
---   return callback
--- end
+function mountCallback(callback, deps: Array<any> | nil): any
+  local hook = mountWorkInProgressHook()
+  local nextDeps = deps
+  hook.memoizedState = {callback, nextDeps}
+  return callback
+end
 
--- function updateCallback<T>(callback: T, deps: Array<mixed> | void | nil): T {
---   local hook = updateWorkInProgressHook()
---   local nextDeps = deps == undefined ? nil : deps
---   local prevState = hook.memoizedState
---   if prevState ~= nil)
---     if nextDeps ~= nil)
---       local prevDeps: Array<mixed> | nil = prevState[1]
---       if areHookInputsEqual(nextDeps, prevDeps))
---         return prevState[0]
---       end
---     end
---   end
---   hook.memoizedState = [callback, nextDeps]
---   return callback
--- end
+function updateCallback(callback, deps: Array<any> | nil)
+  local hook = updateWorkInProgressHook()
+  local nextDeps = deps
+  local prevState = hook.memoizedState
+  if prevState ~= nil then
+    if nextDeps ~= nil then
+      local prevDeps: Array<any> | nil = prevState[1]
+      if areHookInputsEqual(nextDeps, prevDeps) then
+        return prevState[1]
+      end
+    end
+  end
+  hook.memoizedState = {callback, nextDeps}
+  return callback
+end
 
 -- function mountMemo<T>(
 --   nextCreate: () => T,
---   deps: Array<mixed> | void | nil,
+--   deps: Array<any> | nil,
 -- ): T {
 --   local hook = mountWorkInProgressHook()
 --   local nextDeps = deps == undefined ? nil : deps
@@ -1383,7 +1385,7 @@ end
 
 -- function updateMemo<T>(
 --   nextCreate: () => T,
---   deps: Array<mixed> | void | nil,
+--   deps: Array<any> | nil,
 -- ): T {
 --   local hook = updateWorkInProgressHook()
 --   local nextDeps = deps == undefined ? nil : deps
@@ -1391,7 +1393,7 @@ end
 --   if prevState ~= nil)
 --     -- Assume these are defined. If they're not, areHookInputsEqual will warn.
 --     if nextDeps ~= nil)
---       local prevDeps: Array<mixed> | nil = prevState[1]
+--       local prevDeps: Array<any> | nil = prevState[1]
 --       if areHookInputsEqual(nextDeps, prevDeps))
 --         return prevState[0]
 --       end
@@ -1621,12 +1623,12 @@ function mountOpaqueIdentifier()
   end
 end
 
--- function updateOpaqueIdentifier(): OpaqueIDType | void {
+-- function updateOpaqueIdentifier(): OpaqueIDType {
 --   local id = updateState(undefined)[0]
 --   return id
 -- end
 
--- function rerenderOpaqueIdentifier(): OpaqueIDType | void {
+-- function rerenderOpaqueIdentifier(): OpaqueIDType {
 --   local id = rerenderState(undefined)[0]
 --   return id
 -- end
@@ -1773,7 +1775,7 @@ exports.ContextOnlyDispatcher = ContextOnlyDispatcher
 local HooksDispatcherOnMount: Dispatcher = {
   readContext = readContext,
 
-  -- useCallback = mountCallback,
+  useCallback = mountCallback,
   useContext = readContext,
   useEffect = mountEffect,
   -- useImperativeHandle = mountImperativeHandle,
@@ -1794,7 +1796,7 @@ local HooksDispatcherOnMount: Dispatcher = {
 local HooksDispatcherOnUpdate: Dispatcher = {
   readContext = readContext,
 
-  -- useCallback = updateCallback,
+  useCallback = updateCallback,
   useContext = readContext,
   useEffect = updateEffect,
   -- useImperativeHandle = updateImperativeHandle,
@@ -1803,7 +1805,7 @@ local HooksDispatcherOnUpdate: Dispatcher = {
   -- useReducer = updateReducer,
   -- useRef = updateRef,
   useState = updateState,
-  -- useDebugValue = updateDebugValue,
+  useDebugValue = updateDebugValue,
   -- useDeferredValue = updateDeferredValue,
   -- useTransition = updateTransition,
   -- useMutableSource = updateMutableSource,
@@ -1824,7 +1826,7 @@ local HooksDispatcherOnRerender: Dispatcher = {
   -- useReducer = rerenderReducer,
   -- useRef = updateRef,
   useState = rerenderState,
-  -- useDebugValue = updateDebugValue,
+  useDebugValue = updateDebugValue,
   -- useDeferredValue = rerenderDeferredValue,
   -- useTransition = rerenderTransition,
   -- useMutableSource = updateMutableSource,
@@ -1837,50 +1839,50 @@ local HooksDispatcherOnMountInDEV: Dispatcher | nil = nil
 local HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher | nil = nil
 local HooksDispatcherOnUpdateInDEV: Dispatcher | nil = nil
 local HooksDispatcherOnRerenderInDEV: Dispatcher | nil = nil
--- local InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher | nil = nil
+local _InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher | nil = nil
 -- local InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher | nil = nil
--- local InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher | nil = nil
+local _InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher | nil = nil
 
 if _G.__DEV__ then
---   local warnInvalidContextAccess = () => {
---     console.error(
---       'Context can only be read while React is rendering. ' +
---         'In classes, you can read it in the render method or getDerivedStateFromProps. ' +
---         'In function components, you can read it directly in the function body, but not ' +
---         'inside Hooks like useReducer() or useMemo().',
---     )
---   end
+  local warnInvalidContextAccess = function()
+    console.error(
+      'Context can only be read while React is rendering. ' ..
+        'In classes, you can read it in the render method or getDerivedStateFromProps. ' ..
+        'In function components, you can read it directly in the function body, but not ' ..
+        'inside Hooks like useReducer() or useMemo().'
+    )
+  end
 
---   local warnInvalidHookAccess = () => {
---     console.error(
---       'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks. ' +
---         'You can only call Hooks at the top level of your React function. ' +
---         'For more information, see ' +
---         'https:--reactjs.org/link/rules-of-hooks',
---     )
---   end
+  local warnInvalidHookAccess = function()
+    console.error(
+      'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks. ' ..
+        'You can only call Hooks at the top level of your React function. ' ..
+        'For more information, see ' ..
+        'https:--reactjs.org/link/rules-of-hooks'
+    )
+  end
 
   HooksDispatcherOnMountInDEV = {
---     readContext<T>(
---       context: ReactContext<T>,
---       observedBits: void | number | boolean,
---     ): T {
---       return readContext(context, observedBits)
---     },
---     useCallback<T>(callback: T, deps: Array<mixed> | void | nil): T {
---       currentHookNameInDev = 'useCallback'
---       mountHookTypesDev()
---       checkDepsAreArrayDev(deps)
---       return mountCallback(callback, deps)
---     },
---     useContext<T>(
---       context: ReactContext<T>,
---       observedBits: void | number | boolean,
---     ): T {
---       currentHookNameInDev = 'useContext'
---       mountHookTypesDev()
---       return readContext(context, observedBits)
---     },
+    readContext = function(
+      context: ReactContext<any>,
+      observedBits: number | boolean
+    )
+      return readContext(context, observedBits)
+    end,
+    useCallback = function(callback, deps: Array<any> | nil): any
+      currentHookNameInDev = 'useCallback'
+      mountHookTypesDev()
+      checkDepsAreArrayDev(deps)
+      return mountCallback(callback, deps)
+    end,
+    useContext = function(
+      context: ReactContext<any>,
+      observedBits: number | boolean
+    ): any
+      currentHookNameInDev = 'useContext'
+      mountHookTypesDev()
+      return readContext(context, observedBits)
+    end,
     useEffect = function(
       create: () -> (() -> ())?,
       deps: Array<any>?
@@ -1891,9 +1893,9 @@ if _G.__DEV__ then
       return mountEffect(create, deps)
     end,
 --     useImperativeHandle<T>(
---       ref: {|current: T | nil|} | ((inst: T | nil) => mixed) | nil | void,
+--       ref: {|current: T | nil|} | ((inst: T | nil) => mixed) | nil,
 --       create: () => T,
---       deps: Array<mixed> | void | nil,
+--       deps: Array<any> | nil,
 --     ): void {
 --       currentHookNameInDev = 'useImperativeHandle'
 --       mountHookTypesDev()
@@ -1909,7 +1911,7 @@ if _G.__DEV__ then
       checkDepsAreArrayDev(deps)
       return mountLayoutEffect(create, deps)
   end,
---     useMemo<T>(create: () => T, deps: Array<mixed> | void | nil): T {
+--     useMemo<T>(create: () => T, deps: Array<any> | nil): T {
 --       currentHookNameInDev = 'useMemo'
 --       mountHookTypesDev()
 --       checkDepsAreArrayDev(deps)
@@ -1990,18 +1992,20 @@ if _G.__DEV__ then
   HooksDispatcherOnMountWithHookTypesInDEV = {
 --     readContext<T>(
 --       context: ReactContext<T>,
---       observedBits: void | number | boolean,
+--       observedBits: number | boolean,
 --     ): T {
 --       return readContext(context, observedBits)
 --     },
---     useCallback<T>(callback: T, deps: Array<mixed> | void | nil): T {
---       currentHookNameInDev = 'useCallback'
---       updateHookTypesDev()
---       return mountCallback(callback, deps)
---     },
+      useCallback = function(callback, deps: Array<any> | nil): any
+        currentHookNameInDev = 'useCallback'
+        updateHookTypesDev()
+        checkDepsAreArrayDev(deps)
+        return mountCallback(callback, deps)
+      end,
+
 --     useContext<T>(
 --       context: ReactContext<T>,
---       observedBits: void | number | boolean,
+--       observedBits: number | boolean,
 --     ): T {
 --       currentHookNameInDev = 'useContext'
 --       updateHookTypesDev()
@@ -2016,9 +2020,9 @@ if _G.__DEV__ then
         return mountEffect(create, deps)
       end,
 --     useImperativeHandle<T>(
---       ref: {|current: T | nil|} | ((inst: T | nil) => mixed) | nil | void,
+--       ref: {|current: T | nil|} | ((inst: T | nil) => mixed) | nil,
 --       create: () => T,
---       deps: Array<mixed> | void | nil,
+--       deps: Array<any> | nil,
 --     ): void {
 --       currentHookNameInDev = 'useImperativeHandle'
 --       updateHookTypesDev()
@@ -2032,7 +2036,7 @@ if _G.__DEV__ then
       updateHookTypesDev()
       return mountLayoutEffect(create, deps)
   end,
---     useMemo<T>(create: () => T, deps: Array<mixed> | void | nil): T {
+--     useMemo<T>(create: () => T, deps: Array<any> | nil): T {
 --       currentHookNameInDev = 'useMemo'
 --       updateHookTypesDev()
 --       local prevDispatcher = ReactCurrentDispatcher.current
@@ -2112,18 +2116,18 @@ if _G.__DEV__ then
   HooksDispatcherOnUpdateInDEV = {
 --     readContext<T>(
 --       context: ReactContext<T>,
---       observedBits: void | number | boolean,
+--       observedBits: number | boolean,
 --     ): T {
 --       return readContext(context, observedBits)
 --     },
---     useCallback<T>(callback: T, deps: Array<mixed> | void | nil): T {
---       currentHookNameInDev = 'useCallback'
---       updateHookTypesDev()
---       return updateCallback(callback, deps)
---     },
+      useCallback = function(callback, deps: Array<any> | nil): any
+        currentHookNameInDev = 'useCallback'
+        updateHookTypesDev()
+        return mountCallback(callback, deps)
+      end,
 --     useContext<T>(
 --       context: ReactContext<T>,
---       observedBits: void | number | boolean,
+--       observedBits: number | boolean,
 --     ): T {
 --       currentHookNameInDev = 'useContext'
 --       updateHookTypesDev()
@@ -2138,9 +2142,9 @@ if _G.__DEV__ then
         return updateEffect(create, deps)
       end,
 --     useImperativeHandle<T>(
---       ref: {|current: T | nil|} | ((inst: T | nil) => mixed) | nil | void,
+--       ref: {|current: T | nil|} | ((inst: T | nil) => mixed) | nil,
 --       create: () => T,
---       deps: Array<mixed> | void | nil,
+--       deps: Array<any> | nil,
 --     ): void {
 --       currentHookNameInDev = 'useImperativeHandle'
 --       updateHookTypesDev()
@@ -2154,7 +2158,7 @@ if _G.__DEV__ then
       updateHookTypesDev()
       return updateLayoutEffect(create, deps)
     end,
---     useMemo<T>(create: () => T, deps: Array<mixed> | void | nil): T {
+--     useMemo<T>(create: () => T, deps: Array<any> | nil): T {
 --       currentHookNameInDev = 'useMemo'
 --       updateHookTypesDev()
 --       local prevDispatcher = ReactCurrentDispatcher.current
@@ -2222,7 +2226,7 @@ if _G.__DEV__ then
 --       updateHookTypesDev()
 --       return updateMutableSource(source, getSnapshot, subscribe)
 --     },
---     useOpaqueIdentifier(): OpaqueIDType | void {
+--     useOpaqueIdentifier(): OpaqueIDType {
 --       currentHookNameInDev = 'useOpaqueIdentifier'
 --       updateHookTypesDev()
 --       return updateOpaqueIdentifier()
@@ -2234,36 +2238,36 @@ if _G.__DEV__ then
   HooksDispatcherOnRerenderInDEV = {
 --     readContext<T>(
 --       context: ReactContext<T>,
---       observedBits: void | number | boolean,
+--       observedBits: number | boolean,
 --     ): T {
 --       return readContext(context, observedBits)
 --     },
+      useCallback = function(callback, deps: Array<any> | nil): any
+        currentHookNameInDev = 'useCallback'
+        updateHookTypesDev()
+        return mountCallback(callback, deps)
+      end,
 
---     useCallback<T>(callback: T, deps: Array<mixed> | void | nil): T {
---       currentHookNameInDev = 'useCallback'
---       updateHookTypesDev()
---       return updateCallback(callback, deps)
---     },
 --     useContext<T>(
 --       context: ReactContext<T>,
---       observedBits: void | number | boolean,
+--       observedBits: number | boolean,
 --     ): T {
 --       currentHookNameInDev = 'useContext'
 --       updateHookTypesDev()
 --       return readContext(context, observedBits)
 --     },
 --     useEffect(
---       create: () => (() => void) | void,
---       deps: Array<mixed> | void | nil,
+--       create: () => (() => void),
+--       deps: Array<any> | nil,
 --     ): void {
 --       currentHookNameInDev = 'useEffect'
 --       updateHookTypesDev()
 --       return updateEffect(create, deps)
 --     },
 --     useImperativeHandle<T>(
---       ref: {|current: T | nil|} | ((inst: T | nil) => mixed) | nil | void,
+--       ref: {|current: T | nil|} | ((inst: T | nil) => mixed) | nil,
 --       create: () => T,
---       deps: Array<mixed> | void | nil,
+--       deps: Array<any> | nil,
 --     ): void {
 --       currentHookNameInDev = 'useImperativeHandle'
 --       updateHookTypesDev()
@@ -2277,7 +2281,7 @@ if _G.__DEV__ then
       updateHookTypesDev()
       return updateLayoutEffect(create, deps)
   end
---     useMemo<T>(create: () => T, deps: Array<mixed> | void | nil): T {
+--     useMemo<T>(create: () => T, deps: Array<any> | nil): T {
 --       currentHookNameInDev = 'useMemo'
 --       updateHookTypesDev()
 --       local prevDispatcher = ReactCurrentDispatcher.current
@@ -2345,7 +2349,7 @@ if _G.__DEV__ then
 --       updateHookTypesDev()
 --       return updateMutableSource(source, getSnapshot, subscribe)
 --     },
---     useOpaqueIdentifier(): OpaqueIDType | void {
+--     useOpaqueIdentifier(): OpaqueIDType {
 --       currentHookNameInDev = 'useOpaqueIdentifier'
 --       updateHookTypesDev()
 --       return rerenderOpaqueIdentifier()
@@ -2354,160 +2358,166 @@ if _G.__DEV__ then
 --     unstable_isNewReconciler: enableNewReconciler,
   }
 
---   InvalidNestedHooksDispatcherOnMountInDEV = {
+  _InvalidNestedHooksDispatcherOnMountInDEV = {
+    readContext = function(
+      context: ReactContext<any>,
+      observedBits: number | boolean
+    )
+      warnInvalidContextAccess()
+      return readContext(context, observedBits)
+    end,
+    useCallback = function(callback, deps: Array<any> | nil)
+      currentHookNameInDev = 'useCallback'
+      warnInvalidHookAccess()
+      mountHookTypesDev()
+      return mountCallback(callback, deps)
+    end,
+    useContext = function(
+      context: ReactContext<any>,
+      observedBits: number | boolean
+    )
+      currentHookNameInDev = 'useContext'
+      warnInvalidHookAccess()
+      mountHookTypesDev()
+      return readContext(context, observedBits)
+    end,
+    useEffect = function(
+      create: () -> (() -> ()),
+      deps: Array<any> | nil
+    )
+      currentHookNameInDev = 'useEffect'
+      warnInvalidHookAccess()
+      mountHookTypesDev()
+      return mountEffect(create, deps)
+    end,
+    useImperativeHandle = function(
+      ref,
+      create: () -> any,
+      deps: Array<any> | nil
+    )
+      unimplemented("InvalidNestedHooksDispatcherOnMountInDEV: useImperativeHandle()")
+      return {}
+      -- currentHookNameInDev = 'useImperativeHandle'
+      -- warnInvalidHookAccess()
+      -- mountHookTypesDev()
+      -- return mountImperativeHandle(ref, create, deps)
+    end,
+    useLayoutEffect = function(
+      create: () -> (() -> ()),
+      deps: Array<any> | nil
+    )
+      currentHookNameInDev = 'useLayoutEffect'
+      warnInvalidHookAccess()
+      mountHookTypesDev()
+      return mountLayoutEffect(create, deps)
+    end,
+    useMemo = function(create: () -> any, deps: Array<any> | nil)
+      unimplemented("InvalidNestedHooksDispatcherOnMountInDEV: useMemo()")
+    --   currentHookNameInDev = 'useMemo'
+    --   warnInvalidHookAccess()
+    --   mountHookTypesDev()
+    --   local prevDispatcher = ReactCurrentDispatcher.current
+    --   ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnMountInDEV
+    --   try {
+    --     return mountMemo(create, deps)
+    --   } finally {
+    --     ReactCurrentDispatcher.current = prevDispatcher
+    --   end
+    end,
+    useReducer = function(
+      reducer: (any, any) -> any,
+      initialArg,
+      init: (any) -> any | nil
+    ): Array<any>
+      unimplemented("InvalidNestedHooksDispatcherOnMountInDEV: useReducer()")
+      return {}
+    --   currentHookNameInDev = 'useReducer'
+    --   warnInvalidHookAccess()
+    --   mountHookTypesDev()
+    --   local prevDispatcher = ReactCurrentDispatcher.current
+    --   ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnMountInDEV
+    --   try {
+    --     return mountReducer(reducer, initialArg, init)
+    --   } finally {
+    --     ReactCurrentDispatcher.current = prevDispatcher
+    --   end
+    end
+    -- useRef<T>(initialValue: T): {|current: T|} {
+    --   currentHookNameInDev = 'useRef'
+    --   warnInvalidHookAccess()
+    --   mountHookTypesDev()
+    --   return mountRef(initialValue)
+    -- },
+    -- useState<S>(
+    --   initialState: (() => S) | S,
+    -- ): [S, Dispatch<BasicStateAction<S>>] {
+    --   currentHookNameInDev = 'useState'
+    --   warnInvalidHookAccess()
+    --   mountHookTypesDev()
+    --   local prevDispatcher = ReactCurrentDispatcher.current
+    --   ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnMountInDEV
+    --   try {
+    --     return mountState(initialState)
+    --   } finally {
+    --     ReactCurrentDispatcher.current = prevDispatcher
+    --   end
+    -- },
+    -- useDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void {
+    --   currentHookNameInDev = 'useDebugValue'
+    --   warnInvalidHookAccess()
+    --   mountHookTypesDev()
+    --   return mountDebugValue(value, formatterFn)
+    -- },
+    -- useDeferredValue<T>(value: T): T {
+    --   currentHookNameInDev = 'useDeferredValue'
+    --   warnInvalidHookAccess()
+    --   mountHookTypesDev()
+    --   return mountDeferredValue(value)
+    -- },
+    -- useTransition(): [(() => void) => void, boolean] {
+    --   currentHookNameInDev = 'useTransition'
+    --   warnInvalidHookAccess()
+    --   mountHookTypesDev()
+    --   return mountTransition()
+    -- },
+    -- useMutableSource<Source, Snapshot>(
+    --   source: MutableSource<Source>,
+    --   getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
+    --   subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
+    -- ): Snapshot {
+    --   currentHookNameInDev = 'useMutableSource'
+    --   warnInvalidHookAccess()
+    --   mountHookTypesDev()
+    --   return mountMutableSource(source, getSnapshot, subscribe)
+    -- },
+    -- useOpaqueIdentifier(): OpaqueIDType {
+    --   currentHookNameInDev = 'useOpaqueIdentifier'
+    --   warnInvalidHookAccess()
+    --   mountHookTypesDev()
+    --   return mountOpaqueIdentifier()
+    -- },
+
+    -- unstable_isNewReconciler: enableNewReconciler,
+  }
+
+  _InvalidNestedHooksDispatcherOnUpdateInDEV = {
 --     readContext<T>(
 --       context: ReactContext<T>,
---       observedBits: void | number | boolean,
+--       observedBits: number | boolean,
 --     ): T {
 --       warnInvalidContextAccess()
 --       return readContext(context, observedBits)
 --     },
---     useCallback<T>(callback: T, deps: Array<mixed> | void | nil): T {
---       currentHookNameInDev = 'useCallback'
---       warnInvalidHookAccess()
---       mountHookTypesDev()
---       return mountCallback(callback, deps)
---     },
---     useContext<T>(
---       context: ReactContext<T>,
---       observedBits: void | number | boolean,
---     ): T {
---       currentHookNameInDev = 'useContext'
---       warnInvalidHookAccess()
---       mountHookTypesDev()
---       return readContext(context, observedBits)
---     },
---     useEffect(
---       create: () => (() => void) | void,
---       deps: Array<mixed> | void | nil,
---     ): void {
---       currentHookNameInDev = 'useEffect'
---       warnInvalidHookAccess()
---       mountHookTypesDev()
---       return mountEffect(create, deps)
---     },
---     useImperativeHandle<T>(
---       ref: {|current: T | nil|} | ((inst: T | nil) => mixed) | nil | void,
---       create: () => T,
---       deps: Array<mixed> | void | nil,
---     ): void {
---       currentHookNameInDev = 'useImperativeHandle'
---       warnInvalidHookAccess()
---       mountHookTypesDev()
---       return mountImperativeHandle(ref, create, deps)
---     },
---     useLayoutEffect(
---       create: () => (() => void) | void,
---       deps: Array<mixed> | void | nil,
---     ): void {
---       currentHookNameInDev = 'useLayoutEffect'
---       warnInvalidHookAccess()
---       mountHookTypesDev()
---       return mountLayoutEffect(create, deps)
---     },
---     useMemo<T>(create: () => T, deps: Array<mixed> | void | nil): T {
---       currentHookNameInDev = 'useMemo'
---       warnInvalidHookAccess()
---       mountHookTypesDev()
---       local prevDispatcher = ReactCurrentDispatcher.current
---       ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnMountInDEV
---       try {
---         return mountMemo(create, deps)
---       } finally {
---         ReactCurrentDispatcher.current = prevDispatcher
---       end
---     },
---     useReducer<S, I, A>(
---       reducer: (S, A) => S,
---       initialArg: I,
---       init?: I => S,
---     ): [S, Dispatch<A>] {
---       currentHookNameInDev = 'useReducer'
---       warnInvalidHookAccess()
---       mountHookTypesDev()
---       local prevDispatcher = ReactCurrentDispatcher.current
---       ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnMountInDEV
---       try {
---         return mountReducer(reducer, initialArg, init)
---       } finally {
---         ReactCurrentDispatcher.current = prevDispatcher
---       end
---     },
---     useRef<T>(initialValue: T): {|current: T|} {
---       currentHookNameInDev = 'useRef'
---       warnInvalidHookAccess()
---       mountHookTypesDev()
---       return mountRef(initialValue)
---     },
---     useState<S>(
---       initialState: (() => S) | S,
---     ): [S, Dispatch<BasicStateAction<S>>] {
---       currentHookNameInDev = 'useState'
---       warnInvalidHookAccess()
---       mountHookTypesDev()
---       local prevDispatcher = ReactCurrentDispatcher.current
---       ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnMountInDEV
---       try {
---         return mountState(initialState)
---       } finally {
---         ReactCurrentDispatcher.current = prevDispatcher
---       end
---     },
---     useDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void {
---       currentHookNameInDev = 'useDebugValue'
---       warnInvalidHookAccess()
---       mountHookTypesDev()
---       return mountDebugValue(value, formatterFn)
---     },
---     useDeferredValue<T>(value: T): T {
---       currentHookNameInDev = 'useDeferredValue'
---       warnInvalidHookAccess()
---       mountHookTypesDev()
---       return mountDeferredValue(value)
---     },
---     useTransition(): [(() => void) => void, boolean] {
---       currentHookNameInDev = 'useTransition'
---       warnInvalidHookAccess()
---       mountHookTypesDev()
---       return mountTransition()
---     },
---     useMutableSource<Source, Snapshot>(
---       source: MutableSource<Source>,
---       getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
---       subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
---     ): Snapshot {
---       currentHookNameInDev = 'useMutableSource'
---       warnInvalidHookAccess()
---       mountHookTypesDev()
---       return mountMutableSource(source, getSnapshot, subscribe)
---     },
---     useOpaqueIdentifier(): OpaqueIDType | void {
---       currentHookNameInDev = 'useOpaqueIdentifier'
---       warnInvalidHookAccess()
---       mountHookTypesDev()
---       return mountOpaqueIdentifier()
---     },
+    useCallback = function(callback, deps: Array<any> | nil)
+      currentHookNameInDev = 'useCallback'
+      warnInvalidHookAccess()
+      updateHookTypesDev()
+      return mountCallback(callback, deps)
+    end
 
---     unstable_isNewReconciler: enableNewReconciler,
---   end
-
---   InvalidNestedHooksDispatcherOnUpdateInDEV = {
---     readContext<T>(
+    --     useContext<T>(
 --       context: ReactContext<T>,
---       observedBits: void | number | boolean,
---     ): T {
---       warnInvalidContextAccess()
---       return readContext(context, observedBits)
---     },
---     useCallback<T>(callback: T, deps: Array<mixed> | void | nil): T {
---       currentHookNameInDev = 'useCallback'
---       warnInvalidHookAccess()
---       updateHookTypesDev()
---       return updateCallback(callback, deps)
---     },
---     useContext<T>(
---       context: ReactContext<T>,
---       observedBits: void | number | boolean,
+--       observedBits: number | boolean,
 --     ): T {
 --       currentHookNameInDev = 'useContext'
 --       warnInvalidHookAccess()
@@ -2515,8 +2525,8 @@ if _G.__DEV__ then
 --       return readContext(context, observedBits)
 --     },
 --     useEffect(
---       create: () => (() => void) | void,
---       deps: Array<mixed> | void | nil,
+--       create: () => (() => void),
+--       deps: Array<any> | nil,
 --     ): void {
 --       currentHookNameInDev = 'useEffect'
 --       warnInvalidHookAccess()
@@ -2524,9 +2534,9 @@ if _G.__DEV__ then
 --       return updateEffect(create, deps)
 --     },
 --     useImperativeHandle<T>(
---       ref: {|current: T | nil|} | ((inst: T | nil) => mixed) | nil | void,
+--       ref: {|current: T | nil|} | ((inst: T | nil) => mixed) | nil,
 --       create: () => T,
---       deps: Array<mixed> | void | nil,
+--       deps: Array<any> | nil,
 --     ): void {
 --       currentHookNameInDev = 'useImperativeHandle'
 --       warnInvalidHookAccess()
@@ -2534,15 +2544,15 @@ if _G.__DEV__ then
 --       return updateImperativeHandle(ref, create, deps)
 --     },
 --     useLayoutEffect(
---       create: () => (() => void) | void,
---       deps: Array<mixed> | void | nil,
+--       create: () => (() => void),
+--       deps: Array<any> | nil,
 --     ): void {
 --       currentHookNameInDev = 'useLayoutEffect'
 --       warnInvalidHookAccess()
 --       updateHookTypesDev()
 --       return updateLayoutEffect(create, deps)
 --     },
---     useMemo<T>(create: () => T, deps: Array<mixed> | void | nil): T {
+--     useMemo<T>(create: () => T, deps: Array<any> | nil): T {
 --       currentHookNameInDev = 'useMemo'
 --       warnInvalidHookAccess()
 --       updateHookTypesDev()
@@ -2618,7 +2628,7 @@ if _G.__DEV__ then
 --       updateHookTypesDev()
 --       return updateMutableSource(source, getSnapshot, subscribe)
 --     },
---     useOpaqueIdentifier(): OpaqueIDType | void {
+--     useOpaqueIdentifier(): OpaqueIDType {
 --       currentHookNameInDev = 'useOpaqueIdentifier'
 --       warnInvalidHookAccess()
 --       updateHookTypesDev()
@@ -2626,18 +2636,18 @@ if _G.__DEV__ then
 --     },
 
 --     unstable_isNewReconciler: enableNewReconciler,
---   end
+  }
 
---   InvalidNestedHooksDispatcherOnRerenderInDEV = {
+  _InvalidNestedHooksDispatcherOnRerenderInDEV = {
 --     readContext<T>(
 --       context: ReactContext<T>,
---       observedBits: void | number | boolean,
+--       observedBits: number | boolean,
 --     ): T {
 --       warnInvalidContextAccess()
 --       return readContext(context, observedBits)
 --     },
 
---     useCallback<T>(callback: T, deps: Array<mixed> | void | nil): T {
+--     useCallback<T>(callback: T, deps: Array<any> | nil): T {
 --       currentHookNameInDev = 'useCallback'
 --       warnInvalidHookAccess()
 --       updateHookTypesDev()
@@ -2645,7 +2655,7 @@ if _G.__DEV__ then
 --     },
 --     useContext<T>(
 --       context: ReactContext<T>,
---       observedBits: void | number | boolean,
+--       observedBits: number | boolean,
 --     ): T {
 --       currentHookNameInDev = 'useContext'
 --       warnInvalidHookAccess()
@@ -2653,8 +2663,8 @@ if _G.__DEV__ then
 --       return readContext(context, observedBits)
 --     },
 --     useEffect(
---       create: () => (() => void) | void,
---       deps: Array<mixed> | void | nil,
+--       create: () => (() => void),
+--       deps: Array<any> | nil,
 --     ): void {
 --       currentHookNameInDev = 'useEffect'
 --       warnInvalidHookAccess()
@@ -2662,9 +2672,9 @@ if _G.__DEV__ then
 --       return updateEffect(create, deps)
 --     },
 --     useImperativeHandle<T>(
---       ref: {|current: T | nil|} | ((inst: T | nil) => mixed) | nil | void,
+--       ref: {|current: T | nil|} | ((inst: T | nil) => mixed) | nil,
 --       create: () => T,
---       deps: Array<mixed> | void | nil,
+--       deps: Array<any> | nil,
 --     ): void {
 --       currentHookNameInDev = 'useImperativeHandle'
 --       warnInvalidHookAccess()
@@ -2672,15 +2682,15 @@ if _G.__DEV__ then
 --       return updateImperativeHandle(ref, create, deps)
 --     },
 --     useLayoutEffect(
---       create: () => (() => void) | void,
---       deps: Array<mixed> | void | nil,
+--       create: () => (() => void),
+--       deps: Array<any> | nil,
 --     ): void {
 --       currentHookNameInDev = 'useLayoutEffect'
 --       warnInvalidHookAccess()
 --       updateHookTypesDev()
 --       return updateLayoutEffect(create, deps)
 --     },
---     useMemo<T>(create: () => T, deps: Array<mixed> | void | nil): T {
+--     useMemo<T>(create: () => T, deps: Array<any> | nil): T {
 --       currentHookNameInDev = 'useMemo'
 --       warnInvalidHookAccess()
 --       updateHookTypesDev()
@@ -2756,7 +2766,7 @@ if _G.__DEV__ then
 --       updateHookTypesDev()
 --       return updateMutableSource(source, getSnapshot, subscribe)
 --     },
---     useOpaqueIdentifier(): OpaqueIDType | void {
+--     useOpaqueIdentifier(): OpaqueIDType {
 --       currentHookNameInDev = 'useOpaqueIdentifier'
 --       warnInvalidHookAccess()
 --       updateHookTypesDev()
@@ -2764,7 +2774,7 @@ if _G.__DEV__ then
 --     },
 
 --     unstable_isNewReconciler: enableNewReconciler,
---   end
+  }
 end
 
 -- deviation: Moved to bottom so that its dependencies are defined ahead of it
@@ -2794,7 +2804,11 @@ exports.renderWithHooks = function(
     --   current ~= nil
     --     ? ((current._debugHookTypes: any): Array<HookType>)
     --     : nil
-    hookTypesDev = current and current._debugHookTypes or nil
+    if current then
+      hookTypesDev = current._debugHookTypes
+    else
+      hookTypesDev = nil
+    end
     hookTypesUpdateIndexDev = 0
     -- Used for hot reloading:
     ignorePreviousDependencies =

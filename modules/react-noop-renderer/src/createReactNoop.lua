@@ -237,10 +237,18 @@ local function createReactNoop(reconciler, useMutation: boolean)
 		recyclableInstance: Instance?
 	)
 		-- deviation: use metatable to define non-enumerable properties
+		local children
+		if keepChildren then
+			children = instance.children
+		else
+			children = {}
+		end
+
 		local clone = setmetatable({
 			type = type,
-			children = keepChildren and instance.children or {},
+			children = children,
 			prop = newProps.prop,
+			-- ROBLOX TODO: matches upstream, but does it make sense in Lua?
 			hidden = not not newProps.hidden,
 		}, {
 			__index = {
@@ -1257,7 +1265,7 @@ local function createReactNoop(reconciler, useMutation: boolean)
 
 	flushActWork = function(resolve, reject)
 		-- Flush suspended fallbacks
-		
+
 		-- deviation: FIXME: figure out the difference between runAllTimers and
 		-- runOnlyPendingTimers
 		RobloxJest.runAllTimers()

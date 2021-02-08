@@ -206,7 +206,7 @@ exports.appendInitialChild = function(
 	if index ~= -1 then
 		Array.splice(parentInstance.children, index, 1)
 	end
-	Array.push(parentInstance.children, child)
+	table.insert(parentInstance.children, child)
 end
 
 exports.finalizeInitialChildren = function(

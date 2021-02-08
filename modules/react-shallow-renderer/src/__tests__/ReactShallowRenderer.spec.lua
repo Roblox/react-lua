@@ -1522,8 +1522,7 @@ return function()
     expect(callbackWasCalled).toEqual(true)
   end)
 
-  -- ROBLOX TODO: requires us to port and use ReactElementValidator
-  itSKIP('throws usefully when rendering badly-typed elements', function()
+  it('throws usefully when rendering badly-typed elements', function()
     -- FIXME: Remove this local redeclaration and disable typechecking
     local expect: any = expect
     local shallowRenderer = createRenderer()
@@ -1533,12 +1532,12 @@ return function()
         expect(function()
           shallowRenderer:render(React.createElement(Component))
         end)
-        -- .toErrorDev(
-        --   'React.createElement: type is invalid -- expected a string ' ..
-        --     '(for built-in components) or a class/function (for composite components) ' ..
-        --     'but got: ' .. typeString .. '.'
-        -- )
-      end).to.throw()
+        .toErrorDev(
+          'React.createElement: type is invalid -- expected a string ' ..
+            '(for built-in components) or a class/function (for composite components) ' ..
+            'but got: ' .. typeString .. '.'
+        )
+      end) -- ROBLOX TODO: make this last part work -- .to.throw()
       --   'ReactShallowRenderer render(): Shallow rendering works only with custom ' ..
       --     'components, but the provided element type was `' .. typeString .. '`.'
       -- )

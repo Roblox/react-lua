@@ -1209,8 +1209,8 @@ local function updateClassInstance(
   resetHasForceUpdateBeforeProcessing()
 
   local oldState = workInProgress.memoizedState
-  local newState = instance.state
   instance.state = oldState
+  local newState = instance.state
   processUpdateQueue(workInProgress, newProps, instance, renderLanes)
   newState = workInProgress.memoizedState
 

@@ -31,7 +31,11 @@ local function unimplemented(message)
 
 local exports = {}
 
-exports.sharedProfilingBuffer = enableProfiling and {} or nil
+if enableProfiling then
+  exports.sharedProfilingBuffer = {}
+else
+  exports.sharedProfilingBuffer = nil
+end
 
 -- ROBLOX deviation: just use an array
 -- local profilingState =

@@ -157,20 +157,21 @@ return function()
   --   return Promise.resolve().then(function()})
   -- end
 
+  -- ROBLOX TODO: ReactFiberBeginWork.new:3424: FIXME (roblox): beginWork: ForwardRef is unimplemented
   xit('resumes after an interruption', function()
     -- FIXME: type of expect
     local expect: any = expect
 
     local function Counter(props, ref)
       local count, updateCount = useState(0)
-      useImperativeHandle(ref, function() return {updateCount} end)
-      return React.createElement("Text", nil, tostring(props.label) .. ': ' .. count)
+      useImperativeHandle(ref, function() return {updateCount = updateCount} end)
+      return React.createElement("Text", {text = tostring(props.label) .. ': ' .. tostring(count)})
     end
     Counter = forwardRef(Counter)
 
     -- Initial mount
     local counter = React.createRef(nil)
-    ReactNoop.render(React.createElement("Counter",
+    ReactNoop.render(React.createElement(Counter,
       {label="Count", ref=counter}
     ))
     expect(Scheduler).toFlushAndYield({'Count: 0'})
@@ -192,7 +193,7 @@ return function()
     -- Interrupt with a high priority update
     ReactNoop.flushSync(function()
       ReactNoop.render(React.createElement(
-        "Counter",
+        Counter,
         {label="Total"}
       ))
     end)
@@ -1196,7 +1197,7 @@ return function()
         })
       end)
 
-    -- ROBLOX TODO: Child gets nil props, which causes a failure
+    -- ROBLOX TODO: Rendered more hooks than during the previous render.
     xit('defers passive effect destroy functions during unmount', function()
       -- FIXME: type of expect
       local expect: any = expect
