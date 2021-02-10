@@ -702,9 +702,15 @@ function ensureRootIsScheduled(root: ReactInternalTypes.FiberRoot, currentTime: 
   markStarvedLanesAsExpired(root, currentTime)
 
   -- Determine the next lanes to work on, and their priority.
+  local lanes
+  if root == workInProgressRoot then
+    lanes = workInProgressRootRenderLanes
+  else
+    lanes = ReactFiberLane.NoLanes
+  end
   local nextLanes = getNextLanes(
     root,
-    root == workInProgressRoot and workInProgressRootRenderLanes or ReactFiberLane.NoLanes
+    lanes
   )
   -- This returns the priority level computed during the `getNextLanes` call.
   local newCallbackPriority = returnNextLanesPriority()
@@ -797,9 +803,16 @@ mod.performConcurrentWorkOnRoot = function(root)
 
   -- Determine the next expiration time to work on, using the fields stored
   -- on the root.
+  local wipLanes
+  if root == workInProgressRoot then
+    wipLanes = workInProgressRootRenderLanes
+  else
+    wipLanes = ReactFiberLane.NoLanes
+  end
+
   local lanes = getNextLanes(
     root,
-    root == workInProgressRoot and workInProgressRootRenderLanes or ReactFiberLane.NoLanes
+    wipLanes
   )
   if lanes == ReactFiberLane.NoLanes then
     -- Defensive coding. This is never expected to happen.
@@ -1296,53 +1309,67 @@ exports.unbatchedUpdates = function(fn: (any) -> any, a: any): any
   end
 end
 
--- exports.flushSync<A, R>(fn: A => R, a: A): R {
---   local prevExecutionContext = executionContext
---   if (prevExecutionContext & (RenderContext | CommitContext)) ~= NoContext)
---     if _G.__DEV__)
---       console.error(
---         'flushSync was called from inside a lifecycle method. React cannot ' +
---           'flush when React is already rendering. Consider moving this call to ' +
---           'a scheduler task or micro task.',
---       )
---     end
---     return fn(a)
---   end
---   executionContext |= BatchedContext
+-- deviation: FIXME establish generics in signature when Luau supports this
+-- <A, R>(fn: A => R, a: A): R
+exports.flushSync = function(fn: (any) -> any, a: any): any
+  local prevExecutionContext = executionContext
+  if (bit32.band(prevExecutionContext, bit32.bor(RenderContext, CommitContext))) ~= NoContext then
+    if _G.__DEV__ then
+      console.error(
+        'flushSync was called from inside a lifecycle method. React cannot ' ..
+          'flush when React is already rendering. Consider moving this call to ' ..
+          'a scheduler task or micro task.'
+      )
+    end
+    return fn(a)
+  end
+  executionContext = bit32.bor(executionContext, BatchedContext)
 
---   if decoupleUpdatePriorityFromScheduler)
---     local previousLanePriority = getCurrentUpdateLanePriority()
---     try {
---       setCurrentUpdateLanePriority(ReactFiberLane.SyncLanePriority)
---       if fn)
---         return runWithPriority(ImmediateSchedulerPriority, fn.bind(null, a))
---       } else {
---         return (undefined: $FlowFixMe)
---       end
---     } finally {
---       setCurrentUpdateLanePriority(previousLanePriority)
---       executionContext = prevExecutionContext
---       -- Flush the immediate callbacks that were scheduled during this batch.
---       -- Note that this will happen even if batchedUpdates is higher up
---       -- the stack.
---       flushSyncCallbackQueue()
---     end
---   } else {
---     try {
---       if fn)
---         return runWithPriority(ImmediateSchedulerPriority, fn.bind(null, a))
---       } else {
---         return (undefined: $FlowFixMe)
---       end
---     } finally {
---       executionContext = prevExecutionContext
---       -- Flush the immediate callbacks that were scheduled during this batch.
---       -- Note that this will happen even if batchedUpdates is higher up
---       -- the stack.
---       flushSyncCallbackQueue()
---     end
---   end
--- end
+  if decoupleUpdatePriorityFromScheduler then
+    local previousLanePriority = getCurrentUpdateLanePriority()
+    local ok, result = pcall(function()
+      setCurrentUpdateLanePriority(ReactFiberLane.SyncLanePriority)
+      if fn then
+        return runWithPriority(ImmediateSchedulerPriority, function() 
+              return fn(a) 
+            end)
+      else
+        return nil
+      end
+    end)
+      setCurrentUpdateLanePriority(previousLanePriority)
+      executionContext = prevExecutionContext
+      -- Flush the immediate callbacks that were scheduled during this batch.
+      -- Note that this will happen even if batchedUpdates is higher up
+      -- the stack.
+      flushSyncCallbackQueue()
+      if ok then
+        return result
+      else
+        error(result)
+      end
+  else
+    local ok, result = pcall(function()
+      if fn then
+        return runWithPriority(ImmediateSchedulerPriority, function() 
+              return fn(a) 
+            end)
+      else
+        return nil
+      end
+    end)
+    executionContext = prevExecutionContext
+    -- Flush the immediate callbacks that were scheduled during this batch.
+    -- Note that this will happen even if batchedUpdates is higher up
+    -- the stack.
+    flushSyncCallbackQueue()
+    if ok then
+      return result
+    else
+      error(result)
+    end
+  end
+end
 
 exports.flushControlled = function(fn: () -> any)
   local prevExecutionContext = executionContext
@@ -2769,8 +2796,11 @@ flushPassiveEffectsImpl = function()
 
   -- If additional passive effects were scheduled, increment a counter. If this
   -- exceeds the limit, we'll fire a warning.
-  nestedPassiveUpdateCount =
-    rootWithPendingPassiveEffects == nil and 0 or nestedPassiveUpdateCount + 1
+  if rootWithPendingPassiveEffects == nil then
+    nestedPassiveUpdateCount = 0 
+  else 
+    nestedPassiveUpdateCount = nestedPassiveUpdateCount + 1
+  end
 
   return true
 end

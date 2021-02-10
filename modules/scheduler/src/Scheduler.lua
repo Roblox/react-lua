@@ -252,7 +252,6 @@ local function unstable_runWithPriority(priorityLevel, eventHandler)
 	currentPriorityLevel = priorityLevel
 
 	local ok, result = pcall(eventHandler)
-
 	-- ROBLOX: finally
 	currentPriorityLevel = previousPriorityLevel
 

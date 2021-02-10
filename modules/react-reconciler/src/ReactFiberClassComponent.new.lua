@@ -758,12 +758,13 @@ local function constructClassInstance(
         -- deviation: message adjusted for accuracy with Lua "class" components
         console.error(
           "`%s` uses `getDerivedStateFromProps` but its initial state is " ..
-            "nil. This is not recommended. Instead, define the initial state by " ..
+            "%s. This is not recommended. Instead, define the initial state by " ..
             "assigning an object to `self.state` in the `init` method of `%s`. " ..
             "This ensures that `getDerivedStateFromProps` arguments have a consistent shape.",
           componentName,
           -- deviation: no need to worry about undefined
           -- instance.state == nil and 'nil' or 'undefined',
+          "nil",
           componentName
         )
       end
@@ -814,10 +815,34 @@ local function constructClassInstance(
         foundWillUpdateName ~= nil
       then
         local componentName = getComponentName(ctor) or "Component"
-        local newApiName =
-          typeof(ctor.getDerivedStateFromProps) == "function"
-            and "getDerivedStateFromProps()"
-            or "getSnapshotBeforeUpdate()"
+        local newApiName
+        if typeof(ctor.getDerivedStateFromProps) == "function" then
+          newApiName = "getDerivedStateFromProps()"
+        else
+          newApiName = "getSnapshotBeforeUpdate()"
+        end
+        
+        local willMountName
+        if foundWillMountName ~= nil then
+          willMountName = ("\n  " .. tostring(foundWillMountName))
+        else
+          willMountName = ""
+        end
+
+        local willReceievePropsName
+        if foundWillReceivePropsName ~= nil then
+          willReceievePropsName = ("\n  " .. tostring(foundWillReceivePropsName))
+        else
+          willReceievePropsName = ""
+        end
+
+        local willUpdateName
+        if foundWillUpdateName ~= nil then
+          willUpdateName = "\n  " .. tostring(foundWillUpdateName)
+        else
+          willUpdateName = ""
+        end
+        
         if not didWarnAboutLegacyLifecyclesAndDerivedState[componentName] then
           didWarnAboutLegacyLifecyclesAndDerivedState[componentName] = true
           console.error(
@@ -827,11 +852,9 @@ local function constructClassInstance(
               "https://reactjs.org/link/unsafe-component-lifecycles",
             componentName,
             newApiName,
-            foundWillMountName ~= nil and ("\n  " .. tostring(foundWillMountName)) or "",
-            foundWillReceivePropsName ~= nil
-              and ("\n  " .. tostring(foundWillReceivePropsName))
-              or "",
-            foundWillUpdateName ~= nil and "\n  " .. tostring(foundWillUpdateName) or ""
+            willMountName,
+            willReceievePropsName,
+            willUpdateName
           )
         end
       end

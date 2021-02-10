@@ -1002,6 +1002,7 @@ local function createReactNoop(reconciler, useMutation: boolean)
 			if not ok then
 				error(result)
 			end
+			return result
 		end,
 
 		expire = Scheduler.unstable_advanceTime,

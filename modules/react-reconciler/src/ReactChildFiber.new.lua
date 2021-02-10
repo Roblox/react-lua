@@ -727,9 +727,15 @@ local function ChildReconciler(shouldTrackSideEffects)
     end
 
     if typeof(newChild) == "table" and newChild ~= nil then
+      local existingChildrenKey
       if newChild["$$typeof"] == REACT_ELEMENT_TYPE then
+        if newChild.key == nil then
+          existingChildrenKey = newIdx
+        else
+          existingChildrenKey = newChild.key
+        end
         local matchedFiber =
-          existingChildren[newChild.key == nil and newIdx or newChild.key]
+          existingChildren[existingChildrenKey]
         if newChild.type == REACT_FRAGMENT_TYPE then
           return updateFragment(
             returnFiber,
@@ -741,8 +747,13 @@ local function ChildReconciler(shouldTrackSideEffects)
         end
         return updateElement(returnFiber, matchedFiber, newChild, lanes)
       elseif newChild["$$typeof"] == REACT_PORTAL_TYPE then
+        if newChild.key == nil then
+          existingChildrenKey = newIdx
+        else
+          existingChildrenKey = newChild.key
+        end
         local matchedFiber =
-          existingChildren[newChild.key == nil and newIdx or newChild.key]
+          existingChildren[existingChildrenKey]
         return updatePortal(returnFiber, matchedFiber, newChild, lanes)
       elseif newChild["$$typeof"] == REACT_LAZY_TYPE then
         if enableLazyElements then
@@ -966,7 +977,12 @@ local function ChildReconciler(shouldTrackSideEffects)
             -- it from the child list so that we don't add it to the deletion
             -- list.
             -- deviation: Split out ternary into safer/more readable logic
-            local key = newFiber.key or newIdx
+            local key
+            if newFiber.key == nil then
+              key = newIdx
+            else
+              key = newFiber.key
+            end
             existingChildren[key] = nil
           end
         end

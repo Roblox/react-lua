@@ -1096,7 +1096,7 @@ local function updateHostRoot(current, workInProgress, renderLanes)
   local prevState = workInProgress.memoizedState
   local prevChildren
   if prevState ~= nil then
-    prevChildren = prevState.element
+     prevChildren = prevState.element
   end
   cloneUpdateQueue(current, workInProgress)
   processUpdateQueue(workInProgress, nextProps, nil, renderLanes)
@@ -1182,6 +1182,7 @@ local function updateHostComponent(
   if current ~= nil then
     prevProps = current.memoizedProps
   end
+
   local nextChildren = nextProps.children
   local isDirectTextChild = shouldSetTextContent(type, nextProps)
 

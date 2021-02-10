@@ -15,7 +15,7 @@ local exports = {}
 
 -- Filter certain DOM attributes (e.g. src, href) if their values are empty strings.
 -- This prevents e.g. <img src=""> from making an unnecessary HTTP request for certain browsers.
-exports.enableFilterEmptyStringAttributesDOM = false;
+exports.enableFilterEmptyStringAttributesDOM = true;
 
 -- Adds verbose console logging for e.g. state updates, suspense, and work loop stuff.
 -- Intended to enable React core members to more easily debug scheduling issues in DEV builds.
@@ -93,7 +93,7 @@ exports.enableTrustedTypesIntegration = false
 
 -- Enables a warning when trying to spread a 'key' to an element
 -- a deprecated pattern we want to get rid of in the future
-exports.warnAboutSpreadingKeyToJSX = false
+exports.warnAboutSpreadingKeyToJSX = true
 
 exports.enableComponentStackLocations = true
 
@@ -103,7 +103,7 @@ exports.enableNewReconciler = true
 -- should bypass any error boundaries that are also unmounting (or have unmounted)
 -- and be handled by the nearest still-mounted boundary.
 -- If there are no still-mounted boundaries, the errors should be rethrown.
-exports.skipUnmountedBoundaries = false
+exports.skipUnmountedBoundaries = true
 
 -- --------------------------
 -- Future APIs to be deprecated
@@ -111,7 +111,7 @@ exports.skipUnmountedBoundaries = false
 
 -- Prevent the value and checked attributes from syncing
 -- with their related DOM properties
-exports.disableInputAttributeSyncing = false
+exports.disableInputAttributeSyncing = true
 
 exports.warnAboutStringRefs = false
 
@@ -126,24 +126,24 @@ exports.disableModulePatternComponents = false
 exports.warnUnstableRenderSubtreeIntoContainer = false
 
 -- Support legacy Primer support on internal FB www
-exports.enableLegacyFBSupport = false
+exports.enableLegacyFBSupport = true
 
 -- Updates that occur in the render phase are not officially supported. But when
 -- they do occur, we defer them to a subsequent render by picking a lane that's
 -- not currently rendering. We treat them the same as if they came from an
 -- interleaved event. Remove this flag once we have migrated to the
 -- new behavior.
-exports.deferRenderPhaseUpdateToNextBatch = true
+exports.deferRenderPhaseUpdateToNextBatch = false
 
 -- Replacement for runWithPriority in React internals.
-exports.decoupleUpdatePriorityFromScheduler = false
+exports.decoupleUpdatePriorityFromScheduler = true
 
 exports.enableDiscreteEventFlushingChange = false
 
 -- https:--github.com/facebook/react/pull/19654
 exports.enablePassiveEventIntervention = true
 
-exports.enableEagerRootListeners = true
+exports.enableEagerRootListeners = false
 
 exports.disableSchedulerTimeoutInWorkLoop = false
 

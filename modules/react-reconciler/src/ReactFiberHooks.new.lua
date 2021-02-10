@@ -2804,7 +2804,7 @@ exports.renderWithHooks = function(
     --   current ~= nil
     --     ? ((current._debugHookTypes: any): Array<HookType>)
     --     : nil
-    if current then
+    if current ~= nil then
       hookTypesDev = current._debugHookTypes
     else
       hookTypesDev = nil

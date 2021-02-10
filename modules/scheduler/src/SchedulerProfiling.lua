@@ -175,7 +175,9 @@ exports.markTaskRun = function(
     ms: number
 )
   if enableProfiling then
-      profilingState[PRIORITY] = task.PriorityLevel
+      runIdCounter += 1
+
+      profilingState[PRIORITY] = task.priorityLevel
       profilingState[CURRENT_TASK_ID] = task.id
       profilingState[CURRENT_RUN_ID] = runIdCounter
 

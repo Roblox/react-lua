@@ -370,7 +370,7 @@ exports.deferredUpdates = deferredUpdates
 exports.discreteUpdates = discreteUpdates
 exports.flushDiscreteUpdates = flushDiscreteUpdates
 exports.flushControlled = flushControlled
--- exports.flushSync = flushSync
+exports.flushSync = flushSync
 exports.flushPassiveEffects = flushPassiveEffects
 exports.IsThisRendererActing = IsThisRendererActing
 exports.act = act
@@ -534,7 +534,7 @@ if _G.__DEV__ then
 	)
 		local key = path[index]
 		local updated
-		if Array.isArray(obj) then
+		if Array.isArray(obj) then 
 			updated = Array.slice(obj)
 		else
 			updated = Object.assign({}, obj)
@@ -792,7 +792,10 @@ end
 exports.injectIntoDevTools = function(devToolsConfig: DevToolsConfig): boolean
 	local findFiberByHostInstance = devToolsConfig.findFiberByHostInstance
 	local ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher
-
+	local getCurrentFiber = nil
+	if _G.__DEV__ then
+		getCurrentFiber = getCurrentFiberForDevTools
+	end
 	return injectInternals({
 		bundleType = devToolsConfig.bundleType,
 		version = devToolsConfig.version,
@@ -817,7 +820,7 @@ exports.injectIntoDevTools = function(devToolsConfig: DevToolsConfig): boolean
 		-- scheduleRoot = _G.__DEV__ and scheduleRoot or nil,
 		-- setRefreshHandler = _G.__DEV__ and setRefreshHandler or nil,
 		-- Enables DevTools to append owner stacks to error messages in DEV mode.
-		getCurrentFiber = _G.__DEV__ and getCurrentFiberForDevTools or nil,
+		getCurrentFiber = getCurrentFiber
 	})
 end
 

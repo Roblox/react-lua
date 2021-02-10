@@ -799,7 +799,12 @@ local function createFiberFromPortal(
 	mode: TypeOfMode,
 	lanes: Lanes
 ): Fiber
-	local pendingProps = portal.children or {}
+	local pendingProps
+	if portal.children ~= nil then
+		pendingProps = portal.children
+	else
+		pendingProps = {}
+	end
 	local fiber = createFiber(HostPortal, pendingProps, portal.key, mode)
 	fiber.lanes = lanes
 	fiber.stateNode = {

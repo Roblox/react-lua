@@ -85,9 +85,13 @@ type SchedulerCallbackOptions = { timeout: number? } | { [any]: any };
 local fakeCallbackNode = {}
 
 local shouldYield = Scheduler_shouldYield
-local requestPaint =
-  -- Fall back gracefully if we're running an older version of Scheduler.
-  Scheduler_requestPaint ~= nil and Scheduler_requestPaint or function() end
+local requestPaint
+-- Fall back gracefully if we're running an older version of Scheduler.
+if Scheduler_requestPaint ~= nil then
+  requestPaint = Scheduler_requestPaint 
+else
+  requestPaint = function() end
+end
 
 local syncQueue: Array<SchedulerCallback>? = nil
 local immediateQueueCallbackNode: any? = nil
@@ -212,15 +216,16 @@ flushSyncCallbackQueueImpl = function()
   if not isFlushingSyncQueue and syncQueue ~= nil then
     -- Prevent re-entrancy.
     isFlushingSyncQueue = true
-    local i = 0
+    local i = 1
     if decoupleUpdatePriorityFromScheduler then
       local previousLanePriority = getCurrentUpdateLanePriority()
       local ok, result = pcall(function()
-        local isSync = true
+      local isSync = true
         local queue = syncQueue
         setCurrentUpdateLanePriority(SyncLanePriority)
         runWithPriority(ImmediatePriority, function()
           for index, callback in ipairs(queue) do
+            i = index
             repeat
               callback = callback(isSync)
             until callback == nil
@@ -251,6 +256,7 @@ flushSyncCallbackQueueImpl = function()
         local queue = syncQueue
         runWithPriority(ImmediatePriority, function()
           for index, callback in ipairs(queue) do
+            i = index
             repeat
               callback = callback(isSync)
             until callback == nil

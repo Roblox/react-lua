@@ -684,9 +684,15 @@ exports.laneToLanes = laneToLanes
 local function higherPriorityLane(a: Lane, b: Lane)
 	-- // This works because the bit ranges decrease in priority as you go left.
 	if a ~= NoLane and b ~= NoLane then
-		return a < b and a or b
+		if a < b then
+			return a
+		end
+		return b
 	else
-		return a ~= NoLane and a or b
+		if a ~= NoLane then
+			return a
+		end
+		return b
 	end
 end
 exports.higherPriorityLane = higherPriorityLane

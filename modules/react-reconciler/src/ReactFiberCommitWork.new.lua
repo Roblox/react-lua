@@ -384,6 +384,7 @@ local function commitHookEffectListUnmount(
   if updateQueue ~= nil then
     lastEffect = updateQueue.lastEffect
   end
+
   if lastEffect ~= nil then
     local firstEffect = lastEffect.next
     local effect = firstEffect
@@ -1442,8 +1443,8 @@ insertOrAppendPlacementNodeIntoContainer = function(
   local isHost = tag == HostComponent or tag == HostText
   if isHost or (enableFundamentalAPI and tag == FundamentalComponent) then
     local stateNode
-    if isHost then
-      stateNode = node.stateNode
+    if isHost ~= nil then
+       stateNode = node.stateNode
     else
       stateNode = node.stateNode.instance
     end
@@ -1477,11 +1478,11 @@ insertOrAppendPlacementNode = function(
   local tag = node.tag
   local isHost = tag == HostComponent or tag == HostText
   if isHost or (enableFundamentalAPI and tag == FundamentalComponent) then
-    local stateNode
+    local stateNode 
     if isHost then
-      stateNode = node.stateNode
+       stateNode = node.stateNode
     else
-      stateNode = node.stateNode.instance
+       stateNode = node.stateNode.instance
     end
     if before then
       insertBefore(parent, stateNode, before)

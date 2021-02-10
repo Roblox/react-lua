@@ -39,8 +39,8 @@ local function describeFiber(fiber: Fiber): string
 			owner = debugOwner.type
 		end
 	end
-	local source
-	if  _G.__DEV__ then
+	local source = nil
+	if _G.__DEV__ then 
 		source = fiber._debugSource
 	end
 	if fiber.tag == HostComponent then

@@ -20,7 +20,7 @@ local Scheduler
 -- local SchedulerTracing
 -- local Suspense
 local useState
--- local useReducer
+local _useReducer
 local useEffect
 local useLayoutEffect
 -- local useCallback
@@ -950,43 +950,64 @@ return function()
   --     expect(ReactNoop.getChildren()).toEqual([span('Count: 8')])
   --   })
 
-  --   -- Regression test for https:--github.com/facebook/react/issues/14360
+  --  -- Regression test for https:--github.com/facebook/react/issues/14360
   --   it('handles dispatches with mixed priorities', function()
   --     local INCREMENT = 'INCREMENT'
 
-  --     function reducer(state, action)
-  --       return action == INCREMENT ? state + 1 : state
-  --     end
+  --     local function reducer(state, action)
+  --         return(function()
+  --             if action == INCREMENT then
+  --                 return state + 1
+  --             end
 
-  --     function Counter(props, ref)
-  --       local [count, dispatch] = useReducer(reducer, 0)
-  --       useImperativeHandle(ref, function() ({dispatch}))
-  --       return <Text text={'Count: ' + count} />
+  --             return state
+  --         end)()
+  --     end
+  --     local function Counter(props, ref)
+  --       local count, dispatch = useReducer(reducer, 0)
+
+  --         useImperativeHandle(ref, function()
+  --             return{dispatch = dispatch}
+  --         end)
+
+  --         return React.createElement(Text, {
+  --             text = 'Count: ' + count,
+  --         })
   --     end
 
   --     Counter = forwardRef(Counter)
-  --     local counter = React.createRef(null)
-  --     ReactNoop.render(<Counter ref={counter} />)
 
-  --     expect(Scheduler).toFlushAndYield(['Count: 0'])
-  --     expect(ReactNoop.getChildren()).toEqual([span('Count: 0')])
+  --     local counter = React.createRef(nil)
 
+  --     ReactNoop.render(React.createElement(Counter, {ref = counter}))
+  --     expect(Scheduler).toFlushAndYield({
+  --         'Count: 0',
+  --     })
+  --     expect(ReactNoop.getChildren()).toEqual({
+  --         span('Count: 0'),
+  --     })
   --     ReactNoop.batchedUpdates(function()
-  --       counter.current.dispatch(INCREMENT)
-  --       counter.current.dispatch(INCREMENT)
-  --       counter.current.dispatch(INCREMENT)
-  --     })
-
+  --         counter.current.dispatch(INCREMENT)
+  --         counter.current.dispatch(INCREMENT)
+  --         counter.current.dispatch(INCREMENT)
+  --     end)
   --     ReactNoop.flushSync(function()
-  --       counter.current.dispatch(INCREMENT)
+  --         counter.current.dispatch(INCREMENT)
+  --     end)
+  --     expect(Scheduler).toHaveYielded({
+  --         'Count: 1',
   --     })
-  --     expect(Scheduler).toHaveYielded(['Count: 1'])
-  --     expect(ReactNoop.getChildren()).toEqual([span('Count: 1')])
-
-  --     expect(Scheduler).toFlushAndYield(['Count: 4'])
-  --     expect(ReactNoop.getChildren()).toEqual([span('Count: 4')])
-  --   })
-  -- })
+  --     expect(ReactNoop.getChildren()).toEqual({
+  --         span('Count: 1'),
+  --     })
+  --     expect(Scheduler).toFlushAndYield({
+  --         'Count: 4',
+  --     })
+  --     expect(ReactNoop.getChildren()).toEqual({
+  --         span('Count: 4'),
+  --     })
+  -- end)
+  -- end)
 
   describe("useEffect", function()
     it("simple mount and update", function()
