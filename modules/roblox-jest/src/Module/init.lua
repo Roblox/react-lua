@@ -4,6 +4,35 @@ local FakeTimers = require(script.Parent.FakeTimers)
 local requiredModules: { [ModuleScript]: any } = {}
 local mocks: { [ModuleScript]: () -> any } = {}
 
+if _G.__NO_LOADMODULE__ then
+	warn("debug.loadmodule not enabled. Test plans relying on resetModules " ..
+		"will not work properly.")
+
+	return {
+		requireOverride = require,
+		resetModules = function()
+			-- Should we warn on calling this more than once?
+		end,
+		mock = function(module: ModuleScript, fn: () -> any)
+			-- Since we can't mock underneath require, we'll overwrite the
+			-- require module altogether with the result of the mock
+			local mockResult = fn()
+			local realModule = require(module)
+			for k, v in pairs(mockResult) do
+				realModule[k] = v
+			end
+			for k, _v in pairs(realModule) do
+				if mockResult[k] == nil then
+					realModule[k] = nil
+				end
+			end
+		end,
+		unmock = function(_module: ModuleScript)
+			-- no op
+		end,
+	}
+end
+
 local function requireOverride(scriptInstance: ModuleScript): any
 	-- This is crucial! We need to have an early out here so that we don't
 	-- override requires of ourself; this would result in the module cache

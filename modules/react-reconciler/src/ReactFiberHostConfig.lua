@@ -14,6 +14,12 @@ local Workspace = script.Parent.Parent
 
 local invariant = require(Workspace.Shared.invariant)
 
+if _G.__NO_LOADMODULE__ then
+	-- When __NO_LOADMODULE__ is enabled, this module's contents will be
+	-- overwritten; we need to return before we hit the invariant below
+	return {}
+end
+
 -- We expect that our Rollup, Jest, and Flow configurations
 -- always shim this module with the corresponding host config
 -- (either provided by a renderer, or a generic shim for npm).

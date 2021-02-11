@@ -139,9 +139,39 @@ To avoid this in the future, be sure that your foreman binary path is *before* t
 
 * and for Roblox-specific tests, use the file name format: ```Timeout.roblox.spec.lua```
 
+### How to debug local tests
+
+First, install the roblox-lrdb debugger extension for VSCode (following [the installation instructions here](https://github.com/Roblox/vscode-rbx-lrdb)).
+
+In order for breakpoints to work correctly, you'll need to disable the module reloading behavior that relies on `debug.loadmodule` by providing the `__NO_LOADMODULE__` global. To do so, create a `launch.json` file with the following contents:
+```
+{
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"type": "roblox-lrdb",
+			"request": "launch",
+			"name": "Debug Unit Tests",
+			"args": [
+				"--load.project",
+				"default.project.json",
+				"--run",
+				"bin/spec.lua",
+				"--lua.globals",
+				"__NO_LOADMODULE__=true",
+			],
+			"cwd": "${workspaceFolder}",
+			"stopOnEntry": true,
+		},
+	]
+}
+```
+
+With module resetting disabled, most tests will only work if they're the _first_ test run. Use `itFOCUS` or `fit` to focus a single test in your test suite when debugging this way. Once you've set that up, use `Run -> Start Debugging` or the equivalent keyboard shortcut to start debugging.
+
 ### How to debug upstream tests
 
-First, set a breakpoint in the ReactJS code you want to step through, like at the beginning of a specific test. 
+First, set a breakpoint in the ReactJS code you want to step through, like at the beginning of a specific test.
 
 Note: You probably don't want to set a breakpoint on the `fit`, `it`, or `itFOCUS` line itself, but the first line of the test after that.
 
