@@ -24,7 +24,11 @@ local REACT_LAZY_TYPE = ReactSymbols.REACT_LAZY_TYPE
 local REACT_BLOCK_TYPE = ReactSymbols.REACT_BLOCK_TYPE
 
 local function getWrappedName(outerType, innerType, wrapperName)
-	local functionName = innerType.displayName or innerType.name or ''
+	-- deviation: Account for indexing into function
+	local functionName = "<function>"
+	if typeof(innerType) == "table" then
+		functionName = innerType.displayName or innerType.name or ''
+	end
 	return
 		outerType.displayName or
 		(functionName ~= '' and string.format("%s(%s)", wrapperName, functionName) or wrapperName)

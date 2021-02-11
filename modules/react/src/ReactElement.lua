@@ -400,9 +400,9 @@ exports.createElement = function(type_, config, ...)
 			local displayName
 
 			if typeof(type_) == "function" then
-				console.warn("Roblox React can't pull displayName for functions")
+				-- deviation: Can't get displayName for functions
 				-- displayName = (type_.displayName or type_.name) or "Unknown"
-				displayName = "Unknown"
+				displayName = "<function>"
 			else
 				displayName = type_
 			end

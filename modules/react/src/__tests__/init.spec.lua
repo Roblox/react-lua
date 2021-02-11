@@ -4,8 +4,11 @@
 return function()
 	local Workspace = script.Parent.Parent.Parent
 	local RobloxJest = require(Workspace.RobloxJest)
+	local getJestMatchers = require(Workspace.Scheduler["getJestMatchers.roblox"])
 
 	beforeAll(function()
+		expect.extend(getJestMatchers(expect))
+	
 		expect.extend({
 			toEqual = RobloxJest.Matchers.toEqual,
 			toThrow = RobloxJest.Matchers.toThrow,

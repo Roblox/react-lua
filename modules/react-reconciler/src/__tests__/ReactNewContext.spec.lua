@@ -1193,7 +1193,9 @@ return function()
         expect(ReactNoop.getChildren()).toEqual({span('Child')})
     end)
 
-    -- ROBLOX TODO: fails, probably due to missing ref support
+    -- ROBLOX TODO: fails due to incomplete support of legacy context; since
+    -- legacy context doesn't resemble anything that Roact ever shipped, we'll
+    -- likely never need to actually implement it
     xit('provider does not bail out if legacy context changed above', function()
       local expect: any = expect
       local Context = React.createContext(0)

@@ -312,90 +312,95 @@ end
 --   )
 -- end
 
--- function updateForwardRef(
---   current: Fiber | nil,
---   workInProgress: Fiber,
---   Component: any,
---   nextProps: any,
---   renderLanes: Lanes,
--- )
---   -- TODO: current can be non-null here even if the component
---   -- hasn't yet mounted. This happens after the first render suspends.
---   -- We'll need to figure out if this is fine or can cause issues.
+local function updateForwardRef(
+  current: Fiber | nil,
+  workInProgress: Fiber,
+  Component: any,
+  nextProps: any,
+  renderLanes: Lanes
+)
+  -- TODO: current can be non-null here even if the component
+  -- hasn't yet mounted. This happens after the first render suspends.
+  -- We'll need to figure out if this is fine or can cause issues.
 
---   if  _G.__DEV__ then
---     if workInProgress.type ~= workInProgress.elementType)
---       -- Lazy component props can't be validated in createElement
---       -- because they're only guaranteed to be resolved here.
---       local innerPropTypes = Component.propTypes
---       if innerPropTypes)
---         checkPropTypes(
---           innerPropTypes,
---           nextProps, -- Resolved props
---           'prop',
---           getComponentName(Component),
---         )
---       end
---     end
---   end
+  if _G.__DEV__ then
 
---   local render = Component.render
---   local ref = workInProgress.ref
+    if workInProgress.type ~= workInProgress.elementType then
+      -- Lazy component props can't be validated in createElement
+      -- because they're only guaranteed to be resolved here.
+      local innerPropTypes = Component.propTypes
+      if innerPropTypes then
+        checkPropTypes(
+          innerPropTypes,
+          nextProps, -- Resolved props
+          "prop",
+          getComponentName(Component)
+        )
+      end
+    end
+  end
 
---   -- The rest is a fork of updateFunctionComponent
---   local nextChildren
---   prepareToReadContext(workInProgress, renderLanes, exports.markWorkInProgressReceivedUpdate)
---   if  _G.__DEV__ then
---     ReactCurrentOwner.current = workInProgress
---     setIsRendering(true)
---     nextChildren = renderWithHooks(
---       current,
---       workInProgress,
---       render,
---       nextProps,
---       ref,
---       renderLanes,
---     )
---     if
---       debugRenderPhaseSideEffectsForStrictMode and
---       workInProgress.mode & StrictMode
---     )
---       disableLogs()
---       try {
---         nextChildren = renderWithHooks(
---           current,
---           workInProgress,
---           render,
---           nextProps,
---           ref,
---           renderLanes,
---         )
---       } finally {
---         reenableLogs()
---       end
---     end
---     setIsRendering(false)
---   else
---     nextChildren = renderWithHooks(
---       current,
---       workInProgress,
---       render,
---       nextProps,
---       ref,
---       renderLanes,
---     )
---   end
+  local render = Component.render
+  local ref = workInProgress.ref
 
---   if current ~= nil and !didReceiveUpdate)
---     bailoutHooks(current, workInProgress, renderLanes)
---     return bailoutOnAlreadyFinishedWork(current, workInProgress, renderLanes)
---   end
+  -- The rest is a fork of updateFunctionComponent
+  local nextChildren
+  prepareToReadContext(workInProgress, renderLanes, exports.markWorkInProgressReceivedUpdate)
+  if _G.__DEV__ then
+    ReactCurrentOwner.current = workInProgress
+    setIsRendering(true)
+    nextChildren = renderWithHooks(
+      current,
+      workInProgress,
+      render,
+      nextProps,
+      ref,
+      renderLanes
+    )
+    if
+      debugRenderPhaseSideEffectsForStrictMode and
+      bit32.band(workInProgress.mode, StrictMode)
+    then
+      disableLogs()
+      local ok, result = pcall(function()
+        nextChildren = renderWithHooks(
+          current,
+          workInProgress,
+          render,
+          nextProps,
+          ref,
+          renderLanes
+        )
+      end)
+      -- finally
+      reenableLogs()
 
---   -- React DevTools reads this flag.
---   workInProgress.flags |= PerformedWork
---   reconcileChildren(current, workInProgress, nextChildren, renderLanes)
---   return workInProgress.child
--- end
+      if not ok then
+        error(result)
+      end
+    end
+    setIsRendering(false)
+  else
+    nextChildren = renderWithHooks(
+      current,
+      workInProgress,
+      render,
+      nextProps,
+      ref,
+      renderLanes
+    )
+  end
+
+  if current ~= nil and not didReceiveUpdate then
+    bailoutHooks(current, workInProgress, renderLanes)
+    return bailoutOnAlreadyFinishedWork(current, workInProgress, renderLanes)
+  end
+
+  -- React DevTools reads this flag.
+  workInProgress.flags = bit32.bor(workInProgress.flags, PerformedWork)
+  reconcileChildren(current, workInProgress, nextChildren, renderLanes)
+  return workInProgress.child
+end
 
 -- function updateMemoComponent(
 --   current: Fiber | nil,
@@ -3422,20 +3427,19 @@ exports.beginWork = function(
     unimplemented("beginWork: HostPortal")
     -- return updatePortalComponent(current, workInProgress, renderLanes)
   elseif workInProgress.tag == ForwardRef then
-    unimplemented("beginWork: ForwardRef")
-    -- local type = workInProgress.type
-    -- local unresolvedProps = workInProgress.pendingProps
-    -- local resolvedProps =
-    --   workInProgress.elementType == type
-    --     and unresolvedProps
-    --     or resolveDefaultProps(type, unresolvedProps)
-    -- return updateForwardRef(
-    --   current,
-    --   workInProgress,
-    --   type,
-    --   resolvedProps,
-    --   renderLanes
-    -- )
+    local type = workInProgress.type
+    local unresolvedProps = workInProgress.pendingProps
+    local resolvedProps = unresolvedProps
+    if workInProgress.elementType ~= type then
+      resolvedProps = resolveDefaultProps(type, unresolvedProps)
+    end
+    return updateForwardRef(
+      current,
+      workInProgress,
+      type,
+      resolvedProps,
+      renderLanes
+    )
   elseif workInProgress.tag == Fragment then
     return updateFragment(current, workInProgress, renderLanes)
   elseif workInProgress.tag == Mode then
