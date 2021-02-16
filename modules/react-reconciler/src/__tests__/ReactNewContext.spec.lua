@@ -1118,6 +1118,7 @@ return function()
         )
     end)
 
+    -- ROBLOX TODO: expected a string (for built-in components) or a class/function (for composite components) but got: table.
     xit('warns if multiple renderers concurrently render the same context', function()
         local expect: any = expect
         -- ROBLOX TODO: how do we do this elsewhere?
@@ -1293,8 +1294,7 @@ return function()
       end
     end)
 
-    -- ROBLOX TODO: fails due to "Resuming work not yet implemented"
-    xit('can read other contexts inside consumer render prop', function()
+    it('can read other contexts inside consumer render prop', function()
       local expect: any = expect
       local FooContext = React.createContext(0)
       local BarContext = React.createContext(0)

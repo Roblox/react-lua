@@ -75,8 +75,7 @@ return function()
                 span('c:1'),
             })
         end)
-        -- Test fails due to flushSync/update priority bug
-        xit('schedules top-level updates in order of priority', function()
+        it('schedules top-level updates in order of priority', function()
             local expect: any = expect
             ReactNoop.render(React.createElement('span', {prop = 1}))
             expect(Scheduler).toFlushWithoutYielding()
@@ -86,7 +85,7 @@ return function()
             local renderedOutput = ReactNoop.getChildren()
             expect(#renderedOutput).to.equal(1)
             expect(renderedOutput[1].prop).to.equal(1)
-            
+
             ReactNoop.batchedUpdates(function()
                 ReactNoop.render(React.createElement('span', {prop = 5}))
                 ReactNoop.flushSync(function()

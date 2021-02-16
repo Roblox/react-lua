@@ -459,8 +459,8 @@ local function mountWorkInProgressHook(): Hook
     workInProgressHook = hook
   else
     -- Append to the end of the list
-    workInProgressHook = hook
     workInProgressHook.next = hook
+    workInProgressHook = hook
   end
   return workInProgressHook
 end
@@ -521,12 +521,12 @@ local function updateWorkInProgressHook(): Hook
 
     if workInProgressHook == nil then
       -- This is the first hook in the list.
-      currentlyRenderingFiber.memoizedState = newHook
       workInProgressHook = newHook
+      currentlyRenderingFiber.memoizedState = newHook
     else
       -- Append to the end of the list.
-      workInProgressHook = newHook
       workInProgressHook.next = newHook
+      workInProgressHook = newHook
     end
   end
   return workInProgressHook
@@ -1114,8 +1114,8 @@ local function pushEffect(tag, create, destroy, deps)
   if componentUpdateQueue == nil then
     componentUpdateQueue = createFunctionComponentUpdateQueue()
     currentlyRenderingFiber.updateQueue = componentUpdateQueue
-    componentUpdateQueue.lastEffect = effect
     effect.next = effect
+    componentUpdateQueue.lastEffect = effect
   else
     local lastEffect = componentUpdateQueue.lastEffect
     if lastEffect == nil then

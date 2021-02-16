@@ -390,7 +390,7 @@ function throwException(
       -- This boundary already captured during this render. Continue to the next
       -- boundary.
       workInProgress = workInProgress.return_
-    until workInProgress ~= nil
+    until workInProgress == nil
     -- No boundary was found. Fallthrough to error mode.
     -- TODO: Use invariant so the message is stripped in prod?
     value =
@@ -444,7 +444,7 @@ function throwException(
       end
     end
     workInProgress = workInProgress.return_
-  until workInProgress ~= nil
+  until workInProgress == nil
 end
 
 return {

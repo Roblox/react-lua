@@ -424,8 +424,8 @@ exports.readContext = function(
       }
     else
       -- Append a new context item.
-      lastContextDependency = contextItem
       lastContextDependency.next = contextItem
+      lastContextDependency = contextItem
     end
   end
   return isPrimaryRenderer and context._currentValue or context._currentValue2

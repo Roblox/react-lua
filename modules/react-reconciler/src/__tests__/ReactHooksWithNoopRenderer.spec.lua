@@ -157,7 +157,7 @@ return function()
   --   return Promise.resolve().then(function()})
   -- end
 
-  -- ROBLOX TODO: ReactFiberBeginWork.new:3424: FIXME (roblox): beginWork: ForwardRef is unimplemented
+  -- ROBLOX TODO: unimplemented mountState()
   xit('resumes after an interruption', function()
     -- FIXME: type of expect
     local expect: any = expect
@@ -1218,8 +1218,7 @@ return function()
         })
       end)
 
-    -- ROBLOX TODO: Rendered more hooks than during the previous render.
-    xit('defers passive effect destroy functions during unmount', function()
+    it('defers passive effect destroy functions during unmount', function()
       -- FIXME: type of expect
       local expect: any = expect
       function Child(props)
@@ -2160,9 +2159,7 @@ return function()
       })
     end)
 
-    -- ROBLOX FIXME: errors with "rendered more hooks than the previous render", maybe needs throwException?
-    -- upstream prints `yields Sync Effect`, `renders`, and `flushes`. we only print `renders`
-    xit('multiple effects', function()
+    it('multiple effects', function()
       -- FIXME: type of expect
       local expect: any = expect
       local function Counter(props)

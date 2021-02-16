@@ -1926,7 +1926,7 @@ mod.commitRoot = function(root)
   runWithPriority(
     ImmediateSchedulerPriority,
     function()
-      mod.commitRootImpl(root, renderPriorityLevel)
+      return mod.commitRootImpl(root, renderPriorityLevel)
     end
   )
   return nil

@@ -304,7 +304,7 @@ exports.enqueueCapturedUpdate = function(
 			if firstBaseUpdate ~= nil then
 				-- Loop through the updates and clone them.
 				local update = firstBaseUpdate
-				while update ~= nil do
+				repeat
 					local clone: Update<any> = {
 						eventTime = update.eventTime,
 						lane = update.lane,
@@ -316,27 +316,27 @@ exports.enqueueCapturedUpdate = function(
 						next = nil,
 					}
 					if newLast == nil then
-						newFirst = newLast
 						newLast = clone
+						newFirst = clone
 					else
 						newLast.next = clone
 						newLast = clone
 					end
 					update = update.next
-				end
+				until update == nil
 
 				-- Append the captured update the end of the cloned list.
 				if newLast == nil then
-					newFirst = newLast
 					newLast = capturedUpdate
+					newFirst = capturedUpdate
 				else
 					newLast.next = capturedUpdate
 					newLast = capturedUpdate
 				end
 			else
 				-- There are no base updates.
-				newFirst = newLast
 				newLast = capturedUpdate
+				newFirst = capturedUpdate
 			end
 			queue = {
 				baseState = currentQueue.baseState,
@@ -480,8 +480,9 @@ exports.processUpdateQueue = function(
 		currentlyProcessingQueue = queue.shared
 	end
 
-	local firstBaseUpdate = queue.firstBaseUpdate
+	local firstBaseUpdate = queue.firstBaseUpdate	
 	local lastBaseUpdate = queue.lastBaseUpdate
+
 
 	-- Check if there are pending updates. If so, transfer them to the base queue.
 	local pendingQueue = queue.shared.pending
@@ -561,8 +562,8 @@ exports.processUpdateQueue = function(
 					newLastBaseUpdate = clone
 					newBaseState = newState
 				else
-					newLastBaseUpdate = clone
 					newLastBaseUpdate.next = clone
+					newLastBaseUpdate = clone
 				end
 				-- Update the remaining priority in the queue.
 				newLanes = mergeLanes(newLanes, updateLane)
@@ -585,8 +586,8 @@ exports.processUpdateQueue = function(
 
 						next = nil,
 					}
-					newLastBaseUpdate = clone
 					newLastBaseUpdate.next = clone
+					newLastBaseUpdate = clone
 				end
 
 				-- Process this update.

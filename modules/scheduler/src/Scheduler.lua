@@ -198,7 +198,7 @@ workLoop = function(hasTimeRemaining, initialTime)
 			currentTask.callback = nil
 			currentPriorityLevel = currentTask.priorityLevel
 			local didUserCallbackTimeout = currentTask.expirationTime <= currentTime
-			markTaskRun(currentTask, currentTime);
+			markTaskRun(currentTask, currentTime)
 			local continuationCallback = callback(didUserCallbackTimeout)
 			currentTime = getCurrentTime()
 			if typeof(continuationCallback) == "function" then

@@ -53,8 +53,7 @@ return function()
             }
         end
 
-        -- Test fails due to update priority bug
-        xit('applies updates in order of priority', function()
+        it('applies updates in order of priority', function()
             local expect: any = expect
             local state
             local Foo = React.Component:extend('Foo')
@@ -116,9 +115,7 @@ return function()
                 c = 'c',
             })
         end)
-
-        -- Test fails due to update priority bug
-        xit('only drops updates with equal or lesser priority when replaceState is called', function()
+        it('only drops updates with equal or lesser priority when replaceState is called', function()
             local expect: any = expect
             local instance
             local Foo = React.Component:extend('Foo')
@@ -185,13 +182,14 @@ return function()
                 'render',
                 'componentDidUpdate',
             })
+            -- Now the rest of the updates are flushed, including the replaceState.
             expect(instance.state).toEqual({
                 c = 'c',
                 d = 'd',
             })
         end)
         -- Test fails due to update priority bug
-        xit('can abort an update, schedule additional updates, and resume', function()
+        it('can abort an update, schedule additional updates, and resume', function()
             local instance
             local expect: any = expect
             local Foo = React.Component:extend('Foo')
@@ -260,7 +258,7 @@ return function()
             })
         end)
         -- Test fails due to update priority bug
-        xit('can abort an update, schedule a replaceState, and resume', function()
+        it('can abort an update, schedule a replaceState, and resume', function()
             local instance
             local expect: any = expect
 

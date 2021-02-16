@@ -88,7 +88,7 @@ local shouldYield = Scheduler_shouldYield
 local requestPaint
 -- Fall back gracefully if we're running an older version of Scheduler.
 if Scheduler_requestPaint ~= nil then
-  requestPaint = Scheduler_requestPaint 
+  requestPaint = Scheduler_requestPaint
 else
   requestPaint = function() end
 end
@@ -107,7 +107,7 @@ local initialTimeMs: number = Scheduler_now()
 -- -- TODO: Consider lifting this into Scheduler.
 -- -- FIXME (roblox): properly account for ms vs s from tick
 -- local now = initialTimeMs < 10000
---   and Scheduler_now 
+--   and Scheduler_now
 --   or function()
 --     return Scheduler_now() - initialTimeMs
 --   end
@@ -222,6 +222,7 @@ flushSyncCallbackQueueImpl = function()
       local ok, result = pcall(function()
       local isSync = true
         local queue = syncQueue
+
         setCurrentUpdateLanePriority(SyncLanePriority)
         runWithPriority(ImmediatePriority, function()
           for index, callback in ipairs(queue) do

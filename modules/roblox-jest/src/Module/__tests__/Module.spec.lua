@@ -64,8 +64,8 @@ return function()
 		it("should be replace an existing module with a mock", function()
 			local addUnmocked = Module.requireOverride(script.Parent.TestScripts.add)
 
-			local mockValue = function(a, b)
-				print(a, b)
+			local mockValue = function(_a, _b)
+				-- print(a, b)
 			end
 			Module.mock(script.Parent.TestScripts.add, function()
 				return mockValue
