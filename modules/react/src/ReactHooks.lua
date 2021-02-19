@@ -9,7 +9,7 @@
 ]]
 
 local Workspace = script.Parent.Parent
-local Packages = Workspace.Parent.Packages
+local Packages = Workspace.Parent
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local Array = LuauPolyfill.Array
 

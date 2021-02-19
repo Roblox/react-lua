@@ -18,7 +18,7 @@
 ]]
 
 local Workspace = script.Parent.Parent
-local Packages = Workspace.Parent.Packages
+local Packages = Workspace.Parent
 local RobloxJest = require(Workspace.RobloxJest)
 local Cryo = require(Packages.Cryo)
 local LuauPolyfill = require(Packages.LuauPolyfill)

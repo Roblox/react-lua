@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  ]]
 local Workspace = script.Parent.Parent
-local Packages = Workspace.Parent.Packages
+local Packages = Workspace.Parent
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local Object = LuauPolyfill.Object
 -- ROBLOX: use patched console from shared

@@ -20,7 +20,7 @@ type HostContext = ReactFiberHostConfig.HostContext
 
 local invariant = require(Workspace.Shared.invariant)
 
-local getChildHostContext = ReactFiberHostConfig.getRootHostContext
+local getChildHostContext = ReactFiberHostConfig.getChildHostContext
 local getRootHostContext = ReactFiberHostConfig.getRootHostContext
 local createCursor = ReactFiberStack.createCursor
 local push = ReactFiberStack.push

@@ -5,7 +5,7 @@
 -- wrapper to be able to use consoleWithStackDev in dev mode
 local Shared = script.Parent
 local Workspace = Shared.Parent
-local Packages = Workspace.Parent.Packages
+local Packages = Workspace.Parent
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local console = LuauPolyfill.console
 local consoleWithStackDev = require(Shared.consoleWithStackDev)

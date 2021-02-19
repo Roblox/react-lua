@@ -11,7 +11,7 @@
 return function()
 	local RobloxJest = script.Parent.Parent.Parent
 	local Workspace = RobloxJest.Parent
-	local Packages = Workspace.Parent.Packages
+	local Packages = Workspace.Parent
 	local toErrorDev = require(RobloxJest.Matchers.toErrorDev)
 	local toWarnDev = require(RobloxJest.Matchers.toWarnDev)
 

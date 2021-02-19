@@ -12,7 +12,7 @@
 return function()
 	-- local Dependencies = script.Parent.Parent.Parent.Parent.Packages
 	local Workspace = script.Parent.Parent.Parent
-	local Packages = Workspace.Parent.Packages
+	local Packages = Workspace.Parent
 	local LuauPolyfill = require(Packages.LuauPolyfill)
 	local Array = LuauPolyfill.Array
 	local Error = LuauPolyfill.Error

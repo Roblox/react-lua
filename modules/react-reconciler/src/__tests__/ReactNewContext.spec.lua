@@ -10,7 +10,7 @@
 ]]
 
 local Workspace = script.Parent.Parent.Parent
-local Packages = Workspace.Parent.Packages
+local Packages = Workspace.Parent
 local Array = require(Packages.LuauPolyfill).Array
 -- ROBLOX: use patched console from shared
 local console = require(Workspace.Shared.console)

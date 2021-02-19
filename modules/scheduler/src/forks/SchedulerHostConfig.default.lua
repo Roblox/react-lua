@@ -7,7 +7,7 @@
 ]]
 
 local Workspace = script.Parent.Parent.Parent
-local Packages = Workspace.Parent.Packages
+local Packages = Workspace.Parent
 local LuauPolyfill = require(Packages.LuauPolyfill)
 
 -- deviation: getCurrentTime will always map to `tick` in Luau

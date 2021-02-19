@@ -1,39 +1,6 @@
 {
   "name": "RoactAlignment",
   "tree": {
-    "$className": "Folder",
-    "Packages": {
-      "$path": "Packages"
-    },
-    "Modules": {
-      "$className": "Folder",
-      "React": {
-        "$path": "modules/react/src"
-      },
-      "ReactIs": {
-        "$path": "modules/react-is/src"
-      },
-      "ReactReconciler": {
-        "$path": "modules/react-reconciler/src"
-      },
-      "ReactNoopRenderer": {
-        "$path": "modules/react-noop-renderer/src"
-      },
-      "ReactShallowRenderer": {
-        "$path": "modules/react-shallow-renderer/src"
-      },
-      "ReactTestRenderer": {
-        "$path": "modules/react-test-renderer/src"
-      },
-      "RobloxJest": {
-        "$path": "modules/roblox-jest/src"
-      },
-      "Scheduler": {
-        "$path": "modules/scheduler/src"
-      },
-      "Shared": {
-        "$path": "modules/shared/src"
-      }
-    }
+    "$path": "modules"
   }
 }

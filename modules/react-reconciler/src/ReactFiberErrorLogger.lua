@@ -9,7 +9,7 @@
  ]]
 
 local Workspace = script.Parent.Parent
-local Packages = Workspace.Parent.Packages
+local Packages = Workspace.Parent
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local setTimeout = LuauPolyfill.setTimeout
 
@@ -107,6 +107,7 @@ exports.logCapturedError = function(
   end)
 
   if not ok then
+    warn("failed to error with error")
     -- ROBLOX TODO: we may need to think about this more deeply and do something different
     -- This method must not throw, or React internal state will get messed up.
     -- If console.error is overridden, or logCapturedError() shows a dialog that throws,

@@ -10,7 +10,7 @@
 --!nolint LocalShadowPedantic
 
 local Workspace = script.Parent.Parent
-local Packages = Workspace.Parent.Packages
+local Packages = Workspace.Parent
 
 local Cryo = require(Packages.Cryo)
 local LuauPolyfill = require(Packages.LuauPolyfill)

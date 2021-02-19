@@ -10,7 +10,7 @@
 
 return function()
   local Workspace = script.Parent.Parent.Parent
-  local Packages = Workspace.Parent.Packages
+  local Packages = Workspace.Parent
   local RobloxJest = require(Workspace.RobloxJest)
   local Cryo = require(Packages.Cryo)
 

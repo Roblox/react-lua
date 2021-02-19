@@ -1,7 +1,7 @@
 -- upstream https://github.com/facebook/react/blob/6d50a9d090a2a672fc3dea5ce77a3a05332a6caa/fixtures/legacy-jsx-runtimes/setupTests.js
 --!nocheck
 local Workspace = script.Parent.Parent.Parent
-local Packages = Workspace.Parent.Packages
+local Packages = Workspace.Parent
 
 -- deviation: until we can require jest, use a simple implementation
 local function jestDiff(expected, received)

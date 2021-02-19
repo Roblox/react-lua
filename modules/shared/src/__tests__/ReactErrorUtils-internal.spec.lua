@@ -10,7 +10,7 @@
 
 return function()
 	local Workspace = script.Parent.Parent.Parent
-	local Packages = Workspace.Parent.Packages
+	local Packages = Workspace.Parent
 	local LuauPolyfill = require(Packages.LuauPolyfill)
 	local Error = LuauPolyfill.Error
 	

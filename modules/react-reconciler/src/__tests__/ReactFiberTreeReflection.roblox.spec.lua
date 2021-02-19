@@ -2,7 +2,7 @@
 return function()
 	local Reconciler = script.Parent.Parent
 	local Workspace = script.Parent.Parent.Parent
-	local Packages = Workspace.Parent.Packages
+	local Packages = Workspace.Parent
 	local RobloxJest = require(Workspace.RobloxJest)
 	local LuauPolyfill = require(Packages.LuauPolyfill)
 	local Object = LuauPolyfill.Object

@@ -1,6 +1,5 @@
 -- upstream: https://github.com/facebook/react/blob/6f62abb58ae46d9c88525635f1790487285666e6/packages/react-reconciler/src/ReactFiberLane.js
 --!strict
--- upstream https://github.com/facebook/react/blob/6f62abb58ae46d9c88525635f1790487285666e6/packages/react-reconciler/src/ReactFiberLane.js
 --[[
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
@@ -10,12 +9,15 @@
  * @flow
 ]]
 local Workspace = script.Parent.Parent
-local Packages = Workspace.Parent.Packages
+local Packages = Workspace.Parent
 local LuauPolyfill = require(Packages.LuauPolyfill)
 
-local ReactInternalTypes = require(script.Parent.ReactInternalTypes)
-type FiberRoot = ReactInternalTypes.FiberRoot;
-type ReactPriorityLevel = ReactInternalTypes.ReactPriorityLevel;
+-- ROBLOX FIXME: roblox-cli type error workaround
+-- local ReactInternalTypes = require(script.Parent.ReactInternalTypes)
+-- type FiberRoot = ReactInternalTypes.FiberRoot;
+-- type ReactPriorityLevel = ReactInternalTypes.ReactPriorityLevel;
+type FiberRoot = any;
+type ReactPriorityLevel = number;
 local clz32 = LuauPolyfill.Math.clz32
 
 -- ROBLOX: use patched console from shared
@@ -25,10 +27,15 @@ local ReactFiberSchedulerPriorities = require(script.Parent["ReactFiberScheduler
 -- deviation: Instead of defining these here, and and re-exporting in
 -- `ReactInternalTypes`, we depend on and re-export them here to avoid cyclical
 -- require issues
-export type LanePriority = ReactInternalTypes.LanePriority;
-export type Lane = ReactInternalTypes.Lane;
-export type Lanes = ReactInternalTypes.Lanes;
-export type LaneMap<T> = ReactInternalTypes.LaneMap<T>;
+-- ROBLOX FIXME: roblox-cli type error workaround
+-- export type LanePriority = ReactInternalTypes.LanePriority;
+-- export type Lane = ReactInternalTypes.Lane;
+-- export type Lanes = ReactInternalTypes.Lanes;
+-- export type LaneMap<T> = ReactInternalTypes.LaneMap<T>;
+export type LanePriority = number;
+export type Lanes = number;
+export type Lane = number;
+export type LaneMap<T> = { [number]: T };
 
 local invariant = require(Workspace.Shared.invariant)
 

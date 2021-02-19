@@ -8,7 +8,7 @@
  * @flow
 ]]
 
-local Packages = script.Parent.Parent.Parent.Packages
+local Packages = script.Parent.Parent.Parent
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local Object = LuauPolyfill.Object
 

@@ -2,8 +2,8 @@
 
 set -x
 
-rojo build --output model.rbxmx
-roblox-cli analyze default.project.json
+rojo build tests.project.json --output model.rbxmx
+roblox-cli analyze tests.project.json
 selene --version
 selene --config selene.toml --pattern "**/*[a-bd-z].lua" modules/
 echo "Run tests in DEV"

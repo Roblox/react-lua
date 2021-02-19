@@ -19,7 +19,7 @@ return function()
   local Workspace = script.Parent.Parent.Parent
   local RobloxJest = require(Workspace.RobloxJest)
 
-  local Packages = Workspace.Parent.Packages
+  local Packages = Workspace.Parent
   local Error = require(Packages.LuauPolyfill).Error
 
   -- deviation: Move all of the following into the test function body to match

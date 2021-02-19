@@ -11,7 +11,7 @@
 --!nolint ImportUnused
 
 local Workspace = script.Parent.Parent
-local Packages = Workspace.Parent.Packages
+local Packages = Workspace.Parent
 
 local Cryo = require(Packages.Cryo)
 local LuauPolyfill = require(Packages.LuauPolyfill)
@@ -33,7 +33,7 @@ local ReactRootTags = require(script.Parent.ReactRootTags)
 type RootTag = ReactRootTags.RootTag;
 
 local ReactFiberHostConfig = require(script.Parent.ReactFiberHostConfig)
-type Instance = ReactFiberHostConfig.Instance;
+-- type Instance = ReactFiberHostConfig.Instance;
 type TextInstance = ReactFiberHostConfig.TextInstance;
 type Container = ReactFiberHostConfig.Container;
 type PublicInstance = ReactFiberHostConfig.PublicInstance;
