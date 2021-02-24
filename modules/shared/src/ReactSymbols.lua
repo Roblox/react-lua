@@ -17,7 +17,7 @@ local Packages = script.Parent.Parent.Parent
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local Symbol = LuauPolyfill.Symbol
 
-local exports = {}
+local exports: { [string]: any } = {}
 
 -- The Symbol used to tag the ReactElement-like types. If there is no native Symbol
 -- nor polyfill, then a plain number is used for performance.
