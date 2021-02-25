@@ -154,7 +154,7 @@ In order for breakpoints to work correctly, you'll need to disable the module re
 			"name": "Debug Unit Tests",
 			"args": [
 				"--load.project",
-				"default.project.json",
+				"tests.project.json",
 				"--run",
 				"bin/spec.lua",
 				"--lua.globals",
