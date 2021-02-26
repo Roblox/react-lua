@@ -239,7 +239,7 @@ local function processChildContext(
 			return parentContext
 		end
 
-		local childContext = instance.getChildContext()
+		local childContext = instance:getChildContext()
 		for contextKey, _ in pairs(childContext) do
 			invariant(
 				childContextTypes[contextKey] ~= nil,
