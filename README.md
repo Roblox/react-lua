@@ -48,6 +48,17 @@ Projects not in the react repo:
 | `roblox-jest` | Custom matchers and timer logic for TestEZ | A rough approximation of what we'll eventually have with the [`jest` alignment effort](https://github.com/Roblox/lest-alignment) |
 | `roblox-js-polyfill` | Implementations of JS specific interfaces or functionality | Most implementations are incomplete or slightly adjusted for Lua |
 
+## Deviations from [Roact](https://github.com/roblox/roact)
+This repo is meant to supplant the `Roact` project, which is an open-source project that currently powers the majority of the Lua App and is used by the community as well. Our goal is to be as compatible as possible with Roact by the time we're ready to start adopting this alignment effort for use.
+
+With that in mind, however, there will still be a small number of behavioral deviations that make the transition from existing Roact smoother, or account for nuances of the Roblox ecosystem:
+* Stable Keys: Aligned Roact will allow table keys to be used as stable keys for child elements, equivalent to the behavior relied upon in Roact today
+* Context: Current Roact's deprecated `_context` feature will not be present in aligned Roact; users will have to switch to the `createContext` feature, which is present in both current and aligned Roact and is semantically equivalent
+* Class Component Refs: Aligned Roact will allow refs provided to class components (referred to in Roact documentation as "stateful components") to point to the actual component instance. This is not supported in current Roact, and there may be changes around the `Roact.Ref` prop key to support this with minimal disruption
+* Bindings: We intend to keep `createBindings` and `joinBindings`, a feature unique to Roact and [documented here](https://roblox.github.io/roact/api-reference#roactcreatebinding)
+
+See [this document](DEVIATIONS.md) for details about any deviations and the design and refactoring efforts being proposed to address them.
+
 ## How to run the tests
 
 You need to create a GitHub Access Token:
