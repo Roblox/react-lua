@@ -12,12 +12,9 @@ local Workspace = script.Parent.Parent
 local Packages = Workspace.Parent
 local LuauPolyfill = require(Packages.LuauPolyfill)
 
--- ROBLOX FIXME: roblox-cli type error workaround
--- local ReactInternalTypes = require(script.Parent.ReactInternalTypes)
--- type FiberRoot = ReactInternalTypes.FiberRoot;
--- type ReactPriorityLevel = ReactInternalTypes.ReactPriorityLevel;
-type FiberRoot = any;
-type ReactPriorityLevel = number;
+local ReactInternalTypes = require(script.Parent.ReactInternalTypes)
+type FiberRoot = ReactInternalTypes.FiberRoot;
+type ReactPriorityLevel = ReactInternalTypes.ReactPriorityLevel;
 local clz32 = LuauPolyfill.Math.clz32
 
 -- ROBLOX: use patched console from shared
@@ -27,15 +24,10 @@ local ReactFiberSchedulerPriorities = require(script.Parent["ReactFiberScheduler
 -- deviation: Instead of defining these here, and and re-exporting in
 -- `ReactInternalTypes`, we depend on and re-export them here to avoid cyclical
 -- require issues
--- ROBLOX FIXME: roblox-cli type error workaround
--- export type LanePriority = ReactInternalTypes.LanePriority;
--- export type Lane = ReactInternalTypes.Lane;
--- export type Lanes = ReactInternalTypes.Lanes;
--- export type LaneMap<T> = ReactInternalTypes.LaneMap<T>;
-export type LanePriority = number;
-export type Lanes = number;
-export type Lane = number;
-export type LaneMap<T> = { [number]: T };
+export type LanePriority = ReactInternalTypes.LanePriority;
+export type Lane = ReactInternalTypes.Lane;
+export type Lanes = ReactInternalTypes.Lanes;
+export type LaneMap<T> = ReactInternalTypes.LaneMap<T>;
 
 local invariant = require(Workspace.Shared.invariant)
 

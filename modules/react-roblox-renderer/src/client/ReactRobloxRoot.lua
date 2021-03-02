@@ -10,9 +10,8 @@
 
 local Workspace = script.Parent.Parent.Parent
 
-local ReactRobloxHostConfig = require(script.Parent.ReactRobloxHostConfig)
-type Container = ReactRobloxHostConfig.Container;
 local ReactRobloxHostTypes = require(script.Parent["ReactRobloxHostTypes.roblox"])
+type Container = ReactRobloxHostTypes.Container;
 type RootType = ReactRobloxHostTypes.RootType;
 type RootOptions = ReactRobloxHostTypes.RootOptions;
 local ReactRootTags = require(Workspace.ReactReconciler.ReactRootTags)

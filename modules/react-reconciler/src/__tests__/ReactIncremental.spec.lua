@@ -12,7 +12,7 @@ local ReactFeatureFlags = require(Workspace.Shared.ReactFeatureFlags)
 local React
 local ReactNoop
 local Scheduler
-local PropTypes
+local PropTypes = nil
 local HttpService = game:GetService("HttpService")
 return function ()
     describe('ReactIncremental', function()
@@ -2125,14 +2125,14 @@ return function ()
                     }
                 end
                 -- ROBLOX TODO: indexing into function?
-                Recurse.contextTypes = {
-                    n = PropTypes.number,
-                }
+                -- Recurse.contextTypes = {
+                --     n = PropTypes.number,
+                -- }
 
                 -- ROBLOX TODO: indexing into function?
-                Recurse.childContextTypes = {
-                    n = PropTypes.number,
-                }
+                -- Recurse.childContextTypes = {
+                --     n = PropTypes.number,
+                -- }
 
                 ReactNoop.render(React.createElement(Recurse, nil))
                 expect(function()

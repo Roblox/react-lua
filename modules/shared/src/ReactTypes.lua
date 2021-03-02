@@ -146,18 +146,20 @@ export type ReactScope = {
   [string]: any, -- FIXME (roblox): types
 };
 
--- export type ReactScopeQuery = (
---   type: string,
---   props: {[string]: mixed, ...},
---   instance: mixed,
--- ) => boolean;
+export type ReactScopeQuery = (
+  string, -- type
+  {[any]: any}, -- props
+  any -- instance
+) -> boolean;
 
--- export type ReactScopeInstance = {|
---   DO_NOT_USE_queryAllNodes(ReactScopeQuery): null | Array<Object>,
---   DO_NOT_USE_queryFirstNode(ReactScopeQuery): null | Object,
---   containsNode(Object): boolean,
---   getChildContextValues: <T>(context: ReactContext<T>) => Array<T>,
--- |};
+export type ReactScopeInstance = {
+  DO_NOT_USE_queryAllNodes: (ReactScopeQuery) -> nil | Array<Object>,
+  DO_NOT_USE_queryFirstNode: (ReactScopeQuery) -> nil | Object,
+  containsNode: (Object) -> boolean,
+  -- ROBLOX FIXME: function generics
+  -- getChildContextValues: <T>(context: ReactContext<T>) => Array<T>,
+  getChildContextValues: (ReactContext<any>) -> Array<any>,
+};
 
 -- Mutable source version can be anything (e.g. number, string, immutable data structure)
 -- so long as it changes every time any part of the source changes.

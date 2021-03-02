@@ -13,10 +13,8 @@ local Workspace = script.Parent.Parent
 -- ROBLOX: use patched console from shared
 local console = require(Workspace.Shared.console)
 
--- ROBLOX FIXME: roblox-cli type error workaround
--- local ReactInternalTypes = require(script.Parent.ReactInternalTypes)
--- type Fiber = ReactInternalTypes.Fiber;
-type Fiber = any;
+local ReactInternalTypes = require(script.Parent.ReactInternalTypes)
+type Fiber = ReactInternalTypes.Fiber;
 
 type Array<T> = { [number]: T }
 -- deviation: use this table when pushing nil values

@@ -30,7 +30,10 @@ local ReactRobloxHostTypes = require(script.Parent["ReactRobloxHostTypes.roblox"
 type RootType = ReactRobloxHostTypes.RootType;
 type Container = ReactRobloxHostTypes.Container;
 type HostInstance = ReactRobloxHostTypes.HostInstance;
-type SuspenseInstance = ReactRobloxHostTypes.HostInstance;
+type SuspenseInstance = ReactRobloxHostTypes.SuspenseInstance;
+type Props = ReactRobloxHostTypes.Props;
+type Type = ReactRobloxHostTypes.Type;
+type HostContext = ReactRobloxHostTypes.HostContext;
 
 -- local type {ReactScopeInstance} = require(Workspace.shared/ReactTypes'
 -- local type {ReactDOMFundamentalComponentInstance} = require(Workspace.../shared/ReactDOMTypes'
@@ -94,22 +97,23 @@ local enableCreateEventHandleAPI = ReactFeatureFlags.enableCreateEventHandleAPI
 type Array<T> = { [number]: T };
 type Object = { [any]: any };
 
-export type Type = string;
-export type Props = {
-  autoFocus: boolean?,
-  children: any,
-  disabled: boolean?,
-  hidden: boolean?,
-  suppressHydrationWarning: boolean?,
-  dangerouslySetInnerHTML: any,
-  style: { display: string, [any]: any }?,
-  bottom: number?,
-  left: number?,
-  right: number?,
-  top: number?,
-  -- ...
-  [any]: any,
-};
+-- ROBLOX deviation: Moved to ReactRobloxHostTypes
+-- export type Type = string;
+-- export type Props = {
+--   autoFocus: boolean?,
+--   children: any,
+--   disabled: boolean?,
+--   hidden: boolean?,
+--   suppressHydrationWarning: boolean?,
+--   dangerouslySetInnerHTML: any,
+--   style: { display: string, [any]: any }?,
+--   bottom: number?,
+--   left: number?,
+--   right: number?,
+--   top: number?,
+--   -- ...
+--   [any]: any,
+-- };
 -- export type EventTargetChildElement = {
 --   type: string,
 --   props: nil | {
@@ -128,19 +132,23 @@ export type Props = {
 -- end
 
 
+-- ROBLOX deviation: Moved to ReactRobloxHostTypes
 -- export type SuspenseInstance = Comment & {_reactRetry?: () => void, ...}
 -- export type HydratableInstance = Instance | TextInstance | SuspenseInstance
+
+-- ROBLOX deviation: Moved to ReactRobloxHostTypes
 -- export type PublicInstance = Element | Text
--- ROBLOX TODO: See if these actually make sense
-type HostContextDev = {
-  namespace: string,
-  ancestorInfo: any,
-  -- ...
-  [any]: any,
-}
-type HostContextProd = string
-export type HostContext = HostContextDev | HostContextProd
+-- type HostContextDev = {
+--   namespace: string,
+--   ancestorInfo: any,
+--   -- ...
+--   [any]: any,
+-- }
+-- type HostContextProd = string
+-- export type HostContext = HostContextDev | HostContextProd
+
 -- export type UpdatePayload = Array<mixed>
+-- ROBLOX FIXME: cannot create type equal to void
 -- export type ChildSet = void; -- Unused
 -- export type TimeoutHandle = TimeoutID
 -- export type NoTimeout = -1
@@ -228,7 +236,7 @@ exports.getRootHostContext = function(
 end
 
 exports.getChildHostContext = function(
-  parentHostContext: HostContext,
+  parentHostContext: any, -- HostContext
   type: string,
   rootContainerInstance: Container
 ): HostContext

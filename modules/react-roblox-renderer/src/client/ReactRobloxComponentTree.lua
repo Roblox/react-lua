@@ -13,8 +13,11 @@ local Workspace = script.Parent.Parent.Parent
 local ReactRobloxHostTypes = require(script.Parent["ReactRobloxHostTypes.roblox"])
 type HostInstance = ReactRobloxHostTypes.HostInstance;
 type SuspenseInstance = ReactRobloxHostTypes.SuspenseInstance;
+type Container = ReactRobloxHostTypes.Container;
+type Props = ReactRobloxHostTypes.Props;
 
--- local type {Fiber} = require(Workspace.react-reconciler/src/ReactInternalTypes'
+local ReactInternalTypes = require(Workspace.ReactReconciler.ReactInternalTypes)
+type Fiber = ReactInternalTypes.Fiber;
 local ReactTypes = require(Workspace.Shared.ReactTypes)
 type ReactScopeInstance = ReactTypes.ReactScopeInstance;
 -- local type {

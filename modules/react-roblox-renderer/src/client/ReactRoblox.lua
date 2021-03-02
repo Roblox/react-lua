@@ -16,8 +16,8 @@ local Workspace = script.Parent.Parent.Parent
 
 local ReactTypes = require(Workspace.Shared.ReactTypes)
 type ReactNodeList = ReactTypes.ReactNodeList;
-local ReactRobloxHostConfig = require(script.Parent.ReactRobloxHostConfig)
-type Container = ReactRobloxHostConfig.Container;
+local ReactRobloxHostTypes = require(script.Parent["ReactRobloxHostTypes.roblox"])
+type Container = ReactRobloxHostTypes.Container;
 
 -- local '../shared/checkReact'
 -- local ReactRobloxLegacy = require(script.Parent.ReactRobloxLegacy)
@@ -137,6 +137,10 @@ local function createPortal(
   )
   -- TODO: pass ReactDOM portal implementation as third argument
   -- $FlowFixMe The Flow type is opaque but there's no way to actually create it.
+  -- ROBLOX FIXME: luau doesn't realize that this function errors, and it's
+  -- expecting us to return something. Can be removed when implementation is
+  -- done.
+  return nil
   -- return createPortalImpl(children, container, nil, key)
 end
 

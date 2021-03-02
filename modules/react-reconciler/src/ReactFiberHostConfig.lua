@@ -20,7 +20,25 @@ local Workspace = script.Parent.Parent
 
 -- local invariant = require(Workspace.Shared.invariant)
 
+-- ROBLOX deviation: We don't have special tooling to shim this file, so we
+-- manually re-export the default interface: that of ReactRobloxRenderer
 local ReactRobloxHostConfig = require(Workspace.ReactRobloxRenderer.client.ReactRobloxHostConfig)
+local ReactRobloxHostTypes = require(Workspace.ReactRobloxRenderer.client["ReactRobloxHostTypes.roblox"])
+
+export type Instance = ReactRobloxHostTypes.HostInstance;
+-- ROBLOX FIXME: Figure out what we're doing about text instances
+export type TextInstance = any;
+export type Container = ReactRobloxHostTypes.Container;
+export type HostContext = ReactRobloxHostTypes.HostContext;
+export type HydratableInstance = ReactRobloxHostTypes.HydratableInstance;
+export type SuspenseInstance = ReactRobloxHostTypes.SuspenseInstance;
+export type PublicInstance = ReactRobloxHostTypes.PublicInstance;
+export type Type = ReactRobloxHostTypes.Type;
+export type Props = ReactRobloxHostTypes.Props;
+-- ROBLOX FIXME: Can't create type equal to void
+export type ChildSet = any;
+-- ROBLOX FIXME: Can't create equivalent type: $ReadOnly<{or}>
+export type RendererInspectionConfig = any;
 
 return ReactRobloxHostConfig
 
