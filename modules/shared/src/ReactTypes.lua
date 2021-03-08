@@ -48,7 +48,7 @@ export type ReactNodeList = ReactEmpty | React_Node;
 export type ReactProviderType<T> = {
   -- $$typeof: Symbol | number,
   -- _context: ReactContext<T>,
-  _context: any, -- 
+  _context: any, --
   -- [any]: any,
   -- ...
 };
@@ -228,9 +228,9 @@ export type Wakeable = {
 -- }
 export type Thenable<R, U> = {
   then_: (
-    (R) -> Thenable | U | nil,
-    (any) -> Thenable | U | nil
-  ) -> Thenable
+    (R) -> Thenable<R, U> | U | nil,
+    (any) -> Thenable<R, U> | U | nil
+  ) -> Thenable<R, U>
 };
 
 return exports

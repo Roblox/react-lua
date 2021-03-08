@@ -924,7 +924,7 @@ local function createReactNoop(reconciler, useMutation: boolean)
 		renderLegacySyncRoot = function(element, callback)
 			local rootID = DEFAULT_ROOT_ID
 			local container = ReactNoop.getOrCreateRootContainer(rootID, LegacyRoot)
-			local root = roots.get(container.rootID)
+			local root = roots[container.rootID]
 			NoopRenderer.updateContainer(element, root, nil, callback)
 		end,
 
@@ -942,11 +942,11 @@ local function createReactNoop(reconciler, useMutation: boolean)
 		end,
 
 		unmountRootWithID = function(rootID: string)
-			local root = roots.get(rootID)
+			local root = roots[rootID]
 			if root then
 				NoopRenderer.updateContainer(nil, root, nil, function()
-					roots.delete(rootID)
-					rootContainers.delete(rootID)
+					roots[rootID] = nil
+					rootContainers[rootID] = nil
 				end)
 			end
 		end,
@@ -1036,7 +1036,7 @@ local function createReactNoop(reconciler, useMutation: boolean)
 		-- Logs the current state of the tree.
 		dumpTree = function(rootID: string?)
 			rootID = rootID or DEFAULT_ROOT_ID
-			local root = roots.get(rootID)
+			local root = roots[rootID]
 			local rootContainer = rootContainers[rootID]
 			if not root or not rootContainer then
 				-- eslint-disable-next-line react-internal/no-production-logging
@@ -1155,7 +1155,7 @@ local function createReactNoop(reconciler, useMutation: boolean)
 
 		getRoot = function(rootID: string?)
 			rootID = rootID or DEFAULT_ROOT_ID
-			return roots.get(rootID)
+			return roots[rootID]
 		end,
 	}
 
@@ -1229,9 +1229,9 @@ local function createReactNoop(reconciler, useMutation: boolean)
 										unwind()
 										resolve()
 									end,
-									function(error)
+									function(error_)
 										unwind()
-										reject(error)
+										reject(error_)
 									end
 								)
 							end,

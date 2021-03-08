@@ -7,8 +7,6 @@
  *
  * @flow
 ]]
--- FIXME: Luau doesn't count import used only for types as being "used"
---!nolint ImportUnused
 
 local Workspace = script.Parent.Parent
 local Packages = Workspace.Parent
@@ -73,7 +71,8 @@ local createFiberRoot = ReactFiberRoot.createFiberRoot
 local ReactFiberDevToolsHook = require(script.Parent["ReactFiberDevToolsHook.new"])
 local injectInternals = ReactFiberDevToolsHook.injectInternals
 local onScheduleRoot = ReactFiberDevToolsHook.onScheduleRoot
-local ReactFiberWorkLoop = require(script.Parent["ReactFiberWorkLoop.new"])
+local ReactFiberWorkLoop
+ReactFiberWorkLoop = require(script.Parent["ReactFiberWorkLoop.new"])
 local requestEventTime = ReactFiberWorkLoop.requestEventTime
 local requestUpdateLane = ReactFiberWorkLoop.requestUpdateLane
 local scheduleUpdateOnFiber = ReactFiberWorkLoop.scheduleUpdateOnFiber
@@ -534,7 +533,7 @@ if _G.__DEV__ then
 	)
 		local key = path[index]
 		local updated
-		if Array.isArray(obj) then 
+		if Array.isArray(obj) then
 			updated = Array.slice(obj)
 		else
 			updated = Object.assign({}, obj)

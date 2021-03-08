@@ -220,16 +220,17 @@ flushSyncCallbackQueueImpl = function()
     if decoupleUpdatePriorityFromScheduler then
       local previousLanePriority = getCurrentUpdateLanePriority()
       local ok, result = pcall(function()
-      local isSync = true
+        local isSync = true
         local queue = syncQueue
 
         setCurrentUpdateLanePriority(SyncLanePriority)
         runWithPriority(ImmediatePriority, function()
-          for index, callback in ipairs(queue) do
-            i = index
+          while i <= #queue do
+            local callback = queue[i]
             repeat
               callback = callback(isSync)
             until callback == nil
+            i += 1
           end
         end)
         syncQueue = nil

@@ -59,7 +59,7 @@ exports.logCapturedError = function(
         -- been accidental, we'll surface it anyway.
         -- However, the browser would have silenced the original error
         -- so we'll print it first, and then print the stack addendum.
-        console['error'](error_); -- Don't transform to our wrapper
+        console['error'](error_) -- Don't transform to our wrapper
         -- For a more detailed description of this block, see:
         -- https://github.com/facebook/react/pull/13384
       end
@@ -97,12 +97,12 @@ exports.logCapturedError = function(
       -- We don't include the original error message and JS stack because the browser
       -- has already printed it. Even if the application swallows the error, it is still
       -- displayed by the browser thanks to the DEV-only fake event trick in ReactErrorUtils.
-      console['error'](combinedMessage); -- Don't transform to our wrapper
+      console['error'](combinedMessage) -- Don't transform to our wrapper
     else
       -- In production, we print the error directly.
       -- This will include the message, the JS stack, and anything the browser wants to show.
       -- We pass the error object instead of custom message so that the browser displays the error natively.
-      console['error'](error_); -- Don't transform to our wrapper
+      console['error'](error_) -- Don't transform to our wrapper
     end
   end)
 

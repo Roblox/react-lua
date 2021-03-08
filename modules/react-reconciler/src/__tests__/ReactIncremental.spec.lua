@@ -2477,7 +2477,7 @@ return function ()
                 end)()
             end
 
-            function Root:componentDidCatch(error)
+            function Root:componentDidCatch(_error)
                 -- If context is pushed/popped correctly,
                 -- This method will be used to handle the intentionally-thrown Error.
             end

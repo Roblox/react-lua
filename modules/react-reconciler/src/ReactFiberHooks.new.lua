@@ -16,6 +16,7 @@ local Workspace = script.Parent.Parent
 local Packages = Workspace.Parent
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local Array = LuauPolyfill.Array
+local Cryo = require(Packages.Cryo)
 
 -- ROBLOX: use patched console from shared
 local console = require(Workspace.Shared.console)
@@ -29,35 +30,35 @@ local console = require(Workspace.Shared.console)
 local ReactTypes = require(Workspace.Shared.ReactTypes)
 type ReactContext<T> = ReactTypes.ReactContext<T>
 local ReactInternalTypes = require(script.Parent.ReactInternalTypes)
-type Fiber = ReactInternalTypes.Fiber;
--- type Dispatcher = ReactInternalTypes.Dispatcher;
+type Fiber = ReactInternalTypes.Fiber
+-- type Dispatcher = ReactInternalTypes.Dispatcher
 -- FIXME (roblox): Dispatcher definition
-type Dispatcher = any;
-type HookType = ReactInternalTypes.HookType;
-type ReactPriorityLevel = ReactInternalTypes.ReactPriorityLevel;
+type Dispatcher = any
+type HookType = ReactInternalTypes.HookType
+type ReactPriorityLevel = ReactInternalTypes.ReactPriorityLevel
 local ReactFiberLane = require(script.Parent.ReactFiberLane)
-type Lanes = ReactFiberLane.Lanes;
-type Lane = ReactFiberLane.Lane;
+type Lanes = ReactFiberLane.Lanes
+type Lane = ReactFiberLane.Lane
 local ReactHookEffectTags = require(script.Parent.ReactHookEffectTags)
-type HookFlags = ReactHookEffectTags.HookFlags;
+type HookFlags = ReactHookEffectTags.HookFlags
 -- local type {FiberRoot} = require(script.Parent.ReactInternalTypes)
 -- local type {OpaqueIDType} = require(script.Parent.ReactFiberHostConfig)
 
 local ReactSharedInternals = require(Workspace.Shared.ReactSharedInternals)
 local ReactFeatureFlags = require(Workspace.Shared.ReactFeatureFlags)
--- local enableDebugTracing = ReactFeatureFlags.enableDebugTracing
--- local enableSchedulingProfiler = ReactFeatureFlags.enableSchedulingProfiler
+local enableDebugTracing = ReactFeatureFlags.enableDebugTracing
+local enableSchedulingProfiler = ReactFeatureFlags.enableSchedulingProfiler
 local enableNewReconciler = ReactFeatureFlags.enableNewReconciler
 -- local decoupleUpdatePriorityFromScheduler = ReactFeatureFlags.decoupleUpdatePriorityFromScheduler
 local enableDoubleInvokingEffects = ReactFeatureFlags.enableDoubleInvokingEffects
 
 -- local ReactTypeOfMode = require(script.Parent.ReactTypeOfMode)
--- local {NoMode, BlockingMode, DebugTracingMode} = require(script.Parent.ReactTypeOfMode)
--- local NoLane = ReactFiberLane.NoLane
+local DebugTracingMode = require(script.Parent.ReactTypeOfMode).DebugTracingMode
+local NoLane = ReactFiberLane.NoLane
 local NoLanes = ReactFiberLane.NoLanes
 -- local InputContinuousLanePriority = ReactFiberLane.InputContinuousLanePriority
--- local isSubsetOfLanes = ReactFiberLane.isSubsetOfLanes
--- local mergeLanes = ReactFiberLane.mergeLanes
+local isSubsetOfLanes = ReactFiberLane.isSubsetOfLanes
+local mergeLanes = ReactFiberLane.mergeLanes
 local removeLanes = ReactFiberLane.removeLanes
 -- local markRootEntangled = ReactFiberLane.markRootEntangled
 -- local markRootMutableRead = ReactFiberLane.markRootMutableRead
@@ -76,21 +77,24 @@ local MountPassiveDevEffect = ReactFiberFlags.MountPassiveDev
 local HookHasEffect = ReactHookEffectTags.HasEffect
 local HookLayout = ReactHookEffectTags.Layout
 local HookPassive = ReactHookEffectTags.Passive
+local ReactFiberWorkLoop = require(script.Parent['ReactFiberWorkLoop.new'])
+local warnIfNotCurrentlyActingUpdatesInDev = ReactFiberWorkLoop.warnIfNotCurrentlyActingUpdatesInDev
+local scheduleUpdateOnFiber = ReactFiberWorkLoop.scheduleUpdateOnFiber
+local warnIfNotScopedWithMatchingAct = ReactFiberWorkLoop.warnIfNotScopedWithMatchingAct
+local requestEventTime = ReactFiberWorkLoop.requestEventTime
+local requestUpdateLane = ReactFiberWorkLoop.requestUpdateLane
+local markSkippedUpdateLanes = ReactFiberWorkLoop.requestUpdateLane
 -- local {
 --   getWorkInProgressRoot,
---   scheduleUpdateOnFiber,
 --   requestUpdateLane,
 --   requestEventTime,
 --   warnIfNotCurrentlyActingEffectsInDEV,
---   warnIfNotCurrentlyActingUpdatesInDev,
---   warnIfNotScopedWithMatchingAct,
---   markSkippedUpdateLanes,
 -- } = require(script.Parent.ReactFiberWorkLoop.new)
 
 local invariant = require(Workspace.Shared.invariant)
 local getComponentName = require(Workspace.Shared.getComponentName)
 local is = require(Workspace.Shared.objectIs)
--- local {markWorkInProgressReceivedUpdate} = require(script.Parent.ReactFiberBeginWork.new)
+local markWorkInProgressReceivedUpdate = require(script.Parent['ReactFiberBeginWork.new']).markWorkInProgressReceivedUpdate
 -- local {
 --   UserBlockingPriority,
 --   NormalPriority,
@@ -113,30 +117,30 @@ local makeClientId = ReactFiberHostConfig.makeClientId
 --   warnAboutMultipleRenderersDEV,
 -- } = require(script.Parent.ReactMutableSource.new)
 -- local getIsRendering = require(script.Parent.ReactCurrentFiber).getIsRendering
--- local {logStateUpdateScheduled} = require(script.Parent.DebugTracing)
--- local {markStateUpdateScheduled} = require(script.Parent.SchedulingProfiler)
+-- local logStateUpdateScheduled = require(script.Parent.DebugTracing)
+-- local markStateUpdateScheduled = require(script.Parent.SchedulingProfiler)
 
 local ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher
 -- local ReactCurrentBatchConfig = ReactSharedInternals.ReactCurrentBatchConfig
 
 -- deviation: common types
-type Array<T> = { [number]: T };
+type Array<T> = { [number]: T }
 
 type Update<S, A> = {
   lane: Lane,
   action: A,
   eagerReducer: ((S, A) -> S) | nil,
   eagerState: S | nil,
-  next: Update,
+  next: Update<S, A>,
   priority: ReactPriorityLevel?,
-};
+}
 
 type UpdateQueue<S, A> = {
   pending: Update<S, A> | nil,
   dispatch: ((A) -> any) | nil,
   lastRenderedReducer: ((S, A) -> S) | nil,
   lastRenderedState: S | nil,
-};
+}
 
 local didWarnAboutMismatchedHooksForComponent
 local _didWarnAboutUseOpaqueIdentifier
@@ -151,7 +155,7 @@ export type Hook = {
   baseQueue: Update<any, any>?,
   queue: UpdateQueue<any, any>?,
   next: Hook?,
-};
+}
 
 export type Effect = {
   tag: HookFlags,
@@ -159,20 +163,20 @@ export type Effect = {
   destroy: (() -> ())?,
   deps: Array<any>?,
   next: Effect,
-};
+}
 
 export type FunctionComponentUpdateQueue = {
   lastEffect: Effect?
-};
+}
 
--- type BasicStateAction<S> = (S => S) | S
+type BasicStateAction<S> = ((S) -> S) | S
 
--- type Dispatch<A> = A => void
+type Dispatch<A> = (A) -> ()
 
 local exports: any = {}
 
 -- These are set right before calling the component.
-local _renderLanes: Lanes = NoLanes
+local renderLanes: Lanes = NoLanes
 -- The work-in-progress fiber. I've named it differently to distinguish it from
 -- the work-in-progress hook.
 -- FIXME (roblox): No luau support for `local x: Fiber = (nil: any)`
@@ -217,6 +221,15 @@ local hookTypesUpdateIndexDev: number = 0
 -- the dependencies for Hooks that need them (e.g. useEffect or useMemo).
 -- When true, such Hooks will always be "remounted". Only used during hot reload.
 local ignorePreviousDependencies: boolean = false
+
+-- Deviation: move to top so below function can reference
+local HooksDispatcherOnMountInDEV: Dispatcher | nil = nil
+local HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher | nil = nil
+local HooksDispatcherOnUpdateInDEV: Dispatcher | nil = nil
+local HooksDispatcherOnRerenderInDEV: Dispatcher | nil = nil
+local InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher | nil = nil
+local InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher | nil = nil
+local InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher | nil = nil
 
 local function mountHookTypesDev()
   if _G.__DEV__ then
@@ -326,7 +339,7 @@ end
 -- prevDeps: Array<any>?
 local function areHookInputsEqual(
   nextDeps: Array<any>,
-  prevDeps
+  prevDeps: Array<any>
 )
   if _G.__DEV__ then
     if ignorePreviousDependencies then
@@ -424,7 +437,7 @@ exports.resetHooksAfterThrow = function()
     didScheduleRenderPhaseUpdate = false
   end
 
-  _renderLanes = NoLanes
+  renderLanes = NoLanes
   currentlyRenderingFiber = nil
 
   currentHook = nil
@@ -575,144 +588,150 @@ end
 --   return [hook.memoizedState, dispatch]
 -- end
 
--- function updateReducer<S, I, A>(
+-- ROBLOX FIXME: function generics, return type
+-- useReducer<S, I, A>(
 --   reducer: (S, A) => S,
 --   initialArg: I,
 --   init?: I => S,
--- ): [S, Dispatch<A>] {
+-- ): [S, Dispatch<A>]
 function updateReducer(
-  reducer,
-  initialArg,
-  init
-)
-  unimplemented('updateReducer')
---   local hook = updateWorkInProgressHook()
---   local queue = hook.queue
---   invariant(
---     queue ~= nil,
---     'Should have a queue. This is likely a bug in React. Please file an issue.',
---   )
+  reducer: (any, any) -> any,
+  initialArg: any,
+  init: ((any) -> any)?
+): (any, Dispatch<any>)
+  local hook = updateWorkInProgressHook()
+  local queue = hook.queue
+  invariant(
+    queue ~= nil,
+    'Should have a queue. This is likely a bug in React. Please file an issue.'
+  )
 
---   queue.lastRenderedReducer = reducer
+  queue.lastRenderedReducer = reducer
 
---   local current: Hook = (currentHook: any)
+  local current: Hook = currentHook
 
---   -- The last rebase update that is NOT part of the base state.
---   local baseQueue = current.baseQueue
+  -- The last rebase update that is NOT part of the base state.
+  local baseQueue = current.baseQueue
 
---   -- The last pending update that hasn't been processed yet.
---   local pendingQueue = queue.pending
---   if pendingQueue ~= nil)
---     -- We have new updates that haven't been processed yet.
---     -- We'll add them to the base queue.
---     if baseQueue ~= nil)
---       -- Merge the pending queue and the base queue.
---       local baseFirst = baseQueue.next
---       local pendingFirst = pendingQueue.next
---       baseQueue.next = pendingFirst
---       pendingQueue.next = baseFirst
---     end
---     if _G.__DEV__ then
---       if current.baseQueue ~= baseQueue)
---         -- Internal invariant that should never happen, but feasibly could in
---         -- the future if we implement resuming, or some form of that.
---         console.error(
---           'Internal error: Expected work-in-progress queue to be a clone. ' +
---             'This is a bug in React.',
---         )
---       end
---     end
---     current.baseQueue = baseQueue = pendingQueue
---     queue.pending = nil
---   end
+  -- The last pending update that hasn't been processed yet.
+  local pendingQueue = queue.pending
+  if pendingQueue ~= nil then
+    -- We have new updates that haven't been processed yet.
+    -- We'll add them to the base queue.
+    if baseQueue ~= nil then
+      -- Merge the pending queue and the base queue.
+      local baseFirst = baseQueue.next
+      local pendingFirst = pendingQueue.next
+      baseQueue.next = pendingFirst
+      pendingQueue.next = baseFirst
+    end
+    if _G.__DEV__ then
+      if current.baseQueue ~= baseQueue then
+        -- Internal invariant that should never happen, but feasibly could in
+        -- the future if we implement resuming, or some form of that.
+        console.error(
+          'Internal error: Expected work-in-progress queue to be a clone. ' ..
+            'This is a bug in React.'
+        )
+      end
+    end
+    baseQueue = pendingQueue
+    current.baseQueue = baseQueue
+    queue.pending = nil
+  end
 
---   if baseQueue ~= nil)
---     -- We have a queue to process.
---     local first = baseQueue.next
---     local newState = current.baseState
+  if baseQueue ~= nil then
+    -- We have a queue to process.
+    local first = baseQueue.next
+    local newState = current.baseState
 
---     local newBaseState = nil
---     local newBaseQueueFirst = nil
---     local newBaseQueueLast = nil
---     local update = first
---     do {
---       local updateLane = update.lane
---       if !isSubsetOfLanes(renderLanes, updateLane))
---         -- Priority is insufficient. Skip this update. If this is the first
---         -- skipped update, the previous update/state is the new base
---         -- update/state.
---         local clone: Update<S, A> = {
---           lane: updateLane,
---           action: update.action,
---           eagerReducer: update.eagerReducer,
---           eagerState: update.eagerState,
---           next: (null: any),
---         end
---         if newBaseQueueLast == nil)
---           newBaseQueueFirst = newBaseQueueLast = clone
---           newBaseState = newState
---         } else {
---           newBaseQueueLast = newBaseQueueLast.next = clone
---         end
---         -- Update the remaining priority in the queue.
---         -- TODO: Don't need to accumulate this. Instead, we can remove
---         -- renderLanes from the original lanes.
---         currentlyRenderingFiber.lanes = mergeLanes(
---           currentlyRenderingFiber.lanes,
---           updateLane,
---         )
---         markSkippedUpdateLanes(updateLane)
---       } else {
---         -- This update does have sufficient priority.
+    local newBaseState = nil
+    local newBaseQueueFirst = nil
+    local newBaseQueueLast = nil
+    local update = first
+    repeat
+      local updateLane = update.lane
+      if not isSubsetOfLanes(renderLanes, updateLane) then
+        -- Priority is insufficient. Skip this update. If this is the first
+        -- skipped update, the previous update/state is the new base
+        -- update/state.
+        local clone: Update<any, any> = {
+          lane= updateLane,
+          action= update.action,
+          eagerReducer= update.eagerReducer,
+          eagerState= update.eagerState,
+          next= nil,
+        }
+        if newBaseQueueLast == nil then
+          newBaseQueueLast = clone
+          newBaseQueueFirst = newBaseQueueLast
+          newBaseState = newState
+        else
+          newBaseQueueLast.next = clone
+          newBaseQueueLast = newBaseQueueLast.next
+        end
+        -- Update the remaining priority in the queue.
+        -- TODO: Don't need to accumulate this. Instead, we can remove
+        -- renderLanes from the original lanes.
+        currentlyRenderingFiber.lanes = mergeLanes(
+          currentlyRenderingFiber.lanes,
+          updateLane
+        )
+        markSkippedUpdateLanes(updateLane)
+      else
+        -- This update does have sufficient priority.
 
---         if newBaseQueueLast ~= nil)
---           local clone: Update<S, A> = {
---             -- This update is going to be committed so we never want uncommit
---             -- it. Using NoLane works because 0 is a subset of all bitmasks, so
---             -- this will never be skipped by the check above.
---             lane: NoLane,
---             action: update.action,
---             eagerReducer: update.eagerReducer,
---             eagerState: update.eagerState,
---             next: (null: any),
---           end
---           newBaseQueueLast = newBaseQueueLast.next = clone
---         end
+        if newBaseQueueLast ~= nil then
+          local clone: Update<any, any> = {
+            -- This update is going to be committed so we never want uncommit
+            -- it. Using NoLane works because 0 is a subset of all bitmasks, so
+            -- this will never be skipped by the check above.
+            lane = NoLane,
+            action= update.action,
+            eagerReducer= update.eagerReducer,
+            eagerState= update.eagerState,
+            next= nil
+          }
+          newBaseQueueLast.next = clone
+          newBaseQueueLast = newBaseQueueLast.next
+        end
 
---         -- Process this update.
---         if update.eagerReducer == reducer)
---           -- If this update was processed eagerly, and its reducer matches the
---           -- current reducer, we can use the eagerly computed state.
---           newState = ((update.eagerState: any): S)
---         } else {
---           local action = update.action
---           newState = reducer(newState, action)
---         end
---       end
---       update = update.next
---     } while (update ~= nil and update ~= first)
+        -- Process this update.
+        if update.eagerReducer == reducer then
+          -- If this update was processed eagerly, and its reducer matches the
+          -- current reducer, we can use the eagerly computed state.
+          newState = update.eagerState
+        else
+          local action = update.action
+          newState = reducer(newState, action)
+        end
+      end
+      update = update.next
+    until update == nil or update == first
 
---     if newBaseQueueLast == nil)
---       newBaseState = newState
---     } else {
---       newBaseQueueLast.next = (newBaseQueueFirst: any)
---     end
+    if newBaseQueueLast == nil then
+      newBaseState = newState
+    else
+      newBaseQueueLast.next = newBaseQueueFirst
+    end
 
---     -- Mark that the fiber performed work, but only if the new state is
---     -- different from the current state.
---     if !is(newState, hook.memoizedState))
---       markWorkInProgressReceivedUpdate()
---     end
+    -- Mark that the fiber performed work, but only if the new state is
+    -- different from the current state.
+    if not is(newState, hook.memoizedState) then
+      markWorkInProgressReceivedUpdate()
+    end
 
---     hook.memoizedState = newState
---     hook.baseState = newBaseState
---     hook.baseQueue = newBaseQueueLast
+    hook.memoizedState = newState
+    hook.baseState = newBaseState
+    hook.baseQueue = newBaseQueueLast
 
---     queue.lastRenderedState = newState
---   end
+    queue.lastRenderedState = newState
+  end
 
---   local dispatch: Dispatch<A> = (queue.dispatch: any)
---   return [hook.memoizedState, dispatch]
+  -- ROBLOX TODO: dispatch type Dispatch<A>
+  local dispatch = queue.dispatch
+  -- deviation: Lua version of useState and useReducer return two items, not list like upstream
+  return hook.memoizedState, dispatch
 end
 
 -- function rerenderReducer<S, I, A>(
@@ -721,58 +740,57 @@ end
 --   init?: I => S,
 -- ): [S, Dispatch<A>] {
 function rerenderReducer(
-  reducer,
+  reducer: (any, any) -> any,
   initialArg,
-  init
-)
-  unimplemented("rerenderReducer")
---   local hook = updateWorkInProgressHook()
---   local queue = hook.queue
---   invariant(
---     queue ~= nil,
---     'Should have a queue. This is likely a bug in React. Please file an issue.',
---   )
+  init: ((any) -> any)?
+): (any, Dispatch<any>)
+  local hook = updateWorkInProgressHook()
+  local queue = hook.queue
+  invariant(
+    queue ~= nil,
+    'Should have a queue. This is likely a bug in React. Please file an issue.'
+  )
 
---   queue.lastRenderedReducer = reducer
+  queue.lastRenderedReducer = reducer
 
---   -- This is a re-render. Apply the new render phase updates to the previous
---   -- work-in-progress hook.
---   local dispatch: Dispatch<A> = (queue.dispatch: any)
---   local lastRenderPhaseUpdate = queue.pending
---   local newState = hook.memoizedState
---   if lastRenderPhaseUpdate ~= nil)
---     -- The queue doesn't persist past this render pass.
---     queue.pending = nil
+  -- This is a re-render. Apply the new render phase updates to the previous
+  -- work-in-progress hook.
+  local dispatch: Dispatch<any> = queue.dispatch
+  local lastRenderPhaseUpdate = queue.pending
+  local newState = hook.memoizedState
+  if lastRenderPhaseUpdate ~= nil then
+    -- The queue doesn't persist past this render pass.
+    queue.pending = nil
 
---     local firstRenderPhaseUpdate = lastRenderPhaseUpdate.next
---     local update = firstRenderPhaseUpdate
---     do {
---       -- Process this render phase update. We don't have to check the
---       -- priority because it will always be the same as the current
---       -- render's.
---       local action = update.action
---       newState = reducer(newState, action)
---       update = update.next
---     } while (update ~= firstRenderPhaseUpdate)
+    local firstRenderPhaseUpdate = lastRenderPhaseUpdate.next
+    local update = firstRenderPhaseUpdate
+    repeat
+      -- Process this render phase update. We don't have to check the
+      -- priority because it will always be the same as the current
+      -- render's.
+      local action = update.action
+      newState = reducer(newState, action)
+      update = update.next
+    until update == firstRenderPhaseUpdate
 
---     -- Mark that the fiber performed work, but only if the new state is
---     -- different from the current state.
---     if !is(newState, hook.memoizedState))
---       markWorkInProgressReceivedUpdate()
---     end
+    -- Mark that the fiber performed work, but only if the new state is
+    -- different from the current state.
+    if not is(newState, hook.memoizedState) then
+      markWorkInProgressReceivedUpdate()
+    end
 
---     hook.memoizedState = newState
---     -- Don't persist the state accumulated from the render phase updates to
---     -- the base state unless the queue is empty.
---     -- TODO: Not sure if this is the desired semantics, but it's what we
---     -- do for gDSFP. I can't remember why.
---     if hook.baseQueue == nil)
---       hook.baseState = newState
---     end
+    hook.memoizedState = newState
+    -- Don't persist the state accumulated from the render phase updates to
+    -- the base state unless the queue is empty.
+    -- TODO: Not sure if this is the desired semantics, but it's what we
+    -- do for gDSFP. I can't remember why.
+    if hook.baseQueue == nil then
+      hook.baseState = newState
+    end
 
---     queue.lastRenderedState = newState
---   end
---   return [newState, dispatch]
+    queue.lastRenderedState = newState
+  end
+  return newState, dispatch
 end
 
 -- type MutableSourceMemoizedState<Source, Snapshot> = {|
@@ -1049,53 +1067,58 @@ end
 --   return useMutableSource(hook, source, getSnapshot, subscribe)
 -- end
 
+-- ROBLOX FIXME: Luau function generics and return type
 -- function mountState<S>(
 --   initialState: (() => S) | S,
--- ): [S, Dispatch<BasicStateAction<S>>] {
+-- ): [S, Dispatch<BasicStateAction<S>>]
 function mountState(
-  initialState
-)
-  unimplemented("mountState")
--- local hook = mountWorkInProgressHook()
-  -- if typeof(initialState) == 'function' then
-  --   -- $FlowFixMe: Flow doesn't like mixed types
-  --   initialState = initialState()
-  -- end
-  -- hook.baseState = initialState
-  -- hook.memoizedState = hook.baseState
-  -- hook.queue = {
-  --   pending = nil,
-  --   dispatch = nil,
-  --   lastRenderedReducer = basicStateReducer,
-  --   lastRenderedState = initialState
-  -- }
-  -- local queue = hook.queue
-  -- queue.dispatch = dispatchAction.bind(
-  --   nil,
-  --   currentlyRenderingFiber,
-  --   queue
-  -- )
-  -- local dispatch = queue.dispatch
-  -- return {hook.memoizedState, dispatch}
+  initialState: (() -> any) | any
+): (any, Dispatch<BasicStateAction<any>>)
+  local hook = mountWorkInProgressHook()
+  if typeof(initialState) == 'function' then
+    -- $FlowFixMe: Flow doesn't like mixed types
+    -- deviation: workaround to silence cli analyze not understanding that we've already verified initialState is a function
+    local initialStateAsFunction: () -> any = initialState
+    initialState = initialStateAsFunction()
+  end
+  hook.baseState = initialState
+  hook.memoizedState = hook.baseState
+  hook.queue = {
+    pending = nil,
+    dispatch = nil,
+    lastRenderedReducer = basicStateReducer,
+    lastRenderedState = initialState
+  }
+  local queue = hook.queue
+
+  -- deviation: set currentlyRenderingFiber to a local varible so it doesn't change
+  -- by call time
+  local cRF = currentlyRenderingFiber
+  queue.dispatch = function(...)
+    return dispatchAction(cRF, queue, (...))
+  end
+  local dispatch = queue.dispatch
+  -- deviation: Lua version of useState and useReducer return two items, not list like upstream
+  return hook.memoizedState, dispatch
 end
 
+-- ROBLOX FIXME: Luau function generics and return type
 -- function updateState<S>(
 --   initialState: (() => S) | S,
--- ): [S, Dispatch<BasicStateAction<S>>] {
+-- ): [S, Dispatch<BasicStateAction<S>>]
 function updateState(
   initialState: (() -> any) | any
-)
-  unimplemented("updateState")
+): (any, Dispatch<BasicStateAction<any>>)
   return updateReducer(basicStateReducer, initialState)
 end
 
+-- ROBLOX FIXME: Luau function generics and return type
 -- function rerenderState<S>(
 --   initialState: (() => S) | S,
--- ): [S, Dispatch<BasicStateAction<S>>] {
+-- ): [S, Dispatch<BasicStateAction<S>>]
 function rerenderState(
   initialState: (() -> any) | any
-)
-  unimplemented("rerenderState")
+): (any, Dispatch<BasicStateAction<any>>)
   return rerenderReducer(basicStateReducer, initialState)
 end
 
@@ -1129,6 +1152,23 @@ local function pushEffect(tag, create, destroy, deps)
     end
   end
   return effect
+end
+
+-- function mountRef<T>(initialValue: T): {|current: T|} {
+function mountRef(initialValue): {current: any}
+  local hook = mountWorkInProgressHook()
+  local ref = {current = initialValue}
+  -- if (__DEV__) then
+  --   Object.seal(ref)
+  -- end
+  hook.memoizedState = ref
+  return ref
+end
+
+-- function updateRef<T>(initialValue: T): {|current: T|} {
+function updateRef(initialValue): {current: any}
+  local hook = updateWorkInProgressHook()
+  return hook.memoizedState
 end
 
 local function mountEffectImpl(fiberFlags, hookFlags, create, deps)
@@ -1180,9 +1220,9 @@ local function mountEffect(
   deps: Array<any>?
 )
   if _G.__DEV__ then
-    -- deviation: use TestEZ's __TESTEZ_RUNNING_TEST__ (no jest global)
+    -- deviation: use TestEZ's __TESTEZ_RUNNING_TEST__ as well as jest
     -- $FlowExpectedError - jest isn't a global, and isn't recognized outside of tests
-    if _G.__TESTEZ_RUNNING_TEST__ then
+    if typeof(_G.jest) ~= "nil" or _G.__TESTEZ_RUNNING_TEST__ then
       warn("Skip warnIfNotCurrentlyActingEffectsInDEV (creates cycles)")
       -- warnIfNotCurrentlyActingEffectsInDEV(currentlyRenderingFiber)
     end
@@ -1210,9 +1250,9 @@ local function updateEffect(
   deps: Array<any>?
 )
   if _G.__DEV__ then
-    -- deviation: use TestEZ's __TESTEZ_RUNNING_TEST__ (no jest global)
+    -- deviation: use TestEZ's __TESTEZ_RUNNING_TEST__ in addition to jest
     -- $FlowExpectedError - jest isn't a global, and isn't recognized outside of tests
-    if _G.__TESTEZ_RUNNING_TEST__ then
+    if typeof(_G.jest) ~= "nil" or _G.__TESTEZ_RUNNING_TEST__ then
       warn("Skip warnIfNotCurrentlyActingEffectsInDEV (creates cycles)")
       -- warnIfNotCurrentlyActingEffectsInDEV(currentlyRenderingFiber)
     end
@@ -1248,98 +1288,145 @@ local function updateLayoutEffect(
   return updateEffectImpl(UpdateEffect, HookLayout, create, deps)
 end
 
+-- ROBLOX FIXME: Luau function generics imperativeHandleEffect<T>
 -- function imperativeHandleEffect<T>(
 --   create: () => T,
---   ref: {|current: T | nil|} | ((inst: T | nil) => mixed) | nil,
+--   ref: {|current: T | null|} | ((inst: T | null) => mixed) | null | void,
 -- )
---   if typeof ref == 'function')
---     local refCallback = ref
---     local inst = create()
---     refCallback(inst)
---     return () => {
---       refCallback(null)
---     end
---   } else if ref ~= nil and ref ~= undefined)
---     local refObject = ref
---     if _G.__DEV__ then
---       if !refObject.hasOwnProperty('current'))
---         console.error(
---           'Expected useImperativeHandle() first argument to either be a ' +
---             'ref callback or React.createRef() object. Instead received: %s.',
---           'an object with keys {' + Object.keys(refObject).join(', ') + '}',
---         )
---       end
---     end
---     local inst = create()
---     refObject.current = inst
---     return () => {
---       refObject.current = nil
---     end
---   end
--- end
+function imperativeHandleEffect(
+  create: () -> any,
+  ref: {current: any | nil} | (any | nil) -> (any) | nil
+)
+  if typeof(ref) == 'function' then
+    local refCallback = ref
+    local inst = create()
+    refCallback(inst)
+    return function()
+      return refCallback(nil)
+    end
+  elseif ref ~= nil then
+    local refObject = ref
+    -- ROBLOX deviation: can't check for key presence because nil is a legitimate value.
+    -- if _G.__DEV__ then
+    --   -- ROBLOX FIXME: upstream uses hasOwnProperty, is this an OK translation?
+    --   if rawget(refObject, 'current') == nil then
+    --     local keyset = {}
+    --     local n = 0
+    --     for k, _ in pairs(refObject) do
+    --       n = n + 1
+    --       keyset[n]=k
+    --     end
+    --     console.error(
+    --       'Expected useImperativeHandle() first argument to either be a ' ..
+    --         'ref callback or React.createRef() object. Instead received: %s.',
+    --       'an object with keys {' .. table.concat(keyset, ", ") .. '}'
+    --     )
+    --   end
+    -- end
+    local inst = create()
+    refObject.current = inst
+    return function()
+      refObject.current = nil
+    end
+  -- deviation: explicit return to silence analyze
+  else
+    return
+  end
+end
 
+-- ROBLOX FIXME: function generics mountImperativeHandle<T>
 -- function mountImperativeHandle<T>(
---   ref: {|current: T | nil|} | ((inst: T | nil) => mixed) | nil,
+--   ref: {|current: T | null|} | ((inst: T | null) => mixed) | null | void,
 --   create: () => T,
---   deps: Array<any> | nil,
--- ): void {
---   if _G.__DEV__ then
---     if typeof create ~= 'function')
---       console.error(
---         'Expected useImperativeHandle() second argument to be a function ' +
---           'that creates a handle. Instead received: %s.',
---         create ~= nil ? typeof create : 'null',
---       )
---     end
---   end
+--   deps: Array<mixed> | void | null,
+-- ): void
+function mountImperativeHandle(
+  ref: {current: any | nil} | (any | nil) -> (any) | nil,
+  create: () -> any,
+  deps: {any?}?
+)
+  if _G.__DEV__ then
+    if typeof(create) ~= 'function' then
+      local errorArg = 'nil'
+      if create then
+        errorArg = typeof(create)
+      end
+      console.error(
+        'Expected useImperativeHandle() second argument to be a function ' ..
+          'that creates a handle. Instead received: %s.',
+        errorArg
+      )
+    end
+  end
+  -- TODO: If deps are provided, should we skip comparing the ref itself?
+  -- deviation: ternary turned to explicit if/else
+  local effectDeps
+  if deps ~= nil then
+    effectDeps = Cryo.List.join(deps, {ref})
+  end
 
---   -- TODO: If deps are provided, should we skip comparing the ref itself?
---   local effectDeps =
---     deps ~= nil and deps ~= undefined ? deps.concat([ref]) : nil
+  if _G.__DEV__ and enableDoubleInvokingEffects then
+    return mountEffectImpl(
+      bit32.bor(MountLayoutDevEffect, UpdateEffect),
+      HookLayout,
+      function()
+        return imperativeHandleEffect(create, ref)
+      end,
+      effectDeps
+    )
+  else
+    return mountEffectImpl(
+      UpdateEffect,
+      HookLayout,
+      function()
+        return imperativeHandleEffect(create, ref)
+      end,
+      effectDeps
+    )
+  end
+end
 
---   if _G.__DEV__ and enableDoubleInvokingEffects)
---     return mountEffectImpl(
---       MountLayoutDevEffect | UpdateEffect,
---       HookLayout,
---       imperativeHandleEffect.bind(null, create, ref),
---       effectDeps,
---     )
---   } else {
---     return mountEffectImpl(
---       UpdateEffect,
---       HookLayout,
---       imperativeHandleEffect.bind(null, create, ref),
---       effectDeps,
---     )
---   end
--- end
-
+-- ROBLOX FIXME: function generics updateImperativeHandle<T>
 -- function updateImperativeHandle<T>(
---   ref: {|current: T | nil|} | ((inst: T | nil) => mixed) | nil,
+--   ref: {|current: T | null|} | ((inst: T | null) => mixed) | null | void,
 --   create: () => T,
---   deps: Array<any> | nil,
--- ): void {
---   if _G.__DEV__ then
---     if typeof create ~= 'function')
---       console.error(
---         'Expected useImperativeHandle() second argument to be a function ' +
---           'that creates a handle. Instead received: %s.',
---         create ~= nil ? typeof create : 'null',
---       )
---     end
---   end
+--   deps: Array<mixed> | void | null,
+-- ): void
+function updateImperativeHandle(
+  ref: {current: any | nil} | (any | nil) -> (any) | nil,
+  create: () -> any,
+  deps: Array<any> | nil
+)
+  if _G.__DEV__ then
+    if typeof(create) ~= 'function' then
+      local errorArg = 'nil'
+      if create then
+        errorArg = typeof(create)
+      end
+      console.error(
+        'Expected useImperativeHandle() second argument to be a function ' +
+          'that creates a handle. Instead received: %s.',
+          errorArg
+      )
+    end
+  end
 
---   -- TODO: If deps are provided, should we skip comparing the ref itself?
---   local effectDeps =
---     deps ~= nil and deps ~= undefined ? deps.concat([ref]) : nil
+  -- TODO: If deps are provided, should we skip comparing the ref itself?
+  -- deviation: ternary turned to explicit if/else
+  local effectDeps
+  if deps ~= nil then
+    effectDeps = Cryo.List.join(deps, {ref})
+  end
 
---   return updateEffectImpl(
---     UpdateEffect,
---     HookLayout,
---     imperativeHandleEffect.bind(null, create, ref),
---     effectDeps,
---   )
--- end
+  return updateEffectImpl(
+    UpdateEffect,
+    HookLayout,
+    function()
+      return imperativeHandleEffect(create, ref)
+    end,
+    effectDeps
+  )
+end
 
 function mountDebugValue(value, formatterFn: nil | (any) -> any)
   -- This hook is normally a no-op.
@@ -1362,7 +1449,8 @@ function updateCallback(callback, deps: Array<any> | nil)
   local prevState = hook.memoizedState
   if prevState ~= nil then
     if nextDeps ~= nil then
-      local prevDeps: Array<any> | nil = prevState[1]
+      -- ROBLOX TODO: Luau false positive when this is `Array<any>?` (E001) Type 'Array<any>?' could not be converted into 'Array<any>'
+      local prevDeps: Array<any> = prevState[2]
       if areHookInputsEqual(nextDeps, prevDeps) then
         return prevState[1]
       end
@@ -1633,121 +1721,139 @@ end
 --   return id
 -- end
 
+-- ROBLOX FIXME: Luau function generics
 -- function dispatchAction<S, A>(
 --   fiber: Fiber,
 --   queue: UpdateQueue<S, A>,
 --   action: A,
 -- )
--- function dispatchAction(
---   fiber: Fiber,
---   queue,
---   action
--- )
---   unimplemented('dispatchAction')
-  -- if _G.__DEV__ then
-  --   if typeof(arguments[3]) == 'function' then
-  --     console.error(
-  --       "State updates from the useState() and useReducer() Hooks don't support the " +
-  --         'second callback argument. To execute a side effect after ' +
-  --         'rendering, declare it in the component body with useEffect().',
-  --     )
-  --   end
-  -- end
+function dispatchAction(
+  fiber: Fiber,
+  queue: UpdateQueue<any,any>,
+  action: any,
+  extraArg: any?
+)
+  -- deviation: use extraArg to catch if call was given an extra vs counting total args as upstream does
+  if _G.__DEV__ then
+    if typeof(extraArg) == 'function' then
+      console.error(
+        "State updates from the useState() and useReducer() Hooks don't support the " ..
+          'second callback argument. To execute a side effect after ' ..
+          'rendering, declare it in the component body with useEffect().'
+      )
+    end
+  end
 
---   local eventTime = requestEventTime()
---   local lane = requestUpdateLane(fiber)
+  local eventTime = requestEventTime()
+  local lane = requestUpdateLane(fiber)
 
---   local update: Update<S, A> = {
---     lane,
---     action,
---     eagerReducer: nil,
---     eagerState: nil,
---     next: (null: any),
---   end
+  local update: Update<any, any> = {
+    lane = lane,
+    action = action,
+    eagerReducer = nil,
+    eagerState = nil,
+    next = nil
+  }
 
---   -- Append the update to the end of the list.
---   local pending = queue.pending
---   if pending == nil)
---     -- This is the first update. Create a circular list.
---     update.next = update
---   } else {
---     update.next = pending.next
---     pending.next = update
---   end
---   queue.pending = update
+  -- Append the update to the end of the list.
+  local pending = queue.pending
+  if pending == nil then
+    -- This is the first update. Create a circular list.
+    update.next = update
+  else
+    update.next = pending.next
+    pending.next = update
+  end
+  queue.pending = update
 
---   local alternate = fiber.alternate
---   if
---     fiber == currentlyRenderingFiber or
---     (alternate ~= nil and alternate == currentlyRenderingFiber)
---   )
---     -- This is a render phase update. Stash it in a lazily-created map of
---     -- queue -> linked list of updates. After this render pass, we'll restart
---     -- and apply the stashed updates on top of the work-in-progress hook.
---     didScheduleRenderPhaseUpdateDuringThisPass = didScheduleRenderPhaseUpdate = true
---   } else {
---     if
---       fiber.lanes == NoLanes and
---       (alternate == nil or alternate.lanes == NoLanes)
---     )
---       -- The queue is currently empty, which means we can eagerly compute the
---       -- next state before entering the render phase. If the new state is the
---       -- same as the current state, we may be able to bail out entirely.
---       local lastRenderedReducer = queue.lastRenderedReducer
---       if lastRenderedReducer ~= nil)
---         local prevDispatcher
---         if _G.__DEV__ then
---           prevDispatcher = ReactCurrentDispatcher.current
---           ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV
---         end
---         try {
---           local currentState: S = (queue.lastRenderedState: any)
---           local eagerState = lastRenderedReducer(currentState, action)
---           -- Stash the eagerly computed state, and the reducer used to compute
---           -- it, on the update object. If the reducer hasn't changed by the
---           -- time we enter the render phase, then the eager state can be used
---           -- without calling the reducer again.
---           update.eagerReducer = lastRenderedReducer
---           update.eagerState = eagerState
---           if is(eagerState, currentState))
---             -- Fast path. We can bail out without scheduling React to re-render.
---             -- It's still possible that we'll need to rebase this update later,
---             -- if the component re-renders for a different reason and by that
---             -- time the reducer has changed.
---             return
---           end
---         } catch (error)
---           -- Suppress the error. It will throw again in the render phase.
---         } finally {
---           if _G.__DEV__ then
---             ReactCurrentDispatcher.current = prevDispatcher
---           end
---         end
---       end
---     end
---     if _G.__DEV__ then
---       -- $FlowExpectedError - jest isn't a global, and isn't recognized outside of tests
---       if typeof jest ~= 'undefined')
---         warnIfNotScopedWithMatchingAct(fiber)
---         warnIfNotCurrentlyActingUpdatesInDev(fiber)
---       end
---     end
---     scheduleUpdateOnFiber(fiber, lane, eventTime)
---   end
+  local alternate = fiber.alternate
+  if
+    fiber == currentlyRenderingFiber or
+    (alternate ~= nil and alternate == currentlyRenderingFiber)
+  then
+    -- This is a render phase update. Stash it in a lazily-created map of
+    -- queue -> linked list of updates. After this render pass, we'll restart
+    -- and apply the stashed updates on top of the work-in-progress hook.
+    didScheduleRenderPhaseUpdate = true
+    didScheduleRenderPhaseUpdateDuringThisPass = true
+  else
+    if
+      fiber.lanes == NoLanes and
+      (alternate == nil or alternate.lanes == NoLanes)
+    then
+      -- The queue is currently empty, which means we can eagerly compute the
+      -- next state before entering the render phase. If the new state is the
+      -- same as the current state, we may be able to bail out entirely.
+      local lastRenderedReducer = queue.lastRenderedReducer
+      if lastRenderedReducer ~= nil then
+        local prevDispatcher
+        if _G.__DEV__ then
+          prevDispatcher = ReactCurrentDispatcher.current
+          ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV
+        end
+        local ok, result = pcall(function()
+          local currentState = queue.lastRenderedState
+          local eagerState = lastRenderedReducer(currentState, action)
+          -- Stash the eagerly computed state, and the reducer used to compute
+          -- it, on the update object. If the reducer hasn't changed by the
+          -- time we enter the render phase, then the eager state can be used
+          -- without calling the reducer again.
+          update.eagerReducer = lastRenderedReducer
+          update.eagerState = eagerState
+          if is(eagerState, currentState) then
+            -- Fast path. We can bail out without scheduling React to re-render.
+            -- It's still possible that we'll need to rebase this update later,
+            -- if the component re-renders for a different reason and by that
+            -- time the reducer has changed.
 
---   if _G.__DEV__ then
---     if enableDebugTracing)
---       if fiber.mode & DebugTracingMode)
---         local name = getComponentName(fiber.type) or 'Unknown'
---         logStateUpdateScheduled(name, lane, action)
---       end
---     end
---   end
+            -- deviation: workaround for pcall() format
+            return "Bail"
+          -- deviation: explicit return to silence analyze
+          end
+          return
+        end)
+        -- Finally
+        if _G.__DEV__ then
+          ReactCurrentDispatcher.current = prevDispatcher
+        end
+        if ok and result == "Bail" then
+          return
+        elseif ok then
+          -- Left pcall without error, don't return
+        else
+          -- Catch
+          -- Suppress the error. It will throw again in the render phase.
+        end
+      end
+    end
+    if _G.__DEV__ then
+      -- $FlowExpectedError - jest isn't a global, and isn't recognized outside of tests
+      -- deviation: use TestEZ's __TESTEZ_RUNNING_TEST__ as well as jest
+      if typeof(_G.jest) ~= "nil" or _G.__TESTEZ_RUNNING_TEST__ then
+        warnIfNotScopedWithMatchingAct(fiber)
+        warnIfNotCurrentlyActingUpdatesInDev(fiber)
+      end
+    end
+    scheduleUpdateOnFiber(fiber, lane, eventTime)
+  end
 
---   if enableSchedulingProfiler)
---     markStateUpdateScheduled(fiber, lane)
---   end
--- end
+  if _G.__DEV__ then
+    if enableDebugTracing then
+      if bit32.band(fiber.mode, DebugTracingMode) ~= 0 then
+        local _name = getComponentName(fiber.type) or 'Unknown'
+        warn("Skip unimplemented: logStateUpdateScheduled")
+        -- logStateUpdateScheduled(name, lane, action)
+      end
+    end
+  end
+
+  if enableSchedulingProfiler then
+    unimplemented("scheduling profiler logic")
+    -- markStateUpdateScheduled(fiber, lane)
+  end
+
+  return
+end
 
 -- deviation: Move these to the top so they're in scope for above functions
 local ContextOnlyDispatcher: Dispatcher = {
@@ -1778,11 +1884,11 @@ local HooksDispatcherOnMount: Dispatcher = {
   useCallback = mountCallback,
   useContext = readContext,
   useEffect = mountEffect,
-  -- useImperativeHandle = mountImperativeHandle,
+  useImperativeHandle = mountImperativeHandle,
   useLayoutEffect = mountLayoutEffect,
   -- useMemo = mountMemo,
   -- useReducer = mountReducer,
-  -- useRef = mountRef,
+  useRef = mountRef,
   useState = mountState,
   -- useDebugValue = mountDebugValue,
   -- useDeferredValue = mountDeferredValue,
@@ -1799,11 +1905,11 @@ local HooksDispatcherOnUpdate: Dispatcher = {
   useCallback = updateCallback,
   useContext = readContext,
   useEffect = updateEffect,
-  -- useImperativeHandle = updateImperativeHandle,
+  useImperativeHandle = updateImperativeHandle,
   useLayoutEffect = updateLayoutEffect,
   -- useMemo = updateMemo,
   -- useReducer = updateReducer,
-  -- useRef = updateRef,
+  useRef = updateRef,
   useState = updateState,
   useDebugValue = updateDebugValue,
   -- useDeferredValue = updateDeferredValue,
@@ -1817,14 +1923,14 @@ local HooksDispatcherOnUpdate: Dispatcher = {
 local HooksDispatcherOnRerender: Dispatcher = {
   readContext = readContext,
 
-  -- useCallback = updateCallback,
+  useCallback = updateCallback,
   useContext = readContext,
   useEffect = updateEffect,
-  -- useImperativeHandle = updateImperativeHandle,
+  useImperativeHandle = updateImperativeHandle,
   useLayoutEffect = updateLayoutEffect,
   -- useMemo = updateMemo,
-  -- useReducer = rerenderReducer,
-  -- useRef = updateRef,
+  useReducer = rerenderReducer,
+  useRef = updateRef,
   useState = rerenderState,
   useDebugValue = updateDebugValue,
   -- useDeferredValue = rerenderDeferredValue,
@@ -1834,14 +1940,6 @@ local HooksDispatcherOnRerender: Dispatcher = {
 
   unstable_isNewReconciler = enableNewReconciler,
 }
-
-local HooksDispatcherOnMountInDEV: Dispatcher | nil = nil
-local HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher | nil = nil
-local HooksDispatcherOnUpdateInDEV: Dispatcher | nil = nil
-local HooksDispatcherOnRerenderInDEV: Dispatcher | nil = nil
-local _InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher | nil = nil
--- local InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher | nil = nil
-local _InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher | nil = nil
 
 if _G.__DEV__ then
   local warnInvalidContextAccess = function()
@@ -1858,7 +1956,7 @@ if _G.__DEV__ then
       'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks. ' ..
         'You can only call Hooks at the top level of your React function. ' ..
         'For more information, see ' ..
-        'https:--reactjs.org/link/rules-of-hooks'
+        'https://reactjs.org/link/rules-of-hooks'
     )
   end
 
@@ -1892,16 +1990,22 @@ if _G.__DEV__ then
       checkDepsAreArrayDev(deps)
       return mountEffect(create, deps)
     end,
---     useImperativeHandle<T>(
---       ref: {|current: T | nil|} | ((inst: T | nil) => mixed) | nil,
---       create: () => T,
---       deps: Array<any> | nil,
---     ): void {
---       currentHookNameInDev = 'useImperativeHandle'
---       mountHookTypesDev()
---       checkDepsAreArrayDev(deps)
---       return mountImperativeHandle(ref, create, deps)
---     },
+    -- ROBLOX FIXME: function generics
+    -- useImperativeHandle<T>(
+    --   ref: {|current: T | null|} | ((inst: T | null) => mixed) | null | void,
+    --   create: () => T,
+    --   deps: Array<mixed> | void | null,
+    -- ): void
+    useImperativeHandle = function(
+      ref: {current: any | nil} | (any | nil) -> (any) | nil,
+      create: () -> any,
+      deps: Array<any> | nil
+    )
+      currentHookNameInDev = 'useImperativeHandle'
+      mountHookTypesDev()
+      checkDepsAreArrayDev(deps)
+      return mountImperativeHandle(ref, create, deps)
+    end,
     useLayoutEffect = function(
       create: () -> (() -> ())?,
       deps: Array<any>?
@@ -1939,23 +2043,34 @@ if _G.__DEV__ then
 --       end
 --     },
 --     useRef<T>(initialValue: T): {|current: T|} {
---       currentHookNameInDev = 'useRef'
---       mountHookTypesDev()
---       return mountRef(initialValue)
---     },
---     useState<S>(
---       initialState: (() => S) | S,
---     ): [S, Dispatch<BasicStateAction<S>>] {
---       currentHookNameInDev = 'useState'
---       mountHookTypesDev()
---       local prevDispatcher = ReactCurrentDispatcher.current
---       ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnMountInDEV
---       try {
---         return mountState(initialState)
---       } finally {
---         ReactCurrentDispatcher.current = prevDispatcher
---       end
---     },
+    useRef = function(initialValue): {current: any}
+      currentHookNameInDev = 'useRef'
+      mountHookTypesDev()
+      return mountRef(initialValue)
+    end,
+    -- FIXME ROBLOX: Luau function generics and return type
+    -- useState<S>(
+    --   initialState: (() => S) | S,
+    -- ): [S, Dispatch<BasicStateAction<S>>]
+    useState = function(
+      initialState: (() -> any?) | any?
+    ): (any, Dispatch<BasicStateAction<any>>)
+      currentHookNameInDev = 'useState'
+      mountHookTypesDev()
+      local prevDispatcher = ReactCurrentDispatcher.current
+      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnMountInDEV
+      -- deviation: Lua version of mountState return two items, not list like upstream.
+      local ok, result, setResult = pcall(function()
+        return mountState(initialState)
+      end)
+      ReactCurrentDispatcher.current = prevDispatcher
+      if ok then
+        -- deviation: Lua version of useState and useReducer return two items, not list like upstream
+        return result, setResult
+      else
+        error(result)
+      end
+      end,
 --     useDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void {
 --       currentHookNameInDev = 'useDebugValue'
 --       mountHookTypesDev()
@@ -1990,27 +2105,38 @@ if _G.__DEV__ then
   }
 
   HooksDispatcherOnMountWithHookTypesInDEV = {
---     readContext<T>(
---       context: ReactContext<T>,
---       observedBits: number | boolean,
---     ): T {
---       return readContext(context, observedBits)
---     },
+      -- ROBLOX FIXME: Luau function generics and return
+      -- readContext<T>(
+      --   context: ReactContext<T>,
+      --   observedBits: void | number | boolean,
+      -- ): T
+      readContext = function(
+        context: ReactContext<any>,
+        observedBits: number | boolean
+      )
+        return readContext(context, observedBits)
+      end,
+      -- ROBLOX FIXME: Luau function generics and return
+      --     useCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
       useCallback = function(callback, deps: Array<any> | nil): any
         currentHookNameInDev = 'useCallback'
         updateHookTypesDev()
         checkDepsAreArrayDev(deps)
         return mountCallback(callback, deps)
       end,
-
---     useContext<T>(
---       context: ReactContext<T>,
---       observedBits: number | boolean,
---     ): T {
---       currentHookNameInDev = 'useContext'
---       updateHookTypesDev()
---       return readContext(context, observedBits)
---     },
+      -- ROBLOX FIXME: Luau function generics and return type
+      -- useContext<T>(
+      --   context: ReactContext<T>,
+      --   observedBits: void | number | boolean,
+      -- ): T
+      useContext = function(
+        context: ReactContext<any>,
+        observedBits: number | boolean
+      )
+        currentHookNameInDev = 'useContext'
+        updateHookTypesDev()
+        return readContext(context, observedBits)
+      end,
       useEffect = function(
         create: () -> (() -> ())?,
         deps: Array<any>?
@@ -2019,15 +2145,21 @@ if _G.__DEV__ then
         updateHookTypesDev()
         return mountEffect(create, deps)
       end,
---     useImperativeHandle<T>(
---       ref: {|current: T | nil|} | ((inst: T | nil) => mixed) | nil,
---       create: () => T,
---       deps: Array<any> | nil,
---     ): void {
---       currentHookNameInDev = 'useImperativeHandle'
---       updateHookTypesDev()
---       return mountImperativeHandle(ref, create, deps)
---     },
+      -- ROBLOX FIXME: Luau function generics
+      -- useImperativeHandle<T>(
+      --   ref: {|current: T | null|} | ((inst: T | null) => mixed) | null | void,
+      --   create: () => T,
+      --   deps: Array<mixed> | void | null,
+      -- ): void
+      useImperativeHandle = function(
+        ref: {current: any | nil} | (any | nil) -> (any) | nil,
+        create: () -> any,
+        deps: Array<any>?
+      )
+        currentHookNameInDev = 'useImperativeHandle'
+        updateHookTypesDev()
+        return mountImperativeHandle(ref, create, deps)
+      end,
     useLayoutEffect = function(
       create: () -> (() -> ())?,
       deps: Array<any>?
@@ -2067,19 +2199,29 @@ if _G.__DEV__ then
 --       updateHookTypesDev()
 --       return mountRef(initialValue)
 --     },
---     useState<S>(
---       initialState: (() => S) | S,
---     ): [S, Dispatch<BasicStateAction<S>>] {
---       currentHookNameInDev = 'useState'
---       updateHookTypesDev()
---       local prevDispatcher = ReactCurrentDispatcher.current
---       ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnMountInDEV
---       try {
---         return mountState(initialState)
---       } finally {
---         ReactCurrentDispatcher.current = prevDispatcher
---       end
---     },
+    -- FIXME ROBLOX: function generics and return type
+    -- useState<S>(
+    --   initialState: (() => S) | S,
+    -- ): [S, Dispatch<BasicStateAction<S>>]
+    useState = function(
+      initialState: () -> any | any
+    ): (any, Dispatch<BasicStateAction<any>>)
+      currentHookNameInDev = 'useState'
+      updateHookTypesDev()
+      local prevDispatcher = ReactCurrentDispatcher.current
+      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnMountInDEV
+      -- deviation: Lua version of mountState return two items, not list like upstream
+      local ok, result, setResult = pcall(function()
+        return mountState(initialState)
+      end)
+        ReactCurrentDispatcher.current = prevDispatcher
+      if ok then
+        -- deviation: Lua version of mountState return two items, not list like upstream
+        return result, setResult
+      else
+        error(result)
+      end
+    end,
 --     useDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void {
 --       currentHookNameInDev = 'useDebugValue'
 --       updateHookTypesDev()
@@ -2114,25 +2256,37 @@ if _G.__DEV__ then
     }
 
   HooksDispatcherOnUpdateInDEV = {
---     readContext<T>(
---       context: ReactContext<T>,
---       observedBits: number | boolean,
---     ): T {
---       return readContext(context, observedBits)
---     },
+      -- ROBLOX FIXME: Luau function generics and return type
+      -- readContext<T>(
+      --   context: ReactContext<T>,
+      --   observedBits: void | number | boolean,
+      -- ): T
+      readContext = function(
+        context: ReactContext<any>,
+        observedBits: number | boolean
+      )
+        return readContext(context, observedBits)
+      end,
+      -- ROBLOX FIXME: Luau function generics and return
+      --     useCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
       useCallback = function(callback, deps: Array<any> | nil): any
         currentHookNameInDev = 'useCallback'
         updateHookTypesDev()
         return mountCallback(callback, deps)
       end,
---     useContext<T>(
---       context: ReactContext<T>,
---       observedBits: number | boolean,
---     ): T {
---       currentHookNameInDev = 'useContext'
---       updateHookTypesDev()
---       return readContext(context, observedBits)
---     },
+      -- ROBLOX FIXME: Luau function generics and return type
+      -- useContext<T>(
+      --   context: ReactContext<T>,
+      --   observedBits: void | number | boolean,
+      -- ): T
+      useContext = function(
+        context: ReactContext<any>,
+        observedBits: number | boolean | nil
+      )
+        currentHookNameInDev = 'useContext'
+        updateHookTypesDev()
+        return readContext(context, observedBits)
+      end,
       useEffect = function(
         create: () -> (() -> ())?,
         deps: Array<any>?
@@ -2141,15 +2295,21 @@ if _G.__DEV__ then
         updateHookTypesDev()
         return updateEffect(create, deps)
       end,
---     useImperativeHandle<T>(
---       ref: {|current: T | nil|} | ((inst: T | nil) => mixed) | nil,
---       create: () => T,
---       deps: Array<any> | nil,
---     ): void {
---       currentHookNameInDev = 'useImperativeHandle'
---       updateHookTypesDev()
---       return updateImperativeHandle(ref, create, deps)
---     },
+    -- ROBLOX FIXME: function generics
+    -- useImperativeHandle<T>(
+    --   ref: {|current: T | null|} | ((inst: T | null) => mixed) | null | void,
+    --   create: () => T,
+    --   deps: Array<mixed> | void | null,
+    -- ): void
+    useImperativeHandle = function(
+      ref: {current: any | nil} | (any | nil) -> (any) | nil,
+      create: () -> any,
+      deps: Array<any> | nil
+    )
+      currentHookNameInDev = 'useImperativeHandle'
+      updateHookTypesDev()
+      return updateImperativeHandle(ref, create, deps)
+    end,
     useLayoutEffect = function(
       create: () -> (() -> ())?,
       deps: Array<any>?
@@ -2185,23 +2345,34 @@ if _G.__DEV__ then
 --       end
 --     },
 --     useRef<T>(initialValue: T): {|current: T|} {
---       currentHookNameInDev = 'useRef'
---       updateHookTypesDev()
---       return updateRef(initialValue)
---     },
---     useState<S>(
---       initialState: (() => S) | S,
---     ): [S, Dispatch<BasicStateAction<S>>] {
---       currentHookNameInDev = 'useState'
---       updateHookTypesDev()
---       local prevDispatcher = ReactCurrentDispatcher.current
---       ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV
---       try {
---         return updateState(initialState)
---       } finally {
---         ReactCurrentDispatcher.current = prevDispatcher
---       end
---     },
+    useRef = function(initialValue): {current: any}
+      currentHookNameInDev = 'useRef'
+      updateHookTypesDev()
+      return updateRef(initialValue)
+    end,
+    -- FIXME (roblox): function generics and return type
+    -- useState<S>(
+    --   initialState: (() => S) | S,
+    -- ): [S, Dispatch<BasicStateAction<S>>]
+    useState = function(
+      initialState: () -> any | any
+    ): (any, Dispatch<BasicStateAction<any>>)
+      currentHookNameInDev = 'useState'
+      updateHookTypesDev()
+      local prevDispatcher = ReactCurrentDispatcher.current
+      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV
+      -- deviation: Lua version of updateState returns two items, not list like upstream
+      local ok, result, setResult = pcall(function()
+        return updateState(initialState)
+      end)
+        ReactCurrentDispatcher.current = prevDispatcher
+      if ok then
+        -- deviation: Lua version of useState returns two items, not list like upstream
+        return result, setResult
+      else
+        error(result)
+      end
+    end,
 --     useDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void {
 --       currentHookNameInDev = 'useDebugValue'
 --       updateHookTypesDev()
@@ -2236,26 +2407,37 @@ if _G.__DEV__ then
   }
 
   HooksDispatcherOnRerenderInDEV = {
---     readContext<T>(
---       context: ReactContext<T>,
---       observedBits: number | boolean,
---     ): T {
---       return readContext(context, observedBits)
---     },
+      -- ROBLOX FIXME: function generics and return type
+      -- readContext<T>(
+      --   context: ReactContext<T>,
+      --   observedBits: void | number | boolean,
+      -- ): T
+      readContext = function(
+        context: ReactContext<any>,
+        observedBits: number | boolean | nil
+      )
+        return readContext(context, observedBits)
+      end,
+      -- ROBLOX FIXME: Luau function generics and return
+      --     useCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
       useCallback = function(callback, deps: Array<any> | nil): any
         currentHookNameInDev = 'useCallback'
         updateHookTypesDev()
         return mountCallback(callback, deps)
       end,
-
---     useContext<T>(
---       context: ReactContext<T>,
---       observedBits: number | boolean,
---     ): T {
---       currentHookNameInDev = 'useContext'
---       updateHookTypesDev()
---       return readContext(context, observedBits)
---     },
+      -- ROBLOX FIXME: function generics and return type
+      -- useContext<T>(
+      --   context: ReactContext<T>,
+      --   observedBits: void | number | boolean,
+      -- ): T
+      useContext = function(
+        context: ReactContext<any>,
+        observedBits: number | boolean | nil
+      )
+        currentHookNameInDev = 'useContext'
+        updateHookTypesDev()
+        return readContext(context, observedBits)
+      end,
 --     useEffect(
 --       create: () => (() => void),
 --       deps: Array<any> | nil,
@@ -2264,15 +2446,21 @@ if _G.__DEV__ then
 --       updateHookTypesDev()
 --       return updateEffect(create, deps)
 --     },
---     useImperativeHandle<T>(
---       ref: {|current: T | nil|} | ((inst: T | nil) => mixed) | nil,
---       create: () => T,
---       deps: Array<any> | nil,
---     ): void {
---       currentHookNameInDev = 'useImperativeHandle'
---       updateHookTypesDev()
---       return updateImperativeHandle(ref, create, deps)
---     },
+    -- ROBLOX FIXME: function generics and return type useImperativeHandle<T>()
+    -- useImperativeHandle<T>(
+    --   ref: {|current: T | null|} | ((inst: T | null) => mixed) | null | void,
+    --   create: () => T,
+    --   deps: Array<mixed> | void | null,
+    -- ): void
+    useImperativeHandle = function(
+      ref: {current: any | nil} | (any | nil) -> (any) | nil,
+      create: () -> any,
+      deps: Array<any>?
+    )
+      currentHookNameInDev = 'useImperativeHandle'
+      updateHookTypesDev()
+      return updateImperativeHandle(ref, create, deps)
+    end,
     useLayoutEffect = function(
       create: () -> (() -> ())?,
       deps: Array<any>?
@@ -2280,7 +2468,7 @@ if _G.__DEV__ then
       currentHookNameInDev = 'useLayoutEffect'
       updateHookTypesDev()
       return updateLayoutEffect(create, deps)
-  end
+    end,
 --     useMemo<T>(create: () => T, deps: Array<any> | nil): T {
 --       currentHookNameInDev = 'useMemo'
 --       updateHookTypesDev()
@@ -2307,24 +2495,35 @@ if _G.__DEV__ then
 --         ReactCurrentDispatcher.current = prevDispatcher
 --       end
 --     },
---     useRef<T>(initialValue: T): {|current: T|} {
---       currentHookNameInDev = 'useRef'
---       updateHookTypesDev()
---       return updateRef(initialValue)
---     },
---     useState<S>(
---       initialState: (() => S) | S,
---     ): [S, Dispatch<BasicStateAction<S>>] {
---       currentHookNameInDev = 'useState'
---       updateHookTypesDev()
---       local prevDispatcher = ReactCurrentDispatcher.current
---       ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnRerenderInDEV
---       try {
---         return rerenderState(initialState)
---       } finally {
---         ReactCurrentDispatcher.current = prevDispatcher
---       end
---     },
+    -- useRef<T>(initialValue: T): {|current: T|} {
+    useRef = function(initialValue): {current: any}
+      currentHookNameInDev = 'useRef'
+      updateHookTypesDev()
+      return updateRef(initialValue)
+    end,
+  -- ROBLOX FIXME: luau function generics and return type
+  -- useState<S>(
+  --   initialState: (() => S) | S,
+  -- ): [S, Dispatch<BasicStateAction<S>>]
+  useState = function(
+    initialState: () -> any | any
+  ): (any, Dispatch<BasicStateAction<any>>)
+      currentHookNameInDev = 'useState'
+      updateHookTypesDev()
+      local prevDispatcher = ReactCurrentDispatcher.current
+      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnRerenderInDEV
+      -- deviation: Lua version of useState returns two items, not list like upstream
+      local ok, result, setResult = pcall(function()
+        return rerenderState(initialState)
+      end)
+        ReactCurrentDispatcher.current = prevDispatcher
+      if ok then
+        -- deviation: Lua version of useState returns two items, not list like upstream
+        return result, setResult
+      else
+        error(result)
+      end
+    end,
 --     useDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void {
 --       currentHookNameInDev = 'useDebugValue'
 --       updateHookTypesDev()
@@ -2358,7 +2557,12 @@ if _G.__DEV__ then
 --     unstable_isNewReconciler: enableNewReconciler,
   }
 
-  _InvalidNestedHooksDispatcherOnMountInDEV = {
+  InvalidNestedHooksDispatcherOnMountInDEV = {
+    -- ROBLOX FIXME generics
+    -- readContext<T>(
+    --   context: ReactContext<T>,
+    --   observedBits: void | number | boolean,
+    -- ): T
     readContext = function(
       context: ReactContext<any>,
       observedBits: number | boolean
@@ -2366,6 +2570,8 @@ if _G.__DEV__ then
       warnInvalidContextAccess()
       return readContext(context, observedBits)
     end,
+    -- ROBLOX FIXME: Luau function generics and return
+    --     useCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
     useCallback = function(callback, deps: Array<any> | nil)
       currentHookNameInDev = 'useCallback'
       warnInvalidHookAccess()
@@ -2391,16 +2597,14 @@ if _G.__DEV__ then
       return mountEffect(create, deps)
     end,
     useImperativeHandle = function(
-      ref,
+      ref: {current: any | nil} | (any | nil) -> (any) | nil,
       create: () -> any,
       deps: Array<any> | nil
     )
-      unimplemented("InvalidNestedHooksDispatcherOnMountInDEV: useImperativeHandle()")
-      return {}
-      -- currentHookNameInDev = 'useImperativeHandle'
-      -- warnInvalidHookAccess()
-      -- mountHookTypesDev()
-      -- return mountImperativeHandle(ref, create, deps)
+      currentHookNameInDev = 'useImperativeHandle'
+      warnInvalidHookAccess()
+      mountHookTypesDev()
+      return mountImperativeHandle(ref, create, deps)
     end,
     useLayoutEffect = function(
       create: () -> (() -> ()),
@@ -2441,27 +2645,38 @@ if _G.__DEV__ then
     --   } finally {
     --     ReactCurrentDispatcher.current = prevDispatcher
     --   end
-    end
+    end,
     -- useRef<T>(initialValue: T): {|current: T|} {
-    --   currentHookNameInDev = 'useRef'
-    --   warnInvalidHookAccess()
-    --   mountHookTypesDev()
-    --   return mountRef(initialValue)
-    -- },
+    useRef = function(initialValue): {current: any}
+      currentHookNameInDev = 'useRef'
+      warnInvalidHookAccess()
+      mountHookTypesDev()
+      return mountRef(initialValue)
+    end,
+    -- ROBLOX FIXME: luau function generics and return type
     -- useState<S>(
     --   initialState: (() => S) | S,
-    -- ): [S, Dispatch<BasicStateAction<S>>] {
-    --   currentHookNameInDev = 'useState'
-    --   warnInvalidHookAccess()
-    --   mountHookTypesDev()
-    --   local prevDispatcher = ReactCurrentDispatcher.current
-    --   ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnMountInDEV
-    --   try {
-    --     return mountState(initialState)
-    --   } finally {
-    --     ReactCurrentDispatcher.current = prevDispatcher
-    --   end
-    -- },
+    -- ): [S, Dispatch<BasicStateAction<S>>]
+    useState = function(
+      initialState: () -> any | any
+    ): (any, Dispatch<BasicStateAction<any>>)
+      currentHookNameInDev = 'useState'
+      warnInvalidHookAccess()
+      mountHookTypesDev()
+      local prevDispatcher = ReactCurrentDispatcher.current
+      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnMountInDEV
+      -- deviation: Lua version of useState returns two items, not list like upstream
+      local ok, result, setResult = pcall(function()
+        return mountState(initialState)
+      end)
+      ReactCurrentDispatcher.current = prevDispatcher
+      if ok then
+        -- deviation: Lua version of useState returns two items, not list like upstream
+        return result, setResult
+      else
+        error(result)
+      end
+    end,
     -- useDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void {
     --   currentHookNameInDev = 'useDebugValue'
     --   warnInvalidHookAccess()
@@ -2500,30 +2715,37 @@ if _G.__DEV__ then
     -- unstable_isNewReconciler: enableNewReconciler,
   }
 
-  _InvalidNestedHooksDispatcherOnUpdateInDEV = {
---     readContext<T>(
---       context: ReactContext<T>,
---       observedBits: number | boolean,
---     ): T {
---       warnInvalidContextAccess()
---       return readContext(context, observedBits)
---     },
+  InvalidNestedHooksDispatcherOnUpdateInDEV = {
+    -- ROBLOX FIXME: luau function generics and return type
+    -- readContext<T>(
+    --   context: ReactContext<T>,
+    --   observedBits: void | number | boolean,
+    -- ): T
+    readContext = function(
+      context: ReactContext<any>,
+      observedBits: number | boolean | nil
+    )
+      warnInvalidContextAccess()
+      return readContext(context, observedBits)
+    end,
+    -- ROBLOX FIXME: Luau function generics and return
+    --     useCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
     useCallback = function(callback, deps: Array<any> | nil)
       currentHookNameInDev = 'useCallback'
       warnInvalidHookAccess()
       updateHookTypesDev()
       return mountCallback(callback, deps)
-    end
+    end,
 
-    --     useContext<T>(
---       context: ReactContext<T>,
---       observedBits: number | boolean,
---     ): T {
---       currentHookNameInDev = 'useContext'
---       warnInvalidHookAccess()
---       updateHookTypesDev()
---       return readContext(context, observedBits)
---     },
+    useContext = function(
+      context: ReactContext<any>,
+      observedBits: number | boolean
+    ): any
+      currentHookNameInDev = 'useContext'
+      warnInvalidHookAccess()
+      updateHookTypesDev()
+      return readContext(context, observedBits)
+    end,
 --     useEffect(
 --       create: () => (() => void),
 --       deps: Array<any> | nil,
@@ -2533,25 +2755,31 @@ if _G.__DEV__ then
 --       updateHookTypesDev()
 --       return updateEffect(create, deps)
 --     },
---     useImperativeHandle<T>(
---       ref: {|current: T | nil|} | ((inst: T | nil) => mixed) | nil,
---       create: () => T,
---       deps: Array<any> | nil,
---     ): void {
---       currentHookNameInDev = 'useImperativeHandle'
---       warnInvalidHookAccess()
---       updateHookTypesDev()
---       return updateImperativeHandle(ref, create, deps)
---     },
---     useLayoutEffect(
---       create: () => (() => void),
---       deps: Array<any> | nil,
---     ): void {
---       currentHookNameInDev = 'useLayoutEffect'
---       warnInvalidHookAccess()
---       updateHookTypesDev()
---       return updateLayoutEffect(create, deps)
---     },
+    -- ROBLOX FIXME: luau function generics
+    -- useImperativeHandle<T>(
+    --   ref: {|current: T | null|} | ((inst: T | null) => mixed) | null | void,
+    --   create: () => T,
+    --   deps: Array<mixed> | void | null,
+    -- ): void
+    useImperativeHandle = function(
+      ref: {current: any | nil} | (any | nil) -> (any) | nil,
+      create: () -> any,
+      deps: Array<any>?
+    )
+      currentHookNameInDev = 'useImperativeHandle'
+      warnInvalidHookAccess()
+      updateHookTypesDev()
+      return updateImperativeHandle(ref, create, deps)
+    end,
+    useLayoutEffect = function(
+      create: () -> (() -> nil),
+      deps: Array<any>?
+    )
+      currentHookNameInDev = 'useLayoutEffect'
+      warnInvalidHookAccess()
+      updateHookTypesDev()
+      return updateLayoutEffect(create, deps)
+    end,
 --     useMemo<T>(create: () => T, deps: Array<any> | nil): T {
 --       currentHookNameInDev = 'useMemo'
 --       warnInvalidHookAccess()
@@ -2581,25 +2809,36 @@ if _G.__DEV__ then
 --       end
 --     },
 --     useRef<T>(initialValue: T): {|current: T|} {
---       currentHookNameInDev = 'useRef'
---       warnInvalidHookAccess()
---       updateHookTypesDev()
---       return updateRef(initialValue)
---     },
---     useState<S>(
---       initialState: (() => S) | S,
---     ): [S, Dispatch<BasicStateAction<S>>] {
---       currentHookNameInDev = 'useState'
---       warnInvalidHookAccess()
---       updateHookTypesDev()
---       local prevDispatcher = ReactCurrentDispatcher.current
---       ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV
---       try {
---         return updateState(initialState)
---       } finally {
---         ReactCurrentDispatcher.current = prevDispatcher
---       end
---     },
+    useRef = function(initialValue): {current: any}
+      currentHookNameInDev = 'useRef'
+      warnInvalidHookAccess()
+      updateHookTypesDev()
+      return updateRef(initialValue)
+    end,
+    -- ROBLOX FIXME: Luau generics and return type
+    -- useState<S>(
+    --   initialState: (() => S) | S,
+    -- ): [S, Dispatch<BasicStateAction<S>>]
+    useState = function(
+      initialState: () -> any | any
+    ): (any, Dispatch<BasicStateAction<any>>)
+      currentHookNameInDev = 'useState'
+      warnInvalidHookAccess()
+      updateHookTypesDev()
+      local prevDispatcher = ReactCurrentDispatcher.current
+      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV
+      -- deviation: Lua version of useState returns two items, not list like upstream
+      local ok, result, setResult = pcall(function()
+        return updateState(initialState)
+      end)
+      ReactCurrentDispatcher.current = prevDispatcher
+      if ok then
+        -- deviation: Lua version of useState returns two items, not list like upstream
+        return result, setResult
+      else
+        error(result)
+      end
+    end,
 --     useDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void {
 --       currentHookNameInDev = 'useDebugValue'
 --       warnInvalidHookAccess()
@@ -2638,30 +2877,42 @@ if _G.__DEV__ then
 --     unstable_isNewReconciler: enableNewReconciler,
   }
 
-  _InvalidNestedHooksDispatcherOnRerenderInDEV = {
---     readContext<T>(
---       context: ReactContext<T>,
---       observedBits: number | boolean,
---     ): T {
---       warnInvalidContextAccess()
---       return readContext(context, observedBits)
---     },
+  InvalidNestedHooksDispatcherOnRerenderInDEV = {
+    -- ROBLOX FIXME: function generics
+    -- readContext<T>(
+    --   context: ReactContext<T>,
+    --   observedBits: void | number | boolean,
+    -- ): T
+    readContext = function(
+      context: ReactContext<any>,
+      observedBits: number | boolean
+    ): any
+      warnInvalidContextAccess()
+      return readContext(context, observedBits)
+    end,
 
---     useCallback<T>(callback: T, deps: Array<any> | nil): T {
---       currentHookNameInDev = 'useCallback'
---       warnInvalidHookAccess()
---       updateHookTypesDev()
---       return updateCallback(callback, deps)
---     },
---     useContext<T>(
---       context: ReactContext<T>,
---       observedBits: number | boolean,
---     ): T {
---       currentHookNameInDev = 'useContext'
---       warnInvalidHookAccess()
---       updateHookTypesDev()
---       return readContext(context, observedBits)
---     },
+    -- ROBLOX FIXME: Luau function generics and return
+    --     useCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
+    useCallback = function(callback, deps: Array<any> | nil): any
+      currentHookNameInDev = 'useCallback'
+      warnInvalidHookAccess()
+      updateHookTypesDev()
+      return updateCallback(callback, deps)
+    end,
+    -- ROBLOX FIXME: function generics
+    -- useContext<T>(
+    --   context: ReactContext<T>,
+    --   observedBits: void | number | boolean,
+    -- ): T
+    useContext = function(
+      context: ReactContext<any>,
+      observedBits: number | boolean
+    ): any
+      currentHookNameInDev = 'useContext'
+      warnInvalidHookAccess()
+      updateHookTypesDev()
+      return readContext(context, observedBits)
+  end,
 --     useEffect(
 --       create: () => (() => void),
 --       deps: Array<any> | nil,
@@ -2671,25 +2922,31 @@ if _G.__DEV__ then
 --       updateHookTypesDev()
 --       return updateEffect(create, deps)
 --     },
---     useImperativeHandle<T>(
---       ref: {|current: T | nil|} | ((inst: T | nil) => mixed) | nil,
---       create: () => T,
---       deps: Array<any> | nil,
---     ): void {
---       currentHookNameInDev = 'useImperativeHandle'
---       warnInvalidHookAccess()
---       updateHookTypesDev()
---       return updateImperativeHandle(ref, create, deps)
---     },
---     useLayoutEffect(
---       create: () => (() => void),
---       deps: Array<any> | nil,
---     ): void {
---       currentHookNameInDev = 'useLayoutEffect'
---       warnInvalidHookAccess()
---       updateHookTypesDev()
---       return updateLayoutEffect(create, deps)
---     },
+    -- ROBLOX FIXME: function generics
+    -- useImperativeHandle<T>(
+    --   ref: {|current: T | null|} | ((inst: T | null) => mixed) | null | void,
+    --   create: () => T,
+    --   deps: Array<mixed> | void | null,
+    -- ): void
+    useImperativeHandle = function(
+      ref: {current: any | nil} | (any | nil) -> (any) | nil,
+      create: () -> any,
+      deps: Array<any>?
+    )
+      currentHookNameInDev = 'useImperativeHandle'
+      warnInvalidHookAccess()
+      updateHookTypesDev()
+      return updateImperativeHandle(ref, create, deps)
+    end,
+    useLayoutEffect = function(
+      create: () -> (() -> ()),
+      deps: Array<any>?
+    )
+      currentHookNameInDev = 'useLayoutEffect'
+      warnInvalidHookAccess()
+      updateHookTypesDev()
+      return updateLayoutEffect(create, deps)
+    end,
 --     useMemo<T>(create: () => T, deps: Array<any> | nil): T {
 --       currentHookNameInDev = 'useMemo'
 --       warnInvalidHookAccess()
@@ -2719,25 +2976,36 @@ if _G.__DEV__ then
 --       end
 --     },
 --     useRef<T>(initialValue: T): {|current: T|} {
---       currentHookNameInDev = 'useRef'
---       warnInvalidHookAccess()
---       updateHookTypesDev()
---       return updateRef(initialValue)
---     },
---     useState<S>(
---       initialState: (() => S) | S,
---     ): [S, Dispatch<BasicStateAction<S>>] {
---       currentHookNameInDev = 'useState'
---       warnInvalidHookAccess()
---       updateHookTypesDev()
---       local prevDispatcher = ReactCurrentDispatcher.current
---       ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV
---       try {
---         return rerenderState(initialState)
---       } finally {
---         ReactCurrentDispatcher.current = prevDispatcher
---       end
---     },
+    useRef = function(initialValue): {current: any}
+      currentHookNameInDev = 'useRef'
+      warnInvalidHookAccess()
+      updateHookTypesDev()
+      return updateRef(initialValue)
+    end,
+    -- ROBLOX FIXME: function generics and return type
+    -- useState<S>(
+    --   initialState: (() => S) | S,
+    -- ): [S, Dispatch<BasicStateAction<S>>]
+    useState = function(
+      initialState: () -> any | any
+    ): (any, Dispatch<BasicStateAction<any>>)
+        currentHookNameInDev = 'useState'
+        warnInvalidHookAccess()
+        updateHookTypesDev()
+        local prevDispatcher = ReactCurrentDispatcher.current
+        ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV
+        -- deviation: Lua version of useState returns two items, not list like upstream
+        local ok, result, setResult = pcall(function()
+          return rerenderState(initialState)
+        end)
+        ReactCurrentDispatcher.current = prevDispatcher
+        if ok then
+          -- deviation: Lua version of useState returns two items, not list like upstream
+          return result, setResult
+        else
+          error(result)
+        end
+      end,
 --     useDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void {
 --       currentHookNameInDev = 'useDebugValue'
 --       warnInvalidHookAccess()
@@ -2795,7 +3063,7 @@ exports.renderWithHooks = function(
   secondArg: any,
   nextRenderLanes: Lanes
 ): any
-  _renderLanes = nextRenderLanes
+  renderLanes = nextRenderLanes
   currentlyRenderingFiber = workInProgress
 
   if _G.__DEV__ then
@@ -2906,7 +3174,7 @@ exports.renderWithHooks = function(
   local didRenderTooFewHooks =
     currentHook ~= nil and currentHook.next ~= nil
 
-  _renderLanes = NoLanes
+  renderLanes = NoLanes
   currentlyRenderingFiber = nil
 
   currentHook = nil

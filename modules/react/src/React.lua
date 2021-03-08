@@ -37,9 +37,11 @@ return {
 	useState = ReactHooks.useState,
 	useReducer = ReactHooks.useReducer,
 	useEffect = ReactHooks.useEffect,
+	useImperativeHandle = ReactHooks.useImperativeHandle,
 	useLayoutEffect = ReactHooks.useLayoutEffect,
 	useRef = ReactHooks.useRef,
 	useMemo = ReactHooks.useMemo,
+	useCallback = ReactHooks.useCallback,
 	useContext = ReactHooks.useContext,
 	createContext = ReactContext.createContext
 }

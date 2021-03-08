@@ -25,7 +25,7 @@ local function toThrow(fn: () -> any, errorString: string?)
 					),
 				}
 			end
-			if resultErrorString:find(errorString) then
+			if resultErrorString:find(errorString) or resultErrorString == errorString then
 				return {
 					pass = true,
 					message = string.format(

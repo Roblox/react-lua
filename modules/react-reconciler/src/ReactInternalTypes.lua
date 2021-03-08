@@ -304,8 +304,8 @@ export type FiberRoot = {
 	[any]: any,
 };
 
--- type BasicStateAction<S> = (S => S) | S
--- type Dispatch<A> = A => void
+type BasicStateAction<S> = ((S) -> S) | S
+type Dispatch<A> = (A) -> ()
 
 -- export type Dispatcher = {|
 -- 	readContext<T>(

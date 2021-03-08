@@ -7,7 +7,6 @@
  *
  * @flow
 ]]
---!nocheck
 -- FIXME (roblox): remove this when our unimplemented
 local function unimplemented(message)
   error("FIXME (roblox): " .. message .. " is unimplemented", 2)
@@ -21,11 +20,11 @@ local Object = LuauPolyfill.Object
 -- ROBLOX: use patched console from shared
 local console = require(Workspace.Shared.console)
 local ReactInternalTypes = require(script.Parent.ReactInternalTypes)
-type Fiber = ReactInternalTypes.Fiber;
+type Fiber = ReactInternalTypes.Fiber
 local ReactFiberLane = require(script.Parent.ReactFiberLane)
--- type Lanes = ReactFiberLane.Lanes;
+type Lanes = ReactFiberLane.Lanes
 local ReactUpdateQueue = require(script.Parent["ReactUpdateQueue.new"])
--- type UpdateQueue = ReactUpdateQueue.UpdateQueue;
+type UpdateQueue<State> = ReactUpdateQueue.UpdateQueue<State>
 
 local React = require(Workspace.React)
 
@@ -229,7 +228,7 @@ local function applyDerivedStateFromProps(
     -- Queue is always non-null for classes
     -- ROBLOX FIXME: type coercion
     -- local updateQueue: UpdateQueue<any> = (workInProgress.updateQueue: any)
-    local updateQueue = workInProgress.updateQueue
+    local updateQueue: UpdateQueue<any> = workInProgress.updateQueue
     updateQueue.baseState = memoizedState
   end
 end
@@ -670,7 +669,7 @@ local function constructClassInstance(
         -- Allow nil for conditional declaration
         contextType == nil or
         (contextType["$$typeof"] == REACT_CONTEXT_TYPE and
-          contextType._context == nil); -- Not a <Context.Consumer>
+          contextType._context == nil) -- Not a <Context.Consumer>
 
       if not isValid and not didWarnAboutInvalidateContextType[ctor] then
         didWarnAboutInvalidateContextType[ctor] = true
@@ -727,7 +726,7 @@ local function constructClassInstance(
       local ok, result = pcall(function()
         -- deviation: ctor will actually refer to a class component, we use the
         -- `__ctor` function that it exposes
-        ctor.__ctor(props, context); -- eslint-disable-line no-new
+        ctor.__ctor(props, context) -- eslint-disable-line no-new
       end)
       -- finally
       reenableLogs()
@@ -821,7 +820,7 @@ local function constructClassInstance(
         else
           newApiName = "getSnapshotBeforeUpdate()"
         end
-        
+
         local willMountName
         if foundWillMountName ~= nil then
           willMountName = ("\n  " .. tostring(foundWillMountName))
@@ -842,7 +841,7 @@ local function constructClassInstance(
         else
           willUpdateName = ""
         end
-        
+
         if not didWarnAboutLegacyLifecyclesAndDerivedState[componentName] then
           didWarnAboutLegacyLifecyclesAndDerivedState[componentName] = true
           console.error(

@@ -144,7 +144,7 @@ export type Update<State> = {
 	payload: any,
 	callback: (() -> any)?,
 
-	next: Update?,
+	next: Update<State>?,
 };
 
 type SharedQueue<State> = {
@@ -480,7 +480,7 @@ exports.processUpdateQueue = function(
 		currentlyProcessingQueue = queue.shared
 	end
 
-	local firstBaseUpdate = queue.firstBaseUpdate	
+	local firstBaseUpdate = queue.firstBaseUpdate
 	local lastBaseUpdate = queue.lastBaseUpdate
 
 

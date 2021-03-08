@@ -15,7 +15,7 @@ local Array = require(Packages.LuauPolyfill).Array
 -- ROBLOX: use patched console from shared
 local console = require(Workspace.Shared.console)
 local React
--- local useContext
+local useContext
 local ReactNoop
 local Scheduler
 -- local gen
@@ -43,7 +43,7 @@ return function()
     end)
 
     React = require(Workspace.React)
-    -- useContext = React.useContext
+    useContext = React.useContext
     ReactNoop = require(Workspace.ReactNoopRenderer)
     Scheduler = require(Workspace.Scheduler)
     -- gen = nil -- require('random-seed')
@@ -986,49 +986,51 @@ return function()
       return Context.Consumer
     end
   )
-  -- sharedContextTests(
-  --   "useContext inside function component",
-  --   function(Context)
-  --     local expect: any = expect
-  --     return function Consumer(props)
-  --       local observedBits = props.unstable_observedBits
-  --       local contextValue
-  --       expect(function()
-  --         contextValue = useContext(Context, observedBits)
-  --       end).toErrorDev(
-  --         observedBits ~= nil
-  --           and "useContext() second argument is reserved for future use in React. " ..
-  --               "Passing it is not supported. You passed: "..tostring(observedBits).."."
-  --           or {}
-  --       )
-  --       local render = props.children
-  --       return render(contextValue)
-  --     end
-  --   end
-  -- )
-  -- sharedContextTests(
-  --   "useContext inside forwardRef component",
-  --   function(Context)
-  --     return React.forwardRef(function Consumer(props, ref)
-  --       local observedBits = props.unstable_observedBits
-  --       local contextValue
-  --       expect(function()
-  --         contextValue = useContext(Context, observedBits)
-  --       end).toErrorDev(
-  --         observedBits ~= nil
-  --           and "useContext() second argument is reserved for future use in React. " ..
-  --               "Passing it is not supported. You passed: "..tostring(observedBits).."."
-  --           or {}
-  --       )
-  --       local render = props.children
-  --       return render(contextValue)
-  --     end
-  --   end
-  -- )
+  sharedContextTests(
+    "useContext inside function component",
+    function(Context)
+      local expect: any = expect
+      return function(props)
+        local observedBits = props.unstable_observedBits
+        local contextValue
+        expect(function()
+          contextValue = useContext(Context, observedBits)
+        end).toErrorDev(
+          observedBits ~= nil
+            and "useContext() second argument is reserved for future use in React. " ..
+                "Passing it is not supported. You passed: "..tostring(observedBits).."."
+            or {}
+        )
+        local render = props.children
+        return render(contextValue)
+      end
+    end
+  )
+  sharedContextTests(
+    "useContext inside forwardRef component",
+    function(Context)
+      local expect: any = expect
+      return React.forwardRef(function(props, ref)
+        local observedBits = props.unstable_observedBits
+        local contextValue
+        expect(function()
+          contextValue = useContext(Context, observedBits)
+        end).toErrorDev(
+          observedBits ~= nil
+            and "useContext() second argument is reserved for future use in React. " ..
+                "Passing it is not supported. You passed: "..tostring(observedBits).."."
+            or {}
+        )
+        local render = props.children
+        return render(contextValue)
+      end)
+    end
+  )
+  -- ROBLOX TODO: Memo component unimplemented
   -- sharedContextTests(
   --   "useContext inside memoized function component",
   --   function(Context)
-  --     return React.memo(function Consumer(props)
+  --     return React.memo(function (props)
   --       local observedBits = props.unstable_observedBits
   --       local contextValue
   --       expect(function()

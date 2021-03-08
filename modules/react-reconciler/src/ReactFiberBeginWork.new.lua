@@ -159,9 +159,33 @@ local calculateChangedBits = ReactFiberNewContext.calculateChangedBits
 local prepareToReadContext = ReactFiberNewContext.prepareToReadContext
 local pushProvider = ReactFiberNewContext.pushProvider
 
-local ReactFiberHooks = require(script.Parent["ReactFiberHooks.new"])
-local renderWithHooks = ReactFiberHooks.renderWithHooks
-local bailoutHooks = ReactFiberHooks.bailoutHooks
+-- deviation: Lazy init all methods from ReactFiberHooks
+local renderWithHooksRef
+local bailoutHooksRef
+
+-- deviation: collective lazy init methods from ReactFiberHooks
+local initReactFiberHooks = function()
+  local ReactFiberHooks = require(script.Parent["ReactFiberHooks.new"])
+  renderWithHooksRef = ReactFiberHooks.renderWithHooks
+  bailoutHooksRef = ReactFiberHooks.bailoutHooks
+end
+
+-- deviation: Lazy init renderWithHooks from ReactFiberHooks
+local renderWithHooks = function(...)
+  if not renderWithHooksRef then
+    initReactFiberHooks()
+  end
+  return renderWithHooksRef(...)
+end
+
+-- deviation: Lazy init bailoutHooks from ReactFiberHooks
+local bailoutHooks = function(...)
+  if not bailoutHooksRef then
+    initReactFiberHooks()
+  end
+  return bailoutHooksRef(...)
+end
+
 -- local {stopProfilerTimerIfRunning} = require(script.Parent.ReactProfilerTimer.new)
 local ReactFiberContext = require(script.Parent["ReactFiberContext.new"])
 local getMaskedContext = ReactFiberContext.getMaskedContext
@@ -573,7 +597,7 @@ end
 --         )
 --       } else if (current.flags & ForceUpdateForLegacySuspense) ~= NoFlags)
 --         -- This is a special case that only exists for legacy mode.
---         -- See https:--github.com/facebook/react/pull/19216.
+--         -- See https://github.com/facebook/react/pull/19216.
 --         didReceiveUpdate = true
 --       end
 --     end
@@ -3345,7 +3369,7 @@ exports.beginWork = function(
     else
       if bit32.band(current.flags, ForceUpdateForLegacySuspense) ~= NoFlags then
         -- This is a special case that only exists for legacy mode.
-        -- See https:--github.com/facebook/react/pull/19216.
+        -- See https://github.com/facebook/react/pull/19216.
         didReceiveUpdate = true
       else
         -- An update was scheduled on this fiber, but there are no new props

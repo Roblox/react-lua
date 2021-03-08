@@ -101,7 +101,7 @@ local ReactFiberHostConfig = require(script.Parent.ReactFiberHostConfig)
 -- local scheduleTimeout = ReactFiberHostConfig.scheduleTimeout
 -- local cancelTimeout = ReactFiberHostConfig.cancelTimeout
 -- local noTimeout = ReactFiberHostConfig.noTimeout
--- local warnsIfNotActing = ReactFiberHostConfig.warnsIfNotActing
+local warnsIfNotActing = ReactFiberHostConfig.warnsIfNotActing
 -- local beforeActiveInstanceBlur = ReactFiberHostConfig.beforeActiveInstanceBlur
 -- local afterActiveInstanceBlur = ReactFiberHostConfig.afterActiveInstanceBlur
 -- local clearContainer = ReactFiberHostConfig.clearContainer
@@ -185,7 +185,8 @@ local ReactFiberThrow = require(script.Parent["ReactFiberThrow.new"])
 local throwException = ReactFiberThrow.throwException
 local createRootErrorUpdate = ReactFiberThrow.createRootErrorUpdate
 local createClassErrorUpdate = ReactFiberThrow.createClassErrorUpdate
-local ReactFiberCommitWork = require(script.Parent["ReactFiberCommitWork.new"])
+local ReactFiberCommitWork
+ReactFiberCommitWork = require(script.Parent["ReactFiberCommitWork.new"])
 local commitBeforeMutationEffectOnFiber = ReactFiberCommitWork.commitBeforeMutationLifeCycles
 local commitPlacement = ReactFiberCommitWork.commitPlacement
 local commitWork = ReactFiberCommitWork.commitWork
@@ -206,11 +207,45 @@ local recursivelyCommitLayoutEffects = ReactFiberCommitWork.recursivelyCommitLay
 local enqueueUpdate = require(script.Parent["ReactUpdateQueue.new"]).enqueueUpdate
 
 local resetContextDependencies = require(script.Parent["ReactFiberNewContext.new"]).resetContextDependencies
-local ReactFiberHooks = require(script.Parent["ReactFiberHooks.new"])
-local resetHooksAfterThrow = ReactFiberHooks.resetHooksAfterThrow
-local ContextOnlyDispatcher = ReactFiberHooks.ContextOnlyDispatcher
-local getIsUpdatingOpaqueValueInRenderPhaseInDEV = ReactFiberHooks.getIsUpdatingOpaqueValueInRenderPhaseInDEV
--- } = require(script.Parent.ReactFiberHooks.new)
+
+-- deviation: lazy init for functions from ReactFiberHooks
+local resetHooksAfterThrowRef
+local ContextOnlyDispatcherRef
+local getIsUpdatingOpaqueValueInRenderPhaseInDEVRef
+
+local ReactFiberHooks
+-- deviation: lazy init for functions from ReactFiberHooks
+local function initReactFiberHooks()
+  ReactFiberHooks = require(script.Parent["ReactFiberHooks.new"])
+  resetHooksAfterThrowRef = ReactFiberHooks.resetHooksAfterThrow
+  ContextOnlyDispatcherRef = ReactFiberHooks.ContextOnlyDispatcher
+  getIsUpdatingOpaqueValueInRenderPhaseInDEVRef = ReactFiberHooks.getIsUpdatingOpaqueValueInRenderPhaseInDEV
+end
+
+-- deviation: lazy init for resetHooksAfterThrow from ReactFiberHooks
+local resetHooksAfterThrow = function(...)
+  if not resetHooksAfterThrowRef then
+    initReactFiberHooks()
+  end
+  return resetHooksAfterThrowRef(...)
+end
+
+-- deviation: lazy init for ContextOnlyDispatcher from ReactFiberHooks
+local ContextOnlyDispatcher = function()
+  if not ContextOnlyDispatcherRef then
+    initReactFiberHooks()
+  end
+  return ContextOnlyDispatcherRef
+end
+
+-- deviation: lazy init for getIsUpdatingOpaqueValueInRenderPhaseInDEV from ReactFiberHooks
+local getIsUpdatingOpaqueValueInRenderPhaseInDEV = function(...)
+  if not getIsUpdatingOpaqueValueInRenderPhaseInDEVRef then
+    initReactFiberHooks()
+  end
+  return getIsUpdatingOpaqueValueInRenderPhaseInDEVRef(...)
+end
+
 local createCapturedValue = require(script.Parent.ReactCapturedValue).createCapturedValue
 local pushToStack = ReactFiberStack.push
 local popFromStack = ReactFiberStack.pop
@@ -228,7 +263,7 @@ local ReactStrictModeWarnings = require(script.Parent["ReactStrictModeWarnings.n
 local ReactCurrentFiber = require(script.Parent.ReactCurrentFiber)
 -- deviation: these two properties would be captured as values instead of bound
 -- local ReactCurrentDebugFiberIsRenderingInDEV = ReactCurrentFiber.isRendering
--- local ReactCurrentFiberCurrent = ReactCurrentFiber.current
+local ReactCurrentFiberCurrent = ReactCurrentFiber.current
 local resetCurrentDebugFiberInDEV = ReactCurrentFiber.resetCurrentFiber
 local setCurrentDebugFiberInDEV = ReactCurrentFiber.setCurrentFiber
 local ReactErrorUtils = require(Workspace.Shared.ReactErrorUtils)
@@ -1330,44 +1365,45 @@ exports.flushSync = function(fn: (any) -> any, a: any): any
     local ok, result = pcall(function()
       setCurrentUpdateLanePriority(ReactFiberLane.SyncLanePriority)
       if fn then
-        return runWithPriority(ImmediateSchedulerPriority, function() 
-              return fn(a) 
+        return runWithPriority(ImmediateSchedulerPriority, function()
+              return fn(a)
             end)
       else
         return nil
       end
     end)
-      setCurrentUpdateLanePriority(previousLanePriority)
-      executionContext = prevExecutionContext
-      -- Flush the immediate callbacks that were scheduled during this batch.
-      -- Note that this will happen even if batchedUpdates is higher up
-      -- the stack.
-      flushSyncCallbackQueue()
-      if ok then
-        return result
-      else
-        error(result)
-      end
-  else
-    local ok, result = pcall(function()
-      if fn then
-        return runWithPriority(ImmediateSchedulerPriority, function() 
-              return fn(a) 
-            end)
-      else
-        return nil
-      end
-    end)
+    setCurrentUpdateLanePriority(previousLanePriority)
     executionContext = prevExecutionContext
     -- Flush the immediate callbacks that were scheduled during this batch.
     -- Note that this will happen even if batchedUpdates is higher up
     -- the stack.
     flushSyncCallbackQueue()
-    if ok then
-      return result
-    else
+    if not ok then
+      error(result)
+      -- ROBLOX FIXME: Luau makes us put a return here because it doesn't understand error() is no-return
+      return nil
+    end
+    return result
+  else
+    local ok, result = pcall(function()
+      if fn then
+        return runWithPriority(ImmediateSchedulerPriority, function()
+              return fn(a)
+            end)
+      else
+        return nil
+      end
+    end)
+    -- ROBLOX: finally
+    executionContext = prevExecutionContext
+    -- Flush the immediate callbacks that were scheduled during this batch.
+    -- Note that this will happen even if batchedUpdates is higher up
+    -- the stack.
+    flushSyncCallbackQueue()
+    if not ok then
       error(result)
     end
+    return result
   end
 end
 
@@ -1536,12 +1572,16 @@ end
 
 mod.pushDispatcher = function()
   local prevDispatcher = ReactCurrentDispatcher.current
-  ReactCurrentDispatcher.current = ContextOnlyDispatcher
+
+  -- deviation: lazy init of ContextOnlyDispatcher wrapped in a function
+  ReactCurrentDispatcher.current = ContextOnlyDispatcher()
   if prevDispatcher == nil then
     -- The React isomorphic package does not include a default dispatcher.
     -- Instead the first renderer will lazily attach one, in order to give
     -- nicer error messages.
-    return ContextOnlyDispatcher
+
+    -- deviation: lazy init of ContextOnlyDispatcher wrapped in a function
+    return ContextOnlyDispatcher()
   else
     return prevDispatcher
   end
@@ -2797,8 +2837,8 @@ flushPassiveEffectsImpl = function()
   -- If additional passive effects were scheduled, increment a counter. If this
   -- exceeds the limit, we'll fire a warning.
   if rootWithPendingPassiveEffects == nil then
-    nestedPassiveUpdateCount = 0 
-  else 
+    nestedPassiveUpdateCount = 0
+  else
     nestedPassiveUpdateCount = nestedPassiveUpdateCount + 1
   end
 
@@ -3480,49 +3520,56 @@ end
 --           '--[[ assert on the output ]]\n\n' +
 --           "This ensures that you're testing the behavior the user would see " +
 --           'in the browser.' +
---           ' Learn more at https:--reactjs.org/link/wrap-tests-with-act',
+--           ' Learn more at https://reactjs.org/link/wrap-tests-with-act',
 --         getComponentName(fiber.type),
 --       )
 --     end
 --   end
 -- end
 
--- function warnIfNotCurrentlyActingUpdatesInDEV(fiber: Fiber): void {
---   if _G.__DEV__)
---     if
---       warnsIfNotActing == true and
---       executionContext == NoContext and
---       IsSomeRendererActing.current == false and
---       IsThisRendererActing.current == false
---     )
---       local previousFiber = ReactCurrentFiberCurrent
---       try {
---         setCurrentDebugFiberInDEV(fiber)
---         console.error(
---           'An update to %s inside a test was not wrapped in act(...).\n\n' +
---             'When testing, code that causes React state updates should be ' +
---             'wrapped into act(...):\n\n' +
---             'act(() => {\n' +
---             '  --[[ fire events that update state ]]\n' +
---             '});\n' +
---             '--[[ assert on the output ]]\n\n' +
---             "This ensures that you're testing the behavior the user would see " +
---             'in the browser.' +
---             ' Learn more at https:--reactjs.org/link/wrap-tests-with-act',
---           getComponentName(fiber.type),
---         )
---       } finally {
---         if previousFiber)
---           setCurrentDebugFiberInDEV(fiber)
---         } else {
---           resetCurrentDebugFiberInDEV()
---         end
---       end
---     end
---   end
--- end
+local warnIfNotCurrentlyActingUpdatesInDEV = function (fiber: Fiber): ()
+  if _G.__DEV__ then
+    if
+      warnsIfNotActing == true and
+      executionContext == NoContext and
+      IsSomeRendererActing.current == false and
+      exports.isThisRendererActing.current == false then
 
--- export local warnIfNotCurrentlyActingUpdatesInDev = warnIfNotCurrentlyActingUpdatesInDEV
+      local previousFiber = ReactCurrentFiberCurrent
+      local ok, result = pcall(function()
+        setCurrentDebugFiberInDEV(fiber)
+        console.error(
+          'An update to %s inside a test was not wrapped in act(...).\n\n' ..
+            'When testing, code that causes React state updates should be ' ..
+            'wrapped into act(...):\n\n' ..
+            'act(() => {\n' ..
+            '  --[[ fire events that update state ]]\n' ..
+            '});\n' ..
+            '--[[ assert on the output ]]\n\n' ..
+            "This ensures that you're testing the behavior the user would see " ..
+            'in the browser.' ..
+            ' Learn more at https://reactjs.org/link/wrap-tests-with-act',
+          getComponentName(fiber.type)
+        )
+      end)
+
+      -- Finally
+      if previousFiber then
+        setCurrentDebugFiberInDEV(fiber)
+      else
+        resetCurrentDebugFiberInDEV()
+      end
+
+      if ok then
+        return result
+      end
+    end
+  end
+  -- ROBLOX deviation: explicit return to silence analyze
+  return
+end
+
+exports.warnIfNotCurrentlyActingUpdatesInDev = warnIfNotCurrentlyActingUpdatesInDEV
 
 -- In tests, we want to enforce a mocked scheduler.
 local didWarnAboutUnmockedScheduler = false

@@ -27,14 +27,16 @@ type Container = ReactRobloxHostTypes.Container;
 -- local unstable_renderSubtreeIntoContainer = ReactRobloxLegacy.unstable_renderSubtreeIntoContainer
 -- local unmountComponentAtNode = ReactRobloxLegacy.unmountComponentAtNode
 
-local ReactRobloxRoot = require(script.Parent.ReactRobloxRoot)
+local ReactRobloxRoot
+ReactRobloxRoot = require(script.Parent.ReactRobloxRoot)
 local createRoot = ReactRobloxRoot.createRoot
 local createBlockingRoot = ReactRobloxRoot.createBlockingRoot
 local createLegacyRoot = ReactRobloxRoot.createLegacyRoot
 local isValidContainer = ReactRobloxRoot.isValidContainer
 -- local createEventHandle = require(script.Parent.ReactDOMEventHandle).createEventHandle
 
-local ReactFiberReconciler = require(Workspace.ReactReconciler.ReactFiberReconciler)
+local ReactFiberReconciler
+ReactFiberReconciler = require(Workspace.ReactReconciler.ReactFiberReconciler)
 -- local batchedEventUpdates = ReactFiberReconciler.batchedEventUpdates
 -- local batchedUpdates = ReactFiberReconciler.batchedUpdates
 -- local discreteUpdates = ReactFiberReconciler.discreteUpdates
@@ -262,7 +264,7 @@ local exports = {
 if _G.__DEV__ then
   -- if not foundDevTools and canUseDOM and window.top == window.self then
   --   If we're in Chrome or Firefox, provide a download link if not installed.
-  --   if 
+  --   if
   --     (navigator.userAgent.indexOf('Chrome') > -1 and
   --       navigator.userAgent.indexOf('Edge') == -1) or
   --     navigator.userAgent.indexOf('Firefox') > -1

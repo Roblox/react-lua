@@ -571,16 +571,15 @@ return function()
                 span('derived state'),
             })
         end)
-        -- ROBLOX TODO: implement mountState()
-        xit('regression: does not expire soon due to layout effects in the last batch', function()
+        it('regression: does not expire soon due to layout effects in the last batch', function()
             local expect: any = expect
             local useState = React.useState
             local useLayoutEffect = React.useLayoutEffect
-            
+
             local setCount
             local function App()
-                local count = useState(0)[1]
-                setCount = useState(0)[2]
+                local count, setCountTemp = useState(0)
+                setCount = setCountTemp
 
                 Scheduler.unstable_yieldValue('Render: ' .. count)
                 useLayoutEffect(function()
@@ -650,7 +649,7 @@ return function()
             }))
             expect(Scheduler).toFlushExpired({})
         end)
-        -- ROBLOX TODO: implement mountState()
+        -- ROBLOX TODO: implement resuming work
         xit('when rebasing, does not exclude updates that were already committed, regardless of priority', function()
             local expect: any = expect
             local useState = React.useState
@@ -658,15 +657,15 @@ return function()
             local pushToLog
 
             local function App()
-                local log, setLog = useState('')[1], useState('')[2]
+                local log, setLog = useState('')
                 pushToLog = function(msg)
-                    setLog(function(prevLog)
-                        return prevLog + msg
+                    return setLog(function(prevLog)
+                        return prevLog .. msg
                     end)
                 end
 
                 useLayoutEffect(function()
-                    Scheduler.unstable_yieldValue('Committed: ' + log)
+                    Scheduler.unstable_yieldValue('Committed: ' .. log)
 
                     if log == 'B' then
                         -- Right after B commits, schedule additional updates.
@@ -677,7 +676,7 @@ return function()
                             end)
                         end)
                         setLog(function(prevLog)
-                            return prevLog + 'D'
+                            return prevLog .. 'D'
                         end)
                     end
                 end, {log})
@@ -692,17 +691,20 @@ return function()
             expect(Scheduler).toHaveYielded({
                 'Committed: ',
             })
-            expect(root).toMatchRenderedOutput('')
+            -- ROBLOX TODO: replace the below expects with toMatchRenderedOutput
+            -- expect(root).toMatchRenderedOutput('')
+            expect(root.getChildren()[1].text).toEqual('')
+
             ReactNoop.act(function ()
                 pushToLog('A')
 
                 -- TODO: Double wrapping is temporary while we remove Scheduler runWithPriority.
                 ReactNoop.unstable_runWithPriority(InputContinuousLanePriority, function ()
                   return Scheduler.unstable_runWithPriority(Scheduler.unstable_UserBlockingPriority, function ()
-                    pushToLog('B');
-                  end);
-                end);
-            end);
+                    pushToLog('B')
+                  end)
+                end)
+            end)
             expect(Scheduler).toHaveYielded({
                 -- A and B are pending. B is higher priority, so we'll render that first.
                 'Committed: B',
@@ -718,7 +720,9 @@ return function()
                 'Committed: BCD',
                 'Committed: ABCD',
             })
-            expect(root).toMatchRenderedOutput('ABCD')
+            -- ROBLOX TODO: replace the below expects with toMatchRenderedOutput
+            -- expect(root).toMatchRenderedOutput('ABCD')
+            expect(root.getChildren()[1].text).toEqual('ABCD')
         end)
         -- ROBLOX TODO: implement resuming work
         xit('when rebasing, does not exclude updates that were already committed, regardless of priority (classes)', function()
