@@ -219,7 +219,26 @@ flushSyncCallbackQueueImpl = function()
     local i = 1
     if decoupleUpdatePriorityFromScheduler then
       local previousLanePriority = getCurrentUpdateLanePriority()
-      local ok, result = pcall(function()
+      -- ROBLOX deviation: YOLO flag for disabling pcall
+      local ok, result
+    	if not _G.__YOLO__ then
+        ok, result = pcall(function()
+          local isSync = true
+          local queue = syncQueue
+
+          setCurrentUpdateLanePriority(SyncLanePriority)
+          runWithPriority(ImmediatePriority, function()
+            for index, callback in ipairs(queue) do
+              i = index
+              repeat
+                callback = callback(isSync)
+              until callback == nil
+            end
+          end)
+          syncQueue = nil
+        end)
+      else
+        ok = true
         local isSync = true
         local queue = syncQueue
 
@@ -234,7 +253,7 @@ flushSyncCallbackQueueImpl = function()
           end
         end)
         syncQueue = nil
-      end)
+      end
 
       -- finally
       setCurrentUpdateLanePriority(previousLanePriority)
@@ -253,7 +272,24 @@ flushSyncCallbackQueueImpl = function()
         error(result)
       end
     else
-      local ok, result = pcall(function()
+      -- ROBLOX deviation: YOLO flag for disabling pcall
+      local ok, result
+    	if not _G.__YOLO__ then
+        ok, result = pcall(function()
+          local isSync = true
+          local queue = syncQueue
+          runWithPriority(ImmediatePriority, function()
+            for index, callback in ipairs(queue) do
+              i = index
+              repeat
+                callback = callback(isSync)
+              until callback == nil
+            end
+          end)
+          syncQueue = nil
+        end)
+      else
+        ok = true
         local isSync = true
         local queue = syncQueue
         runWithPriority(ImmediatePriority, function()
@@ -265,7 +301,7 @@ flushSyncCallbackQueueImpl = function()
           end
         end)
         syncQueue = nil
-      end)
+    end
 
       -- finally
       isFlushingSyncQueue = false

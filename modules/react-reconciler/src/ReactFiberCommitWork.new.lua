@@ -218,9 +218,16 @@ function safelyCallComponentWillUnmount(
       captureCommitPhaseError(current, nearestMountedAncestor, unmountError)
     end
   else
-    local ok, unmountError = pcall(function()
+    -- ROBLOX deviation: YOLO flag for disabling pcall
+    local ok, unmountError
+    if not _G.__YOLO__ then
+      ok, unmountError = pcall(function()
+        callComponentWillUnmountWithTimer(current, instance)
+      end)
+    else
+      ok = true
       callComponentWillUnmountWithTimer(current, instance)
-    end)
+    end
 
     if not ok then
       captureCommitPhaseError(current, nearestMountedAncestor, unmountError)
@@ -239,9 +246,16 @@ local function safelyDetachRef(current: Fiber, nearestMountedAncestor: Fiber)
           captureCommitPhaseError(current, nearestMountedAncestor, refError)
         end
       else
-        local ok, refError = pcall(function()
+        -- ROBLOX deviation: YOLO flag for disabling pcall
+        local ok, refError
+        if not _G.__YOLO__ then
+          ok, refError = pcall(function()
+            ref(nil)
+          end)
+        else
+          ok = true
           ref(nil)
-        end)
+        end
         if not ok then
           captureCommitPhaseError(current, nearestMountedAncestor, refError)
         end
@@ -628,10 +642,17 @@ local function recursivelyCommitLayoutEffects(
             resetCurrentDebugFiberInDEV()
           end
         else
-          local ok, error_ = pcall(function()
-          -- ROBLOX deviation: pass in this function to avoid dependency cycle
+          -- ROBLOX deviation: YOLO flag for disabling pcall
+          local ok, error_
+          if not _G.__YOLO__ then
+            ok, error_ = pcall(function()
+            -- ROBLOX deviation: pass in this function to avoid dependency cycle
+              recursivelyCommitLayoutEffects(child, finishedRoot, captureCommitPhaseError)
+            end)
+          else
+            ok = true
             recursivelyCommitLayoutEffects(child, finishedRoot, captureCommitPhaseError)
-          end)
+          end
 
           if not ok then
             captureCommitPhaseError(child, finishedWork, error_)
@@ -1478,7 +1499,7 @@ insertOrAppendPlacementNode = function(
   local tag = node.tag
   local isHost = tag == HostComponent or tag == HostText
   if isHost or (enableFundamentalAPI and tag == FundamentalComponent) then
-    local stateNode 
+    local stateNode
     if isHost then
        stateNode = node.stateNode
     else

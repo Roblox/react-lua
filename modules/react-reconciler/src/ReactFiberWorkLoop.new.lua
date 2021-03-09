@@ -1166,15 +1166,23 @@ exports.flushDiscreteUpdates = function()
   exports.flushPassiveEffects()
 end
 
--- deviation: FIXME establish generics in signature when Luau supports this
+-- ROBLOX deviation: FIXME establish generics in signature when Luau supports this
 -- local function deferredUpdates<A>(fn: () => A): A
 exports.deferredUpdates = function(fn: () -> any): any
   if decoupleUpdatePriorityFromScheduler then
     local previousLanePriority = getCurrentUpdateLanePriority()
-    local ok, result = pcall(function()
+    -- ROBLOX deviation: YOLO flag for disabling pcall
+    local ok, result
+    if not _G.__YOLO__ then
+      ok, result = pcall(function()
+        setCurrentUpdateLanePriority(ReactFiberLane.DefaultLanePriority)
+        return runWithPriority(NormalSchedulerPriority, fn)
+      end)
+    else
+      ok = true
       setCurrentUpdateLanePriority(ReactFiberLane.DefaultLanePriority)
-      return runWithPriority(NormalSchedulerPriority, fn)
-    end)
+      result = runWithPriority(NormalSchedulerPriority, fn)
+  end
 
     -- finally
     setCurrentUpdateLanePriority(previousLanePriority)
@@ -1211,9 +1219,17 @@ end
 exports.batchedUpdates = function(fn: (any) -> any, a: any): any
   local prevExecutionContext = executionContext
   executionContext = bit32.bor(executionContext, BatchedContext)
-  local ok, result = pcall(function()
-    return fn(a)
-  end)
+
+  -- ROBLOX deviation: YOLO flag for disabling pcall
+  local ok, result
+  if not _G.__YOLO__ then
+    ok, result = pcall(function()
+      return fn(a)
+    end)
+  else
+    ok = true
+    result = fn(a)
+  end
 
   -- finally
   executionContext = prevExecutionContext
@@ -1235,9 +1251,17 @@ end
 exports.batchedEventUpdates = function(fn: (any) -> any, a: any): any
   local prevExecutionContext = executionContext
   executionContext = bit32.bor(executionContext, EventContext)
-  local ok, result = pcall(function()
-    return fn(a)
-  end)
+
+  -- ROBLOX deviation: YOLO flag for disabling pcall
+  local ok, result
+  if not _G.__YOLO__ then
+    ok, result = pcall(function()
+      return fn(a)
+    end)
+  else
+    ok = true
+    result = fn(a)
+  end
 
   -- finally
   executionContext = prevExecutionContext
@@ -1325,9 +1349,16 @@ exports.unbatchedUpdates = function(fn: (any) -> any, a: any): any
   local prevExecutionContext = executionContext
   executionContext = bit32.band(executionContext, bit32.bnot(BatchedContext))
   executionContext = bit32.bor(executionContext, LegacyUnbatchedContext)
-  local ok, result = pcall(function()
-    return fn(a)
-  end)
+  -- ROBLOX deviation: YOLO flag for disabling pcall
+  local ok, result
+  if not _G.__YOLO__ then
+    ok, result = pcall(function()
+      return fn(a)
+    end)
+  else
+    ok = true
+    result = fn(a)
+  end
 
   -- finally
   executionContext = prevExecutionContext
@@ -1362,22 +1393,39 @@ exports.flushSync = function(fn: (any) -> any, a: any): any
 
   if decoupleUpdatePriorityFromScheduler then
     local previousLanePriority = getCurrentUpdateLanePriority()
-    local ok, result = pcall(function()
+
+    -- ROBLOX deviation: YOLO flag for disabling pcall
+    local ok, result
+    if not _G.__YOLO__ then
+      ok, result = pcall(function()
+        setCurrentUpdateLanePriority(ReactFiberLane.SyncLanePriority)
+        if fn then
+          return runWithPriority(ImmediateSchedulerPriority, function()
+                return fn(a)
+              end)
+        else
+          return nil
+        end
+      end)
+    else
+      ok = true
       setCurrentUpdateLanePriority(ReactFiberLane.SyncLanePriority)
       if fn then
-        return runWithPriority(ImmediateSchedulerPriority, function()
+        result = runWithPriority(ImmediateSchedulerPriority, function()
               return fn(a)
             end)
       else
-        return nil
+        result = nil
       end
-    end)
+    end
+
     setCurrentUpdateLanePriority(previousLanePriority)
     executionContext = prevExecutionContext
     -- Flush the immediate callbacks that were scheduled during this batch.
     -- Note that this will happen even if batchedUpdates is higher up
     -- the stack.
     flushSyncCallbackQueue()
+
     if not ok then
       error(result)
       -- ROBLOX FIXME: Luau makes us put a return here because it doesn't understand error() is no-return
@@ -1385,15 +1433,28 @@ exports.flushSync = function(fn: (any) -> any, a: any): any
     end
     return result
   else
-    local ok, result = pcall(function()
+    -- ROBLOX deviation: YOLO flag for disabling pcall
+    local ok, result
+    if not _G.__YOLO__ then
+      ok, result = pcall(function()
+        if fn then
+          return runWithPriority(ImmediateSchedulerPriority, function()
+                return fn(a)
+              end)
+        else
+          return nil
+        end
+      end)
+    else
+      ok = true
       if fn then
-        return runWithPriority(ImmediateSchedulerPriority, function()
+        result = runWithPriority(ImmediateSchedulerPriority, function()
               return fn(a)
             end)
       else
-        return nil
+        result = nil
       end
-    end)
+    end
     -- ROBLOX: finally
     executionContext = prevExecutionContext
     -- Flush the immediate callbacks that were scheduled during this batch.
@@ -1690,9 +1751,16 @@ mod.renderRootSync = function(root: ReactInternalTypes.FiberRoot, lanes: Lanes)
   end
 
   while true do
-    local ok, thrownValue = pcall(function()
+    -- ROBLOX deviation: YOLO flag for disabling pcall
+    local ok, thrownValue
+    if not _G.__YOLO__ then
+      ok, thrownValue = pcall(function()
+        mod.workLoopSync()
+      end)
+    else
+      ok = true
       mod.workLoopSync()
-    end)
+    end
 
     if not ok then
       mod.handleError(root, thrownValue)
@@ -1775,11 +1843,20 @@ mod.renderRootConcurrent = function(root: ReactInternalTypes.FiberRoot, lanes: L
   end
 
   while true do
-    -- deviation: when converting `try` to `pcall`, we can't use break inside it
-    local ok, thrownValue = pcall(function()
+    -- ROBLOX deviation: YOLO flag for disabling pcall
+    local ok, thrownValue
+    if not _G.__YOLO__ then
+      -- deviation: when converting `try` to `pcall`, we can't use break inside it
+      ok, thrownValue = pcall(function()
+        mod.workLoopConcurrent()
+        return "break"
+      end)
+    else
+      ok = true
+      thrownValue = "break"
       mod.workLoopConcurrent()
-      return "break"
-    end)
+    end
+
     if thrownValue == "break" then
       break
     end
@@ -2164,10 +2241,17 @@ mod.commitRootImpl = function(root, renderPriorityLevel)
       end
       resetCurrentDebugFiberInDEV()
     else
-      local ok, result = pcall(function()
-        -- ROBLOX deviation: pass in this function to avoid dependency cycle
+      -- ROBLOX deviation: YOLO flag for disabling pcall
+      local ok, result
+      if not _G.__YOLO__ then
+        ok, result = pcall(function()
+          -- ROBLOX deviation: pass in this function to avoid dependency cycle
+          recursivelyCommitLayoutEffects(finishedWork, root, exports.captureCommitPhaseError)
+        end)
+      else
+        ok = true
         recursivelyCommitLayoutEffects(finishedWork, root, exports.captureCommitPhaseError)
-      end)
+      end
 
       if not ok then
         captureCommitPhaseErrorOnRoot(finishedWork, finishedWork, result)
@@ -2370,9 +2454,17 @@ mod.commitBeforeMutationEffects = function(firstChild: Fiber)
       end
       resetCurrentDebugFiberInDEV()
     else
-      local ok, error_ = pcall(function()
+      -- ROBLOX deviation: YOLO flag for disabling pcall
+      local ok, error_
+      if not _G.__YOLO__ then
+        ok, error_ = pcall(function()
+          mod.commitBeforeMutationEffectsImpl(fiber)
+        end)
+      else
+        ok = true
         mod.commitBeforeMutationEffectsImpl(fiber)
-      end)
+      end
+
       if not ok then
         exports.captureCommitPhaseError(fiber, fiber.return_, error_)
       end
@@ -2474,9 +2566,16 @@ mod.commitMutationEffects = function(
       end
       resetCurrentDebugFiberInDEV()
     else
-      local ok, result = pcall(function()
+      -- ROBLOX deviation: YOLO flag for disabling pcall
+      local ok, result
+      if not _G.__YOLO__ then
+        ok, result = pcall(function()
+          mod.commitMutationEffectsImpl(fiber, root, renderPriorityLevel)
+        end)
+      else
+        ok = true
         mod.commitMutationEffectsImpl(fiber, root, renderPriorityLevel)
-      end)
+      end
       if not ok then
         exports.captureCommitPhaseError(fiber, fiber.return_, result)
       end
@@ -2571,14 +2670,26 @@ mod.commitMutationEffectsDeletions = function(
         exports.captureCommitPhaseError(childToDelete, nearestMountedAncestor, error_)
       end
     else
-      local ok, error_ = pcall(function()
+      -- ROBLOX deviation: YOLO flag for disabling pcall
+      local ok, error_
+      if not _G.__YOLO__ then
+        ok, error_ = pcall(function()
+          commitDeletion(
+            root,
+            childToDelete,
+            nearestMountedAncestor,
+            renderPriorityLevel
+          )
+        end)
+      else
+        ok = true
         commitDeletion(
           root,
           childToDelete,
           nearestMountedAncestor,
           renderPriorityLevel
         )
-      end)
+      end
       if not ok then
         exports.captureCommitPhaseError(childToDelete, nearestMountedAncestor, error_)
       end
@@ -2608,21 +2719,31 @@ exports.flushPassiveEffects = function(): boolean
     pendingPassiveEffectsRenderPriority = NoSchedulerPriority
     if decoupleUpdatePriorityFromScheduler then
       local previousLanePriority = getCurrentUpdateLanePriority()
-      local ok, result = pcall(function()
+
+      -- ROBLOX deviation: YOLO flag for disabling pcall
+      local ok, result
+      if not _G.__YOLO__ then
+        ok, result = pcall(function()
+          setCurrentUpdateLanePriority(
+            schedulerPriorityToLanePriority(priorityLevel)
+          )
+          return runWithPriority(priorityLevel, flushPassiveEffectsImpl)
+        end)
+      else
+        ok = true
         setCurrentUpdateLanePriority(
           schedulerPriorityToLanePriority(priorityLevel)
         )
-        return runWithPriority(priorityLevel, flushPassiveEffectsImpl)
-      end)
+        result = runWithPriority(priorityLevel, flushPassiveEffectsImpl)
+    end
 
       -- finally
       setCurrentUpdateLanePriority(previousLanePriority)
 
-      if ok then
-        return result
-      else
+      if not ok then
         error(result)
       end
+      return result
     else
       return runWithPriority(priorityLevel, flushPassiveEffectsImpl)
     end
@@ -2663,9 +2784,17 @@ flushPassiveMountEffects = function(root, firstChild: Fiber)
         end
         resetCurrentDebugFiberInDEV()
       else
-        local ok, error_ = pcall(function()
+        -- ROBLOX deviation: YOLO flag for disabling pcall
+        local ok, error_
+        if not _G.__YOLO__ then
+          ok, error_ = pcall(function()
+            commitPassiveMountOnFiber(root, fiber)
+          end)
+        else
+          ok = true
           commitPassiveMountOnFiber(root, fiber)
-        end)
+        end
+
         if not ok then
           exports.captureCommitPhaseError(fiber, fiber.return_, error_)
         end

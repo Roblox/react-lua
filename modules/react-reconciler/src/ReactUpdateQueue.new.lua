@@ -392,9 +392,16 @@ local function getStateFromUpdate(
 					bit32.band(workInProgress.mode, StrictMode) ~= 0
 				then
 					disableLogs()
-					local ok, result = pcall(function()
+					-- ROBLOX deviation: YOLO flag for disabling pcall
+					local ok, result
+					if not _G.__YOLO__ then
+						ok, result = pcall(function()
+							payload(instance, prevState, nextProps)
+						end)
+					else
+						ok = true
 						payload(instance, prevState, nextProps)
-					end)
+					end
 					-- finally
 					reenableLogs()
 
@@ -430,9 +437,16 @@ local function getStateFromUpdate(
 					bit32.band(workInProgress.mode, StrictMode) ~= 0
 				then
 					disableLogs()
-					local ok, result = pcall(function()
+					-- ROBLOX deviation: YOLO flag for disabling pcall
+					local ok, result
+					if not _G.__YOLO__ then
+						ok, result = pcall(function()
+							payload(instance, prevState, nextProps)
+						end)
+					else
+						ok = true
 						payload(instance, prevState, nextProps)
-					end)
+					end
 					-- finally
 					reenableLogs()
 

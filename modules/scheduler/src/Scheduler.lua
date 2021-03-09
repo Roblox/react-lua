@@ -140,28 +140,35 @@ flushWork = function(hasTimeRemaining, initialTime)
 	isPerformingWork = true
 	local previousPriorityLevel = currentPriorityLevel
 
-	local ok, result = pcall(function()
-		if enableProfiling then
-			local ok, result = pcall(function()
-				return workLoop(hasTimeRemaining, initialTime)
-			end)
+	-- ROBLOX deviation: YOLO flag for disabling pcall
+	local ok, result
+	if not _G.__YOLO__ then
+		ok, result = pcall(function()
+			if enableProfiling then
+				local enableProfilingOk, enableProfilingResult = pcall(function()
+					return workLoop(hasTimeRemaining, initialTime)
+				end)
 
-			if not ok then
-				local error_ = result
-				if currentTask ~= nil then
-					local currentTime = getCurrentTime()
-					markTaskErrored(currentTask, currentTime)
-					currentTask.isQueued = false
+				if not enableProfilingOk then
+					local error_ = enableProfilingResult
+					if currentTask ~= nil then
+						local currentTime = getCurrentTime()
+						markTaskErrored(currentTask, currentTime)
+						currentTask.isQueued = false
+					end
+					error(error_)
 				end
-				error(error_)
+				-- ROBLOX FIXME: workaround for Luau not understanding error is a no-return
+				return nil
+			else
+				-- No catch in prod code path.
+				return workLoop(hasTimeRemaining, initialTime)
 			end
-			-- ROBLOX FIXME: workaround for Luau not understanding error is a no-return
-			return nil
-		else
-			-- No catch in prod code path.
-			return workLoop(hasTimeRemaining, initialTime)
-		end
-	end)
+		end)
+	else
+		ok = true
+		result = workLoop(hasTimeRemaining, initialTime)
+	end
 
 	-- ROBLOX: finally
 	currentTask = nil
@@ -251,7 +258,15 @@ local function unstable_runWithPriority(priorityLevel, eventHandler)
 	local previousPriorityLevel = currentPriorityLevel
 	currentPriorityLevel = priorityLevel
 
-	local ok, result = pcall(eventHandler)
+	-- ROBLOX deviation: YOLO flag for disabling pcall
+	local ok, result
+	if not _G.__YOLO__ then
+		ok, result = pcall(eventHandler)
+	else
+		ok = true
+		result = eventHandler()
+	end
+
 	-- ROBLOX: finally
 	currentPriorityLevel = previousPriorityLevel
 
@@ -279,7 +294,14 @@ local function unstable_next(eventHandler)
 	local previousPriorityLevel = currentPriorityLevel
 	currentPriorityLevel = priorityLevel
 
-	local ok, result = pcall(eventHandler)
+	-- ROBLOX deviation: YOLO flag for disabling pcall
+	local ok, result
+	if not _G.__YOLO__ then
+		ok, result = pcall(eventHandler)
+	else
+		ok = true
+		result = eventHandler()
+	end
 
 	-- ROBLOX: finally
 	currentPriorityLevel = previousPriorityLevel
@@ -299,9 +321,16 @@ local function unstable_wrapCallback(callback)
 		local previousPriorityLevel = currentPriorityLevel
 		currentPriorityLevel = parentPriorityLevel
 
-		local ok, result = pcall(function(...)
-			return callback(...)
-		end, ...)
+		-- ROBLOX deviation: YOLO flag for disabling pcall
+		local ok, result
+		if not _G.__YOLO__ then
+			ok, result = pcall(function(...)
+				return callback(...)
+			end, ...)
+		else
+			ok = true
+			result = callback(...)
+		end
 
 		-- ROBLOX: finally
 		currentPriorityLevel = previousPriorityLevel
