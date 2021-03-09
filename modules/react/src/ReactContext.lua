@@ -24,7 +24,7 @@ exports.createContext = function(defaultValue, calculateChangedBits)
   else
     if _G.__DEV__ then
       if calculateChangedBits ~= nil and typeof(calculateChangedBits) ~= 'function' then
-        console.error('createContext: Expected the optional second argument to be a ' + 'function. Instead received: %s', calculateChangedBits)
+        console.error('createContext: Expected the optional second argument to be a ' .. 'function. Instead received: %s', calculateChangedBits)
       end
     end
   end

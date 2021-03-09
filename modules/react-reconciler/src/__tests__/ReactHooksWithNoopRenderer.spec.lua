@@ -389,13 +389,12 @@ return function()
       expect(firstUpdater).toEqual(secondUpdater)
       end)
 
-      -- ROBLOX TODO: output looks corrects, needs toErrorDev
+      -- ROBLOX TODO: toErrorDev, needs LUAFDN-196
     xit('warns on set after unmount', function()
       local expect: any = expect
       local updateCount
       local function Counter(props, ref)
-        local useStateCount = useState(0)
-        updateCount = useStateCount[2]
+        _, updateCount = useState(0)
         return nil
       end
 
@@ -412,7 +411,7 @@ return function()
       )
     end)
 
-    -- ROBLOX TODO: output looks corrects, needs toErrorDev
+    -- ROBLOX TODO: toErrorDev, needs LUAFDN-196
     xit('dedupes the warning by component name', function()
       local expect: any = expect
       local updateCountA

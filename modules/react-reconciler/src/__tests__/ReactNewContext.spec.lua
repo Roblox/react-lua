@@ -67,6 +67,24 @@ return function()
     return dispatcher.readContext(Context, observedBits);
   end
 
+  -- Note: This is based on a similar component we use in www. We can delete
+  -- once the extra div wrapper is no longer necessary.
+  local function LegacyHiddenDiv(props)
+    local children, mode = props.children, props.mode
+
+    return React.createElement('div', {
+        hidden = mode == 'hidden',
+    }, React.createElement(React.unstable_LegacyHidden, {
+        mode = (function()
+            if mode == 'hidden' then
+                return'unstable-defer-without-hiding'
+            end
+
+            return mode
+        end)(),
+    }, children))
+  end
+
   local function sharedContextTests(label, getConsumer)
     describe("reading context with "..label, function()
       it('simple mount and update', function()
@@ -385,485 +403,469 @@ return function()
         })
       end)
 
-    --   it('compares context values with Object.is semantics', () => {
-    --     local Context = React.createContext(1)
-    --     local ContextConsumer = getConsumer(Context)
+      it('compares context values with Object.is semantics', function()
+        local expect: any = expect
+        local Context = React.createContext(1)
+        local ContextConsumer = getConsumer(Context)
 
-    --     function Provider(props)
-    --       Scheduler.unstable_yieldValue('Provider')
-    --       return (
-    --         <Context.Provider value={props.value}>
-    --           {props.children}
-    --         </Context.Provider>
-    --       )
-    --     end
+        local function Provider(props)
+          Scheduler.unstable_yieldValue('Provider')
+          return React.createElement(Context.Provider, {
+            value = props.value
+          }, props.children)
+        end
 
-    --     function Consumer(props)
-    --       Scheduler.unstable_yieldValue('Consumer')
-    --       return (
-    --         <ContextConsumer>
-    --           {value => {
-    --             Scheduler.unstable_yieldValue('Consumer render prop')
-    --             return <span prop={'Result: ' + value} />
-    --           }}
-    --         </ContextConsumer>
-    --       )
-    --     end
+        local function Consumer(props)
+          Scheduler.unstable_yieldValue('Consumer')
+          return React.createElement(ContextConsumer, nil, function (value)
+            Scheduler.unstable_yieldValue('Consumer render prop')
+            return React.createElement("span", {
+              prop= 'Result: ' .. value
+            })
+          end)
+        end
 
-    --     class Indirection extends React.Component {
-    --       shouldComponentUpdate()
-    --         return false
-    --       end
-    --       render()
-    --         Scheduler.unstable_yieldValue('Indirection')
-    --         return this.props.children
-    --       end
-    --     end
+        local Indirection = React.Component:extend("Indirection")
 
-    --     function App(props)
-    --       Scheduler.unstable_yieldValue('App')
-    --       return (
-    --         <Provider value={props.value}>
-    --           <Indirection>
-    --             <Indirection>
-    --               <Consumer />
-    --             </Indirection>
-    --           </Indirection>
-    --         </Provider>
-    --       )
-    --     end
+        function Indirection:shouldComponentUpdate()
+          return false
+        end
 
-    --     ReactNoop.render(<App value={NaN} />)
-    --     expect(Scheduler).toFlushAndYield([
-    --       'App',
-    --       'Provider',
-    --       'Indirection',
-    --       'Indirection',
-    --       'Consumer',
-    --       'Consumer render prop',
-    --     ])
-    --     expect(ReactNoop.getChildren()).toEqual([span('Result: NaN')])
+        function Indirection:render()
+          Scheduler.unstable_yieldValue('Indirection')
+          return self.props.children
+        end
 
-    --     -- Update
-    --     ReactNoop.render(<App value={NaN} />)
-    --     expect(Scheduler).toFlushAndYield([
-    --       'App',
-    --       'Provider',
-    --       -- Consumer should not re-render again
-    --       -- 'Consumer render prop',
-    --     ])
-    --     expect(ReactNoop.getChildren()).toEqual([span('Result: NaN')])
-    --   })
+        local function App(props)
+          Scheduler.unstable_yieldValue('App')
+          return React.createElement(Provider, {
+            value = props.value
+          }, React.createElement(Indirection, nil, React.createElement(Indirection, nil, React.createElement(Consumer, nil))))
+        end
 
-    --   it('context unwinds when interrupted', () => {
-    --     local Context = React.createContext('Default')
-    --     local ContextConsumer = getConsumer(Context)
+        ReactNoop.render( React.createElement(App, {
+          -- deviation: string NaN in place of NaN
+          value = "NaN"
+        }))
+        expect(Scheduler).toFlushAndYield({'App', 'Provider', 'Indirection', 'Indirection', 'Consumer', 'Consumer render prop'})
+        expect(ReactNoop.getChildren()).toEqual({span('Result: NaN')})
 
-    --     function Consumer(props)
-    --       return (
-    --         <ContextConsumer>
-    --           {value => <span prop={'Result: ' + value} />}
-    --         </ContextConsumer>
-    --       )
-    --     end
+        -- Update
+        ReactNoop.render( React.createElement(App, {
+          -- deviation: string NaN in place of NaN
+          value = "NaN"
+        }))
+        expect(Scheduler).toFlushAndYield({'App', 'Provider'
+          -- Consumer should not re-render again
+          -- 'Consumer render prop',
+        })
+        expect(ReactNoop.getChildren()).toEqual({span('Result: NaN')})
+      end)
 
-    --     function BadRender()
-    --       throw new Error('Bad render')
-    --     end
+      it('context unwinds when interrupted', function()
+        local expect: any = expect
+        local Context = React.createContext('Default')
+        local ContextConsumer = getConsumer(Context)
 
-    --     class ErrorBoundary extends React.Component {
-    --       state = {error: nil}
-    --       componentDidCatch(error)
-    --         this.setState({error})
-    --       end
-    --       render()
-    --         if this.state.error)
-    --           return nil
-    --         end
-    --         return this.props.children
-    --       end
-    --     end
+        local function Consumer(props)
+          return React.createElement(ContextConsumer, nil, function (value)
+            return React.createElement("span", {
+              prop = 'Result: ' .. value
+            })
+          end)
+        end
 
-    --     function App(props)
-    --       return (
-    --         <>
-    --           <Context.Provider value="Does not unwind">
-    --             <ErrorBoundary>
-    --               <Context.Provider value="Unwinds after BadRender throws">
-    --                 <BadRender />
-    --               </Context.Provider>
-    --             </ErrorBoundary>
-    --             <Consumer />
-    --           </Context.Provider>
-    --         </>
-    --       )
-    --     end
+        function BadRender()
+          error('Bad render')
+        end
 
-    --     ReactNoop.render(<App value="A" />)
-    --     expect(Scheduler).toFlushWithoutYielding()
-    --     expect(ReactNoop.getChildren()).toEqual([
-    --       -- The second provider should use the default value.
-    --       span('Result: Does not unwind'),
-    --     ])
-    --   })
+        local ErrorBoundary = React.Component:extend("ErrorBoundary")
 
-    --   it('can skip consumers with bitmask', () => {
-    --     local Context = React.createContext({foo: 0, bar: 0}, (a, b) => {
-    --       local result = 0
-    --       if a.foo ~= b.foo)
-    --         result |= 0b01
-    --       end
-    --       if a.bar ~= b.bar)
-    --         result |= 0b10
-    --       end
-    --       return result
-    --     })
-    --     local Consumer = getConsumer(Context)
+        -- deviation: Lua nil values in table don't result in entry
+        -- deviation: error is a Lua reserved word, converted to error_
+        function ErrorBoundary:init()
+          self.state = {error_ = ''}
+        end
 
-    --     function Provider(props)
-    --       return (
-    --         <Context.Provider value={{foo: props.foo, bar: props.bar}}>
-    --           {props.children}
-    --         </Context.Provider>
-    --       )
-    --     end
+        function ErrorBoundary:componentDidCatch(error_)
+            self.setState({
+              -- deviation: error is a Lua reserved word, converted to error_
+              error_ = error_
+            })
+        end
 
-    --     function Foo()
-    --       return (
-    --         <Consumer unstable_observedBits={0b01}>
-    --           {value => {
-    --             Scheduler.unstable_yieldValue('Foo')
-    --             return <span prop={'Foo: ' + value.foo} />
-    --           }}
-    --         </Consumer>
-    --       )
-    --     end
+        function ErrorBoundary:render()
+            if self.state.error_ then
+              return nil
+            end
 
-    --     function Bar()
-    --       return (
-    --         <Consumer unstable_observedBits={0b10}>
-    --           {value => {
-    --             Scheduler.unstable_yieldValue('Bar')
-    --             return <span prop={'Bar: ' + value.bar} />
-    --           }}
-    --         </Consumer>
-    --       )
-    --     end
+            return self.props.children
+          end
+        local function App(props)
+          return React.createElement(React.Fragment, nil, React.createElement(Context.Provider, {
+            value = "Does not unwind"
+          }, React.createElement(ErrorBoundary, nil, React.createElement(Context.Provider, {
+            value = "Unwinds after BadRender throws"
+          }, React.createElement(BadRender, nil))), React.createElement(Consumer, nil)))
+        end
 
-    --     class Indirection extends React.Component {
-    --       shouldComponentUpdate()
-    --         return false
-    --       end
-    --       render()
-    --         return this.props.children
-    --       end
-    --     end
+        ReactNoop.render( React.createElement(App, {
+          value = "A"
+        }))
+        expect(Scheduler).toFlushWithoutYielding()
+        expect(ReactNoop.getChildren()).toEqual({
+          -- The second provider should use the default value.
+          span('Result: Does not unwind')})
+      end)
 
-    --     function App(props)
-    --       return (
-    --         <Provider foo={props.foo} bar={props.bar}>
-    --           <Indirection>
-    --             <Indirection>
-    --               <Foo />
-    --             </Indirection>
-    --             <Indirection>
-    --               <Bar />
-    --             </Indirection>
-    --           </Indirection>
-    --         </Provider>
-    --       )
-    --     end
+      it('can skip consumers with bitmask', function()
+        local expect: any = expect
+        local Context = React.createContext({
+          foo = 0,
+          bar = 0
+        }, function (a, b)
+          local result = 0
 
-    --     ReactNoop.render(<App foo={1} bar={1} />)
-    --     expect(Scheduler).toFlushAndYield(['Foo', 'Bar'])
-    --     expect(ReactNoop.getChildren()).toEqual([
-    --       span('Foo: 1'),
-    --       span('Bar: 1'),
-    --     ])
+          if a.foo ~= b.foo then
+            result = bit32.bor(result, 0b01)
+          end
 
-    --     -- Update only foo
-    --     ReactNoop.render(<App foo={2} bar={1} />)
-    --     expect(Scheduler).toFlushAndYield(['Foo'])
-    --     expect(ReactNoop.getChildren()).toEqual([
-    --       span('Foo: 2'),
-    --       span('Bar: 1'),
-    --     ])
+          if a.bar ~= b.bar then
+            result = bit32.bor(result, 0b10)
+          end
 
-    --     -- Update only bar
-    --     ReactNoop.render(<App foo={2} bar={2} />)
-    --     expect(Scheduler).toFlushAndYield(['Bar'])
-    --     expect(ReactNoop.getChildren()).toEqual([
-    --       span('Foo: 2'),
-    --       span('Bar: 2'),
-    --     ])
+          return result
+        end)
+        local Consumer = getConsumer(Context)
 
-    --     -- Update both
-    --     ReactNoop.render(<App foo={3} bar={3} />)
-    --     expect(Scheduler).toFlushAndYield(['Foo', 'Bar'])
-    --     expect(ReactNoop.getChildren()).toEqual([
-    --       span('Foo: 3'),
-    --       span('Bar: 3'),
-    --     ])
-    --   })
+        local function Provider(props)
+          return React.createElement(Context.Provider, {
+            value = {
+              foo = props.foo,
+              bar = props.bar
+            }
+          }, props.children)
+        end
 
-    --   it('can skip parents with bitmask bailout while updating their children', () => {
-    --     local Context = React.createContext({foo: 0, bar: 0}, (a, b) => {
-    --       local result = 0
-    --       if a.foo ~= b.foo)
-    --         result |= 0b01
-    --       end
-    --       if a.bar ~= b.bar)
-    --         result |= 0b10
-    --       end
-    --       return result
-    --     })
-    --     local Consumer = getConsumer(Context)
+        local function Foo()
+          return React.createElement(Consumer, {
+            unstable_observedBits = 0b01
+          }, function (value)
+            Scheduler.unstable_yieldValue('Foo')
+            return React.createElement("span", {
+              prop = 'Foo: ' .. value.foo
+            })
+          end)
+        end
 
-    --     function Provider(props)
-    --       return (
-    --         <Context.Provider value={{foo: props.foo, bar: props.bar}}>
-    --           {props.children}
-    --         </Context.Provider>
-    --       )
-    --     end
+        local function Bar()
+          return React.createElement(Consumer, {
+            unstable_observedBits = 0b10
+          }, function (value)
+            Scheduler.unstable_yieldValue('Bar')
+            return React.createElement("span", {
+              prop = 'Bar: ' .. value.bar
+            })
+          end)
+        end
 
-    --     function Foo(props)
-    --       return (
-    --         <Consumer unstable_observedBits={0b01}>
-    --           {value => {
-    --             Scheduler.unstable_yieldValue('Foo')
-    --             return (
-    --               <>
-    --                 <span prop={'Foo: ' + value.foo} />
-    --                 {props.children and props.children()}
-    --               </>
-    --             )
-    --           }}
-    --         </Consumer>
-    --       )
-    --     end
+        local Indirection = React.Component:extend("Indirection")
+        function Indirection:shouldComponentUpdate()
+          return false
+        end
 
-    --     function Bar(props)
-    --       return (
-    --         <Consumer unstable_observedBits={0b10}>
-    --           {value => {
-    --             Scheduler.unstable_yieldValue('Bar')
-    --             return (
-    --               <>
-    --                 <span prop={'Bar: ' + value.bar} />
-    --                 {props.children and props.children()}
-    --               </>
-    --             )
-    --           }}
-    --         </Consumer>
-    --       )
-    --     end
+        function Indirection:render()
+          return self.props.children
+        end
 
-    --     class Indirection extends React.Component {
-    --       shouldComponentUpdate()
-    --         return false
-    --       end
-    --       render()
-    --         return this.props.children
-    --       end
-    --     end
+        local function App(props)
+          return React.createElement(Provider, {
+            foo = props.foo,
+            bar = props.bar
+          }, React.createElement(Indirection, nil, React.createElement(Indirection, nil, React.createElement(Foo, nil)),
+              React.createElement(Indirection, nil, React.createElement(Bar, nil))))
+        end
 
-    --     function App(props)
-    --       return (
-    --         <Provider foo={props.foo} bar={props.bar}>
-    --           <Indirection>
-    --             <Foo>
-    --               {--[[ Use a render prop so we don't test constant elements. ]]}
-    --               {() => (
-    --                 <Indirection>
-    --                   <Bar>
-    --                     {() => (
-    --                       <Indirection>
-    --                         <Foo />
-    --                       </Indirection>
-    --                     )}
-    --                   </Bar>
-    --                 </Indirection>
-    --               )}
-    --             </Foo>
-    --           </Indirection>
-    --         </Provider>
-    --       )
-    --     end
+        ReactNoop.render( React.createElement(App, {
+          foo = 1,
+          bar = 1
+        }))
+        expect(Scheduler).toFlushAndYield({'Foo', 'Bar'})
+        expect(ReactNoop.getChildren()).toEqual({span('Foo: 1'), span('Bar: 1')}) -- Update only foo
 
-    --     ReactNoop.render(<App foo={1} bar={1} />)
-    --     expect(Scheduler).toFlushAndYield(['Foo', 'Bar', 'Foo'])
-    --     expect(ReactNoop.getChildren()).toEqual([
-    --       span('Foo: 1'),
-    --       span('Bar: 1'),
-    --       span('Foo: 1'),
-    --     ])
+        ReactNoop.render( React.createElement(App, {
+          foo = 2,
+          bar = 1
+        }))
+        expect(Scheduler).toFlushAndYield({'Foo'})
+        expect(ReactNoop.getChildren()).toEqual({span('Foo: 2'), span('Bar: 1')}) -- Update only bar
 
-    --     -- Update only foo
-    --     ReactNoop.render(<App foo={2} bar={1} />)
-    --     expect(Scheduler).toFlushAndYield(['Foo', 'Foo'])
-    --     expect(ReactNoop.getChildren()).toEqual([
-    --       span('Foo: 2'),
-    --       span('Bar: 1'),
-    --       span('Foo: 2'),
-    --     ])
+        ReactNoop.render( React.createElement(App, {
+          foo = 2,
+          bar = 2
+        }))
+        expect(Scheduler).toFlushAndYield({'Bar'})
+        expect(ReactNoop.getChildren()).toEqual({span('Foo: 2'), span('Bar: 2')}) -- Update both
 
-    --     -- Update only bar
-    --     ReactNoop.render(<App foo={2} bar={2} />)
-    --     expect(Scheduler).toFlushAndYield(['Bar'])
-    --     expect(ReactNoop.getChildren()).toEqual([
-    --       span('Foo: 2'),
-    --       span('Bar: 2'),
-    --       span('Foo: 2'),
-    --     ])
+        ReactNoop.render( React.createElement(App, {
+          foo = 3,
+          bar = 3
+        }))
+        expect(Scheduler).toFlushAndYield({'Foo', 'Bar'})
+        expect(ReactNoop.getChildren()).toEqual({span('Foo: 3'), span('Bar: 3')})
+      end)
+      -- ROBLOX TODO: Fails in dev mode due to React.Fragment
+      xit('can skip parents with bitmask bailout while updating their children', function()
+        local expect: any = expect
+        local Context = React.createContext({
+          foo = 0,
+          bar = 0
+        }, function (a, b)
+          local result = 0
 
-    --     -- Update both
-    --     ReactNoop.render(<App foo={3} bar={3} />)
-    --     expect(Scheduler).toFlushAndYield(['Foo', 'Bar', 'Foo'])
-    --     expect(ReactNoop.getChildren()).toEqual([
-    --       span('Foo: 3'),
-    --       span('Bar: 3'),
-    --       span('Foo: 3'),
-    --     ])
-    --   })
+          if a.foo ~= b.foo then
+            result = bit32.bor(result, 0b01)
+          end
 
-    --   it("does not re-render if there's an update in a child", () => {
-    --     local Context = React.createContext(0)
-    --     local Consumer = getConsumer(Context)
+          if a.bar ~= b.bar then
+            result = bit32.bor(result, 0b10)
+          end
 
-    --     local child
-    --     class Child extends React.Component {
-    --       state = {step: 0}
-    --       render()
-    --         Scheduler.unstable_yieldValue('Child')
-    --         return (
-    --           <span
-    --             prop={`Context: ${this.props.context}, Step: ${this.state.step}`}
-    --           />
-    --         )
-    --       end
-    --     end
+          return result
+        end)
+        local Consumer = getConsumer(Context)
 
-    --     function App(props)
-    --       return (
-    --         <Context.Provider value={props.value}>
-    --           <Consumer>
-    --             {value => {
-    --               Scheduler.unstable_yieldValue('Consumer render prop')
-    --               return <Child ref={inst => (child = inst)} context={value} />
-    --             }}
-    --           </Consumer>
-    --         </Context.Provider>
-    --       )
-    --     end
+        local function Provider(props)
+          return React.createElement(Context.Provider, {
+            value = {
+              foo = props.foo,
+              bar = props.bar
+            }
+          }, props.children)
+        end
 
-    --     -- Initial mount
-    --     ReactNoop.render(<App value={1} />)
-    --     expect(Scheduler).toFlushAndYield(['Consumer render prop', 'Child'])
-    --     expect(ReactNoop.getChildren()).toEqual([span('Context: 1, Step: 0')])
+        local function Foo(props)
+          return React.createElement(Consumer, {
+            unstable_observedBits = 0b01
+          }, function (value)
+            Scheduler.unstable_yieldValue('Foo')
+            return React.createElement(React.Fragment, nil, React.createElement("span", {
+              prop = 'Foo: ' .. value.foo
+            }), props.children and props.children())
+          end)
+        end
 
-    --     child.setState({step: 1})
-    --     expect(Scheduler).toFlushAndYield(['Child'])
-    --     expect(ReactNoop.getChildren()).toEqual([span('Context: 1, Step: 1')])
-    --   })
+        local function Bar(props)
+          return React.createElement(Consumer, {
+            unstable_observedBits = 0b10
+          }, function (value)
+            Scheduler.unstable_yieldValue('Bar')
+            return React.createElement(React.Fragment, nil, React.createElement("span", {
+              prop = 'Bar: ' .. value.bar
+            }), props.children and props.children())
+          end)
+        end
 
-    --   it('consumer bails out if value is unchanged and something above bailed out', () => {
-    --     local Context = React.createContext(0)
-    --     local Consumer = getConsumer(Context)
+        local Indirection = React.Component:extend("Indirection")
+        function Indirection:shouldComponentUpdate()
+          return false
+        end
 
-    --     function renderChildValue(value)
-    --       Scheduler.unstable_yieldValue('Consumer')
-    --       return <span prop={value} />
-    --     end
+        function Indirection:render()
+          return self.props.children
+        end
 
-    --     function ChildWithInlineRenderCallback()
-    --       Scheduler.unstable_yieldValue('ChildWithInlineRenderCallback')
-    --       -- Note: we are intentionally passing an inline arrow. Don't refactor.
-    --       return <Consumer>{value => renderChildValue(value)}</Consumer>
-    --     end
+        local function App(props)
+          return React.createElement(Provider, {
+            foo = props.foo,
+            bar = props.bar
+          }, React.createElement(Indirection, nil, React.createElement(Foo, nil, function()
+            return React.createElement(Indirection, nil, React.createElement(Bar, nil, function()
+              return React.createElement(Indirection, nil, React.createElement(Foo, nil))
+            end))
+          end)))
+        end
 
-    --     function ChildWithCachedRenderCallback()
-    --       Scheduler.unstable_yieldValue('ChildWithCachedRenderCallback')
-    --       return <Consumer>{renderChildValue}</Consumer>
-    --     end
+        ReactNoop.render(React.createElement(App, {
+          foo = 1,
+          bar = 1
+        }))
+        expect(Scheduler).toFlushAndYield({'Foo', 'Bar', 'Foo'})
+        expect(ReactNoop.getChildren()).toEqual({span('Foo: 1'), span('Bar: 1'), span('Foo: 1')})
 
-    --     class PureIndirection extends React.PureComponent {
-    --       render()
-    --         Scheduler.unstable_yieldValue('PureIndirection')
-    --         return (
-    --           <>
-    --             <ChildWithInlineRenderCallback />
-    --             <ChildWithCachedRenderCallback />
-    --           </>
-    --         )
-    --       end
-    --     end
+        -- Update only foo
+        ReactNoop.render(React.createElement(App, {
+          foo = 2,
+          bar = 1
+        }))
+        expect(Scheduler).toFlushAndYield({'Foo', 'Foo'})
+        expect(ReactNoop.getChildren()).toEqual({span('Foo: 2'), span('Bar: 1'), span('Foo: 2')})
 
-    --     class App extends React.Component {
-    --       render()
-    --         Scheduler.unstable_yieldValue('App')
-    --         return (
-    --           <Context.Provider value={this.props.value}>
-    --             <PureIndirection />
-    --           </Context.Provider>
-    --         )
-    --       end
-    --     end
+        -- Update only bar
+        ReactNoop.render(React.createElement(App, {
+          foo = 2,
+          bar = 2
+        }))
+        expect(Scheduler).toFlushAndYield({'Bar'})
+        expect(ReactNoop.getChildren()).toEqual({span('Foo: 2'), span('Bar: 2'), span('Foo: 2')}) 
 
-    --     -- Initial mount
-    --     ReactNoop.render(<App value={1} />)
-    --     expect(Scheduler).toFlushAndYield([
-    --       'App',
-    --       'PureIndirection',
-    --       'ChildWithInlineRenderCallback',
-    --       'Consumer',
-    --       'ChildWithCachedRenderCallback',
-    --       'Consumer',
-    --     ])
-    --     expect(ReactNoop.getChildren()).toEqual([span(1), span(1)])
+        -- Update both
+        ReactNoop.render(React.createElement(App, {
+          foo = 3,
+          bar = 3
+        }))
+        expect(Scheduler).toFlushAndYield({'Foo', 'Bar', 'Foo'})
+        expect(ReactNoop.getChildren()).toEqual({span('Foo: 3'), span('Bar: 3'), span('Foo: 3')})
+      end)
 
-    --     -- Update (bailout)
-    --     ReactNoop.render(<App value={1} />)
-    --     expect(Scheduler).toFlushAndYield(['App'])
-    --     expect(ReactNoop.getChildren()).toEqual([span(1), span(1)])
+      it("does not re-render if there's an update in a child", function()
+        local expect: any = expect
+        local Context = React.createContext(0)
+        local Consumer = getConsumer(Context)
+        local child
 
-    --     -- Update (no bailout)
-    --     ReactNoop.render(<App value={2} />)
-    --     expect(Scheduler).toFlushAndYield(['App', 'Consumer', 'Consumer'])
-    --     expect(ReactNoop.getChildren()).toEqual([span(2), span(2)])
-    --   })
+        local Child = React.Component:extend("Child")
+        function Child:init()
+          self.state = {
+            step= 0
+          }
+        end
 
-    --   -- @gate experimental
-    --   it("context consumer doesn't bail out inside hidden subtree", () => {
-    --     local Context = React.createContext('dark')
-    --     local Consumer = getConsumer(Context)
+        function Child:render()
+          Scheduler.unstable_yieldValue('Child')
+          return React.createElement("span", {
+            prop = 'Context: ' .. tostring(self.props.context) .. ', Step: ' .. tostring(self.state.step)
+          })
+        end
 
-    --     function App({theme})
-    --       return (
-    --         <Context.Provider value={theme}>
-    --           <LegacyHiddenDiv mode="hidden">
-    --             <Consumer>{value => <Text text={value} />}</Consumer>
-    --           </LegacyHiddenDiv>
-    --         </Context.Provider>
-    --       )
-    --     end
+        local function App(props)
+          return React.createElement(Context.Provider, {
+            value = props.value
+          }, React.createElement(Consumer, nil, function(value)
+            Scheduler.unstable_yieldValue('Consumer render prop')
+            return React.createElement(Child, {
+              ref = function(inst)
+                child = inst
+                return child
+              end,
+              context = value
+            })
+          end))
+        end
 
-    --     ReactNoop.render(<App theme="dark" />)
-    --     expect(Scheduler).toFlushAndYield(['dark'])
-    --     expect(ReactNoop.getChildrenAsJSX()).toEqual(
-    --       <div hidden={true}>
-    --         <span prop="dark" />
-    --       </div>,
-    --     )
+        -- Initial mount
+        ReactNoop.render( React.createElement(App, {
+          value = 1
+        }))
+        expect(Scheduler).toFlushAndYield({'Consumer render prop', 'Child'})
+        expect(ReactNoop.getChildren()).toEqual({span('Context: 1, Step: 0')})
+        child:setState({
+          step = 1
+        })
+        expect(Scheduler).toFlushAndYield({'Child'})
+        expect(ReactNoop.getChildren()).toEqual({span('Context: 1, Step: 1')})
+      end)
 
-    --     ReactNoop.render(<App theme="light" />)
-    --     expect(Scheduler).toFlushAndYield(['light'])
-    --     expect(ReactNoop.getChildrenAsJSX()).toEqual(
-    --       <div hidden={true}>
-    --         <span prop="light" />
-    --       </div>,
-    --     )
-    --   })
+      it('consumer bails out if value is unchanged and something above bailed out', function()
+        local expect: any = expect
+        local Context = React.createContext(0)
+        local Consumer = getConsumer(Context)
+
+        local function renderChildValue(value)
+          Scheduler.unstable_yieldValue('Consumer')
+          return React.createElement("span", {
+            prop = value
+          })
+        end
+
+        local function ChildWithInlineRenderCallback()
+          Scheduler.unstable_yieldValue('ChildWithInlineRenderCallback')
+          -- Note: we are intentionally passing an inline arrow. Don't refactor.
+          return React.createElement(Consumer, nil, function (value)
+            return renderChildValue(value)
+          end)
+        end
+
+        local function ChildWithCachedRenderCallback()
+          Scheduler.unstable_yieldValue('ChildWithCachedRenderCallback')
+          return React.createElement(Consumer, nil, renderChildValue)
+        end
+
+        local PureIndirection = React.PureComponent:extend("PureIndirection")
+        function PureIndirection:render()
+          Scheduler.unstable_yieldValue('PureIndirection')
+          return React.createElement(React.Fragment, nil, React.createElement(ChildWithInlineRenderCallback, nil), React.createElement(ChildWithCachedRenderCallback, nil))
+        end
+
+        local App = React.Component:extend("App")
+        function App:render()
+          Scheduler.unstable_yieldValue('App')
+          return React.createElement(Context.Provider, {
+            value = self.props.value
+          }, React.createElement(PureIndirection, nil))
+        end
+
+        -- Initial mount
+        ReactNoop.render( React.createElement(App, {
+          value = 1
+        }))
+        expect(Scheduler).toFlushAndYield({'App', 'PureIndirection', 'ChildWithInlineRenderCallback', 'Consumer', 'ChildWithCachedRenderCallback', 'Consumer'})
+        expect(ReactNoop.getChildren()).toEqual({span(1), span(1)})
+
+        -- Update (bailout)
+        ReactNoop.render( React.createElement(App, {
+          value = 1
+        }))
+        expect(Scheduler).toFlushAndYield({'App'})
+        expect(ReactNoop.getChildren()).toEqual({span(1), span(1)})
+
+        -- Update (no bailout)
+        ReactNoop.render( React.createElement(App, {
+          value = 2
+        }))
+        expect(Scheduler).toFlushAndYield({'App', 'Consumer', 'Consumer'})
+        expect(ReactNoop.getChildren()).toEqual({span(2), span(2)})
+      end)
+
+      -- @gate experimental
+      -- ROBLOX TODO: ReactFiberBeginWork.new:3546: FIXME (roblox): beginWork: LegacyHiddenComponent is unimplemented
+      xit("context consumer doesn't bail out inside hidden subtree", function()
+        local expect: any = expect
+        local Context = React.createContext('dark')
+        local Consumer = getConsumer(Context)
+
+        local function App(ref)
+          local theme = ref.theme
+          return React.createElement(Context.Provider, {
+            value = theme
+          }, React.createElement(LegacyHiddenDiv, {
+            mode = "hidden"
+          }, React.createElement(Consumer, nil, function (value)
+            return React.createElement(Text, {
+              text = value
+            })
+          end)))
+        end
+
+        ReactNoop.render( React.createElement(App, {
+          theme = "dark"
+        }))
+        expect(Scheduler).toFlushAndYield({'dark'})
+        expect(ReactNoop.getChildren()).toEqual( React.createElement("div", {
+          hidden = true
+        }, React.createElement("span", {
+          prop = "dark"
+        })))
+        ReactNoop.render( React.createElement(App, {
+          theme = "light"
+        }))
+        expect(Scheduler).toFlushAndYield({'light'})
+        expect(ReactNoop.getChildren()).toEqual( React.createElement("div", {
+          hidden = true
+        }, React.createElement("span", {
+          prop = "light"
+        })))
+      end)
 
       -- This is a regression case for https://github.com/facebook/react/issues/12389.
       it('does not run into an infinite loop', function()
@@ -1100,7 +1102,7 @@ return function()
         )
     end)
 
-    -- deviation: Not sure if this makes sense, since `nil` could be valid
+    -- ROBLOX TODO: toErrorDev, needs LUAFDN-196
     xit('warns if no value prop provided', function()
         local expect: any = expect
         local Context = React.createContext()
@@ -1120,7 +1122,7 @@ return function()
         )
     end)
 
-    -- ROBLOX TODO: expected a string (for built-in components) or a class/function (for composite components) but got: table.
+    -- ROBLOX TODO: spyOnDev
     xit('warns if multiple renderers concurrently render the same context', function()
         local expect: any = expect
         -- ROBLOX TODO: how do we do this elsewhere?

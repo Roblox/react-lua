@@ -43,5 +43,6 @@ return {
 	useMemo = ReactHooks.useMemo,
 	useCallback = ReactHooks.useCallback,
 	useContext = ReactHooks.useContext,
-	createContext = ReactContext.createContext
+	createContext = ReactContext.createContext,
+	unstable_LegacyHidden = ReactSymbols.REACT_LEGACY_HIDDEN_TYPE
 }

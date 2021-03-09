@@ -219,14 +219,15 @@ local resolveDefaultProps = require(script.Parent["ReactFiberLazyComponent.new"]
 --   isSimpleFunctionComponent,
 local ReactFiber = require(script.Parent["ReactFiber.new"])
 local createFiberFromTypeAndProps = ReactFiber.createFiberFromTypeAndProps
+-- local ReactFiberWorkLoop = require(script.Parent["ReactFiberWorkLoop.new"])
+-- local pushRenderLanes = ReactFiberWorkLoop.pushRenderLanes
+-- local markSpawnedWork = ReactFiberWorkLoop.markSpawnedWork
 -- local {
---   markSpawnedWork,
 --   retryDehydratedSuspenseBoundary,
 --   scheduleUpdateOnFiber,
 --   renderDidSuspendDelayIfPossible,
 --   markSkippedUpdateLanes,
 --   getWorkInProgressRoot,
---   pushRenderLanes,
 --   getExecutionContext,
 --   RetryAfterError,
 --   NoContext,
@@ -611,32 +612,34 @@ end
 --   )
 -- end
 
--- function updateOffscreenComponent(
---   current: Fiber | nil,
+-- local function updateOffscreenComponent(
+--   current: Fiber?,
 --   workInProgress: Fiber,
---   renderLanes: Lanes,
+--   renderLanes: Lanes
 -- )
 --   local nextProps: OffscreenProps = workInProgress.pendingProps
 --   local nextChildren = nextProps.children
 
---   local prevState: OffscreenState | nil =
---     current ~= nil ? current.memoizedState : nil
+--   local prevState: OffscreenState?
+--   if current ~= nil then
+--     prevState = current.MutableSourceMemoizedState
+--   end
 
 --   if
 --     nextProps.mode == 'hidden' or
---     nextProps.mode == 'unstable-defer-without-hiding'
---   )
---     if (workInProgress.mode & ConcurrentMode) == NoMode)
+--     nextProps.mode == 'unstable-defer-without-hiding' then
+--     if bit32.band(workInProgress.mode, ConcurrentMode) == NoMode then
 --       -- In legacy sync mode, don't defer the subtree. Render it now.
 --       -- TODO: Figure out what we should do in Blocking mode.
 --       local nextState: OffscreenState = {
---         baseLanes: NoLanes,
---       end
+--         baseLanes = NoLanes
+--       }
 --       workInProgress.memoizedState = nextState
 --       pushRenderLanes(workInProgress, renderLanes)
---     } else if not includesSomeLane(renderLanes, (OffscreenLane: Lane)))
+--     -- ROBLOX TODO: recast OffscreenLane to type Lane
+--     elseif not includesSomeLane(renderLanes, OffscreenLane) then
 --       local nextBaseLanes
---       if prevState ~= nil)
+--       if prevState ~= nil then
 --         local prevBaseLanes = prevState.baseLanes
 --         nextBaseLanes = mergeLanes(prevBaseLanes, renderLanes)
 --       else
@@ -644,15 +647,20 @@ end
 --       end
 
 --       -- Schedule this fiber to re-render at offscreen priority. Then bailout.
---       if enableSchedulerTracing)
---         markSpawnedWork((OffscreenLane: Lane))
+--       if enableSchedulerTracing then
+--         -- ROBLOX TODO: recast OffscreenLane to type Lane
+--         markSpawnedWork(OffscreenLane)
 --       end
---       workInProgress.lanes = workInProgress.childLanes = laneToLanes(
---         OffscreenLane,
+
+--       -- deviation: unchain multiple assignment into two discrete assignments.
+--       workInProgress.childLanes = laneToLanes(
+--         OffscreenLane
 --       )
+--       workInProgress.lanes = workInProgress.childLanes
+
 --       local nextState: OffscreenState = {
---         baseLanes: nextBaseLanes,
---       end
+--         baseLanes = nextBaseLanes
+--       }
 --       workInProgress.memoizedState = nextState
 --       -- We're about to bail out, but we need to push this to the stack anyway
 --       -- to avoid a push/pop misalignment.
@@ -661,17 +669,22 @@ end
 --     else
 --       -- Rendering at offscreen, so we can clear the base lanes.
 --       local nextState: OffscreenState = {
---         baseLanes: NoLanes,
---       end
+--         baseLanes = NoLanes
+--       }
 --       workInProgress.memoizedState = nextState
 --       -- Push the lanes that were skipped when we bailed out.
---       local subtreeRenderLanes =
---         prevState ~= nil ? prevState.baseLanes : renderLanes
+--       local subtreeRenderLanes = renderLanes
+
+--       -- deviation: ternary converted to if statement
+--       if prevState ~= nil then
+--         subtreeRenderLanes = prevState.baseLanes
+--       end
+
 --       pushRenderLanes(workInProgress, subtreeRenderLanes)
 --     end
 --   else
 --     local subtreeRenderLanes
---     if prevState ~= nil)
+--     if prevState ~= nil then
 --       subtreeRenderLanes = mergeLanes(prevState.baseLanes, renderLanes)
 --       -- Since we're not hidden anymore, reset the state
 --       workInProgress.memoizedState = nil

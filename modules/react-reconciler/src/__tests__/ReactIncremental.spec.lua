@@ -274,7 +274,7 @@ return function ()
                 text2 = 'baz',
             })
         end)
-        -- ROBLOX TODO: LegacyHiddenDiv
+        -- ROBLOX TODO: ReactFiberBeginWork.new:3546: FIXME (roblox): beginWork: LegacyHiddenComponent is unimplemented
         -- @gate experimental
         xit('can deprioritize unfinished work and resume it later', function()
             local expect: any = expect
@@ -330,7 +330,7 @@ return function ()
             })
         end)
 
-        -- ROBLOX TODO: LegacyHiddenDiv
+        -- ROBLOX TODO: ReactFiberBeginWork.new:3559: FIXME (roblox): beginWork: LegacyHiddenComponent is unimplemented
         -- @gate experimental
         xit('can deprioritize a tree from without dropping work', function()
             local expect: any = expect
@@ -2148,7 +2148,7 @@ return function ()
                 })
             end)
         end
-        -- ROBLOX TODO: LegacyHiddenDiv
+        -- ROBLOX TODO: ReactFiberBeginWork.new:3559: FIXME (roblox): beginWork: LegacyHiddenComponent is unimplemented
         -- @gate experimental
         xit('provides context when reusing work', function()
             local expect: any = expect

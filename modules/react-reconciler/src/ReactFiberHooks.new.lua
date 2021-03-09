@@ -2194,11 +2194,13 @@ if _G.__DEV__ then
 --         ReactCurrentDispatcher.current = prevDispatcher
 --       end
 --     },
---     useRef<T>(initialValue: T): {|current: T|} {
---       currentHookNameInDev = 'useRef'
---       updateHookTypesDev()
---       return mountRef(initialValue)
---     },
+    -- FIXME ROBLOX: function generics and return type
+    -- useRef<T>(initialValue: T): {|current: T|}
+    useRef = function(initialValue: any?): {current: any}
+      currentHookNameInDev = 'useRef'
+      updateHookTypesDev()
+      return mountRef(initialValue)
+    end,
     -- FIXME ROBLOX: function generics and return type
     -- useState<S>(
     --   initialState: (() => S) | S,
