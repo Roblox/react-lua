@@ -139,6 +139,14 @@ local clearContainer = ReactFiberHostConfig.clearContainer
 --   schedulePassiveEffectCallback,
 -- } = require(script.Parent.ReactFiberWorkLoop.new)
 
+-- deviation: stub to allow dependency injection that breaks circular dependency
+local schedulePassiveEffectCallback
+schedulePassiveEffectCallback = function(current, parent, error_)
+  console.warn("ReactFiberCommitWork: schedulePassiveEffectCallback causes a dependency cycle\n" .. debug.traceback())
+  error(error_)
+end
+
+-- deviation: stub to allow dependency injection that breaks circular dependency
 local captureCommitPhaseError
 captureCommitPhaseError = function(current, parent, error_)
   console.warn("ReactFiberCommitWork: captureCommitPhaseError causes a dependency cycle")
@@ -515,10 +523,14 @@ local function recursivelyCommitLayoutEffects(
   finishedWork: Fiber,
   finishedRoot: FiberRoot,
   -- ROBLOX deviation: pass in this function to avoid dependency cycle
-  _captureCommitPhaseError: (any, Fiber, any) -> ()
+  _captureCommitPhaseError: (any, Fiber, any) -> (),
+  _schedulePassiveEffectCallback: () -> ()
 )
   if _captureCommitPhaseError ~= nil then
     captureCommitPhaseError = _captureCommitPhaseError
+  end
+  if _schedulePassiveEffectCallback ~= nil then
+    schedulePassiveEffectCallback = _schedulePassiveEffectCallback
   end
   local flags = finishedWork.flags
   local tag = finishedWork.tag
@@ -630,7 +642,8 @@ local function recursivelyCommitLayoutEffects(
             child,
             finishedRoot,
             -- ROBLOX deviation: pass in this function to avoid dependency cycle
-            captureCommitPhaseError
+            captureCommitPhaseError,
+            schedulePassiveEffectCallback
           )
           if hasCaughtError() then
             local error_ = clearCaughtError()
@@ -647,11 +660,11 @@ local function recursivelyCommitLayoutEffects(
           if not _G.__YOLO__ then
             ok, error_ = pcall(function()
             -- ROBLOX deviation: pass in this function to avoid dependency cycle
-              recursivelyCommitLayoutEffects(child, finishedRoot, captureCommitPhaseError)
+              recursivelyCommitLayoutEffects(child, finishedRoot, captureCommitPhaseError, schedulePassiveEffectCallback)
             end)
           else
             ok = true
-            recursivelyCommitLayoutEffects(child, finishedRoot, captureCommitPhaseError)
+            recursivelyCommitLayoutEffects(child, finishedRoot, captureCommitPhaseError, schedulePassiveEffectCallback)
           end
 
           if not ok then
@@ -693,8 +706,7 @@ local function recursivelyCommitLayoutEffects(
         end
 
         if bit32.band(finishedWork.subtreeFlags, PassiveMask) ~= NoFlags then
-          unimplemented("ReactFiberCommitWork: recursivelyCommitLayoutEffects: schedulePassiveEffectCallback() due to dep cycle")
-          -- schedulePassiveEffectCallback()
+          schedulePassiveEffectCallback()
         end
       elseif tag == ClassComponent then
         -- NOTE: Layout effect durations are measured within this function.

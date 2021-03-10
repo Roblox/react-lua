@@ -12,6 +12,12 @@
 --[[ eslint-disable no-func-assign ]]
 local Workspace = script.Parent.Parent.Parent
 local React
+
+local LuauPolyfill = require(Workspace.Parent.LuauPolyfill)
+local clearTimeout = LuauPolyfill.clearTimeout
+local setTimeout = LuauPolyfill.setTimeout
+local Array = LuauPolyfill.Array
+
 -- local textCache
 -- local readText
 -- local resolveText
@@ -20,12 +26,12 @@ local Scheduler
 -- local SchedulerTracing
 -- local Suspense
 local useState
-local _useReducer
+local useReducer
 local useEffect
 local useLayoutEffect
 local useCallback
 -- local useMemo
--- local useRef
+local useRef
 local useImperativeHandle
 -- local useTransition
 -- local useDeferredValue
@@ -51,12 +57,12 @@ return function()
     Scheduler = require(Workspace.Scheduler)
   --   SchedulerTracing = require('scheduler/tracing')
     useState = React.useState
-    -- useReducer = React.useReducer
+    useReducer = React.useReducer
     useEffect = React.useEffect
     useLayoutEffect = React.useLayoutEffect
     useCallback = React.useCallback
     -- useMemo = React.useMemo
-    -- useRef = React.useRef
+    useRef = React.useRef
     useImperativeHandle = React.useImperativeHandle
     forwardRef = React.forwardRef
     memo = React.memo
@@ -157,8 +163,7 @@ return function()
   --   return Promise.resolve().then(function()})
   -- end
 
-  -- ROBLOX TODO: ReactHooksWithNoopRenderer.spec:200: received[1] (Total: 11) ~= expected[1] (Total: 0)
-  xit('resumes after an interruption', function()
+  it('resumes after an interruption', function()
     -- FIXME: type of expect
     local expect: any = expect
 
@@ -647,97 +652,116 @@ return function()
       )
     end)
 
-  --   it('works with useReducer', function()
-  --     function reducer(state, action)
-  --       return action == 'increment' ? state + 1 : state
-  --     end
-  --     function Counter({row: newRow})
-  --       local [count, dispatch] = useReducer(reducer, 0)
-  --       if count < 3)
-  --         dispatch('increment')
-  --       end
-  --       Scheduler.unstable_yieldValue('Render: ' .. count)
-  --       return <Text text={count} />
-  --     end
+    it('works with useReducer', function()
+      local expect: any = expect
+      function reducer(state, action)
+        local returnVal = state
+        if action == 'increment' then
+          returnVal = state + 1
+        end
+        return returnVal
+      end
+      local function Counter(props)
+        local count, dispatch = useReducer(reducer, 0)
+        if count < 3 then
+          dispatch('increment')
+        end
+        Scheduler.unstable_yieldValue('Render: ' .. count)
+        return React.createElement(Text, {text=count})
+      end
 
-  --     ReactNoop.render(<Counter />)
-  --     expect(Scheduler).toFlushAndYield([
-  --       'Render: 0',
-  --       'Render: 1',
-  --       'Render: 2',
-  --       'Render: 3',
-  --       3,
-  --     ])
-  --     expect(ReactNoop.getChildren()).toEqual([span(3)])
-  --   })
+      ReactNoop.render(React.createElement(Counter))
+      expect(Scheduler).toFlushAndYield({
+        'Render: 0',
+        'Render: 1',
+        'Render: 2',
+        'Render: 3',
+        3,
+      })
+      expect(ReactNoop.getChildren()).toEqual({span(3)})
+    end)
 
-  --   it('uses reducer passed at time of render, not time of dispatch', function()
-  --     -- This test is a bit contrived but it demonstrates a subtle edge case.
+    it('uses reducer passed at time of render, not time of dispatch', function()
+      local expect: any = expect
 
-  --     -- Reducer A increments by 1. Reducer B increments by 10.
-  --     function reducerA(state, action)
-  --       switch (action)
-  --         case 'increment':
-  --           return state + 1
-  --         case 'reset':
-  --           return 0
-  --       end
-  --     end
-  --     function reducerB(state, action)
-  --       switch (action)
-  --         case 'increment':
-  --           return state + 10
-  --         case 'reset':
-  --           return 0
-  --       end
-  --     end
+      -- This test is a bit contrived but it demonstrates a subtle edge case.
 
-  --     function Counter({row: newRow}, ref)
-  --       local [reducer, setReducer] = useState(function() reducerA)
-  --       local [count, dispatch] = useReducer(reducer, 0)
-  --       useImperativeHandle(ref, function() ({dispatch}))
-  --       if count < 20)
-  --         dispatch('increment')
-  --         -- Swap reducers each time we increment
-  --         if reducer == reducerA)
-  --           setReducer(function() reducerB)
-  --         } else {
-  --           setReducer(function() reducerA)
-  --         end
-  --       end
-  --       Scheduler.unstable_yieldValue('Render: ' .. count)
-  --       return <Text text={count} />
-  --     end
-  --     Counter = forwardRef(Counter)
-  --     local counter = React.createRef(null)
-  --     ReactNoop.render(<Counter ref={counter} />)
-  --     expect(Scheduler).toFlushAndYield([
-  --       -- The count should increase by alternating amounts of 10 and 1
-  --       -- until we reach 21.
-  --       'Render: 0',
-  --       'Render: 10',
-  --       'Render: 11',
-  --       'Render: 21',
-  --       21,
-  --     ])
-  --     expect(ReactNoop.getChildren()).toEqual([span(21)])
+      -- Reducer A increments by 1. Reducer B increments by 10.
+      local function reducerA(state, action)
+        if action == 'increment' then
+          return state + 1
+        elseif action == 'reset' then
+          return 0
+        else
+          return
+        end
+      end
 
-  --     -- Test that it works on update, too. This time the log is a bit different
-  --     -- because we started with reducerB instead of reducerA.
-  --     ReactNoop.act(function()
-  --       counter.current.dispatch('reset')
-  --     })
-  --     ReactNoop.render(<Counter ref={counter} />)
-  --     expect(Scheduler).toHaveYielded([
-  --       'Render: 0',
-  --       'Render: 1',
-  --       'Render: 11',
-  --       'Render: 12',
-  --       'Render: 22',
-  --       22,
-  --     ])
-  --     expect(ReactNoop.getChildren()).toEqual([span(22)])
-  --   })
+      local function reducerB(state, action)
+        if action == 'increment' then
+          return state + 10
+        elseif action == 'reset' then
+          return 0
+        else
+          return
+        end
+      end
+
+      local function Counter(props, ref)
+        local reducer_, setReducer = useState(function()
+            return reducerA 
+          end)
+        local count, dispatch = useReducer(reducer_, 0)
+        useImperativeHandle(ref, function() 
+            return {dispatch = dispatch}
+          end)
+        if count < 20 then
+          dispatch('increment')
+          -- Swap reducers each time we increment
+          if reducer_ == reducerA then
+            setReducer(function() 
+                return reducerB
+              end)
+          else
+            setReducer(function() 
+                return reducerA
+              end)
+          end
+        end
+        Scheduler.unstable_yieldValue('Render: ' .. count)
+        return React.createElement(Text, {text = count})
+      end
+
+      Counter = forwardRef(Counter)
+      local counter = React.createRef(nil)
+      ReactNoop.render(React.createElement(Counter, {ref = counter}))
+      expect(Scheduler).toFlushAndYield({
+        -- The count should increase by alternating amounts of 10 and 1
+        -- until we reach 21.
+        'Render: 0',
+        'Render: 10',
+        'Render: 11',
+        'Render: 21',
+        21,
+      })
+      expect(ReactNoop.getChildren()).toEqual({span(21)})
+
+      -- Test that it works on update, too. This time the log is a bit different
+      -- because we started with reducerB instead of reducerA.
+      ReactNoop.act(function()
+        counter.current.dispatch('reset')
+      end)
+      ReactNoop.render(React.createElement(Counter, {ref = counter}))
+      expect(Scheduler).toHaveYielded({
+        'Render: 0',
+        'Render: 1',
+        'Render: 11',
+        'Render: 12',
+        'Render: 22',
+        22,
+      })
+      expect(ReactNoop.getChildren()).toEqual({span(22)})
+    end)
 
   --   it('discards render phase updates if something suspends', async function()
   --     local thenable = {then() {}}
@@ -903,147 +927,160 @@ return function()
   --   })
   end)
 
-  -- describe('useReducer', function()
-  --   it('simple mount and update', function()
-  --     local INCREMENT = 'INCREMENT'
-  --     local DECREMENT = 'DECREMENT'
+  describe('useReducer', function()
+    it('simple mount and update', function()
+      local expect: any = expect
+      local INCREMENT = 'INCREMENT'
+      local DECREMENT = 'DECREMENT'
 
-  --     function reducer(state, action)
-  --       switch (action)
-  --         case 'INCREMENT':
-  --           return state + 1
-  --         case 'DECREMENT':
-  --           return state - 1
-  --         default:
-  --           return state
-  --       end
-  --     end
+      local function reducer_(state, action)
+        if action == 'INCREMENT' then
+          return state + 1
+        elseif action == 'DECREMENT' then
+          return state - 1
+        else
+          return state
+        end
+      end
 
-  --     function Counter(props, ref)
-  --       local [count, dispatch] = useReducer(reducer, 0)
-  --       useImperativeHandle(ref, function() ({dispatch}))
-  --       return <Text text={'Count: ' .. count} />
-  --     end
-  --     Counter = forwardRef(Counter)
-  --     local counter = React.createRef(null)
-  --     ReactNoop.render(<Counter ref={counter} />)
-  --     expect(Scheduler).toFlushAndYield(['Count: 0'])
-  --     expect(ReactNoop.getChildren()).toEqual([span('Count: 0')])
+      local function Counter(props, ref)
+        local count, dispatch = useReducer(reducer_, 0)
+        useImperativeHandle(ref, function()
+          return {dispatch = dispatch} end)
+        return React.createElement(Text, {
+          text = 'Count: ' .. count
+        })
+      end
+      Counter = forwardRef(Counter)
+      local counter = React.createRef(nil)
+      ReactNoop.render(React.createElement(Counter, {
+        ref = counter
+      }))
+      expect(Scheduler).toFlushAndYield({'Count: 0'})
+      expect(ReactNoop.getChildren()).toEqual({span('Count: 0')})
 
-  --     act(function() counter.current.dispatch(INCREMENT))
-  --     expect(Scheduler).toHaveYielded(['Count: 1'])
-  --     expect(ReactNoop.getChildren()).toEqual([span('Count: 1')])
-  --     act(function()
-  --       counter.current.dispatch(DECREMENT)
-  --       counter.current.dispatch(DECREMENT)
-  --       counter.current.dispatch(DECREMENT)
-  --     })
+      act(function()
+        return counter.current.dispatch(INCREMENT)
+      end)
+      expect(Scheduler).toHaveYielded({'Count: 1'})
+      expect(ReactNoop.getChildren()).toEqual({span('Count: 1')})
+      act(function()
+        counter.current.dispatch(DECREMENT)
+        counter.current.dispatch(DECREMENT)
+        counter.current.dispatch(DECREMENT)
+      end)
 
-  --     expect(Scheduler).toHaveYielded(['Count: -2'])
-  --     expect(ReactNoop.getChildren()).toEqual([span('Count: -2')])
-  --   })
+      expect(Scheduler).toHaveYielded({'Count: -2'})
+      expect(ReactNoop.getChildren()).toEqual({span('Count: -2')})
+    end)
 
-  --   it('lazy init', function()
-  --     local INCREMENT = 'INCREMENT'
-  --     local DECREMENT = 'DECREMENT'
+    it('lazy init', function()
+      local expect: any = expect
+      local INCREMENT = 'INCREMENT'
+      local DECREMENT = 'DECREMENT'
 
-  --     function reducer(state, action)
-  --       switch (action)
-  --         case 'INCREMENT':
-  --           return state + 1
-  --         case 'DECREMENT':
-  --           return state - 1
-  --         default:
-  --           return state
-  --       end
-  --     end
+      local function reducer_(state, action)
+        if action == 'INCREMENT' then
+          return state + 1
+        elseif action == 'DECREMENT' then
+          return state - 1
+        else
+          return state
+        end
+      end
 
-  --     function Counter(props, ref)
-  --       local [count, dispatch] = useReducer(reducer, props, p => {
-  --         Scheduler.unstable_yieldValue('Init')
-  --         return p.initialCount
-  --       })
-  --       useImperativeHandle(ref, function() ({dispatch}))
-  --       return <Text text={'Count: ' .. count} />
-  --     end
-  --     Counter = forwardRef(Counter)
-  --     local counter = React.createRef(null)
-  --     ReactNoop.render(<Counter initialCount={10} ref={counter} />)
-  --     expect(Scheduler).toFlushAndYield(['Init', 'Count: 10'])
-  --     expect(ReactNoop.getChildren()).toEqual([span('Count: 10')])
+      local function Counter(props, ref)
+        local count, dispatch = useReducer(reducer_, props, function(p)
+            Scheduler.unstable_yieldValue('Init')
+            return p.initialCount  
+        end)
+        useImperativeHandle(ref, function()
+          return {dispatch = dispatch} end)
+        return React.createElement(Text, {
+          text = 'Count: ' .. count
+        })
+      end
+      Counter = forwardRef(Counter)
+      local counter = React.createRef(nil)
+      ReactNoop.render(React.createElement(Counter, {
+        initialCount = 10,
+        ref = counter
+      }))
+      expect(Scheduler).toFlushAndYield({'Init', 'Count: 10'})
+      expect(ReactNoop.getChildren()).toEqual({span('Count: 10')})
 
-  --     act(function() counter.current.dispatch(INCREMENT))
-  --     expect(Scheduler).toHaveYielded(['Count: 11'])
-  --     expect(ReactNoop.getChildren()).toEqual([span('Count: 11')])
+      act(function() 
+        return counter.current.dispatch(INCREMENT)
+      end)
+      expect(Scheduler).toHaveYielded({'Count: 11'})
+      expect(ReactNoop.getChildren()).toEqual({span('Count: 11')})
 
-  --     act(function()
-  --       counter.current.dispatch(DECREMENT)
-  --       counter.current.dispatch(DECREMENT)
-  --       counter.current.dispatch(DECREMENT)
-  --     })
+      act(function()
+        counter.current.dispatch(DECREMENT)
+        counter.current.dispatch(DECREMENT)
+        counter.current.dispatch(DECREMENT)
+      end)
 
-  --     expect(Scheduler).toHaveYielded(['Count: 8'])
-  --     expect(ReactNoop.getChildren()).toEqual([span('Count: 8')])
-  --   })
+      expect(Scheduler).toHaveYielded({'Count: 8'})
+      expect(ReactNoop.getChildren()).toEqual({span('Count: 8')})
+    end)
 
-  --  -- Regression test for https://github.com/facebook/react/issues/14360
-  --   it('handles dispatches with mixed priorities', function()
-  --     local INCREMENT = 'INCREMENT'
+    -- Regression test for https://github.com/facebook/react/issues/14360
+    it('handles dispatches with mixed priorities', function()
+      local expect: any = expect
+      local INCREMENT = 'INCREMENT'
 
-  --     local function reducer(state, action)
-  --         return(function()
-  --             if action == INCREMENT then
-  --                 return state + 1
-  --             end
+      local function reducer_(state, action)
+            if action == INCREMENT then
+                return state + 1
+            else
+                return state
+            end
+      end
+      local function Counter(props, ref)
+        local count, dispatch = useReducer(reducer_, 0)
+        useImperativeHandle(ref, function()
+            return {dispatch = dispatch}
+        end)
 
-  --             return state
-  --         end)()
-  --     end
-  --     local function Counter(props, ref)
-  --       local count, dispatch = useReducer(reducer, 0)
+        return React.createElement(Text, {
+            text = 'Count: ' .. count
+        })
+      end
 
-  --         useImperativeHandle(ref, function()
-  --             return{dispatch = dispatch}
-  --         end)
+      Counter = forwardRef(Counter)
 
-  --         return React.createElement(Text, {
-  --             text = 'Count: ' .. count,
-  --         })
-  --     end
+      local counter = React.createRef(nil)
 
-  --     Counter = forwardRef(Counter)
-
-  --     local counter = React.createRef(nil)
-
-  --     ReactNoop.render(React.createElement(Counter, {ref = counter}))
-  --     expect(Scheduler).toFlushAndYield({
-  --         'Count: 0',
-  --     })
-  --     expect(ReactNoop.getChildren()).toEqual({
-  --         span('Count: 0'),
-  --     })
-  --     ReactNoop.batchedUpdates(function()
-  --         counter.current.dispatch(INCREMENT)
-  --         counter.current.dispatch(INCREMENT)
-  --         counter.current.dispatch(INCREMENT)
-  --     end)
-  --     ReactNoop.flushSync(function()
-  --         counter.current.dispatch(INCREMENT)
-  --     end)
-  --     expect(Scheduler).toHaveYielded({
-  --         'Count: 1',
-  --     })
-  --     expect(ReactNoop.getChildren()).toEqual({
-  --         span('Count: 1'),
-  --     })
-  --     expect(Scheduler).toFlushAndYield({
-  --         'Count: 4',
-  --     })
-  --     expect(ReactNoop.getChildren()).toEqual({
-  --         span('Count: 4'),
-  --     })
-  -- end)
-  -- end)
+      ReactNoop.render(React.createElement(Counter, {ref = counter}))
+      expect(Scheduler).toFlushAndYield({
+          'Count: 0',
+      })
+      expect(ReactNoop.getChildren()).toEqual({
+          span('Count: 0'),
+      })
+      ReactNoop.batchedUpdates(function()
+          counter.current.dispatch(INCREMENT)
+          counter.current.dispatch(INCREMENT)
+          counter.current.dispatch(INCREMENT)
+      end)
+      ReactNoop.flushSync(function()
+          counter.current.dispatch(INCREMENT)
+      end)
+      expect(Scheduler).toHaveYielded({
+          'Count: 1',
+      })
+      expect(ReactNoop.getChildren()).toEqual({
+          span('Count: 1'),
+      })
+      expect(Scheduler).toFlushAndYield({
+          'Count: 4',
+      })
+      expect(ReactNoop.getChildren()).toEqual({
+          span('Count: 4'),
+      })
+    end)
+  end)
 
   describe("useEffect", function()
     it("simple mount and update", function()
@@ -1402,93 +1439,120 @@ return function()
       end)
     end)
 
-  --   it('does not warn about state updates for unmounted components with pending passive unmounts for alternates', function()
-  --     local setParentState = nil
-  --     local setChildStates = []
+    it('does not warn about state updates for unmounted components with pending passive unmounts for alternates', function()
+      local expect: any = expect
+      local setParentState = nil
+      local setChildStates = {}
 
-  --     function Parent()
-  --       local [state, setState] = useState(true)
-  --       setParentState = setState
-  --       Scheduler.unstable_yieldValue(`Parent ${state} render`)
-  --       useLayoutEffect(function()
-  --         Scheduler.unstable_yieldValue(`Parent ${state} commit`)
-  --       })
-  --       if state)
-  --         return (
-  --           <>
-  --             <Child label="one" />
-  --             <Child label="two" />
-  --           </>
-  --         )
-  --       } else {
-  --         return nil
-  --       end
-  --     end
+      -- deviation: reordered so Parent function could reference Child
+      local function Child(props)
+        -- deviation: list deconstruction doesn't work in Lua
+        local label = props.label
+        local state, setState = useState(0)
+        useLayoutEffect(function()
+          Scheduler.unstable_yieldValue('Child ' .. label ..' commit')
+        end)
+        useEffect(function()
+          table.insert(setChildStates, setState)
+          Scheduler.unstable_yieldValue('Child ' .. label ..' passive create')
+          return function()
+            Scheduler.unstable_yieldValue('Child ' .. label ..' passive destroy')
+          end
+        end, {})
+        Scheduler.unstable_yieldValue('Child ' .. label ..' render')
+        return state
+      end
 
-  --     function Child({label})
-  --       local [state, setState] = useState(0)
-  --       useLayoutEffect(function()
-  --         Scheduler.unstable_yieldValue(`Child ${label} commit`)
-  --       })
-  --       useEffect(function()
-  --         setChildStates.push(setState)
-  --         Scheduler.unstable_yieldValue(`Child ${label} passive create`)
-  --         return function()
-  --           Scheduler.unstable_yieldValue(`Child ${label} passive destroy`)
-  --         end
-  --       }, [])
-  --       Scheduler.unstable_yieldValue(`Child ${label} render`)
-  --       return state
-  --     end
+      local function Parent()
+        local state, setState = useState(true)
+        setParentState = setState
+        Scheduler.unstable_yieldValue('Parent ' .. tostring(state) .. ' render')
+        useLayoutEffect(function()
+          Scheduler.unstable_yieldValue('Parent ' .. tostring(state) ..' commit')
+        end)
+        if state then
+          return React.createElement(
+            React.Fragment, 
+            nil,
+            React.createElement(Child, {label = "one"}),
+            React.createElement(Child, {label = "two"})
+        )
+        else
+          return nil
+        end
+      end
 
-  --     -- Schedule debounced state update for child (prob a no-op for this test)
-  --     -- later tick: schedule unmount for parent
-  --     -- start process unmount (but don't flush passive effectS)
-  --     -- State update on child
-  --     act(function()
-  --       ReactNoop.render(<Parent />)
-  --       expect(Scheduler).toFlushAndYieldThrough([
-  --         'Parent true render',
-  --         'Child one render',
-  --         'Child two render',
-  --         'Child one commit',
-  --         'Child two commit',
-  --         'Parent true commit',
-  --         'Child one passive create',
-  --         'Child two passive create',
-  --       ])
+      -- Schedule debounced state update for child (prob a no-op for this test)
+      -- later tick: schedule unmount for parent
+      -- start process unmount (but don't flush passive effectS)
+      -- State update on child
+      act(function()
+        ReactNoop.render(React.createElement(Parent))
+        expect(Scheduler).toFlushAndYieldThrough({
+          'Parent true render',
+          'Child one render',
+          'Child two render',
+          'Child one commit',
+          'Child two commit',
+          'Parent true commit',
+          'Child one passive create',
+          'Child two passive create',
+        })
 
-  --       -- Update children.
-  --       setChildStates.forEach(setChildState => setChildState(1))
-  --       expect(Scheduler).toFlushAndYieldThrough([
-  --         'Child one render',
-  --         'Child two render',
-  --         'Child one commit',
-  --         'Child two commit',
-  --       ])
+        -- Update children.
+        -- deviation: forEach() translated using Array.map
+        Array.map(
+          setChildStates,
+          function(setChildState)
+            return setChildState(1)
+          end
+        )
 
-  --       -- Schedule another update for children, and partially process it.
-  --       setChildStates.forEach(setChildState => setChildState(2))
-  --       expect(Scheduler).toFlushAndYieldThrough(['Child one render'])
+        expect(Scheduler).toFlushAndYieldThrough({
+          'Child one render',
+          'Child two render',
+          'Child one commit',
+          'Child two commit',
+        })
 
-  --       -- Schedule unmount for the parent that unmounts children with pending update.
-  --       Scheduler.unstable_runWithPriority(
-  --         Scheduler.unstable_UserBlockingPriority,
-  --         function() setParentState(false),
-  --       )
-  --       expect(Scheduler).toFlushAndYieldThrough([
-  --         'Parent false render',
-  --         'Parent false commit',
-  --       ])
+        -- Schedule another update for children, and partially process it.
+        -- deviation: forEach() translated using Array.map
 
-  --       -- Schedule updates for children too (which should be ignored)
-  --       setChildStates.forEach(setChildState => setChildState(2))
-  --       expect(Scheduler).toFlushAndYield([
-  --         'Child one passive destroy',
-  --         'Child two passive destroy',
-  --       ])
-  --     })
-  --   })
+        Array.map(
+          setChildStates,
+          function(setChildState)
+            return setChildState(2)
+          end
+        )
+
+        expect(Scheduler).toFlushAndYieldThrough({'Child one render'})
+
+        -- Schedule unmount for the parent that unmounts children with pending update.
+        Scheduler.unstable_runWithPriority(
+          Scheduler.unstable_UserBlockingPriority,
+          function()
+            return setParentState(false)
+          end)
+        expect(Scheduler).toFlushAndYieldThrough({
+          'Parent false render',
+          'Parent false commit',
+        })
+
+        -- Schedule updates for children too (which should be ignored)
+        -- deviation: forEach() translated using Array.map
+        Array.map(
+          setChildStates,
+          function(setChildState)
+            return setChildState(2)
+          end
+        )
+
+        expect(Scheduler).toFlushAndYield({
+          'Child one passive destroy',
+          'Child two passive destroy',
+        })
+      end)
+    end)
 
     it('warns about state updates for unmounted components with no pending passive unmounts', function()
       local expect: any = expect
@@ -1534,65 +1598,71 @@ return function()
       end)
     end)
 
-  --   it('still warns if there are pending passive unmount effects but not for the current fiber', function()
-  --     local completePendingRequest = nil
-  --     function ComponentWithXHR()
-  --       Scheduler.unstable_yieldValue('Component')
-  --       local [didLoad, setDidLoad] = React.useState(false)
-  --       React.useLayoutEffect(function()
-  --         Scheduler.unstable_yieldValue('a:layout create')
-  --         return function()
-  --           Scheduler.unstable_yieldValue('a:layout destroy')
-  --         end
-  --       }, [])
-  --       React.useEffect(function()
-  --         Scheduler.unstable_yieldValue('a:passive create')
-  --         -- Mimic an XHR request with a complete handler that updates state.
-  --         completePendingRequest = function() setDidLoad(true)
-  --       }, [])
-  --       return didLoad
-  --     end
+    it('still warns if there are pending passive unmount effects but not for the current fiber', function()
+      local expect: any = expect
+      local completePendingRequest = nil
+      local function ComponentWithXHR()
+        Scheduler.unstable_yieldValue('Component')
+        local didLoad, setDidLoad = React.useState(false)
+        React.useLayoutEffect(function()
+          Scheduler.unstable_yieldValue('a:layout create')
+          return function()
+            Scheduler.unstable_yieldValue('a:layout destroy')
+          end
+        end, {})
+        React.useEffect(function()
+          Scheduler.unstable_yieldValue('a:passive create')
+          -- Mimic an XHR request with a complete handler that updates state.
+          completePendingRequest = function() 
+                setDidLoad(true)
+            end
+        end, {})
+        return didLoad
+      end
 
-  --     function ComponentWithPendingPassiveUnmount()
-  --       React.useEffect(function()
-  --         Scheduler.unstable_yieldValue('b:passive create')
-  --         return function()
-  --           Scheduler.unstable_yieldValue('b:passive destroy')
-  --         end
-  --       }, [])
-  --       return nil
-  --     end
+      local function ComponentWithPendingPassiveUnmount()
+        React.useEffect(function()
+          Scheduler.unstable_yieldValue('b:passive create')
+          return function()
+            Scheduler.unstable_yieldValue('b:passive destroy')
+          end
+        end, {})
+        return nil
+      end
 
-  --     act(function()
-  --       ReactNoop.renderToRootWithID(
-  --         <>
-  --           <ComponentWithXHR />
-  --           <ComponentWithPendingPassiveUnmount />
-  --         </>,
-  --         'root',
-  --         function() Scheduler.unstable_yieldValue('Sync effect'),
-  --       )
-  --       expect(Scheduler).toFlushAndYieldThrough([
-  --         'Component',
-  --         'a:layout create',
-  --         'Sync effect',
-  --       ])
-  --       ReactNoop.flushPassiveEffects()
-  --       expect(Scheduler).toHaveYielded([
-  --         'a:passive create',
-  --         'b:passive create',
-  --       ])
+      act(function()
+        ReactNoop.renderToRootWithID(
+          React.createElement(
+            React.Fragment,
+            nil,
+            React.createElement(ComponentWithXHR),
+            React.createElement(ComponentWithPendingPassiveUnmount)),
+          'root',
+          function() 
+            return Scheduler.unstable_yieldValue('Sync effect')
+          end
+        )
+        expect(Scheduler).toFlushAndYieldThrough({
+          'Component',
+          'a:layout create',
+          'Sync effect',
+        })
+        ReactNoop.flushPassiveEffects()
+        expect(Scheduler).toHaveYielded({
+          'a:passive create',
+          'b:passive create',
+        })
 
-  --       -- Unmount but don't process pending passive destroy function
-  --       ReactNoop.unmountRootWithID('root')
-  --       expect(Scheduler).toFlushAndYieldThrough(['a:layout destroy'])
+        -- Unmount but don't process pending passive destroy function
+        ReactNoop.unmountRootWithID('root')
+        expect(Scheduler).toFlushAndYieldThrough({'a:layout destroy'})
 
-  --       -- Simulate an XHR completing in the component without a pending passive effect..
-  --       expect(completePendingRequest).toErrorDev(
-  --         "Warning: Can't perform a React state update on an unmounted component.",
-  --       )
-  --     })
-  --   })
+        -- Simulate an XHR completing in the component without a pending passive effect..
+        expect(completePendingRequest).toErrorDev(
+          "Warning: Can't perform a React state update on an unmounted component."
+        )
+      end)
+    end)
 
     -- ROBLOX TODO: needs toErrorDev, but passed manual inspection modulo the component name
     xit('warns if there are updates after pending passive unmount effects have been flushed', function()
@@ -1853,8 +1923,7 @@ return function()
       end)
     end)
 
-    -- ROBLOX FIXME: ReactHooksWithNoopRenderer.spec:1882: received[2] (Count: 1) ~= expected[2] (Count: 2)
-    xit('does not flush non-discrete passive effects when flushing sync', function()
+    it('does not flush non-discrete passive effects when flushing sync', function()
       -- FIXME: type of expect
       local expect: any = expect
       local _updateCount
@@ -1999,35 +2068,39 @@ return function()
   --     },
   --   )
 
-  --   it('flushSync is not allowed', function()
-  --     function Counter(props)
-  --       local [count, updateCount] = useState('(empty)')
-  --       useEffect(function()
-  --         Scheduler.unstable_yieldValue(`Schedule update [${props.count}]`)
-  --         ReactNoop.flushSync(function()
-  --           updateCount(props.count)
-  --         })
-  --         -- This shouldn't flush synchronously.
-  --         expect(ReactNoop.getChildren()).not.toEqual([
-  --           span('Count: ' .. props.count),
-  --         ])
-  --       }, [props.count])
-  --       return <Text text={'Count: ' .. count} />
-  --     end
-  --     expect(function()
-  --       act(function()
-  --         ReactNoop.render(<Counter count={0} />, function()
-  --           Scheduler.unstable_yieldValue('Sync effect'),
-  --         )
-  --         expect(Scheduler).toFlushAndYieldThrough([
-  --           'Count: (empty)',
-  --           'Sync effect',
-  --         ])
-  --         expect(ReactNoop.getChildren()).toEqual([span('Count: (empty)')])
-  --       }),
-  --     ).toErrorDev('flushSync was called from inside a lifecycle method')
-  --     expect(ReactNoop.getChildren()).toEqual([span('Count: 0')])
-  --   })
+    -- ROBLOX TODO: toErrorDev, needs LUAFDN-196
+    -- xit('flushSync is not allowed', function()
+    --   local expect: any = expect
+    --   local function Counter(props)
+    --     local count, updateCount = useState('(empty)')
+    --     useEffect(function()
+    --       Scheduler.unstable_yieldValue('Schedule update [${props.count}]')
+    --       ReactNoop.flushSync(function()
+    --         updateCount(props.count)
+    --       end)
+    --       -- This shouldn't flush synchronously.
+    --       expect(ReactNoop.getChildren()).not.toEqual({
+    --         span('Count: ' .. props.count),
+    --       })
+    --     end, {props.count})
+    --     return React.createElement(Text, {text = 'Count ' .. count})
+    --   end
+    --   expect(function()
+    --     act(function()
+    --       ReactNoop.render(React.createElement(Counter {count = 0}), 
+    --       function()
+    --         return Scheduler.unstable_yieldValue('Sync effect')
+    --       end)
+    --       expect(Scheduler).toFlushAndYieldThrough({
+    --         'Count: (empty)',
+    --         'Sync effect',
+    --       })
+    --       expect(ReactNoop.getChildren()).toEqual({span('Count: (empty)')})
+    --     end)
+    --   end
+    --   ).toErrorDev('flushSync was called from inside a lifecycle method')
+    --   expect(ReactNoop.getChildren()).toEqual({span('Count: 0')})
+    -- end)
 
     it('unmounts previous effect', function()
       -- FIXME: type of expect
@@ -3463,195 +3536,226 @@ end)
   --   })
   -- })
 
-  -- describe('useRef', function()
-  --   it('creates a ref object initialized with the provided value', function()
-  --     jest.useFakeTimers()
+  describe('useRef', function()
+    -- ROBLOX TODO: missing jest advanceTimersByTime
+    xit('creates a ref object initialized with the provided value', function()
+      local expect: any = expect
+      local jest = RobloxJest
+      jest.useFakeTimers()
 
-  --     function useDebouncedCallback(callback, ms, inputs)
-  --       local timeoutID = useRef(-1)
-  --       useEffect(function()
-  --         return function unmount()
-  --           clearTimeout(timeoutID.current)
-  --         end
-  --       }, [])
-  --       local debouncedCallback = useCallback(
-  --         (...args) => {
-  --           clearTimeout(timeoutID.current)
-  --           timeoutID.current = setTimeout(callback, ms, ...args)
-  --         },
-  --         [callback, ms],
-  --       )
-  --       return useCallback(debouncedCallback, inputs)
-  --     end
+      local function useDebouncedCallback(callback, ms, inputs)
+        local timeoutID = useRef(-1)
+        useEffect(function()
+          return function()
+            clearTimeout(timeoutID.current)
+          end
+        end, {})
+        local debouncedCallback = useCallback(
+          function(...)
+            clearTimeout(timeoutID.current)
+            timeoutID.current = setTimeout(callback, ms, ...)
+          end,
+          {callback, ms}
+        )
+        return useCallback(debouncedCallback, inputs)
+      end
 
-  --     local ping
-  --     function App()
-  --       ping = useDebouncedCallback(
-  --         value => {
-  --           Scheduler.unstable_yieldValue('ping: ' .. value)
-  --         },
-  --         100,
-  --         [],
-  --       )
-  --       return nil
-  --     end
+      local ping
+      local function App()
+        ping = useDebouncedCallback(
+          function(value)
+            Scheduler.unstable_yieldValue('ping: ' .. value)
+          end,
+          100,
+          {}
+        )
+        return nil
+      end
 
-  --     act(function()
-  --       ReactNoop.render(<App />)
-  --     })
-  --     expect(Scheduler).toHaveYielded([])
+      act(function()
+        ReactNoop.render(React.createElement(App))
+      end)
+      expect(Scheduler).toHaveYielded({})
 
-  --     ping(1)
-  --     ping(2)
-  --     ping(3)
+      ping(1)
+      ping(2)
+      ping(3)
 
-  --     expect(Scheduler).toHaveYielded([])
+      expect(Scheduler).toHaveYielded({})
 
-  --     jest.advanceTimersByTime(100)
+      jest.advanceTimersByTime(100)
 
-  --     expect(Scheduler).toHaveYielded(['ping: 3'])
+      expect(Scheduler).toHaveYielded({'ping: 3'})
 
-  --     ping(4)
-  --     jest.advanceTimersByTime(20)
-  --     ping(5)
-  --     ping(6)
-  --     jest.advanceTimersByTime(80)
+      ping(4)
+      jest.advanceTimersByTime(20)
+      ping(5)
+      ping(6)
+      jest.advanceTimersByTime(80)
 
-  --     expect(Scheduler).toHaveYielded([])
+      expect(Scheduler).toHaveYielded({})
 
-  --     jest.advanceTimersByTime(20)
-  --     expect(Scheduler).toHaveYielded(['ping: 6'])
-  --   })
+      jest.advanceTimersByTime(20)
+      expect(Scheduler).toHaveYielded({'ping: 6'})
+    end)
 
-  --   it('should return the same ref during re-renders', function()
-  --     function Counter()
-  --       local ref = useRef('val')
-  --       local [count, setCount] = useState(0)
-  --       local [firstRef] = useState(ref)
+    it('should return the same ref during re-renders', function()
+      local expect: any = expect
+      local function Counter()
+        local ref = useRef('val')
+        local count, setCount = useState(0)
+        local firstRef = useState(ref)
 
-  --       if firstRef ~= ref)
-  --         throw new Error('should never change')
-  --       end
+        if firstRef ~= ref then
+          error('should never change')
+        end
 
-  --       if count < 3)
-  --         setCount(count + 1)
-  --       end
+        if count < 3 then
+          setCount(count + 1)
+        end
 
-  --       return <Text text={ref.current} />
-  --     end
+        return React.createElement(Text, {text = ref.current})
+      end
 
-  --     ReactNoop.render(<Counter />)
-  --     expect(Scheduler).toFlushAndYield(['val'])
+      ReactNoop.render(React.createElement(Counter))
+      expect(Scheduler).toFlushAndYield({'val'})
 
-  --     ReactNoop.render(<Counter />)
-  --     expect(Scheduler).toFlushAndYield(['val'])
-  --   })
-  -- })
+      ReactNoop.render(React.createElement(Counter))
+      expect(Scheduler).toFlushAndYield({'val'})
+    end)
+  end)
 
-  -- describe('useImperativeHandle', function()
-  --   it('does not update when deps are the same', function()
-  --     local INCREMENT = 'INCREMENT'
+  describe('useImperativeHandle', function()
+    it('does not update when deps are the same', function()
+      local expect: any = expect
+      local INCREMENT = 'INCREMENT'
 
-  --     function reducer(state, action)
-  --       return action == INCREMENT ? state + 1 : state
-  --     end
+      local function reducer_(state, action)
+        if action == INCREMENT then
+          return state + 1
+        else
+          return state
+        end
+      end
 
-  --     function Counter(props, ref)
-  --       local [count, dispatch] = useReducer(reducer, 0)
-  --       useImperativeHandle(ref, function() ({count, dispatch}), [])
-  --       return <Text text={'Count: ' .. count} />
-  --     end
+      local function Counter(props, ref)
+        local count, dispatch = useReducer(reducer_, 0)
+        useImperativeHandle(ref, function()
+          return {count = count, dispatch = dispatch}
+        end, {})
+        return React.createElement(Text, {text = 'Count: ' .. count})
+      end
 
-  --     Counter = forwardRef(Counter)
-  --     local counter = React.createRef(null)
-  --     ReactNoop.render(<Counter ref={counter} />)
-  --     expect(Scheduler).toFlushAndYield(['Count: 0'])
-  --     expect(ReactNoop.getChildren()).toEqual([span('Count: 0')])
-  --     expect(counter.current.count).toBe(0)
+      Counter = forwardRef(Counter)
+      local counter = React.createRef(nil)
+      ReactNoop.render(React.createElement(Counter, {
+        ref = counter
+      }))
+      expect(Scheduler).toFlushAndYield({'Count: 0'})
+      expect(ReactNoop.getChildren()).toEqual({span('Count: 0')})
+      expect(counter.current.count).toEqual(0)
 
-  --     act(function()
-  --       counter.current.dispatch(INCREMENT)
-  --     })
-  --     expect(Scheduler).toHaveYielded(['Count: 1'])
-  --     expect(ReactNoop.getChildren()).toEqual([span('Count: 1')])
-  --     -- Intentionally not updated because of [] deps:
-  --     expect(counter.current.count).toBe(0)
-  --   })
+      act(function()
+        counter.current.dispatch(INCREMENT)
+      end)
+      expect(Scheduler).toHaveYielded({'Count: 1'})
+      expect(ReactNoop.getChildren()).toEqual({span('Count: 1')})
+      -- Intentionally not updated because of [] deps:
+      expect(counter.current.count).toEqual(0)
+    end)
 
-  --   -- Regression test for https://github.com/facebook/react/issues/14782
-  --   it('automatically updates when deps are not specified', function()
-  --     local INCREMENT = 'INCREMENT'
+    -- Regression test for https://github.com/facebook/react/issues/14782
+    it('automatically updates when deps are not specified', function()
+      local expect: any = expect
+      local INCREMENT = 'INCREMENT'
 
-  --     function reducer(state, action)
-  --       return action == INCREMENT ? state + 1 : state
-  --     end
+      local function reducer_(state, action)
+        if action == INCREMENT then
+          return state + 1
+        else
+          return state
+        end
+      end
 
-  --     function Counter(props, ref)
-  --       local [count, dispatch] = useReducer(reducer, 0)
-  --       useImperativeHandle(ref, function() ({count, dispatch}))
-  --       return <Text text={'Count: ' .. count} />
-  --     end
+      local function Counter(props, ref)
+        local count, dispatch = useReducer(reducer_, 0)
+        useImperativeHandle(ref, function()
+          return {count = count, dispatch = dispatch}
+        end)
+        return React.createElement(Text, {text = 'Count: ' .. count})
+      end
 
-  --     Counter = forwardRef(Counter)
-  --     local counter = React.createRef(null)
-  --     ReactNoop.render(<Counter ref={counter} />)
-  --     expect(Scheduler).toFlushAndYield(['Count: 0'])
-  --     expect(ReactNoop.getChildren()).toEqual([span('Count: 0')])
-  --     expect(counter.current.count).toBe(0)
+      Counter = forwardRef(Counter)
+      local counter = React.createRef(nil)
+      ReactNoop.render(React.createElement(Counter, {
+        ref = counter
+      }))
+      expect(Scheduler).toFlushAndYield({'Count: 0'})
+      expect(ReactNoop.getChildren()).toEqual({span('Count: 0')})
+      expect(counter.current.count).toEqual(0)
 
-  --     act(function()
-  --       counter.current.dispatch(INCREMENT)
-  --     })
-  --     expect(Scheduler).toHaveYielded(['Count: 1'])
-  --     expect(ReactNoop.getChildren()).toEqual([span('Count: 1')])
-  --     expect(counter.current.count).toBe(1)
-  --   })
+      act(function()
+        counter.current.dispatch(INCREMENT)
+      end)
+      expect(Scheduler).toHaveYielded({'Count: 1'})
+      expect(ReactNoop.getChildren()).toEqual({span('Count: 1')})
+      expect(counter.current.count).toEqual(1)
+    end)
 
-  --   it('updates when deps are different', function()
-  --     local INCREMENT = 'INCREMENT'
+    it('updates when deps are different', function()
+      local expect: any = expect
+      local INCREMENT = 'INCREMENT'
 
-  --     function reducer(state, action)
-  --       return action == INCREMENT ? state + 1 : state
-  --     end
+      local function reducer_(state, action)
+        if action == INCREMENT then
+          return state + 1
+        else
+          return state
+        end
+      end
 
-  --     local totalRefUpdates = 0
-  --     function Counter(props, ref)
-  --       local [count, dispatch] = useReducer(reducer, 0)
-  --       useImperativeHandle(
-  --         ref,
-  --         function()
-  --           totalRefUpdates++
-  --           return {count, dispatch}
-  --         },
-  --         [count],
-  --       )
-  --       return <Text text={'Count: ' .. count} />
-  --     end
+      local totalRefUpdates = 0
+      local function Counter(props, ref)
+        local count, dispatch = useReducer(reducer_, 0)
+        useImperativeHandle(
+          ref,
+          function()
+            totalRefUpdates = totalRefUpdates + 1
+            return {count = count, dispatch = dispatch}
+          end,
+          {count}
+        )
+        return React.createElement(Text, {text = 'Count: ' .. count})
+      end
 
-  --     Counter = forwardRef(Counter)
-  --     local counter = React.createRef(null)
-  --     ReactNoop.render(<Counter ref={counter} />)
-  --     expect(Scheduler).toFlushAndYield(['Count: 0'])
-  --     expect(ReactNoop.getChildren()).toEqual([span('Count: 0')])
-  --     expect(counter.current.count).toBe(0)
-  --     expect(totalRefUpdates).toBe(1)
+      Counter = forwardRef(Counter)
+      local counter = React.createRef(nil)
+      ReactNoop.render(React.createElement(Counter, {
+        ref = counter
+      }))
+      expect(Scheduler).toFlushAndYield({'Count: 0'})
+      expect(ReactNoop.getChildren()).toEqual({span('Count: 0')})
+      expect(counter.current.count).toEqual(0)
+      expect(totalRefUpdates).toEqual(1)
 
-  --     act(function()
-  --       counter.current.dispatch(INCREMENT)
-  --     })
-  --     expect(Scheduler).toHaveYielded(['Count: 1'])
-  --     expect(ReactNoop.getChildren()).toEqual([span('Count: 1')])
-  --     expect(counter.current.count).toBe(1)
-  --     expect(totalRefUpdates).toBe(2)
+      act(function()
+        counter.current.dispatch(INCREMENT)
+      end)
+      expect(Scheduler).toHaveYielded({'Count: 1'})
+      expect(ReactNoop.getChildren()).toEqual({span('Count: 1')})
+      expect(counter.current.count).toEqual(1)
+      expect(totalRefUpdates).toEqual(2)
 
-  --     -- Update that doesn't change the ref dependencies
-  --     ReactNoop.render(<Counter ref={counter} />)
-  --     expect(Scheduler).toFlushAndYield(['Count: 1'])
-  --     expect(ReactNoop.getChildren()).toEqual([span('Count: 1')])
-  --     expect(counter.current.count).toBe(1)
-  --     expect(totalRefUpdates).toBe(2); -- Should not increase since last time
-  --   })
-  -- })
+      -- Update that doesn't change the ref dependencies
+      ReactNoop.render(React.createElement(Counter, {
+        ref = counter
+      }))
+      expect(Scheduler).toFlushAndYield({'Count: 1'})
+      expect(ReactNoop.getChildren()).toEqual({span('Count: 1')})
+      expect(counter.current.count).toEqual(1)
+      expect(totalRefUpdates).toEqual(2); -- Should not increase since last time
+    end)
+  end)
   -- describe('useTransition', function()
   --   -- @gate experimental
   --   it('delays showing loading state until after timeout', async function()
@@ -3789,7 +3893,7 @@ end)
   --   })
   -- })
 
-  -- describe('progressive enhancement (not supported)', function()
+  describe('progressive enhancement (not supported)', function()
   --   it('mount additional state', function()
   --     local updateA
   --     local updateB
@@ -3952,55 +4056,66 @@ end)
   --   })
   -- })
 
-  -- it('eager bailout optimization should always compare to latest rendered reducer', function()
-  --   -- Edge case based on a bug report
-  --   local setCounter
-  --   function App()
-  --     local [counter, _setCounter] = useState(1)
-  --     setCounter = _setCounter
-  --     return <Component count={counter} />
-  --   end
+  it('eager bailout optimization should always compare to latest rendered reducer', function()
+    local expect: any = expect
+    -- Edge case based on a bug report
+    local counter, setCounter
 
-  --   function Component({count})
-  --     local [state, dispatch] = useReducer(function()
-  --       -- This reducer closes over a value from props. If the reducer is not
-  --       -- properly updated, the eager reducer will compare to an old value
-  --       -- and bail out incorrectly.
-  --       Scheduler.unstable_yieldValue('Reducer: ' .. count)
-  --       return count
-  --     }, -1)
-  --     useEffect(function()
-  --       Scheduler.unstable_yieldValue('Effect: ' .. count)
-  --       dispatch()
-  --     }, [count])
-  --     Scheduler.unstable_yieldValue('Render: ' .. state)
-  --     return count
-  --   end
+    local function Component(props)
+      -- deviation: can't destructure list in Lua function arguments
+      local count = props.count
+      local state, dispatch = useReducer(function()
+        -- This reducer closes over a value from props. If the reducer is not
+        -- properly updated, the eager reducer will compare to an old value
+        -- and bail out incorrectly.
+        Scheduler.unstable_yieldValue('Reducer: ' .. count)
+        return count
+      end, -1)
+      useEffect(function()
+        Scheduler.unstable_yieldValue('Effect: ' .. count)
+        dispatch()
+      end, {count})
+      Scheduler.unstable_yieldValue('Render: ' .. state)
+      return count
+    end
 
-  --   act(function()
-  --     ReactNoop.render(<App />)
-  --     expect(Scheduler).toFlushAndYield([
-  --       'Render: -1',
-  --       'Effect: 1',
-  --       'Reducer: 1',
-  --       'Reducer: 1',
-  --       'Render: 1',
-  --     ])
-  --     expect(ReactNoop).toMatchRenderedOutput('1')
-  --   })
+    local function App()
+      counter, setCounter = useState(1)
+      return React.createElement(Component, {count = counter})
+    end
 
-  --   act(function()
-  --     setCounter(2)
-  --   })
-  --   expect(Scheduler).toHaveYielded([
-  --     'Render: 1',
-  --     'Effect: 2',
-  --     'Reducer: 2',
-  --     'Reducer: 2',
-  --     'Render: 2',
-  --   ])
-  --   expect(ReactNoop).toMatchRenderedOutput('2')
-  -- })
+    act(function()
+      ReactNoop.render(React.createElement(App))
+      expect(Scheduler).toFlushAndYield({
+        'Render: -1',
+        'Effect: 1',
+        'Reducer: 1',
+        'Reducer: 1',
+        'Render: 1',
+      })
+      -- ROBLOX TODO: replace the below expects with toMatchRenderedOutput
+      -- expect(ReactNoop).toMatchRenderedOutput('1')
+      local renderedOutput = ReactNoop.getChildren()
+      expect(#renderedOutput).toEqual(1)
+      expect(renderedOutput[1].text).toEqual('1')
+    end)
+
+    act(function()
+      setCounter(2)
+    end)
+    expect(Scheduler).toHaveYielded({
+      'Render: 1',
+      'Effect: 2',
+      'Reducer: 2',
+      'Reducer: 2',
+      'Render: 2',
+    })
+    -- ROBLOX TODO: replace the below expects with toMatchRenderedOutput
+    -- expect(ReactNoop).toMatchRenderedOutput('2')
+    local renderedOutput = ReactNoop.getChildren()
+    expect(#renderedOutput).toEqual(1)
+    expect(renderedOutput[1].text).toEqual('2')
+  end)
 
   -- -- Regression test. Covers a case where an internal state variable
   -- -- (`didReceiveUpdate`) is not reset properly.
@@ -4062,38 +4177,51 @@ end)
   --   ])
   -- })
 
-  -- it('should update latest rendered reducer when a preceding state receives a render phase update', function()
-  --   -- Similar to previous test, except using a preceding render phase update
-  --   -- instead of new props.
-  --   local dispatch
-  --   function App()
-  --     local [step, setStep] = useState(0)
-  --     local [shadow, _dispatch] = useReducer(function() step, step)
-  --     dispatch = _dispatch
+  it('should update latest rendered reducer when a preceding state receives a render phase update', function()
+    local expect: any = expect
+    -- Similar to previous test, except using a preceding render phase update
+    -- instead of new props.
+    local shadow, dispatch
+    local function App()
+      local step, setStep = useState(0)
+      shadow, dispatch = useReducer(function()
+          return step
+        end, step)
 
-  --     if step < 5)
-  --       setStep(step + 1)
-  --     end
+      if step < 5 then
+        setStep(step + 1)
+      end
 
-  --     Scheduler.unstable_yieldValue(`Step: ${step}, Shadow: ${shadow}`)
-  --     return shadow
-  --   end
+      Scheduler.unstable_yieldValue('Step: ' .. step .. ', Shadow: ' .. shadow)
+      return shadow
+    end
 
-  --   ReactNoop.render(<App />)
-  --   expect(Scheduler).toFlushAndYield([
-  --     'Step: 0, Shadow: 0',
-  --     'Step: 1, Shadow: 0',
-  --     'Step: 2, Shadow: 0',
-  --     'Step: 3, Shadow: 0',
-  --     'Step: 4, Shadow: 0',
-  --     'Step: 5, Shadow: 0',
-  --   ])
-  --   expect(ReactNoop).toMatchRenderedOutput('0')
+    ReactNoop.render(React.createElement(App))
+    expect(Scheduler).toFlushAndYield({
+      'Step: 0, Shadow: 0',
+      'Step: 1, Shadow: 0',
+      'Step: 2, Shadow: 0',
+      'Step: 3, Shadow: 0',
+      'Step: 4, Shadow: 0',
+      'Step: 5, Shadow: 0',
+    })
 
-  --   act(function() dispatch())
-  --   expect(Scheduler).toHaveYielded(['Step: 5, Shadow: 5'])
-  --   expect(ReactNoop).toMatchRenderedOutput('5')
-  -- })
+    -- ROBLOX TODO: replace the below expects with toMatchRenderedOutput
+    -- expect(ReactNoop).toMatchRenderedOutput('0')
+    local renderedOutput = ReactNoop.getChildren()
+    expect(#renderedOutput).toEqual(1)
+    expect(renderedOutput[1].text).toEqual('0')
+
+    act(function() 
+      return dispatch()
+    end)
+    expect(Scheduler).toHaveYielded({'Step: 5, Shadow: 5'})
+    -- ROBLOX TODO: replace the below expects with toMatchRenderedOutput
+    -- expect(ReactNoop).toMatchRenderedOutput('5')
+    renderedOutput = ReactNoop.getChildren()
+    expect(#renderedOutput).toEqual(1)
+    expect(renderedOutput[1].text).toEqual('5')
+  end)
 
   -- it('should process the rest pending updates after a render phase update', function()
   --   -- Similar to previous test, except using a preceding render phase update
@@ -4176,5 +4304,5 @@ end)
   --     root.render(null)
   --   })
   --   expect(Scheduler).toHaveYielded(['Unmount layout B', 'Unmount passive B'])
-  -- })
+  end)
 end

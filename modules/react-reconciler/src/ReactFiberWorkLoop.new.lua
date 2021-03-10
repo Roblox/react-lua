@@ -2233,7 +2233,8 @@ mod.commitRootImpl = function(root, renderPriorityLevel)
         finishedWork,
         root,
         -- ROBLOX deviation: pass in this function to avoid dependency cycle
-        exports.captureCommitPhaseError
+        exports.captureCommitPhaseError,
+        exports.schedulePassiveEffectCallback
       )
       if hasCaughtError() then
         local err = clearCaughtError()
@@ -2246,11 +2247,11 @@ mod.commitRootImpl = function(root, renderPriorityLevel)
       if not _G.__YOLO__ then
         ok, result = pcall(function()
           -- ROBLOX deviation: pass in this function to avoid dependency cycle
-          recursivelyCommitLayoutEffects(finishedWork, root, exports.captureCommitPhaseError)
+          recursivelyCommitLayoutEffects(finishedWork, root, exports.captureCommitPhaseError, exports.schedulePassiveEffectCallback)
         end)
       else
         ok = true
-        recursivelyCommitLayoutEffects(finishedWork, root, exports.captureCommitPhaseError)
+        recursivelyCommitLayoutEffects(finishedWork, root, exports.captureCommitPhaseError, exports.schedulePassiveEffectCallback)
       end
 
       if not ok then

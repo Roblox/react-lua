@@ -83,7 +83,7 @@ local scheduleUpdateOnFiber = ReactFiberWorkLoop.scheduleUpdateOnFiber
 local warnIfNotScopedWithMatchingAct = ReactFiberWorkLoop.warnIfNotScopedWithMatchingAct
 local requestEventTime = ReactFiberWorkLoop.requestEventTime
 local requestUpdateLane = ReactFiberWorkLoop.requestUpdateLane
-local markSkippedUpdateLanes = ReactFiberWorkLoop.requestUpdateLane
+local markSkippedUpdateLanes = ReactFiberWorkLoop.markSkippedUpdateLanes
 -- local {
 --   getWorkInProgressRoot,
 --   requestUpdateLane,
@@ -561,32 +561,51 @@ function basicStateReducer(state, action)
   end
 end
 
+-- ROBLOX TODO: function generics
 -- function mountReducer<S, I, A>(
 --   reducer: (S, A) => S,
 --   initialArg: I,
 --   init?: I => S,
 -- ): [S, Dispatch<A>] {
---   local hook = mountWorkInProgressHook()
---   local initialState
---   if init ~= undefined)
---     initialState = init(initialArg)
---   } else {
---     initialState = ((initialArg: any): S)
---   end
---   hook.memoizedState = hook.baseState = initialState
---   local queue = (hook.queue = {
---     pending: nil,
---     dispatch: nil,
---     lastRenderedReducer: reducer,
---     lastRenderedState: (initialState: any),
---   })
---   local dispatch: Dispatch<A> = (queue.dispatch = (dispatchAction.bind(
---     nil,
---     currentlyRenderingFiber,
---     queue,
---   ): any))
---   return [hook.memoizedState, dispatch]
--- end
+function mountReducer(
+  reducer: (any, any) -> any,
+  initialArg: any,
+  init: ((any) -> any)?
+): (any, Dispatch<any>)
+  local hook = mountWorkInProgressHook()
+  local initialState
+  if init ~= nil then
+    -- deviation: recast to any to silence analyze error
+    local initAsAny: any = init
+    initialState = initAsAny(initialArg)
+  else
+    -- ROBLOX TODO: recast initialArg to ((initialArg: any): S)
+    initialState = initialArg
+  end
+  -- deviation: multiple assignment converted to two assignments
+  hook.baseState = initialState
+  hook.memoizedState = hook.baseState
+
+  -- deviation: multiple assignment converted to two assignments
+  hook.queue = {
+    pending = nil,
+    dispatch = nil,
+    lastRenderedReducer = reducer,
+    -- ROBLOX TODO: recast(initialState: any)
+    lastRenderedState = initialState
+  }
+
+  local queue = hook.queue
+  -- deviation: set currentlyRenderingFiber to a local varible so it doesn't change
+  -- by call time
+  local cRF = currentlyRenderingFiber
+  queue.dispatch = function(...) 
+      return dispatchAction(cRF, queue, ...)
+    end
+  local dispatch: Dispatch<any> = queue.dispatch
+  -- deviation: Lua version of useState and useReducer return two items, not list like upstream
+  return hook.memoizedState, dispatch
+end
 
 -- ROBLOX FIXME: function generics, return type
 -- useReducer<S, I, A>(
@@ -1887,7 +1906,7 @@ local HooksDispatcherOnMount: Dispatcher = {
   useImperativeHandle = mountImperativeHandle,
   useLayoutEffect = mountLayoutEffect,
   -- useMemo = mountMemo,
-  -- useReducer = mountReducer,
+  useReducer = mountReducer,
   useRef = mountRef,
   useState = mountState,
   -- useDebugValue = mountDebugValue,
@@ -1908,7 +1927,7 @@ local HooksDispatcherOnUpdate: Dispatcher = {
   useImperativeHandle = updateImperativeHandle,
   useLayoutEffect = updateLayoutEffect,
   -- useMemo = updateMemo,
-  -- useReducer = updateReducer,
+  useReducer = updateReducer,
   useRef = updateRef,
   useState = updateState,
   useDebugValue = updateDebugValue,
@@ -2027,21 +2046,32 @@ if _G.__DEV__ then
 --         ReactCurrentDispatcher.current = prevDispatcher
 --       end
 --     },
---     useReducer<S, I, A>(
---       reducer: (S, A) => S,
---       initialArg: I,
---       init?: I => S,
---     ): [S, Dispatch<A>] {
---       currentHookNameInDev = 'useReducer'
---       mountHookTypesDev()
---       local prevDispatcher = ReactCurrentDispatcher.current
---       ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnMountInDEV
---       try {
---         return mountReducer(reducer, initialArg, init)
---       } finally {
---         ReactCurrentDispatcher.current = prevDispatcher
---       end
---     },
+    -- ROBLOX TODO: function generics
+    -- useReducer<S, I, A>(
+    --   reducer: (S, A) => S,
+    --   initialArg: I,
+    --   init?: I => S,
+    -- ): [S, Dispatch<A>] {
+    useReducer = function(
+      reducer: (any, any) -> any,
+      initialArg: any,
+      init: ((any) -> any)?
+    ): (any, Dispatch<any>)
+      currentHookNameInDev = 'useReducer'
+      mountHookTypesDev()
+      local prevDispatcher = ReactCurrentDispatcher.current
+      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnMountInDEV
+      local ok, result, setResult = pcall(function()
+        return mountReducer(reducer, initialArg, init)
+      end)
+      -- ROBLOX finally
+      ReactCurrentDispatcher.current = prevDispatcher
+      if not ok then
+        error(result)
+      end
+      -- deviation: Lua version of useState and useReducer return two items, not list like upstream
+      return result, setResult
+    end,
 --     useRef<T>(initialValue: T): {|current: T|} {
     useRef = function(initialValue): {current: any}
       currentHookNameInDev = 'useRef'
@@ -2064,12 +2094,11 @@ if _G.__DEV__ then
         return mountState(initialState)
       end)
       ReactCurrentDispatcher.current = prevDispatcher
-      if ok then
-        -- deviation: Lua version of useState and useReducer return two items, not list like upstream
-        return result, setResult
-      else
+      if not ok then
         error(result)
       end
+      -- deviation: Lua version of useState and useReducer return two items, not list like upstream
+      return result, setResult
       end,
 --     useDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void {
 --       currentHookNameInDev = 'useDebugValue'
@@ -2179,21 +2208,32 @@ if _G.__DEV__ then
 --         ReactCurrentDispatcher.current = prevDispatcher
 --       end
 --     },
---     useReducer<S, I, A>(
---       reducer: (S, A) => S,
---       initialArg: I,
---       init?: I => S,
---     ): [S, Dispatch<A>] {
---       currentHookNameInDev = 'useReducer'
---       updateHookTypesDev()
---       local prevDispatcher = ReactCurrentDispatcher.current
---       ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnMountInDEV
---       try {
---         return mountReducer(reducer, initialArg, init)
---       } finally {
---         ReactCurrentDispatcher.current = prevDispatcher
---       end
---     },
+  -- ROBLOX TODO: function generics
+  -- useReducer<S, I, A>(
+  --   reducer: (S, A) => S,
+  --   initialArg: I,
+  --   init?: I => S,
+  -- ): [S, Dispatch<A>] {
+    useReducer = function(
+      reducer: (any, any) -> any,
+      initialArg: any,
+      init: ((any) -> any)?
+    ): (any, Dispatch<any>)
+      currentHookNameInDev = 'useReducer'
+      updateHookTypesDev()
+      local prevDispatcher = ReactCurrentDispatcher.current
+      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnMountInDEV
+      local ok, result, setResult = pcall(function()
+        return mountReducer(reducer, initialArg, init)
+      end)
+      -- ROBLOX finally
+      ReactCurrentDispatcher.current = prevDispatcher
+      if not ok then
+        error(result)
+      end
+      -- deviation: Lua version of useState and useReducer return two items, not list like upstream
+      return result, setResult
+    end,
     -- FIXME ROBLOX: function generics and return type
     -- useRef<T>(initialValue: T): {|current: T|}
     useRef = function(initialValue: any?): {current: any}
@@ -2217,12 +2257,11 @@ if _G.__DEV__ then
         return mountState(initialState)
       end)
         ReactCurrentDispatcher.current = prevDispatcher
-      if ok then
-        -- deviation: Lua version of mountState return two items, not list like upstream
-        return result, setResult
-      else
+      if not ok then
         error(result)
       end
+      -- deviation: Lua version of mountState return two items, not list like upstream
+      return result, setResult
     end,
 --     useDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void {
 --       currentHookNameInDev = 'useDebugValue'
@@ -2331,21 +2370,32 @@ if _G.__DEV__ then
 --         ReactCurrentDispatcher.current = prevDispatcher
 --       end
 --     },
---     useReducer<S, I, A>(
---       reducer: (S, A) => S,
---       initialArg: I,
---       init?: I => S,
---     ): [S, Dispatch<A>] {
---       currentHookNameInDev = 'useReducer'
---       updateHookTypesDev()
---       local prevDispatcher = ReactCurrentDispatcher.current
---       ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV
---       try {
---         return updateReducer(reducer, initialArg, init)
---       } finally {
---         ReactCurrentDispatcher.current = prevDispatcher
---       end
---     },
+    -- ROBLOX TODO: function generics
+    -- useReducer<S, I, A>(
+    --   reducer: (S, A) => S,
+    --   initialArg: I,
+    --   init?: I => S,
+    -- ): [S, Dispatch<A>] {
+    useReducer = function(
+      reducer: (any, any) -> any,
+      initialArg: any,
+      init: ((any) -> any)?
+    ): (any, Dispatch<any>)
+      currentHookNameInDev = 'useReducer'
+      updateHookTypesDev()
+      local prevDispatcher = ReactCurrentDispatcher.current
+      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV
+      local ok, result, setResult = pcall(function()
+        return updateReducer(reducer, initialArg, init)
+      end)
+      -- ROBLOX finally
+      ReactCurrentDispatcher.current = prevDispatcher
+      if not ok then
+        error(result)
+      end
+      -- deviation: Lua version of useState and useReducer return two items, not list like upstream
+      return result, setResult
+    end,
 --     useRef<T>(initialValue: T): {|current: T|} {
     useRef = function(initialValue): {current: any}
       currentHookNameInDev = 'useRef'
@@ -2368,12 +2418,11 @@ if _G.__DEV__ then
         return updateState(initialState)
       end)
         ReactCurrentDispatcher.current = prevDispatcher
-      if ok then
-        -- deviation: Lua version of useState returns two items, not list like upstream
-        return result, setResult
-      else
+      if not ok then
         error(result)
       end
+      -- deviation: Lua version of useState returns two items, not list like upstream
+      return result, setResult
     end,
 --     useDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void {
 --       currentHookNameInDev = 'useDebugValue'
@@ -2482,21 +2531,32 @@ if _G.__DEV__ then
 --         ReactCurrentDispatcher.current = prevDispatcher
 --       end
 --     },
---     useReducer<S, I, A>(
---       reducer: (S, A) => S,
---       initialArg: I,
---       init?: I => S,
---     ): [S, Dispatch<A>] {
---       currentHookNameInDev = 'useReducer'
---       updateHookTypesDev()
---       local prevDispatcher = ReactCurrentDispatcher.current
---       ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnRerenderInDEV
---       try {
---         return rerenderReducer(reducer, initialArg, init)
---       } finally {
---         ReactCurrentDispatcher.current = prevDispatcher
---       end
---     },
+    -- ROBLOX TODO: function generics
+    -- useReducer<S, I, A>(
+    --   reducer: (S, A) => S,
+    --   initialArg: I,
+    --   init?: I => S,
+    -- ): [S, Dispatch<A>] {
+    useReducer = function(
+      reducer: (any, any) -> any,
+      initialArg: any,
+      init: ((any) -> any)?
+    ): (any, Dispatch<any>)
+      currentHookNameInDev = 'useReducer'
+      updateHookTypesDev()
+      local prevDispatcher = ReactCurrentDispatcher.current
+      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnRerenderInDEV
+      local ok, result, setResult = pcall(function()
+        return rerenderReducer(reducer, initialArg, init)
+      end)
+      -- ROBLOX finally
+      ReactCurrentDispatcher.current = prevDispatcher
+      if not ok then
+        error(result)
+      end
+      -- deviation: Lua version of useState and useReducer return two items, not list like upstream
+      return result, setResult
+    end,
     -- useRef<T>(initialValue: T): {|current: T|} {
     useRef = function(initialValue): {current: any}
       currentHookNameInDev = 'useRef'
@@ -2519,12 +2579,11 @@ if _G.__DEV__ then
         return rerenderState(initialState)
       end)
         ReactCurrentDispatcher.current = prevDispatcher
-      if ok then
-        -- deviation: Lua version of useState returns two items, not list like upstream
-        return result, setResult
-      else
+      if not ok then
         error(result)
       end
+      -- deviation: Lua version of useState returns two items, not list like upstream
+      return result, setResult
     end,
 --     useDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void {
 --       currentHookNameInDev = 'useDebugValue'
@@ -2635,18 +2694,21 @@ if _G.__DEV__ then
       initialArg,
       init: (any) -> any | nil
     ): Array<any>
-      unimplemented("InvalidNestedHooksDispatcherOnMountInDEV: useReducer()")
-      return {}
-    --   currentHookNameInDev = 'useReducer'
-    --   warnInvalidHookAccess()
-    --   mountHookTypesDev()
-    --   local prevDispatcher = ReactCurrentDispatcher.current
-    --   ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnMountInDEV
-    --   try {
-    --     return mountReducer(reducer, initialArg, init)
-    --   } finally {
-    --     ReactCurrentDispatcher.current = prevDispatcher
-    --   end
+      currentHookNameInDev = 'useReducer'
+      warnInvalidHookAccess()
+      mountHookTypesDev()
+      local prevDispatcher = ReactCurrentDispatcher.current
+      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnMountInDEV
+      local ok, result, setResult = pcall(function()
+        return mountReducer(reducer, initialArg, init)
+      end)
+      -- ROBLOX finally
+      ReactCurrentDispatcher.current = prevDispatcher
+      if not ok then
+        error(result)
+      end
+      -- deviation: Lua version of useState and useReducer return two items, not list like upstream
+      return result, setResult
     end,
     -- useRef<T>(initialValue: T): {|current: T|} {
     useRef = function(initialValue): {current: any}
@@ -2672,12 +2734,11 @@ if _G.__DEV__ then
         return mountState(initialState)
       end)
       ReactCurrentDispatcher.current = prevDispatcher
-      if ok then
-        -- deviation: Lua version of useState returns two items, not list like upstream
-        return result, setResult
-      else
+      if not ok then
         error(result)
       end
+      -- deviation: Lua version of useState returns two items, not list like upstream
+      return result, setResult
     end,
     -- useDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void {
     --   currentHookNameInDev = 'useDebugValue'
@@ -2794,22 +2855,34 @@ if _G.__DEV__ then
 --         ReactCurrentDispatcher.current = prevDispatcher
 --       end
 --     },
---     useReducer<S, I, A>(
---       reducer: (S, A) => S,
---       initialArg: I,
---       init?: I => S,
---     ): [S, Dispatch<A>] {
---       currentHookNameInDev = 'useReducer'
---       warnInvalidHookAccess()
---       updateHookTypesDev()
---       local prevDispatcher = ReactCurrentDispatcher.current
---       ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV
---       try {
---         return updateReducer(reducer, initialArg, init)
---       } finally {
---         ReactCurrentDispatcher.current = prevDispatcher
---       end
---     },
+    -- ROBLOX TODO: function generics
+    -- useReducer<S, I, A>(
+    --   reducer: (S, A) => S,
+    --   initialArg: I,
+    --   init?: I => S,
+    -- ): [S, Dispatch<A>] {
+    useReducer = function(
+      reducer: (any, any) -> any,
+      initialArg: any,
+      init: ((any) -> any)?
+    ): (any, Dispatch<any>)
+      currentHookNameInDev = 'useReducer'
+      warnInvalidHookAccess()
+      updateHookTypesDev()
+      local prevDispatcher = ReactCurrentDispatcher.current
+      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV
+      local ok, result, setResult = pcall(function()
+        return updateReducer(reducer, initialArg, init)
+      end)
+      -- ROBLOX finally
+      ReactCurrentDispatcher.current = prevDispatcher
+
+      if not ok then
+        error(result)
+      end
+      -- deviation: Lua version of useState and useReducer return two items, not list like upstream
+      return result, setResult
+    end,
 --     useRef<T>(initialValue: T): {|current: T|} {
     useRef = function(initialValue): {current: any}
       currentHookNameInDev = 'useRef'
@@ -2834,12 +2907,11 @@ if _G.__DEV__ then
         return updateState(initialState)
       end)
       ReactCurrentDispatcher.current = prevDispatcher
-      if ok then
-        -- deviation: Lua version of useState returns two items, not list like upstream
-        return result, setResult
-      else
+      if not ok then
         error(result)
       end
+      -- deviation: Lua version of useState returns two items, not list like upstream
+      return result, setResult
     end,
 --     useDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void {
 --       currentHookNameInDev = 'useDebugValue'
@@ -2961,22 +3033,33 @@ if _G.__DEV__ then
 --         ReactCurrentDispatcher.current = prevDispatcher
 --       end
 --     },
---     useReducer<S, I, A>(
---       reducer: (S, A) => S,
---       initialArg: I,
---       init?: I => S,
---     ): [S, Dispatch<A>] {
---       currentHookNameInDev = 'useReducer'
---       warnInvalidHookAccess()
---       updateHookTypesDev()
---       local prevDispatcher = ReactCurrentDispatcher.current
---       ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV
---       try {
---         return rerenderReducer(reducer, initialArg, init)
---       } finally {
---         ReactCurrentDispatcher.current = prevDispatcher
---       end
---     },
+  -- ROBLOX TODO: function generics
+  -- useReducer<S, I, A>(
+  --   reducer: (S, A) => S,
+  --   initialArg: I,
+  --   init?: I => S,
+  -- ): [S, Dispatch<A>] {
+    useReducer = function(
+      reducer: (any, any) -> any,
+      initialArg: any,
+      init: ((any) -> any)?
+    ): (any, Dispatch<any>)
+      currentHookNameInDev = 'useReducer'
+      warnInvalidHookAccess()
+      updateHookTypesDev()
+      local prevDispatcher = ReactCurrentDispatcher.current
+      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV
+      local ok, result, setResult = pcall(function()
+        return rerenderReducer(reducer, initialArg, init)
+      end)
+      -- ROBLOX finally
+      ReactCurrentDispatcher.current = prevDispatcher
+      if not ok then
+        error(result)
+      end
+      -- deviation: Lua version of useState and useReducer return two items, not list like upstream
+      return result, setResult
+    end,
 --     useRef<T>(initialValue: T): {|current: T|} {
     useRef = function(initialValue): {current: any}
       currentHookNameInDev = 'useRef'
@@ -3001,12 +3084,11 @@ if _G.__DEV__ then
           return rerenderState(initialState)
         end)
         ReactCurrentDispatcher.current = prevDispatcher
-        if ok then
-          -- deviation: Lua version of useState returns two items, not list like upstream
-          return result, setResult
-        else
+        if not ok then
           error(result)
         end
+        -- deviation: Lua version of useState returns two items, not list like upstream
+        return result, setResult
       end,
 --     useDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void {
 --       currentHookNameInDev = 'useDebugValue'
