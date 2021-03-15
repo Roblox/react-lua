@@ -3006,7 +3006,8 @@ captureCommitPhaseErrorOnRoot = function(
   error_
 )
   local errorInfo = createCapturedValue(error_, sourceFiber)
-  local update = createRootErrorUpdate(rootFiber, errorInfo, SyncLane)
+  -- ROBLOX deviation: parameterize method onUncaughtError to avoid circular dependency
+  local update = createRootErrorUpdate(rootFiber, errorInfo, SyncLane, exports.onUncaughtError)
   enqueueUpdate(rootFiber, update)
   local eventTime = exports.requestEventTime()
   local root = mod.markUpdateLaneFromFiberToRoot(rootFiber, SyncLane)

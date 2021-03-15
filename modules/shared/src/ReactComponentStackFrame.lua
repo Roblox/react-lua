@@ -142,7 +142,6 @@ local function describeNativeComponentFrame(fn: (any) -> any, construct: boolean
 
 	if sample and control and
 		typeof(sample.stack) == "string"
-		and typeof(sample.stack) == "string"
 	then
 		-- // This extracts the first frame from the sample that isn't also in the control.
 		-- // Skipping one frame that we assume is the frame that calls the two.

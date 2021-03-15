@@ -23,7 +23,7 @@ exports.showErrorDialog =  function(
   errorInfo
 ): boolean
   -- ROBLOX TODO: we may replace this with something that sends telemetry
-  console.error("!!!! Error: " .. tostring(errorInfo.value))
+  console.error("!!!! ROBLOX This is where we would report to crash telemetry: " .. tostring(errorInfo.value))
   return true
 end
 

@@ -1479,37 +1479,50 @@ function updateCallback(callback, deps: Array<any> | nil)
   return callback
 end
 
+-- ROBLOX TODO: function generics
 -- function mountMemo<T>(
 --   nextCreate: () => T,
 --   deps: Array<any> | nil,
 -- ): T {
---   local hook = mountWorkInProgressHook()
---   local nextDeps = deps == undefined ? nil : deps
---   local nextValue = nextCreate()
---   hook.memoizedState = [nextValue, nextDeps]
---   return nextValue
--- end
+function mountMemo(
+  nextCreate: () -> any,
+  deps: Array<any> | nil
+): any
+  local hook = mountWorkInProgressHook()
 
+  -- deviation: equivilant to upstream ternary logic
+  local nextDeps = deps
+  local nextValue = nextCreate()
+  hook.memoizedState = {nextValue, nextDeps}
+  return nextValue
+end
+
+-- ROBLOX TODO: function generics
 -- function updateMemo<T>(
 --   nextCreate: () => T,
 --   deps: Array<any> | nil,
 -- ): T {
---   local hook = updateWorkInProgressHook()
---   local nextDeps = deps == undefined ? nil : deps
---   local prevState = hook.memoizedState
---   if prevState ~= nil)
---     -- Assume these are defined. If they're not, areHookInputsEqual will warn.
---     if nextDeps ~= nil)
---       local prevDeps: Array<any> | nil = prevState[1]
---       if areHookInputsEqual(nextDeps, prevDeps))
---         return prevState[0]
---       end
---     end
---   end
---   local nextValue = nextCreate()
---   hook.memoizedState = [nextValue, nextDeps]
---   return nextValue
--- end
+function updateMemo(
+  nextCreate: () -> any,
+  deps: Array<any> | nil
+): any
+  local hook = updateWorkInProgressHook()
+  -- deviation: equivilant to upstream ternary logic
+  local nextDeps = deps
+  local prevState = hook.memoizedState
+  if prevState ~= nil then
+    -- Assume these are defined. If they're not, areHookInputsEqual will warn.
+    if nextDeps ~= nil then
+      local prevDeps: Array<any> = prevState[2]
+      if areHookInputsEqual(nextDeps, prevDeps) then
+        return prevState[1]
+      end
+    end
+  end
+  local nextValue = nextCreate()
+  hook.memoizedState = {nextValue, nextDeps}
+  return nextValue
+end
 
 -- function mountDeferredValue<T>(value: T): T {
 --   local [prevValue, setValue] = mountState(value)
@@ -1905,7 +1918,7 @@ local HooksDispatcherOnMount: Dispatcher = {
   useEffect = mountEffect,
   useImperativeHandle = mountImperativeHandle,
   useLayoutEffect = mountLayoutEffect,
-  -- useMemo = mountMemo,
+  useMemo = mountMemo,
   useReducer = mountReducer,
   useRef = mountRef,
   useState = mountState,
@@ -1926,7 +1939,7 @@ local HooksDispatcherOnUpdate: Dispatcher = {
   useEffect = updateEffect,
   useImperativeHandle = updateImperativeHandle,
   useLayoutEffect = updateLayoutEffect,
-  -- useMemo = updateMemo,
+  useMemo = updateMemo,
   useReducer = updateReducer,
   useRef = updateRef,
   useState = updateState,
@@ -1947,7 +1960,7 @@ local HooksDispatcherOnRerender: Dispatcher = {
   useEffect = updateEffect,
   useImperativeHandle = updateImperativeHandle,
   useLayoutEffect = updateLayoutEffect,
-  -- useMemo = updateMemo,
+  useMemo = updateMemo,
   useReducer = rerenderReducer,
   useRef = updateRef,
   useState = rerenderState,
@@ -2034,18 +2047,23 @@ if _G.__DEV__ then
       checkDepsAreArrayDev(deps)
       return mountLayoutEffect(create, deps)
   end,
---     useMemo<T>(create: () => T, deps: Array<any> | nil): T {
---       currentHookNameInDev = 'useMemo'
---       mountHookTypesDev()
---       checkDepsAreArrayDev(deps)
---       local prevDispatcher = ReactCurrentDispatcher.current
---       ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnMountInDEV
---       try {
---         return mountMemo(create, deps)
---       } finally {
---         ReactCurrentDispatcher.current = prevDispatcher
---       end
---     },
+  -- ROBLOX TODO: function generics  
+  -- useMemo<T>(create: () => T, deps: Array<any> | nil): T {
+    useMemo = function(create: () -> any, deps: Array<any> | nil): any
+      currentHookNameInDev = 'useMemo'
+      mountHookTypesDev()
+      checkDepsAreArrayDev(deps)
+      local prevDispatcher = ReactCurrentDispatcher.current
+      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnMountInDEV
+      local ok, result = pcall(function()
+        return mountMemo(create, deps)
+      end)
+      ReactCurrentDispatcher.current = prevDispatcher
+      if not ok then
+        error(result)
+      end
+      return result
+    end,
     -- ROBLOX TODO: function generics
     -- useReducer<S, I, A>(
     --   reducer: (S, A) => S,
@@ -2197,17 +2215,22 @@ if _G.__DEV__ then
       updateHookTypesDev()
       return mountLayoutEffect(create, deps)
   end,
---     useMemo<T>(create: () => T, deps: Array<any> | nil): T {
---       currentHookNameInDev = 'useMemo'
---       updateHookTypesDev()
---       local prevDispatcher = ReactCurrentDispatcher.current
---       ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnMountInDEV
---       try {
---         return mountMemo(create, deps)
---       } finally {
---         ReactCurrentDispatcher.current = prevDispatcher
---       end
---     },
+    -- ROBLOX TODO: function generics  
+    -- useMemo<T>(create: () => T, deps: Array<any> | nil): T {
+    useMemo = function(create: () -> any, deps: Array<any> | nil): any
+      currentHookNameInDev = 'useMemo'
+      updateHookTypesDev()
+      local prevDispatcher = ReactCurrentDispatcher.current
+      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnMountInDEV
+      local ok, result = pcall(function()
+        return mountMemo(create, deps)
+      end)
+      ReactCurrentDispatcher.current = prevDispatcher
+      if not ok then
+        error(result)
+      end
+      return result
+    end,
   -- ROBLOX TODO: function generics
   -- useReducer<S, I, A>(
   --   reducer: (S, A) => S,
@@ -2359,17 +2382,22 @@ if _G.__DEV__ then
       updateHookTypesDev()
       return updateLayoutEffect(create, deps)
     end,
---     useMemo<T>(create: () => T, deps: Array<any> | nil): T {
---       currentHookNameInDev = 'useMemo'
---       updateHookTypesDev()
---       local prevDispatcher = ReactCurrentDispatcher.current
---       ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV
---       try {
---         return updateMemo(create, deps)
---       } finally {
---         ReactCurrentDispatcher.current = prevDispatcher
---       end
---     },
+    -- ROBLOX TODO: function generics
+    -- useMemo<T>(create: () => T, deps: Array<any> | nil): T {
+    useMemo = function(create: () -> any, deps: Array<any> | nil): any
+      currentHookNameInDev = 'useMemo'
+      updateHookTypesDev()
+      local prevDispatcher = ReactCurrentDispatcher.current
+      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV
+      local ok, result = pcall(function()
+        return updateMemo(create, deps)
+      end)
+      ReactCurrentDispatcher.current = prevDispatcher
+      if not ok then
+        error(result)
+      end
+      return result
+    end,
     -- ROBLOX TODO: function generics
     -- useReducer<S, I, A>(
     --   reducer: (S, A) => S,
@@ -2489,14 +2517,19 @@ if _G.__DEV__ then
         updateHookTypesDev()
         return readContext(context, observedBits)
       end,
---     useEffect(
---       create: () => (() => void),
---       deps: Array<any> | nil,
---     ): void {
---       currentHookNameInDev = 'useEffect'
---       updateHookTypesDev()
---       return updateEffect(create, deps)
---     },
+      -- ROBLOX FIXME: function generics and return type
+      -- useEffect(
+      --   create: () => (() => void),
+      --   deps: Array<any> | nil,
+      -- ): void {
+      useEffect = function(
+        create: () -> (() -> ()),
+        deps: Array<any> | nil
+      ): ()
+      currentHookNameInDev = 'useEffect'
+      updateHookTypesDev()
+      return updateEffect(create, deps)
+      end,
     -- ROBLOX FIXME: function generics and return type useImperativeHandle<T>()
     -- useImperativeHandle<T>(
     --   ref: {|current: T | null|} | ((inst: T | null) => mixed) | null | void,
@@ -2520,17 +2553,23 @@ if _G.__DEV__ then
       updateHookTypesDev()
       return updateLayoutEffect(create, deps)
     end,
---     useMemo<T>(create: () => T, deps: Array<any> | nil): T {
---       currentHookNameInDev = 'useMemo'
---       updateHookTypesDev()
---       local prevDispatcher = ReactCurrentDispatcher.current
---       ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnRerenderInDEV
---       try {
---         return updateMemo(create, deps)
---       } finally {
---         ReactCurrentDispatcher.current = prevDispatcher
---       end
---     },
+        -- ROBLOX TODO: function generics
+
+    -- useMemo<T>(create: () => T, deps: Array<any> | nil): T {
+    useMemo = function(create: () -> any, deps: Array<any> | nil): any
+      currentHookNameInDev = 'useMemo'
+      updateHookTypesDev()
+      local prevDispatcher = ReactCurrentDispatcher.current
+      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnRerenderInDEV
+      local ok, result = pcall(function()
+        return updateMemo(create, deps)
+      end)
+      ReactCurrentDispatcher.current = prevDispatcher
+      if not ok then
+        error(result)
+      end
+      return result
+    end,
     -- ROBLOX TODO: function generics
     -- useReducer<S, I, A>(
     --   reducer: (S, A) => S,
@@ -2677,17 +2716,19 @@ if _G.__DEV__ then
       return mountLayoutEffect(create, deps)
     end,
     useMemo = function(create: () -> any, deps: Array<any> | nil)
-      unimplemented("InvalidNestedHooksDispatcherOnMountInDEV: useMemo()")
-    --   currentHookNameInDev = 'useMemo'
-    --   warnInvalidHookAccess()
-    --   mountHookTypesDev()
-    --   local prevDispatcher = ReactCurrentDispatcher.current
-    --   ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnMountInDEV
-    --   try {
-    --     return mountMemo(create, deps)
-    --   } finally {
-    --     ReactCurrentDispatcher.current = prevDispatcher
-    --   end
+      currentHookNameInDev = 'useMemo'
+      warnInvalidHookAccess()
+      mountHookTypesDev()
+      local prevDispatcher = ReactCurrentDispatcher.current
+      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnMountInDEV
+      local ok, result = pcall(function()
+        return mountMemo(create, deps)
+      end)
+      ReactCurrentDispatcher.current = prevDispatcher
+      if not ok then
+        error(result)
+      end
+      return result
     end,
     useReducer = function(
       reducer: (any, any) -> any,
@@ -2809,15 +2850,20 @@ if _G.__DEV__ then
       updateHookTypesDev()
       return readContext(context, observedBits)
     end,
---     useEffect(
---       create: () => (() => void),
---       deps: Array<any> | nil,
---     ): void {
---       currentHookNameInDev = 'useEffect'
---       warnInvalidHookAccess()
---       updateHookTypesDev()
---       return updateEffect(create, deps)
---     },
+    -- ROBLOX FIXME: Luau function generics and return
+    -- useEffect(
+    --   create: () => (() => void),
+    --   deps: Array<any> | nil,
+    -- ): void {
+    useEffect = function(
+      create: () -> (() -> ()),
+      deps: Array<any> | nil
+    )
+      currentHookNameInDev = 'useEffect'
+      warnInvalidHookAccess()
+      updateHookTypesDev()
+      return updateEffect(create, deps)
+    end,
     -- ROBLOX FIXME: luau function generics
     -- useImperativeHandle<T>(
     --   ref: {|current: T | null|} | ((inst: T | null) => mixed) | null | void,
@@ -2843,18 +2889,23 @@ if _G.__DEV__ then
       updateHookTypesDev()
       return updateLayoutEffect(create, deps)
     end,
---     useMemo<T>(create: () => T, deps: Array<any> | nil): T {
---       currentHookNameInDev = 'useMemo'
---       warnInvalidHookAccess()
---       updateHookTypesDev()
---       local prevDispatcher = ReactCurrentDispatcher.current
---       ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV
---       try {
---         return updateMemo(create, deps)
---       } finally {
---         ReactCurrentDispatcher.current = prevDispatcher
---       end
---     },
+    -- ROBLOX TODO: function generics
+    -- useMemo<T>(create: () => T, deps: Array<any> | nil): T {
+    useMemo = function(create: () -> any, deps: Array<any> | nil): any
+      currentHookNameInDev = 'useMemo'
+      warnInvalidHookAccess()
+      updateHookTypesDev()
+      local prevDispatcher = ReactCurrentDispatcher.current
+      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV
+      local ok, result = pcall(function()
+        return updateMemo(create, deps)
+      end)
+      ReactCurrentDispatcher.current = prevDispatcher
+      if not ok then
+        error(result)
+      end
+      return result
+    end,
     -- ROBLOX TODO: function generics
     -- useReducer<S, I, A>(
     --   reducer: (S, A) => S,
@@ -2987,15 +3038,20 @@ if _G.__DEV__ then
       updateHookTypesDev()
       return readContext(context, observedBits)
   end,
---     useEffect(
---       create: () => (() => void),
---       deps: Array<any> | nil,
---     ): void {
---       currentHookNameInDev = 'useEffect'
---       warnInvalidHookAccess()
---       updateHookTypesDev()
---       return updateEffect(create, deps)
---     },
+    -- ROBLOX FIXME: Luau function generics and return
+    -- useEffect(
+    --   create: () => (() => void),
+    --   deps: Array<any> | nil,
+    -- ): void {
+    useEffect = function(
+      create: () -> (() -> ()),
+      deps: Array<any> | nil
+    )
+      currentHookNameInDev = 'useEffect'
+      warnInvalidHookAccess()
+      updateHookTypesDev()
+      return updateEffect(create, deps)
+    end,
     -- ROBLOX FIXME: function generics
     -- useImperativeHandle<T>(
     --   ref: {|current: T | null|} | ((inst: T | null) => mixed) | null | void,
@@ -3021,18 +3077,23 @@ if _G.__DEV__ then
       updateHookTypesDev()
       return updateLayoutEffect(create, deps)
     end,
---     useMemo<T>(create: () => T, deps: Array<any> | nil): T {
---       currentHookNameInDev = 'useMemo'
---       warnInvalidHookAccess()
---       updateHookTypesDev()
---       local prevDispatcher = ReactCurrentDispatcher.current
---       ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV
---       try {
---         return updateMemo(create, deps)
---       } finally {
---         ReactCurrentDispatcher.current = prevDispatcher
---       end
---     },
+    -- ROBLOX FIXME: function generics
+    -- useMemo<T>(create: () => T, deps: Array<any> | nil): T 
+    useMemo = function(create: () -> any, deps: Array<any> | nil): any
+      currentHookNameInDev = 'useMemo'
+      warnInvalidHookAccess()
+      updateHookTypesDev()
+      local prevDispatcher = ReactCurrentDispatcher.current
+      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV
+      local ok, result = pcall(function()
+        return updateMemo(create, deps)
+      end)
+      ReactCurrentDispatcher.current = prevDispatcher
+      if not ok then
+        error(result)
+      end
+      return result
+    end,
   -- ROBLOX TODO: function generics
   -- useReducer<S, I, A>(
   --   reducer: (S, A) => S,

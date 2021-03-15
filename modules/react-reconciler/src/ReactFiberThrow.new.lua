@@ -109,6 +109,7 @@ function createRootErrorUpdate(
   fiber: Fiber,
   errorInfo: CapturedValue<any>,
   lane: Lane,
+  -- ROBLOX deviation: parameterize method to avoid circular dependency
   onUncaughtError
 ): Update<any>
   local update = createUpdate(NoTimestamp, lane)
@@ -415,6 +416,7 @@ function throwException(
       workInProgress.flags = bit32.bor(workInProgress.flags, ShouldCapture)
       local lane = pickArbitraryLane(rootRenderLanes)
       workInProgress.lanes = mergeLanes(workInProgress.lanes, lane)
+      -- ROBLOX deviation: parameterize method onUncaughtError to avoid circular dependency
       local update = createRootErrorUpdate(workInProgress, errorInfo, lane, onUncaughtError)
       enqueueCapturedUpdate(workInProgress, update)
       return
