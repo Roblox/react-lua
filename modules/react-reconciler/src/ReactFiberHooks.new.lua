@@ -21,14 +21,11 @@ local Cryo = require(Packages.Cryo)
 -- ROBLOX: use patched console from shared
 local console = require(Workspace.Shared.console)
 
--- local type {
---   MutableSource,
---   MutableSourceGetSnapshotFn,
---   MutableSourceSubscribeFn,
---   ReactContext,
--- } = require(Workspace.Shared.ReactTypes)
 local ReactTypes = require(Workspace.Shared.ReactTypes)
 type ReactContext<T> = ReactTypes.ReactContext<T>
+type MutableSource<T> = ReactTypes.MutableSource<T>
+type MutableSourceGetSnapshotFn<Source, Snapshot> = ReactTypes.MutableSourceGetSnapshotFn<Source, Snapshot>
+type MutableSourceSubscribeFn<Source, Snapshot> = ReactTypes.MutableSourceSubscribeFn<Source, Snapshot>
 local ReactInternalTypes = require(script.Parent.ReactInternalTypes)
 type Fiber = ReactInternalTypes.Fiber
 -- type Dispatcher = ReactInternalTypes.Dispatcher
@@ -41,7 +38,7 @@ type Lanes = ReactFiberLane.Lanes
 type Lane = ReactFiberLane.Lane
 local ReactHookEffectTags = require(script.Parent.ReactHookEffectTags)
 type HookFlags = ReactHookEffectTags.HookFlags
--- local type {FiberRoot} = require(script.Parent.ReactInternalTypes)
+type FiberRoot = ReactInternalTypes.FiberRoot
 -- local type {OpaqueIDType} = require(script.Parent.ReactFiberHostConfig)
 
 local ReactSharedInternals = require(Workspace.Shared.ReactSharedInternals)
@@ -60,8 +57,8 @@ local NoLanes = ReactFiberLane.NoLanes
 local isSubsetOfLanes = ReactFiberLane.isSubsetOfLanes
 local mergeLanes = ReactFiberLane.mergeLanes
 local removeLanes = ReactFiberLane.removeLanes
--- local markRootEntangled = ReactFiberLane.markRootEntangled
--- local markRootMutableRead = ReactFiberLane.markRootMutableRead
+local markRootEntangled = ReactFiberLane.markRootEntangled
+local markRootMutableRead = ReactFiberLane.markRootMutableRead
 -- local getCurrentUpdateLanePriority = ReactFiberLane.getCurrentUpdateLanePriority
 -- local setCurrentUpdateLanePriority = ReactFiberLane.setCurrentUpdateLanePriority
 -- local higherLanePriority = ReactFiberLane.higherLanePriority
@@ -84,6 +81,7 @@ local warnIfNotScopedWithMatchingAct = ReactFiberWorkLoop.warnIfNotScopedWithMat
 local requestEventTime = ReactFiberWorkLoop.requestEventTime
 local requestUpdateLane = ReactFiberWorkLoop.requestUpdateLane
 local markSkippedUpdateLanes = ReactFiberWorkLoop.markSkippedUpdateLanes
+local getWorkInProgressRoot = ReactFiberWorkLoop.getWorkInProgressRoot
 -- local {
 --   getWorkInProgressRoot,
 --   requestUpdateLane,
@@ -110,12 +108,13 @@ local ReactFiberHostConfig = require(script.Parent.ReactFiberHostConfig)
 local makeClientId = ReactFiberHostConfig.makeClientId
 -- local makeOpaqueHydratingObject = ReactFiberHostConfig.makeOpaqueHydratingObject
 -- local makeClientIdInDEV = ReactFiberHostConfig.makeClientIdInDEV
--- local {
---   getWorkInProgressVersion,
---   markSourceAsDirty,
---   setWorkInProgressVersion,
---   warnAboutMultipleRenderersDEV,
--- } = require(script.Parent.ReactMutableSource.new)
+
+local ReactMutableSource = require(script.Parent["ReactMutableSource.new"])
+local warnAboutMultipleRenderersDEV = ReactMutableSource.warnAboutMultipleRenderersDEV
+local getWorkInProgressVersion = ReactMutableSource.getWorkInProgressVersion
+local setWorkInProgressVersion = ReactMutableSource.setWorkInProgressVersion
+local markSourceAsDirty = ReactMutableSource.markSourceAsDirty
+
 -- local getIsRendering = require(script.Parent.ReactCurrentFiber).getIsRendering
 -- local logStateUpdateScheduled = require(script.Parent.DebugTracing)
 -- local markStateUpdateScheduled = require(script.Parent.SchedulingProfiler)
@@ -812,279 +811,313 @@ function rerenderReducer(
   return newState, dispatch
 end
 
--- type MutableSourceMemoizedState<Source, Snapshot> = {|
---   refs: {
---     getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
---     setSnapshot: Snapshot => void,
---   },
---   source: MutableSource<any>,
---   subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
--- |}
+type MutableSourceMemoizedState<Source, Snapshot> = {
+  refs: {
+    getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
+    setSnapshot: (Snapshot) -> ()
+  },
+  source: MutableSource<any>,
+  subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
+}
 
+-- ROBLOX TODO: Luau generics
 -- function readFromUnsubcribedMutableSource<Source, Snapshot>(
 --   root: FiberRoot,
 --   source: MutableSource<Source>,
 --   getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
 -- ): Snapshot {
---   if _G.__DEV__ then
---     warnAboutMultipleRenderersDEV(source)
---   end
+function readFromUnsubcribedMutableSource(
+  root: FiberRoot,
+  source: MutableSource<any>,
+  getSnapshot: MutableSourceGetSnapshotFn<any, any>
+): any
+  if _G.__DEV__ then
+    warnAboutMultipleRenderersDEV(source)
+  end
 
---   local getVersion = source._getVersion
---   local version = getVersion(source._source)
+  local getVersion = source._getVersion
+  local version = getVersion(source._source)
 
---   -- Is it safe for this component to read from this source during the current render?
---   local isSafeToReadFromSource = false
+  -- Is it safe for this component to read from this source during the current render?
+  local isSafeToReadFromSource = false
 
---   -- Check the version first.
---   -- If this render has already been started with a specific version,
---   -- we can use it alone to determine if we can safely read from the source.
---   local currentRenderVersion = getWorkInProgressVersion(source)
---   if currentRenderVersion ~= nil)
---     -- It's safe to read if the store hasn't been mutated since the last time
---     -- we read something.
---     isSafeToReadFromSource = currentRenderVersion == version
---   } else {
---     -- If there's no version, then this is the first time we've read from the
---     -- source during the current render pass, so we need to do a bit more work.
---     -- What we need to determine is if there are any hooks that already
---     -- subscribed to the source, and if so, whether there are any pending
---     -- mutations that haven't been synchronized yet.
---     --
---     -- If there are no pending mutations, then `root.mutableReadLanes` will be
---     -- empty, and we know we can safely read.
---     --
---     -- If there *are* pending mutations, we may still be able to safely read
---     -- if the currently rendering lanes are inclusive of the pending mutation
---     -- lanes, since that guarantees that the value we're about to read from
---     -- the source is consistent with the values that we read during the most
---     -- recent mutation.
---     isSafeToReadFromSource = isSubsetOfLanes(
---       renderLanes,
---       root.mutableReadLanes,
---     )
+  -- Check the version first.
+  -- If this render has already been started with a specific version,
+  -- we can use it alone to determine if we can safely read from the source.
+  local currentRenderVersion = getWorkInProgressVersion(source)
+  if currentRenderVersion ~= nil then
+    -- It's safe to read if the store hasn't been mutated since the last time
+    -- we read something.
+    isSafeToReadFromSource = currentRenderVersion == version
+  else
+    -- If there's no version, then this is the first time we've read from the
+    -- source during the current render pass, so we need to do a bit more work.
+    -- What we need to determine is if there are any hooks that already
+    -- subscribed to the source, and if so, whether there are any pending
+    -- mutations that haven't been synchronized yet.
+    --
+    -- If there are no pending mutations, then `root.mutableReadLanes` will be
+    -- empty, and we know we can safely read.
+    --
+    -- If there *are* pending mutations, we may still be able to safely read
+    -- if the currently rendering lanes are inclusive of the pending mutation
+    -- lanes, since that guarantees that the value we're about to read from
+    -- the source is consistent with the values that we read during the most
+    -- recent mutation.
+    isSafeToReadFromSource = isSubsetOfLanes(
+      renderLanes,
+      root.mutableReadLanes
+    )
 
---     if isSafeToReadFromSource)
---       -- If it's safe to read from this source during the current render,
---       -- store the version in case other components read from it.
---       -- A changed version number will local those components know to throw and restart the render.
---       setWorkInProgressVersion(source, version)
---     end
---   end
+    if isSafeToReadFromSource then
+      -- If it's safe to read from this source during the current render,
+      -- store the version in case other components read from it.
+      -- A changed version number will local those components know to throw and restart the render.
+      setWorkInProgressVersion(source, version)
+    end
+  end
 
---   if isSafeToReadFromSource)
---     local snapshot = getSnapshot(source._source)
---     if _G.__DEV__ then
---       if typeof snapshot == 'function')
---         console.error(
---           'Mutable source should not return a function as the snapshot value. ' +
---             'Functions may close over mutable values and cause tearing.',
---         )
---       end
---     end
---     return snapshot
---   } else {
---     -- This handles the special case of a mutable source being shared between renderers.
---     -- In that case, if the source is mutated between the first and second renderer,
---     -- The second renderer don't know that it needs to reset the WIP version during unwind,
---     -- (because the hook only marks sources as dirty if it's written to their WIP version).
---     -- That would cause this tear check to throw again and eventually be visible to the user.
---     -- We can avoid this infinite loop by explicitly marking the source as dirty.
---     --
---     -- This can lead to tearing in the first renderer when it resumes,
---     -- but there's nothing we can do about that (short of throwing here and refusing to continue the render).
---     markSourceAsDirty(source)
+  if isSafeToReadFromSource then
+    local snapshot = getSnapshot(source._source)
+    if _G.__DEV__ then
+      if typeof(snapshot) == 'function' then
+        console.error(
+          'Mutable source should not return a function as the snapshot value. ' ..
+            'Functions may close over mutable values and cause tearing.'
+        )
+      end
+    end
+    return snapshot
+  else
+    -- This handles the special case of a mutable source being shared between renderers.
+    -- In that case, if the source is mutated between the first and second renderer,
+    -- The second renderer don't know that it needs to reset the WIP version during unwind,
+    -- (because the hook only marks sources as dirty if it's written to their WIP version).
+    -- That would cause this tear check to throw again and eventually be visible to the user.
+    -- We can avoid this infinite loop by explicitly marking the source as dirty.
+    --
+    -- This can lead to tearing in the first renderer when it resumes,
+    -- but there's nothing we can do about that (short of throwing here and refusing to continue the render).
+    markSourceAsDirty(source)
 
---     invariant(
---       false,
---       'Cannot read from mutable source during the current render without tearing. This is a bug in React. Please file an issue.',
---     )
---   end
--- end
+    invariant(
+      false,
+      'Cannot read from mutable source during the current render without tearing. This is a bug in React. Please file an issue.'
+    )
+  -- ROBLOX deviation: explicit return to silence
+  return
+  end
+end
 
+-- ROBLOX TODO: 
 -- function useMutableSource<Source, Snapshot>(
 --   hook: Hook,
 --   source: MutableSource<Source>,
 --   getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
 --   subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
 -- ): Snapshot {
---   local root = ((getWorkInProgressRoot(): any): FiberRoot)
---   invariant(
---     root ~= nil,
---     'Expected a work-in-progress root. This is a bug in React. Please file an issue.',
---   )
+function useMutableSource(
+  hook: Hook,
+  source: MutableSource<any>,
+  getSnapshot: MutableSourceGetSnapshotFn<any, any>,
+  subscribe: MutableSourceSubscribeFn<any, any>
+): any
+  local root: FiberRoot = getWorkInProgressRoot()
+  invariant(
+    root ~= nil,
+    'Expected a work-in-progress root. This is a bug in React. Please file an issue.'
+  )
 
---   local getVersion = source._getVersion
---   local version = getVersion(source._source)
+  local getVersion = source._getVersion
+  local version = getVersion(source._source)
 
---   local dispatcher = ReactCurrentDispatcher.current
+  local dispatcher = ReactCurrentDispatcher.current
 
---   -- eslint-disable-next-line prefer-const
---   local [currentSnapshot, setSnapshot] = dispatcher.useState(() =>
---     readFromUnsubcribedMutableSource(root, source, getSnapshot),
---   )
---   local snapshot = currentSnapshot
+  -- eslint-disable-next-line prefer-const
+  local currentSnapshot, setSnapshot = dispatcher.useState(function()
+    return readFromUnsubcribedMutableSource(root, source, getSnapshot)
+  end)
+  local snapshot = currentSnapshot
 
---   -- Grab a handle to the state hook as well.
---   -- We use it to clear the pending update queue if we have a new source.
---   local stateHook = ((workInProgressHook: any): Hook)
+  -- Grab a handle to the state hook as well.
+  -- We use it to clear the pending update queue if we have a new source.
+  
+  -- ROBLOX TODO: recast local stateHook = ((workInProgressHook: any): Hook)
+  local stateHook = workInProgressHook
 
---   local memoizedState = ((hook.memoizedState: any): MutableSourceMemoizedState<
---     Source,
---     Snapshot,
---   >)
---   local refs = memoizedState.refs
---   local prevGetSnapshot = refs.getSnapshot
---   local prevSource = memoizedState.source
---   local prevSubscribe = memoizedState.subscribe
+  local memoizedState: MutableSourceMemoizedState<any,any> = hook.memoizedState
+  if memoizedState.refs == nil then
+    error(tostring(debug.traceback()))
+  end
+  local refs = memoizedState.refs
+  local prevGetSnapshot = refs.getSnapshot
+  local prevSource = memoizedState.source
+  local prevSubscribe = memoizedState.subscribe
 
---   local fiber = currentlyRenderingFiber
+  local fiber = currentlyRenderingFiber
 
---   hook.memoizedState = ({
---     refs,
---     source,
---     subscribe,
---   }: MutableSourceMemoizedState<Source, Snapshot>)
+  hook.memoizedState = {
+    refs = refs,
+    source = source,
+    subscribe = subscribe,
+  }
 
---   -- Sync the values needed by our subscription handler after each commit.
---   dispatcher.useEffect(() => {
---     refs.getSnapshot = getSnapshot
+  -- Sync the values needed by our subscription handler after each commit.
+  dispatcher.useEffect(function()
+    refs.getSnapshot = getSnapshot
 
---     -- Normally the dispatch function for a state hook never changes,
---     -- but this hook recreates the queue in certain cases  to avoid updates from stale sources.
---     -- handleChange() below needs to reference the dispatch function without re-subscribing,
---     -- so we use a ref to ensure that it always has the latest version.
---     refs.setSnapshot = setSnapshot
+    -- Normally the dispatch function for a state hook never changes,
+    -- but this hook recreates the queue in certain cases  to avoid updates from stale sources.
+    -- handleChange() below needs to reference the dispatch function without re-subscribing,
+    -- so we use a ref to ensure that it always has the latest version.
+    refs.setSnapshot = setSnapshot
 
---     -- Check for a possible change between when we last rendered now.
---     local maybeNewVersion = getVersion(source._source)
---     if !is(version, maybeNewVersion))
---       local maybeNewSnapshot = getSnapshot(source._source)
---       if _G.__DEV__ then
---         if typeof maybeNewSnapshot == 'function')
---           console.error(
---             'Mutable source should not return a function as the snapshot value. ' +
---               'Functions may close over mutable values and cause tearing.',
---           )
---         end
---       end
+    -- Check for a possible change between when we last rendered now.
+    local maybeNewVersion = getVersion(source._source)
+    if not is(version, maybeNewVersion) then
+      local maybeNewSnapshot = getSnapshot(source._source)
+      if _G.__DEV__ then
+        if typeof(maybeNewSnapshot) == 'function' then
+          console.error(
+            'Mutable source should not return a function as the snapshot value. ' ..
+              'Functions may close over mutable values and cause tearing.'
+          )
+        end
+      end
 
---       if !is(snapshot, maybeNewSnapshot))
---         setSnapshot(maybeNewSnapshot)
+      if not is(snapshot, maybeNewSnapshot) then
+        setSnapshot(maybeNewSnapshot)
 
---         local lane = requestUpdateLane(fiber)
---         markRootMutableRead(root, lane)
---       end
---       -- If the source mutated between render and now,
---       -- there may be state updates already scheduled from the old source.
---       -- Entangle the updates so that they render in the same batch.
---       markRootEntangled(root, root.mutableReadLanes)
---     end
---   }, [getSnapshot, source, subscribe])
+        local lane = requestUpdateLane(fiber)
+        markRootMutableRead(root, lane)
+      end
+      -- If the source mutated between render and now,
+      -- there may be state updates already scheduled from the old source.
+      -- Entangle the updates so that they render in the same batch.
+      markRootEntangled(root, root.mutableReadLanes)
+    end
+  end, {getSnapshot, source, subscribe})
 
---   -- If we got a new source or subscribe function, re-subscribe in a passive effect.
---   dispatcher.useEffect(() => {
---     local handleChange = () => {
---       local latestGetSnapshot = refs.getSnapshot
---       local latestSetSnapshot = refs.setSnapshot
+  -- If we got a new source or subscribe function, re-subscribe in a passive effect.
+  dispatcher.useEffect(function()
+    local handleChange = function()
+      local latestGetSnapshot = refs.getSnapshot
+      local latestSetSnapshot = refs.setSnapshot
 
---       try {
---         latestSetSnapshot(latestGetSnapshot(source._source))
+      local ok, result = pcall(function()
+        latestSetSnapshot(latestGetSnapshot(source._source))
+  
+        -- Record a pending mutable source update with the same expiration time.
+        local lane = requestUpdateLane(fiber)
+  
+        markRootMutableRead(root, lane)
+      end)
 
---         -- Record a pending mutable source update with the same expiration time.
---         local lane = requestUpdateLane(fiber)
+      if not ok then
+        -- A selector might throw after a source mutation.
+        -- e.g. it might try to read from a part of the store that no longer exists.
+        -- In this case we should still schedule an update with React.
+        -- Worst case the selector will throw again and then an error boundary will handle it.
+        latestSetSnapshot(
+          function()
+            error(result)
+          end)
+      end
+    end
 
---         markRootMutableRead(root, lane)
---       } catch (error)
---         -- A selector might throw after a source mutation.
---         -- e.g. it might try to read from a part of the store that no longer exists.
---         -- In this case we should still schedule an update with React.
---         -- Worst case the selector will throw again and then an error boundary will handle it.
---         latestSetSnapshot(
---           (() => {
---             throw error
---           }: any),
---         )
---       end
---     end
+    local unsubscribe = subscribe(source._source, handleChange)
+    if _G.__DEV__ then
+      if typeof(unsubscribe) ~= 'function' then
+        console.error(
+          'Mutable source subscribe function must return an unsubscribe function.'
+        )
+      end
+    end
 
---     local unsubscribe = subscribe(source._source, handleChange)
---     if _G.__DEV__ then
---       if typeof unsubscribe ~= 'function')
---         console.error(
---           'Mutable source subscribe function must return an unsubscribe function.',
---         )
---       end
---     end
+    return unsubscribe
+  end, {source, subscribe})
 
---     return unsubscribe
---   }, [source, subscribe])
+  -- If any of the inputs to useMutableSource change, reading is potentially unsafe.
+  --
+  -- If either the source or the subscription have changed we can't can't trust the update queue.
+  -- Maybe the source changed in a way that the old subscription ignored but the new one depends on.
+  --
+  -- If the getSnapshot function changed, we also shouldn't rely on the update queue.
+  -- It's possible that the underlying source was mutated between the when the last "change" event fired,
+  -- and when the current render (with the new getSnapshot function) is processed.
+  --
+  -- In both cases, we need to throw away pending updates (since they are no longer relevant)
+  -- and treat reading from the source as we do in the mount case.
+  if
+    not is(prevGetSnapshot, getSnapshot) or
+    not is(prevSource, source) or
+    not is(prevSubscribe, subscribe)
+  then
+    -- Create a new queue and setState method,
+    -- So if there are interleaved updates, they get pushed to the older queue.
+    -- When this becomes current, the previous queue and dispatch method will be discarded,
+    -- including any interleaving updates that occur.
+    local newQueue = {
+      pending = nil,
+      dispatch = nil,
+      lastRenderedReducer = basicStateReducer,
+      lastRenderedState = snapshot
+    }
 
---   -- If any of the inputs to useMutableSource change, reading is potentially unsafe.
---   --
---   -- If either the source or the subscription have changed we can't can't trust the update queue.
---   -- Maybe the source changed in a way that the old subscription ignored but the new one depends on.
---   --
---   -- If the getSnapshot function changed, we also shouldn't rely on the update queue.
---   -- It's possible that the underlying source was mutated between the when the last "change" event fired,
---   -- and when the current render (with the new getSnapshot function) is processed.
---   --
---   -- In both cases, we need to throw away pending updates (since they are no longer relevant)
---   -- and treat reading from the source as we do in the mount case.
---   if
---     !is(prevGetSnapshot, getSnapshot) or
---     !is(prevSource, source) or
---     !is(prevSubscribe, subscribe)
---   )
---     -- Create a new queue and setState method,
---     -- So if there are interleaved updates, they get pushed to the older queue.
---     -- When this becomes current, the previous queue and dispatch method will be discarded,
---     -- including any interleaving updates that occur.
---     local newQueue = {
---       pending: nil,
---       dispatch: nil,
---       lastRenderedReducer: basicStateReducer,
---       lastRenderedState: snapshot,
---     end
---     newQueue.dispatch = setSnapshot = (dispatchAction.bind(
---       nil,
---       currentlyRenderingFiber,
---       newQueue,
---     ): any)
---     stateHook.queue = newQueue
---     stateHook.baseQueue = nil
---     snapshot = readFromUnsubcribedMutableSource(root, source, getSnapshot)
---     stateHook.memoizedState = stateHook.baseState = snapshot
---   end
+    -- deviation: keep local pointer so if global changes we maintain correct reference.
+    local cRF = currentlyRenderingFiber
+    setSnapshot = function(...)
+      return dispatchAction(cRF, newQueue, ...)
+    end
 
---   return snapshot
--- end
+    newQueue.dispatch = setSnapshot
+    stateHook.queue = newQueue
+    stateHook.baseQueue = nil
+    snapshot = readFromUnsubcribedMutableSource(root, source, getSnapshot)
+    stateHook.baseState = snapshot
+    stateHook.memoizedState = stateHook.baseState
+  end
 
+  return snapshot
+end
+
+-- ROBLOX TODO: function generics
 -- function mountMutableSource<Source, Snapshot>(
 --   source: MutableSource<Source>,
 --   getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
 --   subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
 -- ): Snapshot {
---   local hook = mountWorkInProgressHook()
---   hook.memoizedState = ({
---     refs: {
---       getSnapshot,
---       setSnapshot: (null: any),
---     },
---     source,
---     subscribe,
---   }: MutableSourceMemoizedState<Source, Snapshot>)
---   return useMutableSource(hook, source, getSnapshot, subscribe)
--- end
+function mountMutableSource(
+    source: MutableSource<any>,
+    getSnapshot: MutableSourceGetSnapshotFn<any, any>,
+    subscribe: MutableSourceSubscribeFn<any, any>
+  ): any
+  local hook = mountWorkInProgressHook()
+  hook.memoizedState = {
+    refs = {
+      getSnapshot = getSnapshot,
+      setSnapshot = nil,
+    },
+    source = source,
+    subscribe = subscribe,
+  }
+  return useMutableSource(hook, source, getSnapshot, subscribe)
+end
 
+-- ROBLOX TODO: function generics
 -- function updateMutableSource<Source, Snapshot>(
 --   source: MutableSource<Source>,
 --   getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
 --   subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
 -- ): Snapshot {
---   local hook = updateWorkInProgressHook()
---   return useMutableSource(hook, source, getSnapshot, subscribe)
--- end
+function updateMutableSource(
+    source: MutableSource<any>,
+    getSnapshot: MutableSourceGetSnapshotFn<any, any>,
+    subscribe: MutableSourceSubscribeFn<any, any>
+  ): any
+  local hook = updateWorkInProgressHook()
+  return useMutableSource(hook, source, getSnapshot, subscribe)
+end
 
 -- ROBLOX FIXME: Luau function generics and return type
 -- function mountState<S>(
@@ -1925,7 +1958,7 @@ local HooksDispatcherOnMount: Dispatcher = {
   -- useDebugValue = mountDebugValue,
   -- useDeferredValue = mountDeferredValue,
   -- useTransition = mountTransition,
-  -- useMutableSource = mountMutableSource,
+  useMutableSource = mountMutableSource,
   useOpaqueIdentifier = mountOpaqueIdentifier,
 
   unstable_isNewReconciler = enableNewReconciler,
@@ -1946,7 +1979,7 @@ local HooksDispatcherOnUpdate: Dispatcher = {
   useDebugValue = updateDebugValue,
   -- useDeferredValue = updateDeferredValue,
   -- useTransition = updateTransition,
-  -- useMutableSource = updateMutableSource,
+  useMutableSource = updateMutableSource,
   -- useOpaqueIdentifier = updateOpaqueIdentifier,
 
   unstable_isNewReconciler = enableNewReconciler,
@@ -1967,7 +2000,7 @@ local HooksDispatcherOnRerender: Dispatcher = {
   useDebugValue = updateDebugValue,
   -- useDeferredValue = rerenderDeferredValue,
   -- useTransition = rerenderTransition,
-  -- useMutableSource = updateMutableSource,
+  useMutableSource = updateMutableSource,
   -- useOpaqueIdentifier = rerenderOpaqueIdentifier,
 
   unstable_isNewReconciler = enableNewReconciler,
@@ -2133,15 +2166,21 @@ if _G.__DEV__ then
 --       mountHookTypesDev()
 --       return mountTransition()
 --     },
---     useMutableSource<Source, Snapshot>(
---       source: MutableSource<Source>,
---       getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
---       subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
---     ): Snapshot {
---       currentHookNameInDev = 'useMutableSource'
---       mountHookTypesDev()
---       return mountMutableSource(source, getSnapshot, subscribe)
---     },
+    -- ROBLOX TODO: function generics
+    -- useMutableSource<Source, Snapshot>(
+    --   source: MutableSource<Source>,
+    --   getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
+    --   subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
+    -- ): Snapshot {
+      useMutableSource = function(
+        source: MutableSource<any>,
+        getSnapshot: MutableSourceGetSnapshotFn<any, any>,
+        subscribe: MutableSourceSubscribeFn<any, any>
+      ): any
+        currentHookNameInDev = 'useMutableSource'
+        mountHookTypesDev()
+        return mountMutableSource(source, getSnapshot, subscribe)
+    end,
     useOpaqueIdentifier = function()
       currentHookNameInDev = 'useOpaqueIdentifier'
       mountHookTypesDev()
@@ -2301,15 +2340,21 @@ if _G.__DEV__ then
 --       updateHookTypesDev()
 --       return mountTransition()
 --     },
---     useMutableSource<Source, Snapshot>(
---       source: MutableSource<Source>,
---       getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
---       subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
---     ): Snapshot {
---       currentHookNameInDev = 'useMutableSource'
---       updateHookTypesDev()
---       return mountMutableSource(source, getSnapshot, subscribe)
---     },
+    -- ROBLOX TODO: function generics
+    -- useMutableSource<Source, Snapshot>(
+    --   source: MutableSource<Source>,
+    --   getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
+    --   subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
+    -- ): Snapshot {
+      useMutableSource = function(
+        source: MutableSource<any>,
+        getSnapshot: MutableSourceGetSnapshotFn<any, any>,
+        subscribe: MutableSourceSubscribeFn<any, any>
+      ): any
+        currentHookNameInDev = 'useMutableSource'
+        updateHookTypesDev()
+        return mountMutableSource(source, getSnapshot, subscribe)
+      end,
     useOpaqueIdentifier = function()
       currentHookNameInDev = 'useOpaqueIdentifier'
       updateHookTypesDev()
@@ -2467,15 +2512,21 @@ if _G.__DEV__ then
 --       updateHookTypesDev()
 --       return updateTransition()
 --     },
---     useMutableSource<Source, Snapshot>(
---       source: MutableSource<Source>,
---       getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
---       subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
---     ): Snapshot {
---       currentHookNameInDev = 'useMutableSource'
---       updateHookTypesDev()
---       return updateMutableSource(source, getSnapshot, subscribe)
---     },
+    -- ROBLOX TODO: function generics
+    -- useMutableSource<Source, Snapshot>(
+    --   source: MutableSource<Source>,
+    --   getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
+    --   subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
+    -- ): Snapshot {
+      useMutableSource = function(
+        source: MutableSource<any>,
+        getSnapshot: MutableSourceGetSnapshotFn<any, any>,
+        subscribe: MutableSourceSubscribeFn<any, any>
+      ): any
+        currentHookNameInDev = 'useMutableSource'
+        updateHookTypesDev()
+        return updateMutableSource(source, getSnapshot, subscribe)
+    end,
 --     useOpaqueIdentifier(): OpaqueIDType {
 --       currentHookNameInDev = 'useOpaqueIdentifier'
 --       updateHookTypesDev()
@@ -2639,15 +2690,21 @@ if _G.__DEV__ then
 --       updateHookTypesDev()
 --       return rerenderTransition()
 --     },
---     useMutableSource<Source, Snapshot>(
---       source: MutableSource<Source>,
---       getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
---       subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
---     ): Snapshot {
---       currentHookNameInDev = 'useMutableSource'
---       updateHookTypesDev()
---       return updateMutableSource(source, getSnapshot, subscribe)
---     },
+    -- ROBLOX TODO: function generics
+    -- useMutableSource<Source, Snapshot>(
+    --   source: MutableSource<Source>,
+    --   getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
+    --   subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
+    -- ): Snapshot {
+      useMutableSource = function(
+        source: MutableSource<any>,
+        getSnapshot: MutableSourceGetSnapshotFn<any, any>,
+        subscribe: MutableSourceSubscribeFn<any, any>
+      ): any
+        currentHookNameInDev = 'useMutableSource'
+        updateHookTypesDev()
+        return updateMutableSource(source, getSnapshot, subscribe)
+      end,
 --     useOpaqueIdentifier(): OpaqueIDType {
 --       currentHookNameInDev = 'useOpaqueIdentifier'
 --       updateHookTypesDev()
@@ -2799,16 +2856,22 @@ if _G.__DEV__ then
     --   mountHookTypesDev()
     --   return mountTransition()
     -- },
+    -- ROBLOX TODO: function generics
     -- useMutableSource<Source, Snapshot>(
     --   source: MutableSource<Source>,
     --   getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
     --   subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
     -- ): Snapshot {
-    --   currentHookNameInDev = 'useMutableSource'
-    --   warnInvalidHookAccess()
-    --   mountHookTypesDev()
-    --   return mountMutableSource(source, getSnapshot, subscribe)
-    -- },
+      useMutableSource = function(
+        source: MutableSource<any>,
+        getSnapshot: MutableSourceGetSnapshotFn<any, any>,
+        subscribe: MutableSourceSubscribeFn<any, any>
+      ): any
+          currentHookNameInDev = 'useMutableSource'
+          warnInvalidHookAccess()
+          mountHookTypesDev()
+          return mountMutableSource(source, getSnapshot, subscribe)
+      end,
     -- useOpaqueIdentifier(): OpaqueIDType {
     --   currentHookNameInDev = 'useOpaqueIdentifier'
     --   warnInvalidHookAccess()
@@ -2982,16 +3045,22 @@ if _G.__DEV__ then
 --       updateHookTypesDev()
 --       return updateTransition()
 --     },
---     useMutableSource<Source, Snapshot>(
---       source: MutableSource<Source>,
---       getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
---       subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
---     ): Snapshot {
---       currentHookNameInDev = 'useMutableSource'
---       warnInvalidHookAccess()
---       updateHookTypesDev()
---       return updateMutableSource(source, getSnapshot, subscribe)
---     },
+    -- ROBLOX TODO: function generics
+    -- useMutableSource<Source, Snapshot>(
+    --   source: MutableSource<Source>,
+    --   getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
+    --   subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
+    -- ): Snapshot {
+      useMutableSource = function(
+        source: MutableSource<any>,
+        getSnapshot: MutableSourceGetSnapshotFn<any, any>,
+        subscribe: MutableSourceSubscribeFn<any, any>
+      ): any
+        currentHookNameInDev = 'useMutableSource'
+        warnInvalidHookAccess()
+        updateHookTypesDev()
+        return updateMutableSource(source, getSnapshot, subscribe)
+      end,
 --     useOpaqueIdentifier(): OpaqueIDType {
 --       currentHookNameInDev = 'useOpaqueIdentifier'
 --       warnInvalidHookAccess()
@@ -3169,16 +3238,22 @@ if _G.__DEV__ then
 --       updateHookTypesDev()
 --       return rerenderTransition()
 --     },
---     useMutableSource<Source, Snapshot>(
---       source: MutableSource<Source>,
---       getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
---       subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
---     ): Snapshot {
---       currentHookNameInDev = 'useMutableSource'
---       warnInvalidHookAccess()
---       updateHookTypesDev()
---       return updateMutableSource(source, getSnapshot, subscribe)
---     },
+    -- ROBLOX TODO: function generics
+    -- useMutableSource<Source, Snapshot>(
+    --   source: MutableSource<Source>,
+    --   getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
+    --   subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
+    -- ): Snapshot {
+      useMutableSource = function(
+        source: MutableSource<any>,
+        getSnapshot: MutableSourceGetSnapshotFn<any, any>,
+        subscribe: MutableSourceSubscribeFn<any, any>
+      ): any
+        currentHookNameInDev = 'useMutableSource'
+        warnInvalidHookAccess()
+        updateHookTypesDev()
+        return updateMutableSource(source, getSnapshot, subscribe)
+      end,
 --     useOpaqueIdentifier(): OpaqueIDType {
 --       currentHookNameInDev = 'useOpaqueIdentifier'
 --       warnInvalidHookAccess()

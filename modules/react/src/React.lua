@@ -2,6 +2,7 @@
 -- deviation: TODO: This is currently just a stub!
 local React = script.Parent
 local Workspace = React.Parent
+local createMutableSource = require(React.ReactMutableSource)
 local ReactSharedInternals = require(React.ReactSharedInternals)
 local ReactBaseClasses = require(React.ReactBaseClasses)
 local ReactElementValidator = require(React.ReactElementValidator)
@@ -26,6 +27,7 @@ return {
 	PureComponent = ReactBaseClasses.PureComponent,
 	createElement = createElement,
 	cloneElement = cloneElement,
+	createMutableSource = createMutableSource,
 	isValidElement = ReactElement.isValidElement,
 	createRef = ReactCreateRef.createRef,
 	forwardRef = ReactForwardRef.forwardRef,
@@ -41,6 +43,7 @@ return {
 	useLayoutEffect = ReactHooks.useLayoutEffect,
 	useRef = ReactHooks.useRef,
 	useMemo = ReactHooks.useMemo,
+	useMutableSource = ReactHooks.useMutableSource,
 	useCallback = ReactHooks.useCallback,
 	useContext = ReactHooks.useContext,
 	createContext = ReactContext.createContext,

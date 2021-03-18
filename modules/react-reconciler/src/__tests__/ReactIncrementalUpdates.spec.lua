@@ -10,7 +10,6 @@
 
 local Workspace = script.Parent.Parent.Parent
 local ReactFeatureFlags = require(Workspace.Shared.ReactFeatureFlags)
-local _inspect = require(Workspace.Shared['inspect.roblox']).inspect
 local React
 local ReactNoop
 local Scheduler

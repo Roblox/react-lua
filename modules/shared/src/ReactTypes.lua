@@ -166,15 +166,14 @@ export type ReactScopeInstance = {
 -- ROBLOX deviation: we don't have mixed, or a type system that can represent the above
 export type MutableSourceVersion = any -- $NonMaybeType<mixed>;
 
--- export type MutableSourceGetSnapshotFn<
---   Source: $NonMaybeType<mixed>,
---   Snapshot,
--- > = (source: Source) => Snapshot;
+export type MutableSourceGetSnapshotFn<Source, Snapshot> = (
+  Source -- source
+) -> Snapshot
 
--- export type MutableSourceSubscribeFn<Source: $NonMaybeType<mixed>, Snapshot> = (
---   source: Source,
---   callback: (snapshot: Snapshot) => void,
--- ) => () => void;
+export type MutableSourceSubscribeFn<Source, Snapshot> = (
+      Source, -- source
+      Snapshot -- callback
+    ) -> (() -> ())
 
 export type MutableSourceGetVersionFn = (
   any
