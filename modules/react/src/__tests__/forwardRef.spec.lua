@@ -48,14 +48,14 @@ return function()
       else
         secondRef = forwardedRef
       end
-      return React.createElement("section", nil, {
+      return React.createElement("section", nil,
         React.createElement("div", {ref=firstRef},
           React.createElement("TextLabel", {Text="First"})
         ),
         React.createElement("span", {ref=secondRef},
           React.createElement("TextLabel", {Text="Second"})
-        ),
-      })
+        )
+      )
     end
 
     local RefForwardingComponent = React.forwardRef(function(props, ref)

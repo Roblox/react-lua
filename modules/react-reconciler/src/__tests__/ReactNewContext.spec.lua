@@ -311,7 +311,7 @@ return function()
         end
 
         ReactNoop.render({
-          React.createElement(BarContext.Provider, {value={value = "bar-updated"}}, {
+          React.createElement(BarContext.Provider, {value={value = "bar-updated"}},
             React.createElement(BarConsumer, nil, function(value)
               return React.createElement(Verify, {actual=value, expected="bar-updated"})
             end),
@@ -320,7 +320,7 @@ return function()
                 return React.createElement(Verify, {actual=value, expected="foo-updated"})
               end)
             )
-          }),
+          ),
           React.createElement(FooConsumer, nil, function(value)
             return React.createElement(Verify, {actual=value, expected="foo-initial"})
           end),
@@ -358,7 +358,7 @@ return function()
 
         local function App(props)
           return React.createElement(Provider, {value=props.value},
-            React.createElement(Indirection, nil, {
+            React.createElement(Indirection, nil,
               React.createElement(Indirection, nil,
                 React.createElement(Provider, nil,
                   React.createElement(Consumer, nil,
@@ -374,8 +374,8 @@ return function()
                     return React.createElement("span", {prop='Result: ' .. value})
                   end
                 )
-              ),
-            })
+              )
+            )
           )
         end
 
@@ -876,12 +876,12 @@ return function()
         local App = React.Component:extend("App")
         function App:renderItem(id)
           return
-            React.createElement("span", {key=id}, {
+            React.createElement("span", {key=id},
               React.createElement(Consumer, nil,
                 function() return React.createElement("span", nil, "inner") end
               ),
               React.createElement("span", nil, "outer")
-            })
+            )
         end
         function App:renderList()
           local list = Array.map({1, 2}, function(id) self.renderItem(id) end)

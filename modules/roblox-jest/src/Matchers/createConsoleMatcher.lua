@@ -67,10 +67,12 @@ local function normalizeCodeLocInfo(str)
 	-- // V8 format:
 	-- //  at Component (/path/filename.js:123:45)
 	-- // React format:
-	-- //    in Component (at filename.js:123))
-	return str:gsub("\n +(?:at|in) ([%S]+)[^\n]*", function(_m, name)
-		return "\n    in " + name + " (at **)"
-	end)
+	-- //    in Component (at filename.js:123)
+
+	-- ROBLOX deviation: In roblox/luau, we're using the stack frame from luau,
+	-- which looks like:
+	--     in Component (at ModulePath.FileName.lua:123)
+	return (str:gsub("\n    in ([%w%-%._]+)[^\n]*", "\n    in %1 (at **)"))
 end
 
 return function(consoleMethod, matcherName)

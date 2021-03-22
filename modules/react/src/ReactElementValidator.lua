@@ -134,12 +134,20 @@ end
 --  * @internal
 --  * @param {ReactElement} element Element that requires a key.
 --  * @param {*} parentType element's parent's type.
+--  * @param {*} tableKey ROBLOX deviation: key provided by the children table
 --  */
-local function validateExplicitKey(element, parentType)
-	if not element._store or element._store.validated or element.key ~= nil then
+local function validateExplicitKey(element, parentType, tableKey)
+	-- ROBLOX deviation: move key check to after we mark it validated, since we
+	-- may not 
+	if element._store == nil or element._store.validated then
 		return
 	end
 	element._store.validated = true
+	-- ROBLOX deviation: Consider this element valid if only _one_ key is
+	-- present, otherwise proceed and check for error states
+	if (element.key ~= nil) ~= (tableKey ~= nil) then
+		return
+	end
 
 	local currentComponentErrorInfo = getCurrentComponentErrorInfo(parentType)
 	if ownerHasKeyUseWarning[currentComponentErrorInfo] then
@@ -161,14 +169,32 @@ local function validateExplicitKey(element, parentType)
 		)
 	end
 
+	-- ROBLOX deviation: Account for conflict between "key" prop and deviated
+	-- table key behavior (in addition to missing key warnings)
 	if _G.__DEV__ then
 		setCurrentlyValidatingElement(element)
-		console.error(
-			'Each child in a list should have a unique "key" prop.' ..
-				"%s%s See https://reactjs.org/link/warning-keys for more information.",
-			currentComponentErrorInfo,
-			childOwner
-		)
+		-- Both forms of key were provided
+		if element._store ~= nil and tableKey ~= nil then
+			-- ROBLOX TODO: Link to special Roact documentation that accounts
+			-- for deviation instead of react docs
+			console.error(
+				'Child element received a "key" prop in addition to a key in ' ..
+					'the "children" table of its parent. Please provide only ' ..
+					'one key definition. When both are present, the "key" prop ' ..
+					'will take precedence.' ..
+					'%s%s See https://reactjs.org/link/warning-keys for more information.',
+				currentComponentErrorInfo,
+				childOwner
+			)
+		-- No key was provided at all
+		else
+			console.error(
+				'Each child in a list should have a unique "key" prop.' ..
+					"%s%s See https://reactjs.org/link/warning-keys for more information.",
+				currentComponentErrorInfo,
+				childOwner
+			)
+		end
 		setCurrentlyValidatingElement(nil)
 	end
 end
@@ -209,7 +235,7 @@ local function validateChildKeys(node, parentType)
 				local step = iterator.next()
 				while not step.done do
 					if isValidElement(step.value) then
-						validateExplicitKey(step.value, parentType)
+						validateExplicitKey(step.value, parentType, step.key)
 					end
 
 					step = iterator.next()

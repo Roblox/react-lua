@@ -25,7 +25,9 @@ type ReactPortal = ReactTypes.ReactPortal;
 type ReactFundamentalComponent<T, U> = ReactTypes.ReactFundamentalComponent<T, U>;
 type ReactScope = ReactTypes.ReactScope;
 local ReactInternalTypes = require(script.Parent.ReactInternalTypes)
-export type Fiber = ReactInternalTypes.Fiber;
+export type Fiber = ReactInternalTypes.Fiber
+-- ROBLOX deviation: Allow number keys for sparse arrays
+type RoactStableKey = ReactInternalTypes.RoactStableKey
 local ReactRootTags = require(script.Parent.ReactRootTags)
 type RootTag = ReactRootTags.RootTag;
 local ReactWorkTags = require(script.Parent.ReactWorkTags)
@@ -135,7 +137,7 @@ local debugCounter = 1
 function FiberNode(
 	tag: WorkTag,
 	pendingProps: any,
-	key: string?,
+	key: RoactStableKey?,
 	mode: TypeOfMode
 )
 	local node = {}
@@ -242,7 +244,7 @@ end
 local function createFiber(
 	tag: WorkTag,
 	pendingProps: any,
-	key: string?,
+	key: RoactStableKey?,
 	mode: TypeOfMode
 ): Fiber
 	-- $FlowFixMe: the shapes are exact here but Flow doesn't like constructors

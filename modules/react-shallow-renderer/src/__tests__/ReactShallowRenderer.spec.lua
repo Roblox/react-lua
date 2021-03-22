@@ -232,10 +232,10 @@ return function()
     local expect: any = expect
     local SomeComponent = React.Component:extend("Component")
     function SomeComponent:render()
-      return React.createElement("Frame", nil, {
+      return React.createElement("Frame", nil,
         React.createElement("TextLabel", { Text = "child1" }),
-        React.createElement("TextLabel", { Text = "child2" }),
-      })
+        React.createElement("TextLabel", { Text = "child2" })
+      )
     end
 
     local shallowRenderer = createRenderer()
@@ -254,10 +254,10 @@ return function()
     local testRef = React.createRef()
     local SomeComponent = React.forwardRef(function(props, ref)
       expect(ref).toEqual(testRef)
-      return React.createElement("Frame", nil, {
+      return React.createElement("Frame", nil,
         React.createElement("TextLabel", { Text = "child1" }),
-        React.createElement("TextLabel", { Text = "child2" }),
-      })
+        React.createElement("TextLabel", { Text = "child2" })
+      )
     end)
 
     local shallowRenderer = createRenderer()
@@ -279,10 +279,10 @@ return function()
     local SomeComponent = React.Component:extend("SomeComponent")
     function SomeComponent:render()
         return React.createElement(React.Profiler, {id="test", onRender=function() end},
-            React.createElement("Text", nil, {
+            React.createElement("Text", nil,
               React.createElement("Frame", {className="child1"}),
               React.createElement("Frame", {className="child2"})
-            }))
+            ))
           end
 
     local shallowRenderer = createRenderer()
@@ -290,10 +290,10 @@ return function()
 
     expect(result.type).toEqual(React.Profiler)
     expect(result.props.children).toEqual(validateElement(
-      React.createElement("Text", nil, {
+      React.createElement("Text", nil,
         React.createElement("Frame", {className="child1"}),
         React.createElement("Frame", {className="child2"})
-      })
+      )
     ))
   end)
 

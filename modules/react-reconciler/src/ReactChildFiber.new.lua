@@ -28,6 +28,7 @@ type ReactPortal = ReactTypes.ReactPortal
 -- type LazyComponent = ReactLazy.LazyComponent
 local ReactInternalTypes = require(script.Parent.ReactInternalTypes)
 type Fiber = ReactInternalTypes.Fiber;
+type RoactStableKey = ReactInternalTypes.RoactStableKey;
 local ReactFiberLanes = require(script.Parent.ReactFiberLane)
 type Lanes = ReactFiberLanes.Lanes;
 
@@ -72,6 +73,7 @@ local StrictMode = require(script.Parent.ReactTypeOfMode).StrictMode
 -- deviation: Common types
 type Array<T> = { [number]: T }
 type Set<T> = { [T]: boolean }
+type Object = { [any]: any }
 
 local exports = {}
 
@@ -502,7 +504,6 @@ local function ChildReconciler(shouldTrackSideEffects)
     return created
   end
 
-
   -- ROBLOX FIXME: type narrowing.
   -- function updatePortal(
   --   returnFiber: Fiber,
@@ -565,10 +566,31 @@ local function ChildReconciler(shouldTrackSideEffects)
     end
   end
 
+  -- ROBLOX deviation: Roact stable keys - Support Roact's implementation of
+  -- stable keys, wherein the key used in the `children` table is used as if it
+  -- were a `key` prop. Child order doesn't matter in Roblox, so a vast majority
+  -- of existing Roact code used table keys in this way.
+  local function assignStableKey(tableKey: any?, newChild: Object): ()
+    -- If there's no assigned key in the element, and the table key is valid,
+    -- assign it as the element's key.
+
+    -- ROBLOX TODO: Investigate if this is safe; maybe we need to shallow-copy
+    -- the object if we have a new key, to preserve immutability, but that cost
+    -- may be severe
+    if
+      newChild.key == nil and
+      (typeof(tableKey) == "string" or typeof(tableKey) == "number")
+    then
+      newChild.key = tableKey
+    end
+  end
+
   local function createChild(
     returnFiber: Fiber,
     newChild: any,
-    lanes: Lanes
+    lanes: Lanes,
+    -- ROBLOX deviation: children table key for compat with Roact's stable keys
+    tableKey: any?
   ): Fiber | nil
     if typeof(newChild) == "string" or typeof(newChild) == "number" then
       -- Text nodes don't have keys. If the previous node is implicitly keyed
@@ -584,6 +606,9 @@ local function ChildReconciler(shouldTrackSideEffects)
     end
 
     if typeof(newChild) == "table" and newChild ~= nil then
+      -- ROBLOX deviation: Roact stable keys - forward children table key to
+      -- child if applicable
+      assignStableKey(tableKey, newChild)
       if newChild["$$typeof"] == REACT_ELEMENT_TYPE then
         local created = createFiberFromElement(
           newChild,
@@ -605,6 +630,8 @@ local function ChildReconciler(shouldTrackSideEffects)
         if enableLazyElements then
           local payload = newChild._payload
           local init = newChild._init
+          -- ROBLOX deviation: Roact stable keys - Since the table key was
+          -- already applied to `newChild` above, we don't need to pass it along
           return createChild(returnFiber, init(payload), lanes)
         end
       end
@@ -643,7 +670,9 @@ local function ChildReconciler(shouldTrackSideEffects)
     returnFiber: Fiber,
     oldFiber: Fiber,
     newChild: any,
-    lanes: Lanes
+    lanes: Lanes,
+    -- ROBLOX deviation: children table key for compat with Roact's stable keys
+    tableKey: any?
   ): Fiber | nil
     -- Update the fiber if the keys match, otherwise return nil.
 
@@ -663,6 +692,9 @@ local function ChildReconciler(shouldTrackSideEffects)
     end
 
     if typeof(newChild) == "table" and newChild ~= nil then
+      -- ROBLOX deviation: Roact stable keys - forward children table key to
+      -- child if applicable
+      assignStableKey(tableKey, newChild)
       if newChild["$$typeof"] == REACT_ELEMENT_TYPE then
         if newChild.key == key then
           if newChild.type == REACT_FRAGMENT_TYPE then
@@ -688,7 +720,9 @@ local function ChildReconciler(shouldTrackSideEffects)
         if enableLazyElements then
           local payload = newChild._payload
           local init = newChild._init
-          return updateSlot(returnFiber, oldFiber, init(payload), lanes)
+          -- ROBLOX deviation: Roact stable keys - Since the table key was
+          -- already applied to `newChild` above, we don't need to pass it along
+          return updateSlot(returnFiber, oldFiber, init(payload), lanes, nil)
         end
       end
 
@@ -717,7 +751,9 @@ local function ChildReconciler(shouldTrackSideEffects)
     returnFiber: Fiber,
     newIdx: number,
     newChild: any,
-    lanes: Lanes
+    lanes: Lanes,
+    -- ROBLOX deviation: children table key for compat with Roact's stable keys
+    tableKey: any?
   ): Fiber | nil
     if typeof(newChild) == "string" or typeof(newChild) == "number" then
       -- Text nodes don't have keys, so we neither have to check the old nor
@@ -727,6 +763,9 @@ local function ChildReconciler(shouldTrackSideEffects)
     end
 
     if typeof(newChild) == "table" and newChild ~= nil then
+      -- ROBLOX deviation: Roact stable keys - forward children table key to
+      -- child if applicable
+      assignStableKey(tableKey, newChild)
       local existingChildrenKey
       if newChild["$$typeof"] == REACT_ELEMENT_TYPE then
         if newChild.key == nil then
@@ -759,6 +798,8 @@ local function ChildReconciler(shouldTrackSideEffects)
         if enableLazyElements then
           local payload = newChild._payload
           local init = newChild._init
+          -- ROBLOX deviation: Roact stable keys - Since the table key was
+          -- already applied to `newChild` above, we don't need to pass it along
           return updateFromMap(
             existingChildren,
             returnFiber,
@@ -937,7 +978,7 @@ local function ChildReconciler(shouldTrackSideEffects)
       -- since the rest will all be insertions.
       -- deviation: use while loop in place of modified for loop
       while newIdx <= #newChildren do
-        local newFiber = createChild(returnFiber, newChildren[newIdx], lanes)
+        local newFiber = createChild(returnFiber, newChildren[newIdx], lanes, nil)
         if newFiber == nil then
           -- deviation: increment manually since we're not using a modified for loop
           newIdx += 1;
@@ -967,7 +1008,8 @@ local function ChildReconciler(shouldTrackSideEffects)
         returnFiber,
         newIdx,
         newChildren[newIdx],
-        lanes
+        lanes,
+        nil
       )
       if newFiber ~= nil then
         if shouldTrackSideEffects then
@@ -1096,7 +1138,7 @@ local function ChildReconciler(shouldTrackSideEffects)
       else
         nextOldFiber = oldFiber.sibling
       end
-      local newFiber = updateSlot(returnFiber, oldFiber, step.value, lanes)
+      local newFiber = updateSlot(returnFiber, oldFiber, step.value, lanes, step.key)
       if newFiber == nil then
         -- TODO: This breaks on empty slots like nil children. That's
         -- unfortunate because it triggers the slow path all the time. We need
@@ -1142,7 +1184,7 @@ local function ChildReconciler(shouldTrackSideEffects)
       -- If we don't have any more existing children we can choose a fast path
       -- since the rest will all be insertions.
       while not step.done do
-        local newFiber = createChild(returnFiber, step.value, lanes)
+        local newFiber = createChild(returnFiber, step.value, lanes, step.key)
         if newFiber == nil then
           newIdx += 1
           step = newChildren.next()
@@ -1173,7 +1215,8 @@ local function ChildReconciler(shouldTrackSideEffects)
         returnFiber,
         newIdx,
         step.value,
-        lanes
+        lanes,
+        step.key
       )
       if newFiber ~= nil then
         if shouldTrackSideEffects then

@@ -11,6 +11,7 @@ return function()
 	local RobloxJest = require(Workspace.RobloxJest)
 
 	local React
+	local ReactNoop
 	local ReactFeatureFlags
 	-- ROBLOX deviation: the tests using these are currently SKIPped
 	local PropTypes = nil
@@ -21,11 +22,19 @@ return function()
 
 		beforeEach(function()
 			RobloxJest.resetModules()
+			-- deviation: In react, jest _always_ mocks Scheduler -> unstable_mock;
+			-- in our case, we need to do it anywhere we want to use the scheduler,
+			-- until we have some form of bundling logic
+			RobloxJest.mock(Workspace.Scheduler, function()
+				return require(Workspace.Scheduler.unstable_mock)
+			end)
 
 			-- PropTypes = require("prop-types")
 			ReactFeatureFlags = require(Workspace.Shared.ReactFeatureFlags)
 			ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false
 			React = require(Workspace.React)
+			-- deviation: Use Noop to drive these tests instead of DOM renderer
+			ReactNoop = require(Workspace.ReactNoopRenderer)
 			-- ReactDOM = require("react-dom")
 			-- ReactTestUtils = require("react-dom/test-utils")
 			ComponentClass = React.Component:extend("ComponentClass")
@@ -44,7 +53,7 @@ return function()
 			end).toErrorDev('Each child in a list should have a unique "key" prop.')
 		end)
 
-		itSKIP("warns for keys for arrays of elements with owner info", function()
+		it("warns for keys for arrays of elements with owner info", function()
 			local expect: any = expect
 			local InnerClass = React.Component:extend("InnerClass")
 			function InnerClass:render()
@@ -62,7 +71,10 @@ return function()
 			end
 
 			expect(function()
-				ReactTestUtils.renderIntoDocument(React.createElement(ComponentWrapper))
+				-- deviation: Use Noop to drive these tests instead of DOM renderer
+				ReactNoop.act(function()
+					ReactNoop.render(React.createElement(ComponentWrapper))
+				end)
 			end).toErrorDev(
 				'Each child in a list should have a unique "key" prop.' ..
 					"\n\nCheck the render method of `InnerClass`. " ..
@@ -70,20 +82,23 @@ return function()
 			)
 		end)
 
-		itSKIP("warns for keys for arrays with no owner or parent info", function()
+		it("warns for keys for arrays with no owner or parent info", function()
 			local expect: any = expect
 			local function Anonymous()
-				return React.createElement("Frame")
+				return React.createElement("div")
 			end
 			-- Object.defineProperty(Anonymous, "name", {value = nil})
 
 			local divs = {
-				React.createElement("Frame"),
-				React.createElement("Frame"),
+				React.createElement("div"),
+				React.createElement("div"),
 			}
 
 			expect(function()
-				ReactTestUtils.renderIntoDocument(React.createElement(Anonymous, nil, divs))
+			-- deviation: Use Noop to drive these tests instead of DOM renderer
+				ReactNoop.act(function()
+					ReactNoop.render(React.createElement(Anonymous, nil, divs))
+				end)
 			end).toErrorDev(
 				"Warning: Each child in a list should have a unique " ..
 					'"key" prop. See https://reactjs.org/link/warning-keys for more information.\n' ..
@@ -91,15 +106,18 @@ return function()
 			)
 		end)
 
-		itSKIP("warns for keys for arrays of elements with no owner info", function()
+		it("warns for keys for arrays of elements with no owner info", function()
 			local expect: any = expect
 			local divs = {
-				React.createElement("Frame"),
-				React.createElement("Frame"),
+				React.createElement("div"),
+				React.createElement("div"),
 			}
 
 			expect(function()
-				ReactTestUtils.renderIntoDocument(React.createElement("Frame", nil, divs))
+				-- deviation: Use Noop to drive these tests instead of DOM renderer
+				ReactNoop.act(function()
+					ReactNoop.render(React.createElement("div", nil, divs))
+				end)
 			end).toErrorDev(
 				"Warning: Each child in a list should have a unique " ..
 					'"key" prop.\n\nCheck the top-level render call using <div>. See ' ..
@@ -108,12 +126,14 @@ return function()
 			)
 		end)
 
-		itSKIP("warns for keys with component stack info", function()
+		-- ROBLOX FIXME: LUAFDN-207 We can't properly process stack info due to
+		-- absence of function names; address this when we have `debug.info`
+		xit("warns for keys with component stack info", function()
 			local expect: any = expect
 			local function Component()
-				return React.createElement("Frame", nil, {
-					React.createElement("Frame"),
-					React.createElement("Frame"),
+				return React.createElement("div", nil, {
+					React.createElement("div"),
+					React.createElement("div"),
 				})
 			end
 			local function Parent(props)
@@ -126,7 +146,10 @@ return function()
 			end
 
 			expect(function()
-				return ReactTestUtils.renderIntoDocument(React.createElement(GrandParent, nil))
+				-- deviation: Use Noop to drive these tests instead of DOM renderer
+				ReactNoop.act(function()
+					ReactNoop.render(React.createElement(GrandParent, nil))
+				end)
 			end).toErrorDev(
 				"Warning: Each child in a list should have a unique " ..
 					'"key" prop.\n\nCheck the render method of `Component`. See ' ..
@@ -138,7 +161,10 @@ return function()
 			)
 		end)
 
-		itSKIP("does not warn for keys when passing children down", function()
+		it("does not warn for keys when passing children down", function()
+			-- ROBLOX FIXME: Expect coercion
+			local expect: any = expect
+
 			local function Wrapper(props)
 				return React.createElement(
 					"Frame",
@@ -148,17 +174,42 @@ return function()
 				)
 			end
 
-			ReactTestUtils.renderIntoDocument(
-				React.createElement(
-					Wrapper,
-					nil,
-					React.createElement('span'),
-					React.createElement('span', nil)
-				)
-			)
+			-- ROBLOX deviation: Use Noop to drive these tests instead of DOM
+			-- renderer; additionally, add an expectation to make sure we get
+			-- _no_ errors
+			expect(function()
+				ReactNoop.act(function()
+					ReactNoop.render(
+						React.createElement(
+							Wrapper,
+							nil,
+							React.createElement('span'),
+							React.createElement('span', nil)
+						)
+					)
+				end)
+			end).toErrorDev({})
 		end)
 
-		itSKIP("warns for keys for iterables of elements in rest args", function()
+		-- ROBLOX deviation: This test is unique to roblox; we allow children to
+		-- be passed as a table, and use the keys as stable keys for the
+		-- equivalent children
+		it("does not warn for keys when providing keys via children tables", function()
+			-- ROBLOX FIXME: Expect coercion
+			local expect: any = expect
+			expect(function()
+				ReactNoop.act(function()
+					ReactNoop.render(
+						React.createElement("Frame", nil, {
+							ChildA = React.createElement('span'),
+							ChildB = React.createElement('span'),
+						})
+					)
+				end)
+			end).toErrorDev({})
+		end)
+
+		xit("warns for keys for iterables of elements in rest args", function()
 			local expect: any = expect
 			local iterable = {
 				["@@iterator"] = function()
@@ -192,7 +243,7 @@ return function()
 			})
 		end)
 
-		itSKIP("does not warns for iterable elements with keys", function()
+		xit("does not warns for iterable elements with keys", function()
 			local iterable = {
 				["@@iterator"] = function()
 					local i = 0
@@ -227,7 +278,7 @@ return function()
 			React.createElement(ComponentClass, nil, {{}, {}})
 		end)
 
-		itSKIP("should give context for PropType errors in nested components.", function()
+		xit("should give context for PropType errors in nested components.", function()
 			local expect: any = expect
 			-- // In this test, we're making sure that if a proptype error is found in a
 			-- // component, we give a small hint as to which parent instantiated that
@@ -307,7 +358,7 @@ return function()
 			React.createElement("Frame")
 		end)
 
-		itSKIP("includes the owner name when passing null, undefined, boolean, or number", function()
+		xit("includes the owner name when passing null, undefined, boolean, or number", function()
 			local expect: any = expect
 			local function ParentComp()
 				return React.createElement(nil)
@@ -562,6 +613,33 @@ return function()
 			end)
 			React.createElement(Lazy)
 			expect(didCall).to.equal(false)
+		end)
+
+		-- ROBLOX deviation: validate extra warning when using table keys as the
+		-- keys provided to child elements
+		it("warns when keys are provided via both the 'key' prop AND table keys", function()
+			local expect: any = expect
+			local Component = React.Component:extend("Component")
+			function Component:render()
+				return React.createElement("div", nil, {
+					a = React.createElement("div", {key="a"}),
+					b = React.createElement("div", {key="b"}),
+				})
+			end
+
+			expect(function()
+				-- deviation: Use Noop to drive these tests instead of DOM renderer
+				ReactNoop.act(function()
+					ReactNoop.render(React.createElement(Component))
+				end)
+			end).toErrorDev('Child element received a "key" prop in addition to a key in ' ..
+				'the "children" table of its parent. Please provide only ' ..
+				'one key definition. When both are present, the "key" prop ' ..
+				'will take precedence.\n\nCheck the render method of `Component`. ' ..
+				'See https://reactjs.org/link/warning-keys for more information.\n' ..
+				'    in div (at **)\n' ..
+				'    in Component (at **)'
+			)
 		end)
 	end)
 end

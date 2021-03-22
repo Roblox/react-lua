@@ -181,10 +181,10 @@ local function ReactElement(type_, key, ref, self, source, owner, props)
 		-- ignores it.
 		element._store.validated = false
 		-- self and source are DEV only properties.
-		element._store._self = self
+		element._self = self
 		-- Two elements created in two different places should be considered
 		-- equal for testing purposes and therefore we hide it from enumeration.
-		element._store._source = source
+		element._source = source
 	end
 
 	return element
@@ -481,17 +481,23 @@ exports.cloneElement = function(element, config, ...)
 	-- Remaining properties override existing props
 	local defaultProps
 
-	if element.type and element.type.defaultProps then
+	-- ROBLOX deviation: make sure type is a table (and not a function component)
+	-- if element.type and element.type.defaultProps then
+	if typeof(element.type) == "table" and element.type.defaultProps then
 		defaultProps = element.type.defaultProps
 	end
 
-	for propName, _ in pairs(config) do
-		if config[propName] and not RESERVED_PROPS[propName] then
-			if config[propName] == nil and defaultProps ~= nil then
-				-- Resolve default props
-				props[propName] = defaultProps[propName]
-			else
-				props[propName] = config[propName]
+	-- ROBLOX deviation: cannot call pairs on nil the way you can use `for...in`
+	-- on nil in JS, so we check for nil before iterating
+	if config ~= nil then
+		for propName, _ in pairs(config) do
+			if config[propName] and not RESERVED_PROPS[propName] then
+				if config[propName] == nil and defaultProps ~= nil then
+					-- Resolve default props
+					props[propName] = defaultProps[propName]
+				else
+					props[propName] = config[propName]
+				end
 			end
 		end
 	end

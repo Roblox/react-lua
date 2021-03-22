@@ -108,11 +108,11 @@ return function()
     local ref = React.createRef()
 
     ReactNoop.render(
-      React.createElement("div", {}, {
+      React.createElement("div", {},
         React.createElement("div"),
         React.createElement(RefForwardingComponent, {ref=ref, value=123}),
-        React.createElement("div"),
-      })
+        React.createElement("div")
+      )
     )
     expect(Scheduler).toFlushAndYield({123})
     -- ROBLOX FIXME: When instanceof is implemented, use it

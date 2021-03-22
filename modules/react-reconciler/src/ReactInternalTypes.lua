@@ -97,6 +97,11 @@ export type Dependencies = {
 	[any]: any,
 };
 
+-- ROBLOX deviation: Roact stable keys - slightly widen the type definition of a
+-- stable key so that it's likely to work with existing Roact code. Includes
+-- numbers for mixed/sparse tables
+export type RoactStableKey = string | number;
+
 -- A Fiber is work on a Component that needs to be done or was done. There can
 -- be more than one per component.
 export type Fiber = {
@@ -113,8 +118,10 @@ export type Fiber = {
 	-- Tag identifying the type of fiber.
 	tag: WorkTag,
 
+	-- ROBLOX deviation: Use a slightly more permissive key type to allow for
+	-- sparse arrays, which will still be distinct from actual arrays.
 	-- Unique identifier of this child.
-	key: string?,
+	key: RoactStableKey?,
 
 	-- The value of element.type which is used to preserve the identity during
 	-- reconciliation of this child.
