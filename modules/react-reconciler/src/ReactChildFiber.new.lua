@@ -218,7 +218,8 @@ function coerceRef(
       then
         return current.ref
       end
-      local ref = function(value)
+      -- ROBLOX deviation: make ref a callable table rather than a function
+      local callableRef = function(value)
         local refs = inst.refs
         if refs == emptyRefsObject then
           -- This is a lazy pooled frozen object, so we need to initialize.
@@ -231,6 +232,7 @@ function coerceRef(
           refs[stringRef] = value
         end
       end
+      local ref = setmetatable({}, {__call = callableRef})
       ref._stringRef = stringRef
       return ref
     else

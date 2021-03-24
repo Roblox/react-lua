@@ -6,7 +6,7 @@
 --  *
 --  * @emails react-core
 --  * @jest-environment node
---  */local React
+--  */
 
 local Workspace = script.Parent.Parent.Parent
 local React
