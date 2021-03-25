@@ -30,8 +30,8 @@ The [react repo](https://github.com/facebook/react) is a monorepo with a number 
 | `react-interactions` | For use with experimental React features | ❌ Not ported | ❔ Not yet assessed | |
 | 📌`react-is` | Runtime type checks for React elements | ✔️ Ported | | |
 | `react-native-renderer` | Renderer interface for react-native | ❌ Not ported | ❔ Not yet assessed | This package has no readme, so it's hard to understand its scope |
-| 📌`react-noop-renderer` | Renderer used for debugging Fiber | 🔨 Port in progress |  | Will be needed to verify our Fiber/Reconciler work |
-| 📌`react-reconciler` | Reconciler implementation used with various renderers | 🔨 Port in progress |  | Bulk of React's complicated logic lives here |
+| 📌`react-noop-renderer` | Renderer used for debugging Fiber | ✔️ Ported |  | Will be needed to verify our Fiber/Reconciler work |
+| 📌`react-reconciler` | Reconciler implementation used with various renderers | ✔️ Ported |  | Bulk of React's complicated logic lives here |
 | `react-refresh` | Wiring for Fast Refresh | ❌ Not ported | ❔ Not yet assessed, depend on applicability | Officially supported successor to "hot reloading" |
 | `react-server` | Experimental package for creating React streaming server renderers | ❌ Not ported | ❔ Not yet assessed | |
 | `react-test-renderer` | Test renderer with dom snapshotting | ❌ Not ported | ➕ Likely to be ported | Used for testing much of React's internals |
