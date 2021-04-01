@@ -394,7 +394,7 @@ return function()
       expect(firstUpdater).toEqual(secondUpdater)
       end)
 
-      -- ROBLOX TODO: toErrorDev, needs LUAFDN-196
+    -- ROBLOX TODO: toErrorDev expects name of function component, needs LUAFDN-207
     xit('warns on set after unmount', function()
       local expect: any = expect
       local updateCount
@@ -407,7 +407,11 @@ return function()
       expect(Scheduler).toFlushWithoutYielding()
       ReactNoop.render(nil)
       expect(Scheduler).toFlushWithoutYielding()
-      expect(function() return act(function() return updateCount(1) end) end).toErrorDev(
+      expect(function()
+        act(function()
+          updateCount(1)
+        end)
+      end).toErrorDev(
         "Warning: Can't perform a React state update on an unmounted " ..
           'component. This is a no-op, but it indicates a memory leak in your ' ..
           'application. To fix, cancel all subscriptions and asynchronous ' ..
@@ -416,7 +420,7 @@ return function()
       )
     end)
 
-    -- ROBLOX TODO: toErrorDev, needs LUAFDN-196
+    -- ROBLOX TODO: toErrorDev expects name of function component, needs LUAFDN-207
     xit('dedupes the warning by component name', function()
       local expect: any = expect
       local updateCountA
@@ -436,7 +440,11 @@ return function()
       expect(Scheduler).toFlushWithoutYielding()
       ReactNoop.render(nil)
       expect(Scheduler).toFlushWithoutYielding()
-      expect(function() return act(function() return updateCountA(1) end) end).toErrorDev(
+      expect(function()
+        act(function()
+          updateCountA(1)
+        end)
+      end).toErrorDev(
         "Warning: Can't perform a React state update on an unmounted " ..
           'component. This is a no-op, but it indicates a memory leak in your ' ..
           'application. To fix, cancel all subscriptions and asynchronous ' ..
@@ -444,8 +452,14 @@ return function()
           '    in CounterA (at **)'
       )
       -- already cached so this logs no error
-      act(function() return updateCountA(2) end)
-      expect(function() return act(function() return updateCountB(1) end) end).toErrorDev(
+      act(function()
+        updateCountA(2)
+      end)
+      expect(function()
+        act(function()
+          updateCountB(1)
+        end)
+      end).toErrorDev(
         "Warning: Can't perform a React state update on an unmounted " ..
           'component. This is a no-op, but it indicates a memory leak in your ' ..
           'application. To fix, cancel all subscriptions and asynchronous ' ..

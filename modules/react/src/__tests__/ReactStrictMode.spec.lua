@@ -784,8 +784,8 @@ Please update the following components: Parent]],
             -- ReactDOMServer = require('react-dom/server')
             Scheduler = require(Workspace.Scheduler)
         end)
-        -- ROBLOX TODO: LUAFDN-196, but otherwise error message looks correct
-        xit('should warn within a strict tree', function()
+
+        it('should warn within a strict tree', function()
             local expect: any = expect
             local StrictMode = React.StrictMode
             local OuterComponent = React.Component:extend("OuterComponent")
@@ -807,7 +807,14 @@ Please update the following components: Parent]],
                 ReactNoop.act(function()
                     ReactNoop.render(React.createElement(OuterComponent))
                 end)
-            end).toErrorDev('Warning: A string ref, "somestring", has been found within a strict mode tree. ' .. 'String refs are a source of potential bugs and should be avoided. ' .. 'We recommend using useRef() or createRef() instead. ' .. 'Learn more about using refs safely here: ' .. 'https://reactjs.org/link/strict-mode-string-ref\n' .. '    in OuterComponent (at **)')
+            end).toErrorDev(
+                'Warning: A string ref, "somestring", has been found within a strict mode tree. ' ..
+                    'String refs are a source of potential bugs and should be avoided. ' ..
+                    'We recommend using useRef() or createRef() instead. ' ..
+                    'Learn more about using refs safely here: ' ..
+                    'https://reactjs.org/link/strict-mode-string-ref\n' ..
+                    '    in OuterComponent (at **)'
+            )
 
             -- Dedup
             -- ROBLOX deviation: using ReactNoop in place of ReactDOM
@@ -815,9 +822,9 @@ Please update the following components: Parent]],
                 ReactNoop.render(React.createElement(OuterComponent))
             end)
         end)
+
         -- ROBLOX deviation: upstream uses test name twice
-        -- ROBLOX TODO: LUAFDN-196, but otherwise error message looks correct
-        xit('should warn within a strict tree 2', function()
+        it('should warn within a strict tree 2', function()
             local expect: any = expect
             local StrictMode = React.StrictMode
 
@@ -846,7 +853,15 @@ Please update the following components: Parent]],
                 ReactNoop.act(function()
                     ReactNoop.render(React.createElement(OuterComponent))
                 end)
-            end).toErrorDev('Warning: A string ref, "somestring", has been found within a strict mode tree. ' .. 'String refs are a source of potential bugs and should be avoided. ' .. 'We recommend using useRef() or createRef() instead. ' .. 'Learn more about using refs safely here: ' .. 'https://reactjs.org/link/strict-mode-string-ref\n' .. '    in InnerComponent (at **)\n' .. '    in OuterComponent (at **)')
+            end).toErrorDev(
+                'Warning: A string ref, "somestring", has been found within a strict mode tree. ' ..
+                    'String refs are a source of potential bugs and should be avoided. ' ..
+                    'We recommend using useRef() or createRef() instead. ' ..
+                    'Learn more about using refs safely here: ' ..
+                    'https://reactjs.org/link/strict-mode-string-ref\n' ..
+                    '    in InnerComponent (at **)\n' ..
+                    '    in OuterComponent (at **)'
+            )
             -- Dedup
             -- ROBLOX deviation: using ReactNoop in place of ReactDOM
             ReactNoop.act(function()
