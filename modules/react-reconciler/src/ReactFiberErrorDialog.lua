@@ -8,10 +8,7 @@
  * @flow
  ]]
 
-local Workspace = script.Parent.Parent
-
--- ROBLOX: use patched console from shared
-local console = require(Workspace.Shared.console)
+local _Workspace = script.Parent.Parent
 
 -- This module is forked in different environments.
 -- By default, return `true` to log errors to the console.
@@ -22,8 +19,7 @@ exports.showErrorDialog =  function(
   boundary,
   errorInfo
 ): boolean
-  -- ROBLOX TODO: we may replace this with something that sends telemetry
-  console.error("!!!! ROBLOX This is where we would report to crash telemetry: " .. tostring(errorInfo.value))
+  -- ROBLOX TODO: we may replace this with something that sends telemetry LUAFDN-222
   return true
 end
 

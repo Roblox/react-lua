@@ -66,8 +66,9 @@ type RefreshHandler = (any) -> (Family?);
 -- FIXME (roblox): restore type 'resolveFamily: RefreshHandler?' when type
 -- refinement in Luau works better
 local resolveFamily = nil
--- -- $FlowFixMe Flow gets confused by a WeakSet feature check below.
--- local failedBoundaries: WeakSet<Fiber> | nil = nil
+-- $FlowFixMe Flow gets confused by a WeakSet feature check below.
+-- ROBLOX deviation: Using table instead of WeakSet
+local failedBoundaries: { [number]: Fiber } | nil = nil
 
 local exports = {}
 
@@ -222,21 +223,23 @@ exports.isCompatibleFamilyForHotReloading = function(
 	-- end
 end
 
--- exports.markFailedErrorBoundaryForHotReloading(fiber: Fiber)
--- 	if _G.__DEV__)
--- 		if resolveFamily == nil)
--- 			-- Hot reloading is disabled.
--- 			return
--- 		end
--- 		if typeof WeakSet ~= 'function')
--- 			return
--- 		end
--- 		if failedBoundaries == nil)
--- 			failedBoundaries = new WeakSet()
--- 		end
--- 		failedBoundaries.add(fiber)
--- 	end
--- end
+exports.markFailedErrorBoundaryForHotReloading = function(fiber: Fiber)
+	if _G.__DEV__ then
+		if resolveFamily == nil then
+			-- Hot reloading is disabled.
+			return
+		end
+		-- if typeof(WeakSet) ~= 'function' then
+		-- 	return
+		-- end
+		-- ROBLOX deviation: {} in place of WeakSet
+		if failedBoundaries == nil then
+			failedBoundaries = {}
+		end
+		local failedBoundariesAsAny: any = failedBoundaries
+		table.insert(failedBoundariesAsAny, fiber)
+	end
+end
 
 -- export local scheduleRefresh: ScheduleRefresh = (
 -- 	root: FiberRoot,

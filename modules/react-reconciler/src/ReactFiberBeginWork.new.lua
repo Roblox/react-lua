@@ -305,37 +305,37 @@ local function reconcileChildren(
   end
 end
 
--- function forceUnmountCurrentAndReconcile(
---   current: Fiber,
---   workInProgress: Fiber,
---   nextChildren: any,
---   renderLanes: Lanes,
--- )
---   -- This function is fork of reconcileChildren. It's used in cases where we
---   -- want to reconcile without matching against the existing set. This has the
---   -- effect of all current children being unmounted; even if the type and key
---   -- are the same, the old child is unmounted and a new child is created.
---   --
---   -- To do this, we're going to go through the reconcile algorithm twice. In
---   -- the first pass, we schedule a deletion for all the current children by
---   -- passing nil.
---   workInProgress.child = reconcileChildFibers(
---     workInProgress,
---     current.child,
---     nil,
---     renderLanes,
---   )
---   -- In the second pass, we mount the new children. The trick here is that we
---   -- pass nil in place of where we usually pass the current child set. This has
---   -- the effect of remounting all children regardless of whether their
---   -- identities match.
---   workInProgress.child = reconcileChildFibers(
---     workInProgress,
---     nil,
---     nextChildren,
---     renderLanes,
---   )
--- end
+local function forceUnmountCurrentAndReconcile(
+  current: Fiber,
+  workInProgress: Fiber,
+  nextChildren: any,
+  renderLanes: Lanes
+)
+  -- This function is fork of reconcileChildren. It's used in cases where we
+  -- want to reconcile without matching against the existing set. This has the
+  -- effect of all current children being unmounted; even if the type and key
+  -- are the same, the old child is unmounted and a new child is created.
+  --
+  -- To do this, we're going to go through the reconcile algorithm twice. In
+  -- the first pass, we schedule a deletion for all the current children by
+  -- passing nil.
+  workInProgress.child = reconcileChildFibers(
+    workInProgress,
+    current.child,
+    nil,
+    renderLanes
+  )
+  -- In the second pass, we mount the new children. The trick here is that we
+  -- pass nil in place of where we usually pass the current child set. This has
+  -- the effect of remounting all children regardless of whether their
+  -- identities match.
+  workInProgress.child = reconcileChildFibers(
+    workInProgress,
+    nil,
+    nextChildren,
+    renderLanes
+  )
+end
 
 local function updateForwardRef(
   current: Fiber | nil,
@@ -1082,17 +1082,19 @@ function finishClassComponent(
   -- React DevTools reads this flag.
   workInProgress.flags = bit32.bor(workInProgress.flags, PerformedWork)
   if current ~= nil and didCaptureError then
+    -- Recast to silence analyze
+    local currentAsAny: any = current
+
     -- If we're recovering from an error, reconcile without reusing any of
     -- the existing children. Conceptually, the normal children and the children
     -- that are shown on error are two different sets, so we shouldn't reuse
     -- normal children even if their identities match.
-    unimplemented("forceUnmountCurrentAndReconcile")
-    -- forceUnmountCurrentAndReconcile(
-    --   current,
-    --   workInProgress,
-    --   nextChildren,
-    --   renderLanes
-    -- )
+    forceUnmountCurrentAndReconcile(
+      currentAsAny,
+      workInProgress,
+      nextChildren,
+      renderLanes
+    )
   else
     reconcileChildren(current, workInProgress, nextChildren, renderLanes)
   end

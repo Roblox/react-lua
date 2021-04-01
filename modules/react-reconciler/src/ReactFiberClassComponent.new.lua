@@ -422,7 +422,7 @@ local function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: an
     local renderPresent = instance.render
 
     if not renderPresent then
-      -- deviation: for us, the render function will be visible as a direct
+      -- ROBLOX deviation: for us, the render function will be visible as a direct
       -- member of the 'ctor', which in reality is the component definition
       if typeof(ctor.render) == "function" then
         console.error(
@@ -517,9 +517,9 @@ local function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: an
 
     if typeof(instance.componentShouldUpdate) == "function" then
       console.error(
-        "%s has a method called " +
-          "componentShouldUpdate(). Did you mean shouldComponentUpdate()? " +
-          "The name is phrased as a question because the function is " +
+        "%s has a method called " ..
+          "componentShouldUpdate(). Did you mean shouldComponentUpdate()? " ..
+          "The name is phrased as a question because the function is " ..
           "expected to return a value.",
         name
       )
@@ -531,8 +531,8 @@ local function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: an
       instance.shouldComponentUpdate ~= nil
     then
       console.error(
-        "%s has a method called shouldComponentUpdate(). " +
-          "shouldComponentUpdate should not be used when extending React.PureComponent. " +
+        "%s has a method called shouldComponentUpdate(). " ..
+          "shouldComponentUpdate should not be used when extending React.PureComponent. " ..
           "Please extend React.Component if shouldComponentUpdate is used.",
         getComponentName(ctor) or "A pure component"
       )
@@ -578,7 +578,7 @@ local function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: an
         name
       )
     end
-    if instance.defaultProps then
+    if rawget(instance, "defaultProps") then
       console.error(
         "Setting defaultProps as an instance property on %s is not supported and will be ignored." ..
           " Instead, define defaultProps as a static property on %s.",
@@ -1133,10 +1133,10 @@ function resumeMountClassInstance(
         typeof(instance.componentWillMount) == 'function')
     then
       if typeof(instance.componentWillMount) == 'function' then
-        instance.componentWillMount()
+        instance:componentWillMount()
       end
       if typeof(instance.UNSAFE_componentWillMount) == 'function' then
-        instance.UNSAFE_componentWillMount()
+        instance:UNSAFE_componentWillMount()
       end
     end
     if typeof(instance.componentDidMount) == 'function' then

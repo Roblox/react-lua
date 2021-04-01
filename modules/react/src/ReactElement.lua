@@ -49,7 +49,8 @@ end
 
 local function hasValidKey(config)
 	if _G.__DEV__ then
-		if config.key then
+		-- ROBLOX TODO: sort out proper translation of this clause which involves checking for getter methods
+		if config.key and typeof(config.key) == 'table' then
 			local getter = config.key.get
 
 			if getter and getter.isReactWarning then

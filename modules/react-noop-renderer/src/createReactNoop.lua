@@ -218,7 +218,7 @@ local function createReactNoop(reconciler, useMutation: boolean)
 		child: Instance | TextInstance
 	)
 		local parentInstance: any = parentInstance
-		if typeof(parentInstance.rootID) ~= "string" then
+		if typeof(parentInstance.rootID) == "string" then
 			-- Some calls to this aren't typesafe.
 			-- This helps surface mistakes in tests.
 			error(Error("removeChild() first argument is not an instance."))

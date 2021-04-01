@@ -183,10 +183,15 @@ return function()
     local StatefulComponent = React.Component:extend("StatefulComponent")
 
     function StatefulComponent:UNSAFE_componentWillMount()
+      -- ROBLOX deviation: ensure self is non nil
+      expect(self).never.toEqual(nil)
+
       return self.state.yada
     end
 
     function StatefulComponent:render()
+      -- ROBLOX deviation: ensure self is non nil
+      expect(self).never.toEqual(nil)
       return React.createElement("div")
     end
 
@@ -296,6 +301,8 @@ return function()
       expect(isMounted()).to.equal(false)
     end
     function Component:componentDidMount()
+      -- ROBLOX deviation: assert self is non nil
+      expect(self).never.toEqual(nil)
       expect(isMounted()).to.equal(true)
     end
     function Component:render()
@@ -461,6 +468,9 @@ return function()
       end
 
     function LifeCycleComponent:componentWillUnmount()
+      -- ROBLOX deviation: assert self is non nil
+      expect(self).never.toEqual(nil)
+
       _testJournal.stateAtStartOfWillUnmount = clone(self.state)
       _testJournal.lifeCycleAtStartOfWillUnmount = getTestLifeCycleState()
       self.state.hasWillUnmountCompleted = true
@@ -831,6 +841,9 @@ xit('should not throw when updating an auxiliary component', function()
       error(Error('unexpected'))
     end
     function Component:componentWillReceiveProps()
+      -- ROBLOX deviation: assert self is non nil
+      expect(self).never.toEqual(nil)
+
       error(Error('unexpected'))
     end
     function Component:componentWillUpdate()
@@ -880,9 +893,14 @@ xit('should not throw when updating an auxiliary component', function()
       error(Error('unexpected'))
     end
     function Component:componentWillUpdate()
+      -- ROBLOX deviation: assert self is non nil
+      expect(self).never.toEqual(nil)
       error(Error('unexpected'))
     end
-    function Component:componentDidUpdate() end
+    function Component:componentDidUpdate()
+      -- ROBLOX deviation: assert self is non nil
+      expect(self).never.toEqual(nil)
+    end
     function Component:render()
       return nil
     end

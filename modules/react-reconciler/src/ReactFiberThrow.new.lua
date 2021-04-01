@@ -64,7 +64,7 @@ local createUpdate = ReactUpdateQueue.createUpdate
 local CaptureUpdate = ReactUpdateQueue.CaptureUpdate
 local ForceUpdate = ReactUpdateQueue.ForceUpdate
 local enqueueUpdate = ReactUpdateQueue.enqueueUpdate
--- local {markFailedErrorBoundaryForHotReloading} = require(Workspace../ReactFiberHotReloading.new'
+local markFailedErrorBoundaryForHotReloading = require(script.Parent["ReactFiberHotReloading.new"]).markFailedErrorBoundaryForHotReloading
 -- local {
 --   suspenseStackCursor,
 --   InvisibleParentSuspenseContext,
@@ -73,6 +73,17 @@ local enqueueUpdate = ReactUpdateQueue.enqueueUpdate
 
 -- ROBLOX FIXME: these will incur a dependency cycle
 -- onUncaughtError woudl be very easy to extract out, or to transplant into this file
+local ReactFiberWorkLoop
+local markLegacyErrorBoundaryAsFailedRef
+
+-- ROBLOX deviation: lazy initialize ReactFiberWorkLoop to prevent cyclic module dependency
+local markLegacyErrorBoundaryAsFailed = function(...)
+  if not markLegacyErrorBoundaryAsFailedRef then
+    ReactFiberWorkLoop = require(script.Parent["ReactFiberWorkLoop.new"])
+    markLegacyErrorBoundaryAsFailedRef = ReactFiberWorkLoop.markLegacyErrorBoundaryAsFailed
+  end
+  return markLegacyErrorBoundaryAsFailedRef(...)
+end
 -- local {
 --   renderDidError,
 --   onUncaughtError,
@@ -148,8 +159,7 @@ function createClassErrorUpdate(
   if inst ~= nil and typeof(inst.componentDidCatch) == 'function' then
     update.callback = function()
       if _G.__DEV__ then
-        unimplemented("markFailedErrorBoundaryForHotReloading")
-        -- markFailedErrorBoundaryForHotReloading(fiber)
+        markFailedErrorBoundaryForHotReloading(fiber)
       end
       if typeof(getDerivedStateFromError) ~= 'function' then
         -- To preserve the preexisting retry behavior of error boundaries,
@@ -157,8 +167,8 @@ function createClassErrorUpdate(
         -- This gets reset before we yield back to the browser.
         -- TODO: Warn in strict mode if getDerivedStateFromError is
         -- not defined.
-        unimplemented("markLegacyErrorBoundaryAsFailed")
-        -- markLegacyErrorBoundaryAsFailed(this)
+        -- ROBLOX devation: used to the `this` upstream, but I *think* they mean `inst`
+        markLegacyErrorBoundaryAsFailed(inst)
 
         -- Only log here if componentDidCatch is the only error boundary method defined
         logCapturedError(fiber, errorInfo)
@@ -166,7 +176,7 @@ function createClassErrorUpdate(
       local error_ = errorInfo.value
       local stack = errorInfo.stack
       -- ROBLOX devation: used to the `this` upstream, but I *think* they mean `inst`
-      inst.componentDidCatch(error_, {
+      inst:componentDidCatch(error_, {
         componentStack = stack or '',
       })
       if _G.__DEV__ then
@@ -186,8 +196,7 @@ function createClassErrorUpdate(
     end
   elseif _G.__DEV__ then
     update.callback = function()
-      unimplemented("markFailedErrorBoundaryForHotReloading")
-      -- markFailedErrorBoundaryForHotReloading(fiber)
+      markFailedErrorBoundaryForHotReloading(fiber)
     end
   end
   return update

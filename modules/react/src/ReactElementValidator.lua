@@ -266,8 +266,8 @@ local function validatePropTypes(element)
 		elseif typeof(type) == "table" and
 			(
 				type["$$typeof"] == REACT_FORWARD_REF_TYPE or
-				-- // Note: Memo only checks outer props here.
-				-- // Inner props are checked in the reconciler.
+				-- Note: Memo only checks outer props here.
+				-- Inner props are checked in the reconciler.
 				type["$$typeof"] == REACT_MEMO_TYPE
 			)
 		then
@@ -277,12 +277,12 @@ local function validatePropTypes(element)
 		end
 
 		if propTypes then
-			-- // Intentionally inside to avoid triggering lazy initializers:
+			-- Intentionally inside to avoid triggering lazy initializers:
 			local name = getComponentName(type)
 			checkPropTypes(propTypes, element.props, "prop", name, element)
 		elseif type.PropTypes ~= nil and not propTypesMisspellWarningShown then
 			propTypesMisspellWarningShown = true
-			-- // Intentionally inside to avoid triggering lazy initializers:
+			-- Intentionally inside to avoid triggering lazy initializers:
 			local name = getComponentName(type)
 			console.error(
 				"Component %s declared `PropTypes` instead of `propTypes`. Did you misspell the property assignment?",

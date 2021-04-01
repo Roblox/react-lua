@@ -181,7 +181,9 @@ local completeWork = require(script.Parent["ReactFiberCompleteWork.new"]).comple
 local ReactFiberUnwindWork = require(script.Parent["ReactFiberUnwindWork.new"])
 local unwindWork = ReactFiberUnwindWork.unwindWork
 local unwindInterruptedWork = ReactFiberUnwindWork.unwindInterruptedWork
-local ReactFiberThrow = require(script.Parent["ReactFiberThrow.new"])
+-- ROBLOX TODO: had to split this line to silence analyze errors, cleanup once analyze is fixed
+local ReactFiberThrow
+ReactFiberThrow = require(script.Parent["ReactFiberThrow.new"])
 local throwException = ReactFiberThrow.throwException
 local createRootErrorUpdate = ReactFiberThrow.createRootErrorUpdate
 local createClassErrorUpdate = ReactFiberThrow.createClassErrorUpdate
