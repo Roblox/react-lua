@@ -210,6 +210,9 @@ local enqueueUpdate = require(script.Parent["ReactUpdateQueue.new"]).enqueueUpda
 
 local resetContextDependencies = require(script.Parent["ReactFiberNewContext.new"]).resetContextDependencies
 
+-- ROBLOX deviation: Pre-declare function
+local ensureRootIsScheduled
+
 -- deviation: lazy init for functions from ReactFiberHooks
 local resetHooksAfterThrowRef
 local ContextOnlyDispatcherRef
@@ -731,7 +734,7 @@ end
 -- of the existing task is the same as the priority of the next level that the
 -- root has work on. This function is called on every update, and right before
 -- exiting a task.
-function ensureRootIsScheduled(root: ReactInternalTypes.FiberRoot, currentTime: number)
+ensureRootIsScheduled = function(root: ReactInternalTypes.FiberRoot, currentTime: number)
   local existingCallbackNode = root.callbackNode
 
   -- Check if any lanes are being starved by other work. If so, mark them as

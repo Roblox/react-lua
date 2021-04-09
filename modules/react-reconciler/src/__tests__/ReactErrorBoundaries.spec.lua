@@ -83,7 +83,7 @@ return function()
 
             function BrokenConstructor:init()
                 Scheduler.unstable_yieldValue('BrokenConstructor constructor [!]')
-                error('Hello')
+                error('Hello', 0)
             end
             function BrokenConstructor:render()
                 Scheduler.unstable_yieldValue('BrokenConstructor render')
@@ -126,7 +126,7 @@ return function()
                 Scheduler.unstable_yieldValue(
                     'BrokenComponentWillMount componentWillMount [!]'
                 )
-                error('Hello')
+                error('Hello', 0)
             end
             
             function BrokenComponentWillMount:componentDidMount()
@@ -176,7 +176,7 @@ return function()
                 Scheduler.unstable_yieldValue(
                     'BrokenComponentDidMount componentDidMount [!]'
                 )
-                error('Hello')
+                error('Hello', 0)
             end
             function BrokenComponentDidMount:UNSAFE_componentWillReceiveProps()
                 Scheduler.unstable_yieldValue(
@@ -224,7 +224,7 @@ return function()
                 Scheduler.unstable_yieldValue(
                   'BrokenComponentWillReceiveProps componentWillReceiveProps [!]'
                 )
-                error('Hello')
+                error('Hello', 0)
             end
             function BrokenComponentWillReceiveProps:UNSAFE_componentWillUpdate()
                 Scheduler.unstable_yieldValue(
@@ -272,7 +272,7 @@ return function()
                 Scheduler.unstable_yieldValue(
                   'BrokenComponentWillUpdate componentWillUpdate [!]'
                 )
-                error('Hello')
+                error('Hello', 0)
             end
             function BrokenComponentWillUpdate:componentDidUpdate()
                 Scheduler.unstable_yieldValue(
@@ -322,7 +322,7 @@ return function()
                 )
 
                 -- ROBLOX deviation: or 'Hello' in place of setting defaultProps
-                error(self.props.errorText or 'Hello')
+                error(self.props.errorText or 'Hello', 0)
             end
             function BrokenComponentDidUpdate:componentWillUnmount()
                 Scheduler.unstable_yieldValue(
@@ -371,7 +371,7 @@ return function()
                     'BrokenComponentWillUnmount componentWillUnmount [!]'
                 )
                 -- ROBLOX deviation: or 'Hello' in place of setting defaultProps
-                error(self.props.errorText or 'Hello')
+                error(self.props.errorText or 'Hello', 0)
             end
 
             BrokenComponentWillMountErrorBoundary = React.Component:extend("BrokenComponentWillMountErrorBoundary")
@@ -394,7 +394,7 @@ return function()
                 Scheduler.unstable_yieldValue(
                   'BrokenComponentWillMountErrorBoundary componentWillMount [!]'
                 )
-                error('Hello')
+                error('Hello', 0)
             end
             function BrokenComponentWillMountErrorBoundary:componentDidMount()
                 Scheduler.unstable_yieldValue(
@@ -438,7 +438,7 @@ return function()
                 Scheduler.unstable_yieldValue(
                     'BrokenComponentDidMountErrorBoundary componentDidMount [!]'
                 )
-                error('Hello')
+                error('Hello', 0)
             end
             function BrokenComponentDidMountErrorBoundary:componentWillUnmount()
                 Scheduler.unstable_yieldValue(
@@ -463,7 +463,7 @@ return function()
             function BrokenRenderErrorBoundary:render()
                 if self.state.error then
                     Scheduler.unstable_yieldValue('BrokenRenderErrorBoundary render error [!]')
-                    error("Hello")
+                    error("Hello", 0)
                 end
                 Scheduler.unstable_yieldValue('BrokenRenderErrorBoundary render success')
                 return React.createElement("div", nil, self.props.children)
@@ -499,7 +499,7 @@ return function()
             end
             function BrokenRender:render()
                 Scheduler.unstable_yieldValue('BrokenRender render [!]')
-                error('Hello')
+                error('Hello', 0)
             end
             function BrokenRender:UNSAFE_componentWillMount()
                 Scheduler.unstable_yieldValue(
@@ -538,7 +538,7 @@ return function()
                 Scheduler.unstable_yieldValue('BrokenUseEffect render')
                 React.useEffect(function()
                     Scheduler.unstable_yieldValue('BrokenUseEffect useEffect [!]')
-                    error('Hello')
+                    error('Hello', 0)
                 end)
 
                 return children
@@ -549,7 +549,7 @@ return function()
                 Scheduler.unstable_yieldValue('BrokenUseLayoutEffect render')
                 React.useLayoutEffect(function()
                     Scheduler.unstable_yieldValue('BrokenUseLayoutEffect useLayoutEffect [!]')
-                    error('Hello')
+                    error('Hello', 0)
                 end)
 
                 return children
@@ -837,9 +837,7 @@ return function()
             expect(root2.getChildren()[1]).toEqual(nil)
 
             -- ROBLOX deviation: using textContent helper in place of upstream .textContent()
-            -- ROBLOX TODO: when polyfill error object is adopted, change below to 'Caught an error: Hello.'
-            expect(textContent(root3):sub(1,16)).toEqual('Caught an error:')
-            expect(textContent(root3):sub(-6)).toEqual('Hello.')
+            expect(textContent(root3)).toEqual('Caught an error: Hello.')
 
             root1.render(React.createElement('span', nil, 'After 1'), root1)
             root2.render(React.createElement('span', nil, 'After 2'), root2)
@@ -865,9 +863,7 @@ return function()
             end).toErrorDev('The above error occurred in the <BrokenRender> component:', {logAllErrors = true})
 
             -- ROBLOX deviation: using textContent helper in place of upstream .textContent()
-            -- ROBLOX TODO: when polyfill error object is adopted, change below to 'Caught an error: Hello.'
-            expect(textContent(root):sub(1,16)).toEqual('Caught an error:')
-            expect(textContent(root):sub(-6)).toEqual('Hello.')
+            expect(textContent(root)).toEqual('Caught an error: Hello.')
             expect(Scheduler).toHaveYielded({
                 'ErrorBoundary constructor',
                 'ErrorBoundary componentWillMount',
@@ -894,9 +890,7 @@ return function()
             local root = ReactNoop.createLegacyRoot()
             root.render(React.createElement(ErrorBoundary, nil, React.createElement(BrokenRender)))
             -- ROBLOX deviation: using textContent helper in place of upstream .textContent()
-            -- ROBLOX TODO: when polyfill error object is adopted, change below to 'Caught an error: Hello.'
-            expect(textContent(root):sub(1,16)).toEqual('Caught an error:')
-            expect(textContent(root):sub(-6)).toEqual('Hello.')
+            expect(textContent(root)).toEqual('Caught an error: Hello.')
             expect(Scheduler).toHaveYielded({
                 'ErrorBoundary constructor',
                 'ErrorBoundary componentWillMount',
@@ -924,9 +918,7 @@ return function()
 
             root.render(React.createElement(ErrorBoundary, nil, React.createElement(BrokenConstructor)))
             -- ROBLOX deviation: using textContent helper in place of upstream .textContent()
-            -- ROBLOX TODO: when polyfill error object is adopted, change below to 'Caught an error: Hello.'
-            expect(textContent(root):sub(1,16)).toEqual('Caught an error:')
-            expect(textContent(root):sub(-6)).toEqual('Hello.')
+            expect(textContent(root)).toEqual('Caught an error: Hello.')
             expect(Scheduler).toHaveYielded({
                 'ErrorBoundary constructor',
                 'ErrorBoundary componentWillMount',
@@ -952,9 +944,7 @@ return function()
 
             root.render(React.createElement(ErrorBoundary, nil, React.createElement(BrokenComponentWillMount)))
             -- ROBLOX deviation: using textContent helper in place of upstream .textContent()
-            -- ROBLOX TODO: when polyfill error object is adopted, change below to 'Caught an error: Hello.'
-            expect(textContent(root):sub(1,16)).toEqual('Caught an error:')
-            expect(textContent(root):sub(-6)).toEqual('Hello.')
+            expect(textContent(root)).toEqual('Caught an error: Hello.')
             expect(Scheduler).toHaveYielded({
                 'ErrorBoundary constructor',
                 'ErrorBoundary componentWillMount',
@@ -988,7 +978,7 @@ return function()
                 return React.createElement('div', nil, self.props.children)
             end
             function BrokenComponentWillMountWithContext:UNSAFE_componentWillMount()
-                error('Hello')
+                error('Hello', 0)
             end
 
             BrokenComponentWillMountWithContext.childContextTypes = {
@@ -997,9 +987,7 @@ return function()
             }
 
             root.render(React.createElement(ErrorBoundary, nil, React.createElement(BrokenComponentWillMountWithContext)))
-            -- ROBLOX TODO: when polyfill error object is adopted, change below to 'Caught an error: Hello.'
-            expect(textContent(root):sub(1,16)).toEqual('Caught an error:')
-            expect(textContent(root):sub(-6)).toEqual('Hello.')
+            expect(textContent(root)).toEqual('Caught an error: Hello.')
         end)
         if not ReactFeatureFlags.disableModulePatternComponents then
             -- ROBLOX TODO: attempt to index function with 'contextType' -- function component error
@@ -1018,7 +1006,7 @@ return function()
                                 return React.createElement('div', nil, self.props.children)
                             end,
                             UNSAFE_componentWillMount = function()
-                                error('Hello')
+                                error('Hello', 0)
                             end,
                         }
                 end
@@ -1084,9 +1072,7 @@ return function()
 
             root.render(React.createElement(ErrorBoundary, nil, React.createElement(RetryErrorBoundary, nil, React.createElement(BrokenRender))))
             -- ROBLOX deviation: using textContent helper in place of upstream .textContent()
-            -- ROBLOX TODO: when polyfill error object is adopted, change below to 'Caught an error: Hello.'
-            expect(textContent(root):sub(1,16)).toEqual('Caught an error:')
-            expect(textContent(root):sub(-6)).toEqual('Hello.')
+            expect(textContent(root)).toEqual('Caught an error: Hello.')
             expect(Scheduler).toHaveYielded({
                 'ErrorBoundary constructor',
                 'ErrorBoundary componentWillMount',
@@ -1123,9 +1109,7 @@ return function()
             local root = ReactNoop.createLegacyRoot()
             root.render(React.createElement(ErrorBoundary, nil, React.createElement(BrokenComponentWillMountErrorBoundary)))
             -- ROBLOX deviation: using textContent helper in place of upstream .textContent()
-            -- ROBLOX TODO: when polyfill error object is adopted, change below to 'Caught an error: Hello.'
-            expect(textContent(root):sub(1,16)).toEqual('Caught an error:')
-            expect(textContent(root):sub(-6)).toEqual('Hello.')
+            expect(textContent(root)).toEqual('Caught an error: Hello.')
             expect(Scheduler).toHaveYielded({
                 'ErrorBoundary constructor',
                 'ErrorBoundary componentWillMount',
@@ -1152,9 +1136,7 @@ return function()
 
             root.render(React.createElement(ErrorBoundary, nil, React.createElement(BrokenRenderErrorBoundary, nil, React.createElement(BrokenRender))))
             -- ROBLOX deviation: using textContent helper in place of upstream .textContent()
-            -- ROBLOX TODO: when polyfill error object is adopted, change below to 'Caught an error: Hello.'
-            expect(textContent(root):sub(1,16)).toEqual('Caught an error:')
-            expect(textContent(root):sub(-6)).toEqual('Hello.')
+            expect(textContent(root)).toEqual('Caught an error: Hello.')
             expect(Scheduler).toHaveYielded({
                 'ErrorBoundary constructor',
                 'ErrorBoundary componentWillMount',
@@ -1189,9 +1171,7 @@ return function()
 
             root.render(React.createElement(ErrorBoundary, nil, React.createElement(Normal), React.createElement(BrokenRender), React.createElement(Normal)))
             -- ROBLOX deviation: using textContent helper in place of upstream .textContent()
-            -- ROBLOX TODO: when polyfill error object is adopted, change below to 'Caught an error: Hello.'
-            expect(textContent(root):sub(1,16)).toEqual('Caught an error:')
-            expect(textContent(root):sub(-6)).toEqual('Hello.')
+            expect(textContent(root)).toEqual('Caught an error: Hello.')
             expect(Scheduler).toHaveYielded({
                 'ErrorBoundary constructor',
                 'ErrorBoundary componentWillMount',
@@ -1240,9 +1220,7 @@ return function()
 
             root.render(React.createElement(ErrorBoundary, {errorMessageRef = errorMessageRef}, React.createElement('div', {ref = childRef}), React.createElement(BrokenRender)))
             -- ROBLOX deviation: using textContent helper in place of upstream .textContent()
-            -- ROBLOX TODO: when polyfill error object is adopted, change below to 'Caught an error: Hello.'
-            expect(textContent(root):sub(1,16)).toEqual('Caught an error:')
-            expect(textContent(root):sub(-6)).toEqual('Hello.')
+            expect(textContent(root)).toEqual('Caught an error: Hello.')
             expect(Scheduler).toHaveYielded({
                 'ErrorBoundary constructor',
                 'ErrorBoundary componentWillMount',
@@ -1274,9 +1252,7 @@ return function()
 
             root.render(React.createElement(ErrorBoundary, {errorMessageRef = errorMessageRef}, React.createElement('div', {ref = childRef}), React.createElement(BrokenRender)))
             -- ROBLOX deviation: using textContent helper in place of upstream .textContent()
-            -- ROBLOX TODO: when polyfill error object is adopted, change below to 'Caught an error: Hello.'
-            expect(textContent(root):sub(1,16)).toEqual('Caught an error:')
-            expect(textContent(root):sub(-6)).toEqual('Hello.')
+            expect(textContent(root)).toEqual('Caught an error: Hello.')
             expect(Scheduler).toHaveYielded({
                 'ErrorBoundary constructor',
                 'ErrorBoundary componentWillMount',
@@ -1333,9 +1309,7 @@ return function()
             }), React.createElement(BrokenConstructor)))
 
             -- ROBLOX deviation: using textContent helper in place of upstream .textContent()
-            -- ROBLOX TODO: when polyfill error object is adopted, change below to 'Caught an error: Hello.'
-            expect(textContent(root):sub(1,16)).toEqual('Caught an error:')
-            expect(textContent(root):sub(-6)).toEqual('Hello.')
+            expect(textContent(root)).toEqual('Caught an error: Hello.')
             expect(Scheduler).toHaveYielded({
                 'ErrorBoundary componentWillReceiveProps',
                 'ErrorBoundary componentWillUpdate',
@@ -1374,9 +1348,7 @@ return function()
             root.render(React.createElement(ErrorBoundary, nil, React.createElement(Normal), React.createElement(Normal, {
                 logName = 'Normal2',
             }), React.createElement(BrokenComponentWillMount)))
-            -- ROBLOX TODO: when polyfill error object is adopted, change below to 'Caught an error: Hello.'
-            expect(textContent(root):sub(1,16)).toEqual('Caught an error:')
-            expect(textContent(root):sub(-6)).toEqual('Hello.')
+            expect(textContent(root)).toEqual('Caught an error: Hello.')
             expect(Scheduler).toHaveYielded({
                 'ErrorBoundary componentWillReceiveProps',
                 'ErrorBoundary componentWillUpdate',
@@ -1414,9 +1386,7 @@ return function()
             root.render(React.createElement(ErrorBoundary, nil, React.createElement(Normal), React.createElement(BrokenComponentWillReceiveProps)))
             Scheduler.unstable_clearYields()
             root.render(React.createElement(ErrorBoundary, nil, React.createElement(Normal), React.createElement(BrokenComponentWillReceiveProps)))
-            -- ROBLOX TODO: when polyfill error object is adopted, change below to 'Caught an error: Hello.'
-            expect(textContent(root):sub(1,16)).toEqual('Caught an error:')
-            expect(textContent(root):sub(-6)).toEqual('Hello.')
+            expect(textContent(root)).toEqual('Caught an error: Hello.')
             expect(Scheduler).toHaveYielded({
                 'ErrorBoundary componentWillReceiveProps',
                 'ErrorBoundary componentWillUpdate',
@@ -1450,9 +1420,7 @@ return function()
             root.render(React.createElement(ErrorBoundary, nil, React.createElement(Normal), React.createElement(BrokenComponentWillUpdate)))
             Scheduler.unstable_clearYields()
             root.render(React.createElement(ErrorBoundary, nil, React.createElement(Normal), React.createElement(BrokenComponentWillUpdate)))
-            -- ROBLOX TODO: when polyfill error object is adopted, change below to 'Caught an error: Hello.'
-            expect(textContent(root):sub(1,16)).toEqual('Caught an error:')
-            expect(textContent(root):sub(-6)).toEqual('Hello.')
+            expect(textContent(root)).toEqual('Caught an error: Hello.')
             expect(Scheduler).toHaveYielded({
                 'ErrorBoundary componentWillReceiveProps',
                 'ErrorBoundary componentWillUpdate',
@@ -1488,9 +1456,7 @@ return function()
             root.render(React.createElement(ErrorBoundary, nil, React.createElement(Normal), React.createElement(Normal, {
                 logName = 'Normal2',
             }), React.createElement(BrokenRender)))
-            -- ROBLOX TODO: when polyfill error object is adopted, change below to 'Caught an error: Hello.'
-            expect(textContent(root):sub(1,16)).toEqual('Caught an error:')
-            expect(textContent(root):sub(-6)).toEqual('Hello.')
+            expect(textContent(root)).toEqual('Caught an error: Hello.')
             expect(Scheduler).toHaveYielded({
                 'ErrorBoundary componentWillReceiveProps',
                 'ErrorBoundary componentWillUpdate',
@@ -1550,9 +1516,7 @@ return function()
                 'ErrorBoundary componentDidMount',
             })
             root.render(React.createElement(ErrorBoundary, {errorMessageRef = errorMessageRef}, React.createElement('div', {ref = child1Ref}), React.createElement('div', {ref = child2Ref}), React.createElement(BrokenRender)))
-            -- ROBLOX TODO: when polyfill error object is adopted, change below to 'Caught an error: Hello.'
-            expect(textContent(root):sub(1,16)).toEqual('Caught an error:')
-            expect(textContent(root):sub(-6)).toEqual('Hello.')
+            expect(textContent(root)).toEqual('Caught an error: Hello.')
             expect(Scheduler).toHaveYielded({
                 'ErrorBoundary componentWillReceiveProps',
                 'ErrorBoundary componentWillUpdate',
@@ -1585,9 +1549,7 @@ return function()
             root.render(React.createElement(ErrorBoundary, nil, React.createElement(BrokenComponentWillUnmount), React.createElement(BrokenComponentWillUnmount), React.createElement(Normal)))
             Scheduler.unstable_clearYields()
             root.render(React.createElement(ErrorBoundary, nil, React.createElement(BrokenComponentWillUnmount)))
-            -- ROBLOX TODO: when polyfill error object is adopted, change below to 'Caught an error: Hello.'
-            expect(textContent(root):sub(1,16)).toEqual('Caught an error:')
-            expect(textContent(root):sub(-6)).toEqual('Hello.')
+            expect(textContent(root)).toEqual('Caught an error: Hello.')
             expect(Scheduler).toHaveYielded({
                 'ErrorBoundary componentWillReceiveProps',
                 'ErrorBoundary componentWillUpdate',
@@ -1632,9 +1594,7 @@ return function()
             root.render(React.createElement(ErrorBoundary, nil, React.createElement(Normal, nil, React.createElement(BrokenComponentWillUnmount)), React.createElement(BrokenComponentWillUnmount)))
             Scheduler.unstable_clearYields()
             root.render(React.createElement(ErrorBoundary, nil, React.createElement(Normal, nil, React.createElement(BrokenComponentWillUnmount))))
-            -- ROBLOX TODO: when polyfill error object is adopted, change below to 'Caught an error: Hello.'
-            expect(textContent(root):sub(1,16)).toEqual('Caught an error:')
-            expect(textContent(root):sub(-6)).toEqual('Hello.')
+            expect(textContent(root)).toEqual('Caught an error: Hello.')
             expect(Scheduler).toHaveYielded({
                 'ErrorBoundary componentWillReceiveProps',
                 'ErrorBoundary componentWillUpdate',
@@ -1699,9 +1659,7 @@ return function()
                 logName = 'InnerErrorBoundary',
                 renderError = renderInnerError,
             })))
-            -- ROBLOX TODO: when polyfill error object is adopted, change below to 'Caught an inner error: Hello.'
-            expect(textContent(root):sub(1,22)).toEqual('Caught an inner error:')
-            expect(textContent(root):sub(-6)).toEqual('Hello.')
+            expect(textContent(root)).toEqual('Caught an inner error: Hello.')
             expect(Scheduler).toHaveYielded({
                 -- Update outer boundary
                 'OuterErrorBoundary componentWillReceiveProps',
@@ -1740,9 +1698,7 @@ return function()
             root.render(React.createElement(ErrorBoundary, nil, React.createElement(BrokenRender)))
             root.render(React.createElement(ErrorBoundary, nil, React.createElement(Normal)))
             -- Error boundary doesn't retry by itself
-            -- ROBLOX TODO: when polyfill error object is adopted, change below to 'Caught an error: Hello.'
-            expect(textContent(root):sub(1,16)).toEqual('Caught an error:')
-            expect(textContent(root):sub(-6)).toEqual('Hello.')            
+            expect(textContent(root)).toEqual('Caught an error: Hello.')
             -- Force the success path:
             Scheduler.unstable_clearYields()
 
@@ -1775,13 +1731,9 @@ return function()
             -- ROBLOX deviation: using legacy root of Noop renderer instead of ReactDOM
             local root = ReactNoop.createLegacyRoot()
             root.render(React.createElement(ErrorBoundary, nil, React.createElement(BrokenRender)))
-            -- ROBLOX TODO: when polyfill error object is adopted, change below to 'Caught an error: Hello.'
-            expect(textContent(root):sub(1,16)).toEqual('Caught an error:')
-            expect(textContent(root):sub(-6)).toEqual('Hello.')
+            expect(textContent(root)).toEqual('Caught an error: Hello.')
             root.render(React.createElement(ErrorBoundary, nil, React.createElement(BrokenRender)))
-            -- ROBLOX TODO: when polyfill error object is adopted, change below to 'Caught an error: Hello.'
-            expect(textContent(root):sub(1,16)).toEqual('Caught an error:')
-            expect(textContent(root):sub(-6)).toEqual('Hello.')
+            expect(textContent(root)).toEqual('Caught an error: Hello.')
 
             -- ROBLOX deviation: render nil to clear children for textContent
             root.render(nil)
@@ -1797,9 +1749,7 @@ return function()
 
             root.render(React.createElement(ErrorBoundary, nil, React.createElement(Normal), React.createElement(BrokenComponentWillUnmount), React.createElement(Normal)))
             root.render(React.createElement(ErrorBoundary))
-            -- ROBLOX TODO: when polyfill error object is adopted, change below to 'Caught an error: Hello.'
-            expect(textContent(root):sub(1,16)).toEqual('Caught an error:')
-            expect(textContent(root):sub(-6)).toEqual('Hello.')
+            expect(textContent(root)).toEqual('Caught an error: Hello.')
             Scheduler.unstable_clearYields()
             root.render(nil)
             expect(Scheduler).toHaveYielded({
@@ -1813,9 +1763,7 @@ return function()
             local root = ReactNoop.createLegacyRoot()
             root.render(React.createElement(ErrorBoundary))
             root.render(React.createElement(ErrorBoundary, nil, React.createElement(Normal), React.createElement(BrokenRender), React.createElement(Normal)))
-            -- ROBLOX TODO: when polyfill error object is adopted, change below to 'Caught an error: Hello.'
-            expect(textContent(root):sub(1,16)).toEqual('Caught an error:')
-            expect(textContent(root):sub(-6)).toEqual('Hello.')
+            expect(textContent(root)).toEqual('Caught an error: Hello.')
             Scheduler.unstable_clearYields()
             root.render(nil)
             expect(Scheduler).toHaveYielded({
@@ -1830,7 +1778,7 @@ return function()
             local MaybeBrokenRender = React.Component:extend("MaybeBrokenRender")
             function MaybeBrokenRender:render()
                 if fail_ then
-                    error('Hello')
+                    error('Hello', 0)
                 end
 
                 return React.createElement('div', nil, self.props.children)
@@ -1869,9 +1817,7 @@ return function()
             fail_ = true
 
             root.render(React.createElement(ErrorBoundary, nil, getAMixOfNormalAndBrokenRenderElements()))
-            -- ROBLOX TODO: when polyfill error object is adopted, change below to 'Caught an error: Hello.'
-            expect(textContent(root):sub(1,16)).toEqual('Caught an error:')
-            expect(textContent(root):sub(-6)).toEqual('Hello.')
+            expect(textContent(root)).toEqual('Caught an error: Hello.')
             Scheduler.unstable_clearYields()
             root.render(nil)
             expect(Scheduler).toHaveYielded({
@@ -1890,7 +1836,7 @@ return function()
             function Stateful:render()
                 if fail_ then
                     Scheduler.unstable_yieldValue('Stateful render [!]')
-                    error('Hello')
+                    error('Hello', 0)
                 end
 
                 return React.createElement('div', nil, self.props.children)
@@ -2057,9 +2003,7 @@ return function()
                 'ErrorBoundary render error',
                 'ErrorBoundary componentDidUpdate',
             })
-            -- ROBLOX TODO: when polyfill error object is adopted, change below to 'Caught an error: Hello.'
-            expect(textContent(root):sub(1,16)).toEqual('Caught an error:')
-            expect(textContent(root):sub(-6)).toEqual('Hello.')
+            expect(textContent(root)).toEqual('Caught an error: Hello.')
         end)
         it('propagates errors inside boundary during componentDidMount', function()
             local expect: any = expect
@@ -2072,9 +2016,7 @@ return function()
                     return React.createElement('div', nil, 'We should never catch our own error: ', error_.message, '.')
                 end,
             })))
-            -- ROBLOX TODO: when polyfill error object is adopted, change below to 'Caught an error: Hello.'
-            expect(textContent(root):sub(1,16)).toEqual('Caught an error:')
-            expect(textContent(root):sub(-6)).toEqual('Hello.')
+            expect(textContent(root)).toEqual('Caught an error: Hello.')
             expect(Scheduler).toHaveYielded({
                 'ErrorBoundary constructor',
                 'ErrorBoundary componentWillMount',
@@ -2142,14 +2084,7 @@ return function()
             }), React.createElement(BrokenComponentDidUpdate, {
                 errorText = 'E4',
             }))))
-            -- ROBLOX TODO: when polyfill error object is adopted, simplify below to expect(textContent(root))
-            local textResult = textContent(root)
-            expect(
-                textResult:sub(1, 28) ..
-                textResult:sub(129, 131) ..
-                textResult:sub(132,157) ..
-                textResult:sub(-3)
-            ).toEqual('Caught an unmounting error: E2.' .. 'Caught an updating error: E4.')
+            expect(textContent(root)).toEqual('Caught an unmounting error: E2.Caught an updating error: E4.')
             expect(Scheduler).toHaveYielded({
                 -- Begin update phase
                 'OuterErrorBoundary componentWillReceiveProps',
@@ -2307,7 +2242,6 @@ return function()
 
             end)
             if not ok then
-                -- ROBLOX TODO: when polyfill error object is adopted, change below to 'Caught an error: Hello.'
                 if not result:sub(-#'parent sad') == 'parent sad' and not result:sub(-#'child sad') == 'child sad' then
                     error(result)
                 end
@@ -2319,7 +2253,6 @@ return function()
                 'parent sad',
             })
             -- Error should be the first thrown
-            -- ROBLOX TODO: when polyfill error object is adopted, change below to 'Caught an error: Hello.'
             expect(caughtError:sub(-#'child sad')).toEqual('child sad')
         end)
         it('propagates uncaught error inside unbatched initial mount', function()
@@ -2373,7 +2306,6 @@ return function()
                 root.render(React.createElement(Parent, {value = 2}))
             end)
             if not ok then
-                -- ROBLOX TODO: when polyfill error object is adopted, change below to 'e.message !== 'parent sad' && e.message !== 'child sad''
                 if not result:sub(-#'parent sad') == 'parent sad' and not result:sub(-#'child sad') == 'child sad' then
                     error(result)
                 end
@@ -2384,7 +2316,6 @@ return function()
                 'parent sad',
             })
             -- Error should be the first thrown
-            -- ROBLOX TODO: when polyfill error object is adopted, change below to expect(caughtError.message).toBe('child sad');
             expect(caughtError:sub(-#'child sad')).toEqual('child sad')
         end)
         -- ROBLOX TODO: Gets right warning, but also warns about error that 'Throws' function throws which doesn't happen upstream
@@ -2485,7 +2416,6 @@ return function()
             end
 
             root.render(React.createElement(ErrorBoundary, nil, React.createElement(EvilErrorBoundary, nil, React.createElement(Throws))))
-            -- ROBLOX TODO: when polyfill error object is adopted, change below to 'Caught an error: gotta catch em all.'
             expect(textContent(root):sub(1,16)).toEqual('Caught an error:')
             expect(textContent(root):sub(-19)).toEqual('gotta catch em all.')
         end)
