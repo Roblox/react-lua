@@ -17,7 +17,9 @@ local ReactNoop
 -- local act
 local Scheduler
 local Packages = Workspace.Parent
-local Array = require(Packages.LuauPolyfill).Array
+local LuauPolyfill = require(Packages.LuauPolyfill)
+local Array = LuauPolyfill.Array
+
 local ReactFeatureFlags = require(Workspace.Shared.ReactFeatureFlags)
 
 local textContent = function(node)
@@ -990,7 +992,7 @@ return function()
             expect(textContent(root)).toEqual('Caught an error: Hello.')
         end)
         if not ReactFeatureFlags.disableModulePatternComponents then
-            -- ROBLOX TODO: attempt to index function with 'contextType' -- function component error
+            -- ROBLOX TODO: toErrorDev expects name of function component, needs LUAFDN-207
             xit('renders an error state if module-style context provider throws in componentWillMount', function()
                 local expect: any = expect
 
@@ -1689,8 +1691,7 @@ return function()
                 'InnerErrorBoundary componentWillUnmount',
             })
         end)
-        -- ROBLOX TODO: text content contains 'Caught an error' when it shouldn't. Error is from BrokenRender -- maybe has to do with using legacyRoot?
-        xit('can recover from error state', function()
+        it('can recover from error state', function()
             local expect: any = expect
 
             -- ROBLOX deviation: using legacy root of Noop renderer instead of ReactDOM
@@ -1702,10 +1703,12 @@ return function()
             -- Force the success path:
             Scheduler.unstable_clearYields()
 
+            -- ROBLOX deviation: DOM renderer clears root children on each rerender, so we have to check the newly added child's text content
+            expect(#root.getChildren()[1].children).toEqual(3)
             root.render(React.createElement(ErrorBoundary, {forceRetry = true}, React.createElement(Normal)))
+            expect(#root.getChildren()[1].children).toEqual(4)
+            expect(root.getChildren()[1].children[4].text).toEqual(nil)
 
-            -- ROBLOX deviation: using find to translate toContain
-            expect(textContent(root):find('Caught an error')).toEqual(nil)
             expect(Scheduler).toHaveYielded({
                 'ErrorBoundary componentWillReceiveProps',
                 'ErrorBoundary componentWillUpdate',
@@ -1953,22 +1956,26 @@ return function()
                 'ErrorBoundary componentWillUnmount',
             })
         end)
-        -- ROBLOX TODO: not getting to useEffect callback - maybe has to do with legacyRoot?
+        -- ROBLOX TODO: Eyeballing result shows expected functionality. ReactNoop.act() doesn't flush in the same way 
+        -- that ReactDOM's act method does; need to resolve this with either ReactDOM port or closer match of act() in another renderer
         xit('catches errors in useEffect', function()
             local expect: any = expect
 
             -- ROBLOX deviation: using legacy root of Noop renderer instead of ReactDOM
             local root = ReactNoop.createLegacyRoot()
-            root.render(React.createElement(ErrorBoundary, nil, React.createElement(BrokenUseEffect, nil, 'Initial value')))
-            expect(Scheduler).toHaveYielded({
-                'ErrorBoundary constructor',
-                'ErrorBoundary componentWillMount',
-                'ErrorBoundary render success',
-                'BrokenUseEffect render',
-                'ErrorBoundary componentDidMount',
-            })
-            expect(textContent(root)).toEqual('Initial value')
-            Scheduler.unstable_clearYields()
+            ReactNoop.act(function()
+                root.render(React.createElement(ErrorBoundary, nil, React.createElement(BrokenUseEffect, nil, 'Initial value')))
+                expect(Scheduler).toHaveYielded({
+                    'ErrorBoundary constructor',
+                    'ErrorBoundary componentWillMount',
+                    'ErrorBoundary render success',
+                    'BrokenUseEffect render',
+                    'ErrorBoundary componentDidMount',
+                })
+                expect(textContent(root)).toEqual('Initial value')
+                Scheduler.unstable_clearYields()
+                
+            end)
 
             -- verify flushed passive effects and handle the error
             expect(Scheduler).toHaveYielded({
@@ -2257,7 +2264,7 @@ return function()
         end)
         it('propagates uncaught error inside unbatched initial mount', function()
             local function Foo()
-                error('foo error')
+                error('foo error', 0)
             end
 
             local expect: any = expect
@@ -2318,10 +2325,9 @@ return function()
             -- Error should be the first thrown
             expect(caughtError:sub(-#'child sad')).toEqual('child sad')
         end)
-        -- ROBLOX TODO: Gets right warning, but also warns about error that 'Throws' function throws which doesn't happen upstream
-        xit('should warn if an error boundary with only componentDidCatch does not update state', function()
+        it('should warn if an error boundary with only componentDidCatch does not update state', function()
             local expect: any = expect
-            local InvalidErrorBoundary = React.Component:extend("Child")
+            local InvalidErrorBoundary = React.Component:extend("InvalidErrorBoundary")
 
             function InvalidErrorBoundary:componentDidCatch(error, info)
                 -- This component does not define getDerivedStateFromError().
@@ -2339,9 +2345,18 @@ return function()
             -- ROBLOX deviation: using legacy root of Noop renderer instead of ReactDOM
             local root = ReactNoop.createLegacyRoot()
 
+            -- deviation: ReactNoop runs with a StrictMode root and logs more warnings
             expect(function()
                 root.render(React.createElement(InvalidErrorBoundary, nil, React.createElement(Throws)))
-            end).toErrorDev('InvalidErrorBoundary: Error boundaries should implement getDerivedStateFromError(). ' .. 'In that method, return a state update to display an error message or fallback UI.')
+            end).toErrorDev({'Warning: The above error occurred in one of your React components:\
+\
+    in LoadedCode.RoactAlignment.Packages.Modules.ReactReconciler.__tests__.ReactErrorBoundaries-internal.spec (at **)\
+    in InvalidErrorBoundary (at **)\
+\
+React will try to recreate this component tree from scratch using the error boundary you provided, InvalidErrorBoundary.\
+    in InvalidErrorBoundary (at **)',
+    'Warning: InvalidErrorBoundary: Error boundaries should implement getDerivedStateFromError(). In that method, return a state update to display an error message or fallback UI.'
+            })
             expect(textContent(root)).toEqual('')
         end)
         it('should call both componentDidCatch and getDerivedStateFromError if both exist on a component', function()
@@ -2373,18 +2388,17 @@ return function()
             end
 
             -- ROBLOX deviation: using a string 'expected' thrownError in place of JS's error object.
-            -- ROBLOX TODO: change this to error object
             local thrownError = 'expected'
             local Throws = function()
-                error(thrownError)
+                error(thrownError, 0)
             end
 
             root.render(React.createElement(ErrorBoundaryWithBothMethods, nil, React.createElement(Throws)))
             expect(textContent(root)).toEqual('ErrorBoundary')
 
             -- ROBLOX deviation: using a string 'expected' thrownError in place of JS's error object.
-            expect(componentDidCatchError:sub(-8)).toEqual('expected')
-            expect(getDerivedStateFromErrorError:sub(-8)).toEqual('expected')
+            expect(componentDidCatchError).toEqual('expected')
+            expect(getDerivedStateFromErrorError).toEqual('expected')
         end)
         -- ROBLOX TODO: ReactDOMComponent not translated
         xit('should catch errors from invariants in completion phase', function()
@@ -2403,12 +2417,12 @@ return function()
             local root = ReactNoop.createLegacyRoot()
             local thrownError = 'original error'
             local Throws = function()
-                error(thrownError)
+                error(thrownError, 0)
             end
             local EvilErrorBoundary = React.Component:extend("EvilErrorBoundary")
 
             function EvilErrorBoundary:componentDidCatch()
-                error('gotta catch em all')
+                error('gotta catch em all', 0)
             end
 
             function EvilErrorBoundary:render()
@@ -2416,22 +2430,27 @@ return function()
             end
 
             root.render(React.createElement(ErrorBoundary, nil, React.createElement(EvilErrorBoundary, nil, React.createElement(Throws))))
-            expect(textContent(root):sub(1,16)).toEqual('Caught an error:')
-            expect(textContent(root):sub(-19)).toEqual('gotta catch em all.')
+            expect(textContent(root)).toEqual('Caught an error: gotta catch em all.')
         end)
-        -- ROBLOX TODO: tests pass, but displayName is never called. Does this have to do with the translation from a function component
-        -- to a class component?
+        -- ROBLOX TODO: when focused this test passes, however it causes 'runAllTimers flushes all scheduled callbacks' and
+        -- 'executes callbacks in order of priority' tests to fail in SchedulerNoDOM
         xit('should protect errors from errors in the stack generation', function()
             local expect: any = expect
 
             -- ROBLOX deviation: using legacy root of Noop renderer instead of ReactDOM
             local root = ReactNoop.createLegacyRoot()
-            local evilError = {
+            local evilError = setmetatable({
                 message = 'gotta catch em all',
-                stack = function()
-                    error('gotta catch em all')
+            }, {
+                __index = function(mytable, key)
+                    -- ROBLOX TODO: when we convert to LuauPolyfill errors, ensure this stack error is handled correctly
+                    if key == 'stack' then
+                        error('gotta catch em all')
+                    else
+                        return mytable
+                    end
                 end,
-            }
+            })
 
             -- ROBLOX deviation: uses Class component instead of functional component so we can set displayName
             local Throws = React.Component:extend("Throws")
@@ -2439,10 +2458,10 @@ return function()
                 error(evilError)
             end
 
-            setmetatable(Throws, {
+            Throws = setmetatable(Throws, {
                 __index = function(mytable, key)
                     if key == 'displayName' then
-                        error('gotta catch em all')
+                        error('gotta catch em all', 0)
                     else
                         return Throws
                     end
@@ -2454,6 +2473,7 @@ return function()
             end
 
             root.render(React.createElement(ErrorBoundary, nil, React.createElement(Wrapper)))
+            -- ROBLOX deviation: using textContent helper in place of upstream .textContent()
             expect(textContent(root)).toEqual('Caught an error: gotta catch em all.')
         end)
         -- @gate skipUnmountedBoundaries

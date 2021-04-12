@@ -121,7 +121,7 @@ local function getComponentName(type)
 			-- to check for that here and use the name the component was
 			-- assigned.
 			if type.isReactComponent then
-				return tostring(type)
+				return type.displayName or tostring(type)
 			end
 		end
 	end
