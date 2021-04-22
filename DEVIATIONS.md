@@ -5,6 +5,7 @@ Upstream naming and logic has some deviations and incompatibilities with existin
 ## Naming
 
 ### Component Lifecycle
+**Status:** ❔ Alignment Strategy TBD
 
 A portion of the component lifecycle methods exclude the `component` part of their name in Roact.
 
@@ -32,6 +33,8 @@ There are a few clear options:
 3. Deviate wholly on these function names in the alignment effort, using Roact's established names. This creates a gap with React user expectations that we'll have to bridge carefully with documentation and possibly warnings (though, one could argue, option 1 causes the same problem with existing Roact users).
 
 ### Reserved Prop Keys: "ref"
+**Status:** ❔ Alignment Strategy TBD
+
 Upstream React reserves the prop key "ref". In Roact the "ref" key is replaced by a Symbol exported as part of the API and applied as a prop with the key `[Roact.Ref]`. This means that there's no need to reserve a key, because the key is already unique and has a special meaning.
 
 In Roact, the equivalent key is also only meaningful on host components, leading to some deviations around [Ref Forwarding](#ref-forwarding).
@@ -76,6 +79,8 @@ This would be blocked by refactors to remove any existing uses of the `ref` key,
 This alignment effort should be considered in tandem with that of [ref forwarding logic](#ref-forwarding).
 
 ### Reserved Prop Keys: "key"
+**Status:** ❔ Alignment Strategy TBD
+
 Upstream React reserves the prop key "key". In Roact, "key" has no special meaning.
 
 In React (with the HTML DOM), the order of provided children is meaningful to the resulting layout of host components in the element tree. In Roblox, however, order does not have any relevance on its own.
@@ -95,6 +100,8 @@ However, we may instead consider providing a `Roact.Key` symbol key that can be 
 For any approach to stable key assignment, we should additionally support Roact's approach. This alignment effort should be considered in tandem with that of [stable keys](#stable-keys)
 
 ### Reserved Prop Keys: "children"
+**Status:** ❔ Alignment Strategy TBD
+
 Upstream React [reserves the prop key "children"](https://reactjs.org/docs/glossary.html#propschildren). In Roact the "children" key is replaced by a Symbol exported as part of the API and applied as a prop with the key `[Roact.Children]`. This means that there's no need to reserve a key, because the key is already unique and has a special meaning.
 
 In both upstream React and current Roact, `createElement` has an optional third argument for specifying children _separately_ from other props. This is used in the vast majority of cases for Roact code, is often made irrelevant by JSX (as is `createElement` altogether) in React code.
@@ -127,6 +134,8 @@ The most straightforward approach would be to export `Roact.Children` with a val
 ## Behavior
 
 ### _context (Roact only)
+**Status:** ❔ Alignment Strategy TBD
+
 In Roact, the "old" context behavior was a `_context` field defined on every class component instance. To provide context, a component would mutate its `_context` field in `init`:
 ```lua
 function MyProvider:init()
@@ -165,6 +174,8 @@ We'll likely have to modernize all existing uses of `_context` to instead use th
 This is likely the biggest refactor effort that the Lua Apps adoption is contingent on. It also incurs some knock-on efforts on projects that the App depends upon, like [roact-rodux](https://github.com/roblox/roact-rodux/issues/26), which has some work completed, [but with unaddressed backwards compatibility problems](https://github.com/Roblox/roact-rodux/pull/38#issuecomment-644902307).
 
 ### Fragments
+**Status:** ❔ Alignment Strategy TBD
+
 React allows a component to return multiple top-level elements as a special kind of component referred to as a "fragment", which will be siblings within the parent they're rendered into (more in the [React documentation](https://reactjs.org/docs/fragments.html)).
 
 Roact similarly allows this, but since it expects those sibling elements to be in a particular format, and exposes an API called `Roact.createFragment` to allow this.
@@ -211,6 +222,8 @@ end
 This would be a simple compatibility layer that should require very little maintenance.
 
 ### Ref Forwarding
+**Status:** ❔ Alignment Strategy TBD
+
 Ref forwarding is possible in React via the [`forwardRef` API](https://reactjs.org/docs/forwarding-refs.html).
 
 In Roact, however, Refs only work properly on Host components to begin with. For this reason, naming a function or class component's prop `[Roact.Ref]` (the [ref keyword equivalent](#reserved-prop-keys-ref)) would cause it to behave like any old prop. It was possible to forward refs from a class or function component by accepting a ref via the typical ref prop, and pass it on to an underlying host component.
@@ -264,6 +277,8 @@ Alternative 2: Align to `Roact.Ref`, which deviates slightly from upstream but d
 3. Implement refs in roact-alignment in terms of the key `[Roact.Ref]` _instead of_ using the reserved `ref` keyword. This is an API deviation from upstream, so it requires user-facing documentation.
 
 ### Stable Keys
+**Status:** ✔️ Resolved (backwards compatible)
+
 In React, the [reserved "key" prop](#reserved-prop-keys-key) is used to provide stable identities to DOM elements. This provides better performance when list-like data is reordered; React knows to move identified elements instead of simply changing the props of each element at each position to line up with the new ordering (more info in the [React documentation](https://reactjs.org/docs/lists-and-keys.html)).
 
 Since order has no inherent meaning in Roblox's DOM, Roact generally expects children to be provided as a map, where the keys to the map are the stable keys associated with the elements. This behavior is used instead of a reserved "key" prop (more info in the [Roact documentation](https://roblox.github.io/roact/performance/reduce-reconciliation/#stable-keys)).
@@ -323,9 +338,11 @@ Any time children are provided as a table (including mixed tables or sparse arra
 
 In the event that both a table key and the `key` prop are provided to the same element, we should through a warning in DEV mode that aligns with similar warnings for un-keyed children.
 
-An implementation of this approach is being developed in [#68](https://github.com/Roblox/roact-alignment/pull/68).
+An implementation of this approach was merged in [#68](https://github.com/Roblox/roact-alignment/pull/68).
 
 ### Use of setState
+**Status:** ❔ Alignment Strategy TBD
+
 In React, `setState` is not allowed inside a constructor. Instead, it is recommended to assign directly to `this.state` (more info in the [React documentation](https://reactjs.org/docs/react-component.html#constructor))
 
 Roact allows the use of `setState` in `init`, which is its equivalent to a class component constructor. In Roact, calling setState was deemed to be slightly more correct, since it would interact correctly with `getDerivedStateFromProps`. Roact also allows `self.state` to be assigned in `init` for backwards compatibility.
@@ -381,4 +398,19 @@ _(section needs filling in...)_
 ...
 
 ### Memo
+...
+
+### Lazy
+...
+
+### Suspense
+...
+
+### Error Boundaries
+...
+
+### DEV mode
+...
+
+### Better Error Messages
 ...
