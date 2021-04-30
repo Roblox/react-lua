@@ -6,8 +6,11 @@ local Module = require(script.Module)
 -- hitting the Module's cache
 local require = Module.requireOverride
 
+local createSpy = require(script.createSpy)
 local RobloxJest = {
-	createSpy = require(script.createSpy),
+	createSpy = createSpy,
+	-- This is the actual jest api
+	fn = createSpy,
 	Matchers = {
 		toEqual = require(script.Matchers.toEqual),
 		toThrow = require(script.Matchers.toThrow),

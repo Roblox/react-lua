@@ -9,7 +9,7 @@ content_root = "modules"
 
 [dependencies]
 Cryo = "github.com/roblox/cryo@1.0"
-LuauPolyfill = "github.com/roblox/luau-polyfill@0.1.1"
+LuauPolyfill = "github.com/roblox/luau-polyfill@0.2.0"
 Promise = "github.com/evaera/roblox-lua-promise@3.1.0"
 
 [dev_dependencies]

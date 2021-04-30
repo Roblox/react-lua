@@ -147,4 +147,6 @@ exports.enableEagerRootListeners = false
 
 exports.disableSchedulerTimeoutInWorkLoop = false
 
+exports.enableDoubleInvokingEffects = false
+
 return exports
