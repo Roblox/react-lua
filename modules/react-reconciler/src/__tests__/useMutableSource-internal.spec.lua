@@ -391,24 +391,32 @@ return function ()
             local mutableSource = createMutableSource(source, function(param)
                 return param.version
             end)
-            local unsubscribeA = RobloxJest.fn()
-            local subscribeA = RobloxJest.fn(function(s)
-                local unsubscribe = defaultSubscribe(s)
 
-                return function()
-                    unsubscribe()
-                    unsubscribeA()
-                end
-            end)
-            local unsubscribeB = RobloxJest.fn()
-            local subscribeB = RobloxJest.fn(function(s)
-                local unsubscribe = defaultSubscribe(s)
+            -- ROBLOX TODO: mock functions commented out to silence analyze
+            local unsubscribeA = nil
+            local subscribeA = nil
 
-                return function()
-                    unsubscribe()
-                    unsubscribeB()
-                end
-            end)
+            -- local unsubscribeA = RobloxJest.fn()
+            -- local subscribeA = RobloxJest.fn(function(s)
+            --     local unsubscribe = defaultSubscribe(s)
+
+            --     return function()
+            --         unsubscribe()
+            --         unsubscribeA()
+            --     end
+            -- end)
+            -- ROBLOX TODO: mock functions commented out to silence analyze
+            local unsubscribeB = nil
+            local subscribeB = nil
+            -- local unsubscribeB = RobloxJest.fn()
+            -- local subscribeB = RobloxJest.fn(function(s)
+            --     local unsubscribe = defaultSubscribe(s)
+
+            --     return function()
+            --         unsubscribe()
+            --         unsubscribeB()
+            --     end
+            -- end)
 
             act(function()
                 ReactNoop.renderToRootWithID(React.createElement(Component, {
@@ -937,8 +945,11 @@ return function ()
             local mutableSource = createMutableSource(source, function(param)
                 return param.version
             end)
-            local onRenderA = RobloxJest.fn()
-            local onRenderB = RobloxJest.fn()
+            -- ROBLOX TODO: mock functions commented out to silence analyze
+            local onRenderA = nil
+            local onRenderB = nil
+            -- local onRenderA = RobloxJest.fn()
+            -- local onRenderB = RobloxJest.fn()
             local getSnapshot, updateGetSnapshot
 
             local function WrapperWithState()

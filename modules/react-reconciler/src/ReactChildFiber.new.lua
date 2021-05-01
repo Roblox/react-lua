@@ -150,7 +150,7 @@ function coerceRef(
       -- TODO: Clean this up once we turn on the string ref warning for
       -- everyone, because the strict mode case will no longer be relevant
       if
-        (bit32.bor(returnFiber.mode, StrictMode) or warnAboutStringRefs) and
+        (bit32.band(returnFiber.mode, StrictMode) ~= 0 or warnAboutStringRefs) and
         -- We warn in ReactElement.js if owner and self are equal for string refs
         -- because these cannot be automatically converted to an arrow function
         -- using a codemod. Therefore, we don't have to warn about string refs again.
@@ -429,7 +429,7 @@ local function ChildReconciler(shouldTrackSideEffects)
   --   textContent: string,
   --   lanes: Lanes
   -- )
-  function updateTextNode(
+  local function updateTextNode(
     returnFiber: Fiber,
     current: any,
     textContent: string,
@@ -513,7 +513,7 @@ local function ChildReconciler(shouldTrackSideEffects)
   --   portal: ReactPortal,
   --   lanes: Lanes,
   -- ): Fiber {
-  function updatePortal(
+  local function updatePortal(
     returnFiber: Fiber,
     current: Fiber,
     portal: ReactPortal,
@@ -543,7 +543,7 @@ local function ChildReconciler(shouldTrackSideEffects)
   --   lanes: Lanes,
   --   key: nil | string,
   -- ): Fiber {
-    function updateFragment(
+    local function updateFragment(
       returnFiber: Fiber,
       current: any,
       fragment: any,
@@ -1059,7 +1059,8 @@ local function ChildReconciler(shouldTrackSideEffects)
   --   newChildrenIterable: Iterable<*>,
   --   lanes: Lanes,
   -- ): Fiber | nil
-  function reconcileChildrenIterator(
+  -- ROBLOX TODO: LUAFDN-254
+  local function reconcileChildrenIterator(
     returnFiber: Fiber,
     currentFirstChild: Fiber | nil,
     newChildrenIterable: any,
@@ -1228,9 +1229,9 @@ local function ChildReconciler(shouldTrackSideEffects)
             -- it from the child list so that we don't add it to the deletion
             -- list.
             if newFiber.key == nil then
-              existingChildren.delete(newIdx)
+              existingChildren[newIdx] = nil
             else
-              existingChildren.delete(newFiber.key)
+              existingChildren[newFiber.key] = nil
             end
           end
         end
@@ -1260,7 +1261,7 @@ local function ChildReconciler(shouldTrackSideEffects)
 
   -- ROBLOX FIXME: Luau narrowing issue
   -- currentFirstChild: Fiber | nil,
-  function reconcileSingleTextNode(
+  local function reconcileSingleTextNode(
     returnFiber: Fiber,
     currentFirstChild: Fiber,
     textContent: string,
@@ -1351,10 +1352,10 @@ local function ChildReconciler(shouldTrackSideEffects)
             end
             return existing
           end
-          break
         end
         -- Didn't match.
         deleteRemainingChildren(returnFiber, child)
+        break
       else
         deleteChild(returnFiber, child)
       end
@@ -1385,7 +1386,7 @@ local function ChildReconciler(shouldTrackSideEffects)
   --   portal: ReactPortal,
   --   lanes: Lanes,
   -- ): Fiber
-  function reconcileSinglePortal(
+  local function reconcileSinglePortal(
     returnFiber: Fiber,
     currentFirstChild: Fiber,
     portal: ReactPortal,

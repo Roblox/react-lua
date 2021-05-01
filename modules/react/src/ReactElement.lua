@@ -62,9 +62,10 @@ local function hasValidKey(config)
 	return config.key ~= nil
 end
 
+local reactWarning = {isReactWarning = true}
+
 local function defineKeyPropWarningGetter(props, displayName)
-	local warnAboutAccessingKey = setmetatable({}, {
-		__call = function()
+	local warnAboutAccessingKey = function()
 			if _G.__DEV__ then
 				if not specialPropKeyWarningShown then
 					specialPropKeyWarningShown = true
@@ -77,18 +78,27 @@ local function defineKeyPropWarningGetter(props, displayName)
 					)
 				end
 			end
-		end,
-	})
+		end
 
-	warnAboutAccessingKey.isReactWarning = true
-	props.key = warnAboutAccessingKey
+	-- ROBLOX deviation: clear key to ensure metamethod is called, 
+	-- then set key getter to call warnAboutAccessingKey
+	props.key = nil
+	setmetatable(props, {
+		__index = function(t, k)
+			if k == 'key' then
+				warnAboutAccessingKey()
+				-- ROBLOX deviation: returns sentinel object that mimics upstream ability to check isReactWarning field
+				return reactWarning
+			end
+			return nil
+		end
+	})
 end
 
 local function defineRefPropWarningGetter(props, displayName)
 	-- deviation: Use a __call metamethod here to make this function-like, but
 	-- still able to have the `isReactWarning` flag defined on it
-	local warnAboutAccessingRef = setmetatable({}, {
-		__call = function()
+	local warnAboutAccessingRef = function()
 			if _G.__DEV__ then
 				if not specialPropRefWarningShown then
 					specialPropRefWarningShown = true
@@ -101,11 +111,21 @@ local function defineRefPropWarningGetter(props, displayName)
 					)
 				end
 			end
-		end,
-	})
+		end
 
-	warnAboutAccessingRef.isReactWarning = true
-	props.ref = warnAboutAccessingRef
+	-- ROBLOX deviation: clear key to ensure metamethod is called, 
+	-- then set key getter to call warnAboutAccessingKey
+	props.ref = nil
+	setmetatable(props, {
+		__index = function(t, k)
+			if k == 'ref' then
+				warnAboutAccessingRef()
+				-- ROBLOX deviation: returns sentinel object that mimics upstream ability to check isReactWarning field
+				return reactWarning
+			end
+			return nil
+		end
+	})
 end
 
 local function warnIfStringRefCannotBeAutoConverted(config)

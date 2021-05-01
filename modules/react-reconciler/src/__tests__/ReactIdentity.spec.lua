@@ -108,9 +108,10 @@ return function()
     end
   end)
 
+  -- ROBLOX TODO: LUAFDN-254
   -- ROBLOX deviation: Verify equivalent behavior with table keys, an adaptation
   -- to be compatible with currently-released Roact
-  it("should allow table key to express identity", function()
+  xit("should allow table key to express identity", function()
     local ref = React.createRef(nil)
     local function Component(props)
       local children = {}

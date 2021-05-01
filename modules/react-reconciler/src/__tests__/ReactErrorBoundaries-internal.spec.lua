@@ -1703,11 +1703,10 @@ return function()
             -- Force the success path:
             Scheduler.unstable_clearYields()
 
-            -- ROBLOX deviation: DOM renderer clears root children on each rerender, so we have to check the newly added child's text content
-            expect(#root.getChildren()[1].children).toEqual(3)
             root.render(React.createElement(ErrorBoundary, {forceRetry = true}, React.createElement(Normal)))
-            expect(#root.getChildren()[1].children).toEqual(4)
-            expect(root.getChildren()[1].children[4].text).toEqual(nil)
+
+            -- ROBLOX deviation: use :find() to mimic toContain functionality
+            expect(textContent(root):find('Caught an error')).toEqual(nil)
 
             expect(Scheduler).toHaveYielded({
                 'ErrorBoundary componentWillReceiveProps',
@@ -1815,6 +1814,7 @@ return function()
             -- ROBLOX deviation: using legacy root of Noop renderer instead of ReactDOM
             local root = ReactNoop.createLegacyRoot()
             root.render(React.createElement(ErrorBoundary, nil, getAMixOfNormalAndBrokenRenderElements()))
+            -- ROBLOX deviation: use :find() to mimic toContain functionality
             expect(textContent(root):find('Caught an error')).toEqual(nil)
 
             fail_ = true
@@ -2408,7 +2408,8 @@ React will try to recreate this component tree from scratch using the error boun
             local root = ReactNoop.createLegacyRoot()
 
             root.render(React.createElement(ErrorBoundary, nil, React.createElement('input', nil, React.createElement('div'))))
-            expect(textContent(root)).toEqual('Caught an error: input is a void element tag')
+            -- ROBLOX deviation: use :find() to mimic toContain functionality
+            expect(textContent(root):find('Caught an error: input is a void element tag')).never.toEqual(nil)
         end)
         it('should catch errors from errors in the throw phase from boundaries', function()
             local expect: any = expect
@@ -2430,7 +2431,8 @@ React will try to recreate this component tree from scratch using the error boun
             end
 
             root.render(React.createElement(ErrorBoundary, nil, React.createElement(EvilErrorBoundary, nil, React.createElement(Throws))))
-            expect(textContent(root)).toEqual('Caught an error: gotta catch em all.')
+            -- ROBLOX deviation: use :find() to mimic toContain functionality
+            expect(textContent(root):find('Caught an error: gotta catch em all.')).never.toEqual(nil)
         end)
         -- ROBLOX TODO: when focused this test passes, however it causes 'runAllTimers flushes all scheduled callbacks' and
         -- 'executes callbacks in order of priority' tests to fail in SchedulerNoDOM
@@ -2474,7 +2476,8 @@ React will try to recreate this component tree from scratch using the error boun
 
             root.render(React.createElement(ErrorBoundary, nil, React.createElement(Wrapper)))
             -- ROBLOX deviation: using textContent helper in place of upstream .textContent()
-            expect(textContent(root)).toEqual('Caught an error: gotta catch em all.')
+            -- ROBLOX deviation: use :find() to mimic toContain functionality
+            expect(textContent(root):find('Caught an error: gotta catch em all.')).never.toEqual(nil)
         end)
         -- @gate skipUnmountedBoundaries
         it('catches errors thrown in componentWillUnmount', function()

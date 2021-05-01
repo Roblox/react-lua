@@ -10,7 +10,7 @@ local depth = 0
 
 local function deepEqual(a: any, b: any)
 	depth += 1
-	if depth > 7 then
+	if depth > 10 then
 		depth = 0
 		error("deepEqual recursion limit hit")
 	end
