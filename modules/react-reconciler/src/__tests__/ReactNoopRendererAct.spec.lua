@@ -37,7 +37,7 @@ return function()
 	if not _G.__DEV__ then
 		it('can use act to flush effects', function()
 			local expect: any = expect
-			function App(props)
+			local function App(props)
 				React.useEffect(props.callback)
 				return nil
 			end
@@ -58,7 +58,7 @@ return function()
 	end
 
 	-- it('should work with async/await', function()
-	-- 	function App()
+	-- 	local function App()
 	-- 		local [ctr, setCtr] = React.useState(0)
 	-- 		async function someAsyncFunction()
 	-- 			Scheduler.unstable_yieldValue('stage 1')

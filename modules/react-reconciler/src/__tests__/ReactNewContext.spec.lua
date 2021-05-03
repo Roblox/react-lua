@@ -475,7 +475,7 @@ return function()
           end)
         end
 
-        function BadRender()
+        local function BadRender()
           error('Bad render')
         end
 

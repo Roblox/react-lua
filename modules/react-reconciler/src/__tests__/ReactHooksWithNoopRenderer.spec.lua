@@ -123,7 +123,7 @@ return function()
     return {type = "span", hidden = false, children = {}, prop = prop}
   end
 
-  function Text(props)
+  local function Text(props)
     Scheduler.unstable_yieldValue(props.text)
     return React.createElement("span", {
       prop = props.text
@@ -668,7 +668,7 @@ return function()
 
     it('works with useReducer', function()
       local expect: any = expect
-      function reducer(state, action)
+      local function reducer(state, action)
         local returnVal = state
         if action == 'increment' then
           returnVal = state + 1
