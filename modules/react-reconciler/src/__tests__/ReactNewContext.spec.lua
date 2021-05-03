@@ -614,8 +614,7 @@ return function()
         expect(Scheduler).toFlushAndYield({'Foo', 'Bar'})
         expect(ReactNoop.getChildren()).toEqual({span('Foo: 3'), span('Bar: 3')})
       end)
-      -- ROBLOX TODO: Fails in dev mode due to React.Fragment
-      xit('can skip parents with bitmask bailout while updating their children', function()
+      it('can skip parents with bitmask bailout while updating their children', function()
         local expect: any = expect
         local Context = React.createContext({
           foo = 0,

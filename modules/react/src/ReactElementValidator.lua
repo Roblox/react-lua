@@ -464,8 +464,10 @@ exports.jsxWithValidationDynamic = function(type, props, key)
 	return jsxWithValidation(type, props, key, false)
 end
 
-local function createElementWithValidation(type, props, ...)
-	local arguments = { type, props, ... }
+-- ROBLOX deviation: uses varargs to account for possibility of nil props argument
+local function createElementWithValidation(...)
+	-- ROBLOX deviation: assign first two arguments to type and props
+	local type, props = ...
 
 	local validType = isValidElementType(type)
 
@@ -516,7 +518,8 @@ local function createElementWithValidation(type, props, ...)
 		end
 	end
 
-	local element = createElement(unpack(arguments))
+	-- ROBLOX deviation: passes varargs to createElement for compatability with nil props and/or nil children
+	local element = createElement(...)
 
 	-- // The result can be nullish if a mock or a custom function is used.
 	-- // TODO: Drop this when these are no longer allowed as the type argument.
@@ -530,8 +533,10 @@ local function createElementWithValidation(type, props, ...)
 	-- // (Rendering will throw with a helpful message and as soon as the type is
 	-- // fixed, the key warnings will appear.)
 	if validType then
-		for i=3, #arguments do
-			validateChildKeys(arguments[i], type)
+		-- ROBLOX deviation: skips (1) type and (2) props - starts from 3 to the end varargs (iterate through children)
+		for i=3, select('#', ...) do
+			-- ROBLOX deviation: selects the ith child from this function's arguments to validate
+			validateChildKeys(select(i, ...), type)
 		end
 	end
 
