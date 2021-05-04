@@ -13,14 +13,11 @@ return function()
 	local Packages = Workspace.Parent
 	local LuauPolyfill = require(Packages.LuauPolyfill)
 	local Error = LuauPolyfill.Error
-	
+	local jestModule = require(Packages.Dev.JestRoblox)
+    local jestExpect = jestModule.Globals.expect
+    local jest = jestModule.Globals.jest
 	local RobloxJest = require(Workspace.RobloxJest)
 	local ReactErrorUtils
-
-	-- deviation: FIXME: add arrays polyfill w/ push/pop/shift/etc.
-	local push = function(list, value)
-		list[#list + 1] = value
-	end
 
 	beforeEach(function()
 		-- TODO: can we express this test with only public API?
@@ -38,44 +35,28 @@ return function()
 			callback,
 			nil
 		)
-		expect(ReactErrorUtils.hasCaughtError()).to.equal(false);
-		local ok, result = pcall(function()
-			return ReactErrorUtils.rethrowCaughtError()
-		end)
-
-		-- deviation: FIXME: align `toThrow` more closely
-		-- deviation: FIXME: proper deep-equal comparison
-		expect(ok).to.equal(false)
-		expect(result.name).to.equal(err.name)
-		expect(result.message).to.equal(err.message)
+		jestExpect(ReactErrorUtils.hasCaughtError()).toBe(false);
+		jestExpect(function()
+			ReactErrorUtils.rethrowCaughtError()
+		end).toThrow(err)
 	end)
 
 	it('should call the callback the passed arguments', function()
-		-- deviation: In Lua, calling a function with `self` (which is the
+		-- ROBLOX deviation: In Lua, calling a function with `self` (which is the
 		-- equivalent of the `context` argument used in
 		-- invokeGuardedCallbackImpl) is explicit; if the context argument is
 		-- nil, the function is presumed to not rely on `self` and is called
 		-- without the `context` argument. For this test, we validate both
 		-- cases.
-		local callback = RobloxJest.createSpy()
-		local context = {}
+		local callback = jest:fn()
 		ReactErrorUtils.invokeGuardedCallback(
 			'foo',
-			callback.value,
-			context,
-			'arg1',
-			'arg2'
-		)
-
-		callback:assertCalledWith(context, 'arg1', 'arg2')
-		ReactErrorUtils.invokeGuardedCallback(
-			'foo',
-			callback.value,
+			callback,
 			nil,
 			'arg1',
 			'arg2'
 		)
-		callback:assertCalledWith('arg1', 'arg2')
+		jestExpect(callback).toBeCalledWith('arg1', 'arg2')
 	end)
 
 	it('should call the callback with the provided context', function()
@@ -87,34 +68,30 @@ return function()
 			end,
 			context
 		)
-		expect(context.didCall).to.equal(true)
+		jestExpect(context.didCall).toBe(true)
 	end)
 
 	it('should catch errors', function()
-		local err = Error()
+		local error_ = Error()
 		local returnValue = ReactErrorUtils.invokeGuardedCallback(
 			'foo',
 			function()
-				error(err)
+				error(error_)
 			end,
 			nil,
 			'arg1',
 			'arg2'
 		)
-		expect(returnValue).to.equal(nil);
-		expect(ReactErrorUtils.hasCaughtError()).to.equal(true);
-		expect(ReactErrorUtils.clearCaughtError()).to.equal(err);
+		jestExpect(returnValue).toBe(nil);
+		jestExpect(ReactErrorUtils.hasCaughtError()).toBe(true);
+		jestExpect(ReactErrorUtils.clearCaughtError()).toBe(error_);
 	end)
 
 	it('should return false from clearCaughtError if no error was thrown', function()
-		local callback = RobloxJest.createSpy()
-		ReactErrorUtils.invokeGuardedCallback('foo', callback.value, nil);
-		expect(ReactErrorUtils.hasCaughtError()).to.equal(false);
-		local ok, result = pcall(ReactErrorUtils.clearCaughtError)
-
-		expect(ok).to.equal(false)
-		-- deviation: FIXME: align `toThrow` more closely
-		expect((string.find(result.message, 'no error was captured'))).to.be.ok()
+		local callback = jest:fn()
+		ReactErrorUtils.invokeGuardedCallback('foo', callback, nil);
+		jestExpect(ReactErrorUtils.hasCaughtError()).toBe(false);
+		jestExpect(ReactErrorUtils.clearCaughtError).toThrow('no error was captured');
 	end)
 
 	it('can nest with same debug name', function()
@@ -138,8 +115,8 @@ return function()
 		)
 		local err4 = ReactErrorUtils.clearCaughtError()
 
-		expect(err2).to.equal(err1)
-		expect(err4).to.equal(err3)
+		jestExpect(err2).toBe(err1)
+		jestExpect(err4).toBe(err3)
 	end)
 
 	it('handles nested errors', function()
@@ -160,16 +137,16 @@ return function()
 			nil
 		)
 		-- Returns nil because inner error was already captured
-		expect(ReactErrorUtils.hasCaughtError()).to.equal(false)
+		jestExpect(ReactErrorUtils.hasCaughtError()).toBe(false)
 
-		expect(err2).to.equal(err1)
+		jestExpect(err2).toBe(err1)
 	end)
 
 	it('handles nested errors in separate renderers', function()
 		local ReactErrorUtils1 = require(script.Parent.Parent.ReactErrorUtils)
 		RobloxJest.resetModules()
 		local ReactErrorUtils2 = require(script.Parent.Parent.ReactErrorUtils)
-		expect(ReactErrorUtils1).never.to.equal(ReactErrorUtils2)
+		jestExpect(ReactErrorUtils1).never.toEqual(ReactErrorUtils2)
 
 		local ops = {}
 
@@ -184,19 +161,18 @@ return function()
 					nil
 				)
 				-- ReactErrorUtils2 should catch the error
-				push(ops, ReactErrorUtils2.hasCaughtError())
-				push(ops, ReactErrorUtils2.clearCaughtError().message)
+				table.insert(ops, ReactErrorUtils2.hasCaughtError())
+				table.insert(ops, ReactErrorUtils2.clearCaughtError().message)
 			end,
 			nil
 		)
 
 		-- ReactErrorUtils1 should not catch the error
-		push(ops, ReactErrorUtils1.hasCaughtError())
+		table.insert(
+			ops, ReactErrorUtils1.hasCaughtError()
+		)
 
-		-- deviation: FIXME: add a deep-equal expectation
-		expect(ops[1]).to.equal(true)
-		expect(ops[2]).to.equal('nested error')
-		expect(ops[3]).to.equal(false)
+		jestExpect(ops).toEqual({true, 'nested error', false});
 	end)
 
 	if not _G.__DEV__ then
@@ -210,8 +186,8 @@ return function()
 				end,
 				nil
 			)
-			expect(ReactErrorUtils.hasCaughtError()).to.equal(true)
-			expect(ReactErrorUtils.clearCaughtError()).to.equal(nil)
+			jestExpect(ReactErrorUtils.hasCaughtError()).toBe(true)
+			jestExpect(ReactErrorUtils.clearCaughtError()).toBe(nil)
 		end)
 	end
 
@@ -220,7 +196,7 @@ return function()
 		RobloxJest.resetModules();
 		RobloxJest.mock(script.Parent.Parent.invokeGuardedCallbackImpl, function()
 			return function(reporter, name, func, context, a)
-				push(ops, a)
+				table.insert(ops, a)
 				local ok, result = pcall(function()
 					func(context, a)
 				end)
@@ -245,12 +221,9 @@ return function()
 			'somearg'
 		)
 
-		-- deviation: FIXME: align `toThrow` more closely
-		local ok, result = pcall(ReactErrorUtils.rethrowCaughtError)
-		expect(ok).to.equal(false)
-		expect(result).to.equal(err)
-
-		expect(#ops).to.equal(1)
-		expect(ops[1]).to.equal('somearg')
-	end)
+		jestExpect(function()
+			ReactErrorUtils.rethrowCaughtError()
+		end).toThrow(err)
+		jestExpect(ops).toEqual({'somearg'})
+	  end)
 end

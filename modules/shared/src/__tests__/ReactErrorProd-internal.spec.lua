@@ -11,6 +11,8 @@
 
 return function()
 	local Workspace = script.Parent.Parent.Parent
+	local Packages = Workspace.Parent
+	local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
 	local RobloxJest = require(Workspace.RobloxJest)
 	local formatProdErrorMessage
 
@@ -20,21 +22,21 @@ return function()
 	end)
 
 	it('should throw with the correct number of `%s`s in the URL', function()
-		expect(formatProdErrorMessage(124, 'foo', 'bar')).to.equal(
+		jestExpect(formatProdErrorMessage(124, 'foo', 'bar')).toEqual(
 			'Minified React error #124; visit ' ..
 				'https://reactjs.org/docs/error-decoder.html?invariant=124&args[]=foo&args[]=bar' ..
 				' for the full message or use the non-minified dev environment' ..
 				' for full errors and additional helpful warnings.'
 		)
 
-		expect(formatProdErrorMessage(20)).to.equal(
+		jestExpect(formatProdErrorMessage(20)).toEqual(
 			'Minified React error #20; visit ' ..
 				'https://reactjs.org/docs/error-decoder.html?invariant=20' ..
 				' for the full message or use the non-minified dev environment' ..
 				' for full errors and additional helpful warnings.'
 		)
 
-		expect(formatProdErrorMessage(77, '<div>', '&?bar')).to.equal(
+		jestExpect(formatProdErrorMessage(77, '<div>', '&?bar')).toEqual(
 			'Minified React error #77; visit ' ..
 				'https://reactjs.org/docs/error-decoder.html?invariant=77&args[]=%3Cdiv%3E&args[]=%26%3Fbar' ..
 				' for the full message or use the non-minified dev environment' ..

@@ -1,4 +1,4 @@
--- upstream: 
+-- upstream: https://github.com/facebook/react/blob/v17.0.2/packages/react-dom/src/__tests__/ReactIdentity-test.js
 --[[*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
@@ -7,7 +7,6 @@
  *
  * @emails react-core
 ]]
---!strict
 
 -- ROBLOX deviation: This test file was adapted from `react-dom` and generalized
 -- to `react-reconciler` using `react-noop` instead of the dom renderer
@@ -16,6 +15,8 @@ local ReactNoop
 
 return function()
   local Workspace = script.Parent.Parent.Parent
+  local Packages = Workspace.Parent
+  local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
   local RobloxJest = require(Workspace.RobloxJest)
 
   beforeEach(function()
@@ -64,8 +65,8 @@ return function()
 
   --   -- After rendering with `swap=true`, the keys will have switched and the
   --   -- prop values will correspond to the opposite children
-  --   expect(origChildren["Hello"]).to.equal(newChildren["World"])
-  --   expect(origChildren["World"]).to.equal(newChildren["Hello"])
+  --   jestExpect(origChildren["Hello"]).toBe(newChildren["World"])
+  --   jestExpect(origChildren["World"]).toBe(newChildren["Hello"])
   -- end)
 
   -- ROBLOX deviation: Replaces the above test. This new test verifies the
@@ -103,8 +104,8 @@ return function()
     -- After rendering with `invert=true`, the keys will have switched and the
     -- prop values will correspond to the opposite children
     for i = 1, 50 do
-      expect(origChildren[i]).to.equal(newChildren[51-i])
-      expect(origChildren[51-i]).to.equal(newChildren[i])
+      jestExpect(origChildren[i]).toBe(newChildren[51-i])
+      jestExpect(origChildren[51-i]).toBe(newChildren[i])
     end
   end)
 
@@ -143,8 +144,8 @@ return function()
     -- After rendering with `invert=true`, the keys will have switched and the
     -- prop values will correspond to the opposite children
     for i = 1, 50 do
-      expect(origChildren[i]).to.equal(newChildren[51-i])
-      expect(origChildren[51-i]).to.equal(newChildren[i])
+      jestExpect(origChildren[i]).toBe(newChildren[51-i])
+      jestExpect(origChildren[51-i]).toBe(newChildren[i])
     end
   end)
 
@@ -182,8 +183,8 @@ return function()
     -- After rendering with `invert=true`, the keys will have switched and the
     -- prop values will correspond to the opposite children
     for i = 1, 50 do
-      expect(origChildren[i]).to.equal(newChildren[51-i])
-      expect(origChildren[51-i]).to.equal(newChildren[i])
+      jestExpect(origChildren[i]).toBe(newChildren[51-i])
+      jestExpect(origChildren[51-i]).toBe(newChildren[i])
     end
   end)
 
@@ -211,7 +212,7 @@ return function()
       )
     end)
 
-    expect(ref1.current).never.to.equal(ref2.current)
+    jestExpect(ref1.current).never.toBe(ref2.current)
   end)
 
   -- local function renderAComponentWithKeyIntoContainer(key, container)
@@ -228,7 +229,7 @@ return function()
   --     ReactNoop.render(React.createElement(Wrapper), container)
   --   end)
   --   local span = ref.current
-  --   expect(span).never.to.equal(nil)
+  --   jestExpect(span).never.toBe(nil)
   -- end
 
   -- ROBLOX FIXME: test does not apply to ReactNoop; we should port it to rely
@@ -265,13 +266,10 @@ return function()
   --   document.body.removeChild(attachedContainer)
 
   --   -- If we get this far, make sure we haven't executed the code
-  --   expect(window.YOUVEBEENH4X0RED).toBe(undefined)
+  --   jestExpect(window.YOUVEBEENH4X0RED).toBe(undefined)
   -- end)
 
   it('should let restructured components retain their uniqueness', function()
-    -- ROBLOX FIXME: expect type
-    local expect: any = expect
-
     local instance0 = React.createElement("span")
     local instance1 = React.createElement("span")
     local instance2 = React.createElement("span")
@@ -293,7 +291,7 @@ return function()
       )
     end
 
-    expect(function()
+    jestExpect(function()
       ReactNoop.act(function()
         ReactNoop.render(React.createElement(TestContainer))
       end)
@@ -301,9 +299,6 @@ return function()
   end)
 
   it('should let nested restructures retain their uniqueness', function()
-    -- ROBLOX FIXME: expect type
-    local expect: any = expect
-
     local instance0 = React.createElement("span")
     local instance1 = React.createElement("span")
     local instance2 = React.createElement("span")
@@ -325,9 +320,9 @@ return function()
           instance1
         )
       )
-    end 
+    end
 
-    expect(function()
+    jestExpect(function()
       ReactNoop.act(function()
         ReactNoop.render(React.createElement(TestContainer))
       end)
@@ -351,11 +346,11 @@ return function()
       )
     end
 
-    expect(function()
+    jestExpect(function()
       ReactNoop.act(function()
         ReactNoop.render(React.createElement(TestContainer))
       end)
-    end).never.to.throw()
+    end).never.toThrow()
   end)
 
   it('should retain key during updates in composite components', function()
@@ -404,8 +399,8 @@ return function()
     swap()
     local newChildren = childrenByProp(ref.current.children)
 
-    expect(originalChildren["Hello"]).to.equal(newChildren["Hello"])
-    expect(originalChildren["World"]).to.equal(newChildren["World"])
+    jestExpect(originalChildren["Hello"]).toBe(newChildren["Hello"])
+    jestExpect(originalChildren["World"]).toBe(newChildren["World"])
   end)
 
   it('should not allow implicit and explicit keys to collide', function()
@@ -416,12 +411,12 @@ return function()
       )
     end
 
-    expect(function()
+    jestExpect(function()
       ReactNoop.act(function()
         ReactNoop.render(
           React.createElement(component)
         )
       end)
-    end).never.to.throw()
+    end).never.toThrow()
   end)
 end

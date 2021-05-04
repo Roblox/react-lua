@@ -40,7 +40,7 @@ export type Props = Object;
 export type Container = {
 	children: Array<Instance | TextInstance>,
 	createNodeMock: Function,
-	tag: string,
+	tag: string, -- ROBLOX deviation: Luau can't specify literals
 };
 export type Instance = {
 	type: string,
@@ -95,7 +95,7 @@ end
 
 exports.getPublicInstance = function(inst: Instance | TextInstance)
 	if inst.tag == "INSTANCE" then
-		-- deviation: Luau won't let us narrow type to Instance, just widen it
+		-- ROBLOX deviation: Luau won't let us narrow type to Instance, just widen it
 		local inst: any = inst
 		local createNodeMock = inst.rootContainerInstance.createNodeMock
 		local mockNode = createNodeMock({

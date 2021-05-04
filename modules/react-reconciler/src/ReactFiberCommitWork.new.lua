@@ -30,7 +30,9 @@ local ReactInternalTypes = require(script.Parent.ReactInternalTypes)
 type Fiber = ReactInternalTypes.Fiber;
 type FiberRoot = ReactInternalTypes.FiberRoot;
 -- local type {SuspenseState} = require(script.Parent.ReactFiberSuspenseComponent.new)
--- local type {UpdateQueue} = require(script.Parent.ReactUpdateQueue.new)
+local ReactUpdateQueueModule = require(script.Parent["ReactUpdateQueue.new"])
+type UpdateQueue<T> = ReactUpdateQueueModule.UpdateQueue<T>
+
 -- local type {FunctionComponentUpdateQueue} = require(script.Parent.ReactFiberHooks.new)
 -- local type {Wakeable} = require(Workspace.Shared.ReactTypes)
 type ReactPriorityLevel = ReactInternalTypes.ReactPriorityLevel
@@ -99,7 +101,7 @@ local resolveDefaultProps = require(script.Parent["ReactFiberLazyComponent.new"]
 --   startPassiveEffectTimer,
 -- } = require(script.Parent.ReactProfilerTimer.new)
 local ProfileMode = require(script.Parent.ReactTypeOfMode).ProfileMode
-local commitUpdateQueue = require(script.Parent["ReactUpdateQueue.new"]).commitUpdateQueue
+local commitUpdateQueue = ReactUpdateQueueModule.commitUpdateQueue
 local getPublicInstance = ReactFiberHostConfig.getPublicInstance
 local supportsMutation = ReactFiberHostConfig.supportsMutation
 local supportsPersistence = ReactFiberHostConfig.supportsPersistence
@@ -987,7 +989,7 @@ commitLayoutEffectsForHostRoot = function(finishedWork: Fiber)
   if updateQueue ~= nil then
     local instance = nil
     if finishedWork.child ~= nil then
-      -- deviation: localize child, workaround luau type refinement shortcomings
+      -- ROBLOX TODO: localize child, workaround Luau type refinement shortcomings
       local child = finishedWork.child
       if child.tag == HostComponent then
         instance = getPublicInstance(child.stateNode)
@@ -1547,7 +1549,7 @@ unmountHostComponents = function(
 )
   -- We only have the top Fiber that was deleted but we need to recurse down its
   -- children to find all the terminal nodes.
-  -- deviation: type refinement
+  -- ROBLOX TODO: type refinement
   -- local node: Fiber = current
   local node = current
 

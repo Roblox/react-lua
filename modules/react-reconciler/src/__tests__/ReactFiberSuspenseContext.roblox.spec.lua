@@ -1,5 +1,7 @@
 return function()
 	local Workspace = script.Parent.Parent.Parent
+	local Packages = Workspace.Parent
+	local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
 	local RobloxJest = require(Workspace.RobloxJest)
 
 	local ReactFiberSuspenseContext
@@ -22,18 +24,16 @@ return function()
 			end)
 
 			it("pushes the context and assigns the value to the cursor", function()
-				local expect: any = expect
 				ReactFiberSuspenseContext.pushSuspenseContext(fiber, someContext)
-				expect(suspenseStackCursor).toEqual({current = someContext})
+				jestExpect(suspenseStackCursor).toEqual({current = someContext})
 			end)
 
 			it("pushes and pops and sets the cursor to its initial value", function()
-				local expect: any = expect
 				local initialValue = suspenseStackCursor.current
 
 				ReactFiberSuspenseContext.pushSuspenseContext(fiber, someContext)
 				ReactFiberSuspenseContext.popSuspenseContext(fiber)
-				expect(suspenseStackCursor).toEqual({current = initialValue})
+				jestExpect(suspenseStackCursor).toEqual({current = initialValue})
 			end)
 		end)
 
@@ -42,15 +42,15 @@ return function()
 				local subtree = 0b1000
 				local parent = ReactFiberSuspenseContext.addSubtreeSuspenseContext(10000, subtree)
 
-				expect(
+				jestExpect(
 					ReactFiberSuspenseContext.hasSuspenseContext(parent, subtree)
-				).to.equal(true)
+				).toBe(true)
 			end)
 
 			it("is false for two different context", function()
-				expect(
+				jestExpect(
 					ReactFiberSuspenseContext.hasSuspenseContext(0b1000, 0b10000)
-				).to.equal(false)
+				).toBe(false)
 			end)
 		end)
 	end)

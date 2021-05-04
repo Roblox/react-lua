@@ -1,5 +1,7 @@
 return function()
     local Workspace = script.Parent.Parent.Parent
+    local Packages = Workspace.Parent
+    local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
     local ReactBaseClasses = require(Workspace.React.ReactBaseClasses)
     local Component = ReactBaseClasses.Component
     local PureComponent = ReactBaseClasses.Component
@@ -10,9 +12,9 @@ return function()
         it("should prevent extending a second time", function()
             component = Component:extend("Sheev")
 
-            expect(function()
+            jestExpect(function()
                 component:extend("Frank")
-            end).to.throw()
+            end).toThrow()
         end)
 
         it("should use a given name", function()
@@ -20,8 +22,8 @@ return function()
 
             local name = tostring(component)
 
-            expect(name).to.be.a("string")
-            expect(name:find("FooBar")).to.be.ok()
+            jestExpect(name).toEqual(jestExpect.any("string"))
+            jestExpect(name).toContain("FooBar")
         end)
     end)
 
@@ -29,9 +31,9 @@ return function()
         it("should prevent extending a second time", function()
             component = PureComponent:extend("Sheev")
 
-            expect(function()
+            jestExpect(function()
                 component:extend("Frank")
-            end).to.throw()
+            end).toThrow()
         end)
 
         it("should use a given name", function()
@@ -39,8 +41,8 @@ return function()
 
             local name = tostring(component)
 
-            expect(name).to.be.a("string")
-            expect(name:find("FooBar")).to.be.ok()
+            jestExpect(name).toEqual(jestExpect.any("string"))
+            jestExpect(name).toContain("FooBar")
         end)
     end)
 end

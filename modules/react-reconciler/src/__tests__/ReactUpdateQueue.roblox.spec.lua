@@ -5,6 +5,9 @@
 
 return function()
 	local Workspace = script.Parent.Parent.Parent
+	local Packages = Workspace.Parent
+	local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
+
 
 	local RobloxJest = require(Workspace.RobloxJest)
 	local React = require(Workspace.React)
@@ -41,17 +44,15 @@ return function()
 
 	describe("new ReactUpdateQueue", function()
 		it("does not have force update", function()
-			local expect: any = expect
-			expect(
+			jestExpect(
 				ReactUpdateQueue.checkHasForceUpdateAfterProcessing()
 			).toEqual(false)
 		end)
 
 		it("enqueue before initialize is a no-op", function()
-			local expect: any = expect
 			workInProgress = Fiber.createWorkInProgress(fundamentalFiber, {})
 			ReactUpdateQueue.enqueueUpdate(workInProgress, update)
-			expect(workInProgress.updateQueue).toEqual(nil)
+			jestExpect(workInProgress.updateQueue).toEqual(nil)
 		end)
 	end)
 
@@ -61,28 +62,24 @@ return function()
 		end)
 
 		it("initializes fiber", function()
-			local expect: any = expect
-			expect(workInProgress.updateQueue).to.be.ok()
+			jestExpect(workInProgress.updateQueue).toBeDefined()
 		end)
 
 		it("enqueues first update", function()
-			local expect: any = expect
-			expect(update.tag).toEqual(0)
+			jestExpect(update.tag).toBe(0)
 
 			ReactUpdateQueue.enqueueUpdate(workInProgress, update)
-			expect(update.next).to.equal(update)
-			expect(workInProgress.updateQueue.shared.pending).to.equal(update)
+			jestExpect(update.next).toBe(update)
+			jestExpect(workInProgress.updateQueue.shared.pending).toBe(update)
 		end)
 
 		it("enqueues same update twice", function()
-			local expect: any = expect
-
 			ReactUpdateQueue.enqueueUpdate(workInProgress, update)
 			ReactUpdateQueue.enqueueUpdate(workInProgress, update)
 
-			expect(update.next).to.equal(update)
-			expect(update.next.next).to.equal(update)
-			expect(workInProgress.updateQueue.shared.pending).to.equal(update)
+			jestExpect(update.next).toBe(update)
+			jestExpect(update.next.next).toBe(update)
+			jestExpect(workInProgress.updateQueue.shared.pending).toBe(update)
 		end)
 	end)
 
@@ -93,7 +90,6 @@ return function()
 		end)
 
 		it("with empty queue", function()
-			local expect: any = expect
 			ReactUpdateQueue.processUpdateQueue(
 				workInProgress,
 				nextProps,
@@ -101,13 +97,12 @@ return function()
 				FiberLane.NoLanes
 			  )
 
-			  expect(workInProgress.memoizedState).toEqual(nil)
+			jestExpect(workInProgress.memoizedState).toBe(nil)
 		end)
 
 		it("with non-empty queue", function()
-			local expect: any = expect
 			ReactUpdateQueue.enqueueUpdate(workInProgress, update)
-			expect(workInProgress.memoizedState).toEqual(nil)
+			jestExpect(workInProgress.memoizedState).toBe(nil)
 
 			ReactUpdateQueue.processUpdateQueue(
 			  workInProgress,
@@ -116,8 +111,8 @@ return function()
 			  FiberLane.NoLanes
 			)
 
-			expect(setStateCallbackWasCalled).toEqual(false)
-			expect(workInProgress.memoizedState).toEqual(updatePayload)
+			jestExpect(setStateCallbackWasCalled).toBe(false)
+			jestExpect(workInProgress.memoizedState).toEqual(updatePayload)
 		end)
 	end)
 
@@ -136,10 +131,8 @@ return function()
 		end)
 
 		it("with non-empty queue", function()
-			local expect: any = expect
-
 			ReactUpdateQueue.enqueueUpdate(workInProgress, update)
-			expect(workInProgress.memoizedState).toEqual(nil)
+			jestExpect(workInProgress.memoizedState).toBe(nil)
 
 			ReactUpdateQueue.processUpdateQueue(
 			  workInProgress,
@@ -154,7 +147,7 @@ return function()
 			  component
 			)
 
-			expect(setStateCallbackWasCalled).toEqual(true)
+			jestExpect(setStateCallbackWasCalled).toBe(true)
 		end)
 	end)
 
@@ -171,11 +164,9 @@ return function()
 		end)
 
 		it("sets lastBaseUpdate", function()
-			local expect: any = expect
-
 			ReactUpdateQueue.enqueueCapturedUpdate(workInProgress, update)
 
-			expect(workInProgress.updateQueue.lastBaseUpdate).toEqual(update)
+			jestExpect(workInProgress.updateQueue.lastBaseUpdate).toEqual(update)
 		end)
 	end)
 

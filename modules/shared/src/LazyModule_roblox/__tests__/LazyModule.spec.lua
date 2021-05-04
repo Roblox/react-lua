@@ -1,5 +1,7 @@
 return function()
 	local Workspace = script.Parent.Parent.Parent.Parent
+	local Packages = Workspace.Parent
+	local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
 	local RobloxJest = require(Workspace.RobloxJest)
 	local Foo, Bar
 
@@ -11,15 +13,15 @@ return function()
 		Foo = require(script.Parent.TestModules.Foo)
 		Bar = require(script.Parent.TestModules.Bar)
 
-		expect(Foo.addThenMultiply(3)).to.equal(8)
-		expect(Bar.multiplyThenAdd(3)).to.equal(7)
+		jestExpect(Foo.addThenMultiply(3)).toBe(8)
+		jestExpect(Bar.multiplyThenAdd(3)).toBe(7)
 	end)
 
 	it("avoids cycles when Bar is required before Foo", function()
 		Bar = require(script.Parent.TestModules.Bar)
 		Foo = require(script.Parent.TestModules.Foo)
-	
-		expect(Bar.multiplyThenAdd(3)).to.equal(7)
-		expect(Foo.addThenMultiply(3)).to.equal(8)
+
+		jestExpect(Bar.multiplyThenAdd(3)).toBe(7)
+		jestExpect(Foo.addThenMultiply(3)).toBe(8)
 	end)
 end

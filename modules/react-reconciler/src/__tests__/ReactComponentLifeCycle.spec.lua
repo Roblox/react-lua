@@ -18,8 +18,8 @@ return function()
   local HttpService = game:GetService("HttpService")
   local Workspace = script.Parent.Parent.Parent
   local RobloxJest = require(Workspace.RobloxJest)
-
   local Packages = Workspace.Parent
+  local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
   local Error = require(Packages.LuauPolyfill).Error
 
   -- deviation: Move all of the following into the test function body to match
@@ -107,6 +107,7 @@ return function()
     -- PropTypes = require('prop-types')
   end)
 
+  -- ROBLOX TODO: do we need to test this in roblox renderer?
   -- xit('should not reuse an instance when it has been unmounted', function()
   --   local container = document.createElement('div')
 
@@ -122,7 +123,7 @@ return function()
 --     local firstInstance = ReactDOM.render(element, container)
 --     ReactDOM.unmountComponentAtNode(container)
 --     local secondInstance = ReactDOM.render(element, container)
---     expect(firstInstance).not.toBe(secondInstance)
+--     jestExpect(firstInstance).not.toBe(secondInstance)
 --   })
 
 --   --[[*
@@ -168,7 +169,7 @@ return function()
 --     end
 
 --     ReactTestUtils.renderIntoDocument(<SwitcherParent />)
---     expect(_testJournal).toEqual([
+--     jestExpect(_testJournal).toEqual([
 --       'SwitcherParent:getInitialState',
 --       'SwitcherParent:onDOMReady',
 --       'Child:onDOMReady',
@@ -178,25 +179,23 @@ return function()
   -- You could assign state here, but not access members of it, unless you
   -- had provided a getInitialState method.
   it("throws when accessing state in componentWillMount", function()
-    -- ROBLOX FIXME: expect type
-    local expect: any = expect
     local StatefulComponent = React.Component:extend("StatefulComponent")
 
     function StatefulComponent:UNSAFE_componentWillMount()
       -- ROBLOX deviation: ensure self is non nil
-      expect(self).never.toEqual(nil)
+      jestExpect(self).never.toEqual(nil)
 
       return self.state.yada
     end
 
     function StatefulComponent:render()
       -- ROBLOX deviation: ensure self is non nil
-      expect(self).never.toEqual(nil)
+      jestExpect(self).never.toEqual(nil)
       return React.createElement("div")
     end
 
     local instance = React.createElement(StatefulComponent)
-    expect(function()
+    jestExpect(function()
       ReactNoop.act(function()
         instance = ReactNoop.render(instance)
       end)
@@ -205,8 +204,6 @@ return function()
   end)
 
   it('should allow update state inside of componentWillMount', function()
-    -- ROBLOX FIXME: expect type
-    local expect: any = expect
     local StatefulComponent = React.Component:extend("StatefulComponent")
 
     function StatefulComponent:UNSAFE_componentWillMount()
@@ -218,7 +215,7 @@ return function()
     end
 
     local instance = React.createElement(StatefulComponent)
-    expect(function()
+    jestExpect(function()
       ReactNoop.act(function()
         instance = ReactNoop.render(instance)
       end)
@@ -226,8 +223,6 @@ return function()
   end)
 
   it("warns if setting 'self.state = props'", function()
-    -- ROBLOX FIXME: expect type
-    local expect: any = expect
     local StatefulComponent = React.Component:extend("StatefulComponent")
 
     function StatefulComponent:init()
@@ -238,7 +233,7 @@ return function()
       return React.createElement("div")
     end
 
-    expect(function()
+    jestExpect(function()
       ReactNoop.act(function()
         ReactNoop.render(React.createElement(StatefulComponent))
       end)
@@ -252,9 +247,6 @@ return function()
   -- Not sure why I couldn't get this one to work
   -- ROBLOX deviation? setState doesn't exist on the instance during init()
   it('should not allow update state inside of getInitialState', function()
-    -- ROBLOX FIXME: expect type
-    local expect: any = expect
-
     local StatefulComponent = React.Component:extend("StatefulComponent")
 
     function StatefulComponent:init()
@@ -266,7 +258,7 @@ return function()
       return React.createElement("div")
     end
 
-    expect(function()
+    jestExpect(function()
       ReactNoop.act(function()
         ReactNoop.render(React.createElement(StatefulComponent))
       end)
@@ -284,9 +276,6 @@ return function()
   end)
 
   it('should correctly determine if a component is mounted', function()
-    -- ROBLOX FIXME: expect type
-    local expect: any = expect
-
     local isMounted
     local Component = React.Component:extend("Component")
 
@@ -298,25 +287,25 @@ return function()
       end
     end
     function Component:UNSAFE_componentWillMount()
-      expect(isMounted()).to.equal(false)
+      jestExpect(isMounted()).toBe(false)
     end
     function Component:componentDidMount()
       -- ROBLOX deviation: assert self is non nil
-      expect(self).never.toEqual(nil)
-      expect(isMounted()).to.equal(true)
+      jestExpect(self).never.toEqual(nil)
+      jestExpect(isMounted()).toBe(true)
     end
     function Component:render()
-      expect(isMounted()).to.equal(false)
+      jestExpect(isMounted()).toBe(false)
       return React.createElement("div")
     end
 
     local element = React.createElement(Component)
 
-    expect(function()
+    jestExpect(function()
       ReactNoop.act(function()
         ReactNoop.render(element)
       end)
-      expect(isMounted()).to.equal(true)
+      jestExpect(isMounted()).toBe(true)
     end).toErrorDev(
       {
         "Component is accessing isMounted inside its render()",
@@ -327,9 +316,6 @@ return function()
   end)
 
   it('should correctly determine if a nil component is mounted', function()
-    -- ROBLOX FIXME: expect type
-    local expect: any = expect
-
     local isMounted
     local Component = React.Component:extend("Component")
 
@@ -341,23 +327,23 @@ return function()
       end
     end
     function Component:UNSAFE_componentWillMount()
-      expect(isMounted()).to.equal(false)
+      jestExpect(isMounted()).toBe(false)
     end
     function Component:componentDidMount()
-      expect(isMounted()).to.equal(true)
+      jestExpect(isMounted()).toBe(true)
     end
     function Component:render()
-      expect(isMounted()).to.equal(false)
+      jestExpect(isMounted()).toBe(false)
       return nil
     end
 
     local element = React.createElement(Component)
 
-    expect(function()
+    jestExpect(function()
       ReactNoop.act(function()
         ReactNoop.render(element)
       end)
-      expect(isMounted()).to.equal(true)
+      jestExpect(isMounted()).toBe(true)
     end).toErrorDev(
       {
         "Component is accessing isMounted inside its render()",
@@ -368,9 +354,6 @@ return function()
   end)
 
   it('isMounted should return false when unmounted', function()
-    -- ROBLOX FIXME: expect type
-    local expect: any = expect
-
     local isMounted
     local Component = React.Component:extend("Component")
     function Component:init()
@@ -388,13 +371,13 @@ return function()
 
     -- No longer a public API, but we can test that it works internally by
     -- reaching into the updater.
-    expect(isMounted()).to.equal(true)
+    jestExpect(isMounted()).toBe(true)
 
     ReactNoop.act(function()
       ReactNoop.render(nil)
     end)
 
-    expect(isMounted()).to.equal(false)
+    jestExpect(isMounted()).toBe(false)
   end)
 
 --   xit('warns if findDOMNode is used inside render', function()
@@ -405,21 +388,18 @@ return function()
 --       end
 --       render()
 --         if this.state.isMounted)
---           expect(ReactDOM.findDOMNode(this).tagName).toBe('DIV')
+--           jestExpect(ReactDOM.findDOMNode(this).tagName).toBe('DIV')
 --      end
 --         return <div />
 --       end
 --  end
 
---     expect(function()
+--     jestExpect(function()
 --       ReactNoop.render(<Component />)
 --     }).toErrorDev('Component is accessing findDOMNode inside its render()')
 --   })
 
   it('should carry through each of the phases of setup', function()
-    -- ROBLOX FIXME: expect type
-    local expect: any = expect
-
     local _testJournal: any = {}
     local getTestLifeCycleState, getInstanceState
     local LifeCycleComponent = React.Component:extend("LifeCycleComponent")
@@ -469,7 +449,7 @@ return function()
 
     function LifeCycleComponent:componentWillUnmount()
       -- ROBLOX deviation: assert self is non nil
-      expect(self).never.toEqual(nil)
+      jestExpect(self).never.toEqual(nil)
 
       _testJournal.stateAtStartOfWillUnmount = clone(self.state)
       _testJournal.lifeCycleAtStartOfWillUnmount = getTestLifeCycleState()
@@ -481,7 +461,7 @@ return function()
     --
     -- local container = document.createElement('div')
 
-    expect(function()
+    jestExpect(function()
       ReactNoop.act(function()
         ReactNoop.render(React.createElement(LifeCycleComponent))
       end)
@@ -494,32 +474,32 @@ return function()
     )
 
     -- getInitialState
-    expect(_testJournal.returnedFromGetInitialState).toEqual(
+    jestExpect(_testJournal.returnedFromGetInitialState).toEqual(
       GET_INIT_STATE_RETURN_VAL
     )
-    expect(_testJournal.lifeCycleAtStartOfGetInitialState).to.equal(
+    jestExpect(_testJournal.lifeCycleAtStartOfGetInitialState).toBe(
       'UNMOUNTED'
     )
 
     -- componentWillMount
-    expect(_testJournal.stateAtStartOfWillMount).toEqual(
+    jestExpect(_testJournal.stateAtStartOfWillMount).toEqual(
       _testJournal.returnedFromGetInitialState
     )
-    expect(_testJournal.lifeCycleAtStartOfWillMount).to.equal('UNMOUNTED')
+    jestExpect(_testJournal.lifeCycleAtStartOfWillMount).toBe('UNMOUNTED')
 
     -- componentDidMount
-    expect(_testJournal.stateAtStartOfDidMount).toEqual(
+    jestExpect(_testJournal.stateAtStartOfDidMount).toEqual(
       DID_MOUNT_STATE
     )
-    expect(_testJournal.lifeCycleAtStartOfDidMount).to.equal('MOUNTED')
+    jestExpect(_testJournal.lifeCycleAtStartOfDidMount).toBe('MOUNTED')
 
     -- initial render
-    expect(_testJournal.stateInInitialRender).toEqual(
+    jestExpect(_testJournal.stateInInitialRender).toEqual(
       INIT_RENDER_STATE
     )
-    expect(_testJournal.lifeCycleInInitialRender).to.equal('UNMOUNTED')
+    jestExpect(_testJournal.lifeCycleInInitialRender).toBe('UNMOUNTED')
 
-    expect(getTestLifeCycleState()).to.equal('MOUNTED')
+    jestExpect(getTestLifeCycleState()).toBe('MOUNTED')
 
     -- Now *update the component*
     -- instance.forceUpdate()
@@ -528,24 +508,24 @@ return function()
     end)
 
     -- render 2nd time
-    expect(_testJournal.stateInLaterRender).toEqual(NEXT_RENDER_STATE)
-    expect(_testJournal.lifeCycleInLaterRender).to.equal('MOUNTED')
+    jestExpect(_testJournal.stateInLaterRender).toEqual(NEXT_RENDER_STATE)
+    jestExpect(_testJournal.lifeCycleInLaterRender).toBe('MOUNTED')
 
-    expect(getTestLifeCycleState()).to.equal('MOUNTED')
+    jestExpect(getTestLifeCycleState()).toBe('MOUNTED')
 
     ReactNoop.act(function()
       ReactNoop.render(nil)
     end)
 
-    expect(_testJournal.stateAtStartOfWillUnmount).toEqual(
+    jestExpect(_testJournal.stateAtStartOfWillUnmount).toEqual(
       WILL_UNMOUNT_STATE
     )
     -- componentWillUnmount called right before unmount.
-    expect(_testJournal.lifeCycleAtStartOfWillUnmount).to.equal('MOUNTED')
+    jestExpect(_testJournal.lifeCycleAtStartOfWillUnmount).toBe('MOUNTED')
 
     -- But the current lifecycle of the component is unmounted.
-    expect(getTestLifeCycleState()).to.equal('UNMOUNTED')
-    expect(getInstanceState()).toEqual(POST_WILL_UNMOUNT_STATE)
+    jestExpect(getTestLifeCycleState()).toBe('UNMOUNTED')
+    jestExpect(getInstanceState()).toEqual(POST_WILL_UNMOUNT_STATE)
   end)
 
   -- getting to the real error here requires commenting out many try/catch, but here it is:
@@ -621,9 +601,6 @@ xit('should not throw when updating an auxiliary component', function()
   end)
 
   it('should allow state updates in componentDidMount', function()
-    -- ROBLOX FIXME: expect type
-    local expect: any = expect
-
     local getComponentState
     --[[*
      * calls setState in an componentDidMount.
@@ -654,13 +631,10 @@ xit('should not throw when updating an auxiliary component', function()
     ReactNoop.act(function()
       ReactNoop.render(element)
     end)
-    expect(getComponentState().stateField).to.equal("goodbye")
+    jestExpect(getComponentState().stateField).toBe("goodbye")
   end)
 
   it('should call nested legacy lifecycle methods in the right order', function()
-    -- ROBLOX FIXME: expect type
-    local expect: any = expect
-
     local log
     local logger = function(msg)
       return function()
@@ -707,7 +681,7 @@ xit('should not throw when updating an auxiliary component', function()
     ReactNoop.act(function()
       ReactNoop.render(React.createElement(Outer, {x = 1}))
     end)
-    expect(log).toEqual({
+    jestExpect(log).toEqual({
       "outer componentWillMount",
       "inner componentWillMount",
       "inner componentDidMount",
@@ -719,7 +693,7 @@ xit('should not throw when updating an auxiliary component', function()
     ReactNoop.act(function()
       ReactNoop.render(React.createElement(Outer, {x = 2}))
     end)
-    expect(log).toEqual({
+    jestExpect(log).toEqual({
       "outer componentWillReceiveProps",
       "outer shouldComponentUpdate",
       "outer componentWillUpdate",
@@ -734,16 +708,13 @@ xit('should not throw when updating an auxiliary component', function()
     ReactNoop.act(function()
       ReactNoop.render(nil)
     end)
-    expect(log).toEqual({
+    jestExpect(log).toEqual({
       "outer componentWillUnmount",
       "inner componentWillUnmount",
     })
   end)
 
   it('should call nested new lifecycle methods in the right order', function()
-    -- ROBLOX FIXME: expect type
-    local expect: any = expect
-
     local log
     local logger = function(msg)
       return function()
@@ -793,7 +764,7 @@ xit('should not throw when updating an auxiliary component', function()
     ReactNoop.act(function()
       ReactNoop.render(React.createElement(Outer, {x = 1}))
     end)
-    expect(log).toEqual({
+    jestExpect(log).toEqual({
       "outer getDerivedStateFromProps",
       "inner getDerivedStateFromProps",
       "inner componentDidMount",
@@ -805,7 +776,7 @@ xit('should not throw when updating an auxiliary component', function()
     ReactNoop.act(function()
       ReactNoop.render(React.createElement(Outer, {x = 2}))
     end)
-    expect(log).toEqual({
+    jestExpect(log).toEqual({
       "outer getDerivedStateFromProps",
       "outer shouldComponentUpdate",
       "inner getDerivedStateFromProps",
@@ -820,16 +791,13 @@ xit('should not throw when updating an auxiliary component', function()
     ReactNoop.act(function()
       ReactNoop.render(nil)
     end)
-    expect(log).toEqual({
+    jestExpect(log).toEqual({
       "outer componentWillUnmount",
       "inner componentWillUnmount",
     })
   end)
 
   it('should not invoke deprecated lifecycles (cWM/cWRP/cWU) if new static gDSFP is present', function()
-    -- ROBLOX FIXME: expect type
-    local expect: any = expect
-
     local Component = React.Component:extend("Component")
     function Component:init()
       self.state = {}
@@ -842,7 +810,7 @@ xit('should not throw when updating an auxiliary component', function()
     end
     function Component:componentWillReceiveProps()
       -- ROBLOX deviation: assert self is non nil
-      expect(self).never.toEqual(nil)
+      jestExpect(self).never.toEqual(nil)
 
       error(Error('unexpected'))
     end
@@ -853,8 +821,8 @@ xit('should not throw when updating an auxiliary component', function()
       return nil
     end
 
-    expect(function()
-      expect(function()
+    jestExpect(function()
+      jestExpect(function()
         ReactNoop.act(function()
           ReactNoop.render(React.createElement(Component))
         end)
@@ -876,9 +844,6 @@ xit('should not throw when updating an auxiliary component', function()
 
   -- ROBLOX FIXME: outputs none of the toWarnDev() expected messages in DEV mode
   it('should not invoke deprecated lifecycles (cWM/cWRP/cWU) if new getSnapshotBeforeUpdate is present', function()
-    -- ROBLOX FIXME: expect type
-    local expect: any = expect
-
     local Component = React.Component:extend("Component")
     function Component:init()
       self.state = {}
@@ -894,19 +859,19 @@ xit('should not throw when updating an auxiliary component', function()
     end
     function Component:componentWillUpdate()
       -- ROBLOX deviation: assert self is non nil
-      expect(self).never.toEqual(nil)
+      jestExpect(self).never.toEqual(nil)
       error(Error('unexpected'))
     end
     function Component:componentDidUpdate()
       -- ROBLOX deviation: assert self is non nil
-      expect(self).never.toEqual(nil)
+      jestExpect(self).never.toEqual(nil)
     end
     function Component:render()
       return nil
     end
 
-    expect(function()
-      expect(function()
+    jestExpect(function()
+      jestExpect(function()
         ReactNoop.act(function()
           ReactNoop.render(React.createElement(Component, {value=1}))
         end)
@@ -927,9 +892,6 @@ xit('should not throw when updating an auxiliary component', function()
   end)
 
   it('should not invoke new unsafe lifecycles (cWM/cWRP/cWU) if static gDSFP is present', function()
-    -- ROBLOX FIXME: expect type
-    local expect: any = expect
-
     local Component = React.Component:extend("Component")
     function Component:init()
       self.state = {}
@@ -950,7 +912,7 @@ xit('should not throw when updating an auxiliary component', function()
       return nil
     end
 
-    expect(function()
+    jestExpect(function()
       ReactNoop.act(function()
         ReactNoop.render(React.createElement(Component, {value = 1}))
       end)
@@ -967,9 +929,6 @@ xit('should not throw when updating an auxiliary component', function()
   end)
 
   it('should warn about deprecated lifecycles (cWM/cWRP/cWU) if new static gDSFP is present', function()
-    -- ROBLOX FIXME: expect type
-    local expect: any = expect
-
     local AllLegacyLifecycles = React.Component:extend("AllLegacyLifecycles")
     function AllLegacyLifecycles:init()
       self.state = {}
@@ -984,8 +943,8 @@ xit('should not throw when updating an auxiliary component', function()
       return nil
     end
 
-    expect(function()
-      expect(function()
+    jestExpect(function()
+      jestExpect(function()
         ReactNoop.act(function()
           ReactNoop.render(React.createElement(AllLegacyLifecycles))
         end)
@@ -1022,7 +981,7 @@ xit('should not throw when updating an auxiliary component', function()
       return nil
     end
 
-    expect(function()
+    jestExpect(function()
       ReactNoop.act(function()
         ReactNoop.render(React.createElement(WillMount))
       end).toErrorDev(
@@ -1051,8 +1010,8 @@ xit('should not throw when updating an auxiliary component', function()
       return nil
     end
 
-    expect(function()
-      expect(function()
+    jestExpect(function()
+      jestExpect(function()
         ReactNoop.act(function()
           ReactNoop.render(React.createElement(WillMountAndUpdate))
         end)
@@ -1084,8 +1043,8 @@ xit('should not throw when updating an auxiliary component', function()
       return nil
     end
 
-    expect(function()
-      expect(function()
+    jestExpect(function()
+      jestExpect(function()
         ReactNoop.act(function()
           ReactNoop.render(React.createElement(WillReceiveProps))
         end)
@@ -1102,9 +1061,6 @@ xit('should not throw when updating an auxiliary component', function()
   end)
 
   it('should warn about deprecated lifecycles (cWM/cWRP/cWU) if new getSnapshotBeforeUpdate is present', function()
-    -- ROBLOX FIXME: expect type
-    local expect: any = expect
-
     local AllLegacyLifecycles = React.Component:extend("AllLegacyLifecycles")
     function AllLegacyLifecycles:init()
       self.state = {}
@@ -1118,8 +1074,8 @@ xit('should not throw when updating an auxiliary component', function()
       return nil
     end
 
-    expect(function()
-      expect(function()
+    jestExpect(function()
+      jestExpect(function()
         ReactNoop.act(function()
           ReactNoop.render(React.createElement(AllLegacyLifecycles))
         end)
@@ -1155,7 +1111,7 @@ xit('should not throw when updating an auxiliary component', function()
       return nil
     end
 
-    expect(function()
+    jestExpect(function()
       ReactNoop.act(function()
         ReactNoop.render(React.createElement(WillMount))
       end)
@@ -1183,8 +1139,8 @@ xit('should not throw when updating an auxiliary component', function()
       return nil
     end
 
-    expect(function()
-      expect(function()
+    jestExpect(function()
+      jestExpect(function()
         ReactNoop.act(function()
           ReactNoop.render(React.createElement(WillMountAndUpdate))
         end)
@@ -1215,8 +1171,8 @@ xit('should not throw when updating an auxiliary component', function()
       return nil
     end
 
-    expect(function()
-      expect(function()
+    jestExpect(function()
+      jestExpect(function()
         ReactNoop.act(function()
           ReactNoop.render(React.createElement(WillReceiveProps))
         end)
@@ -1239,7 +1195,7 @@ xit('should not throw when updating an auxiliary component', function()
 --       function Parent()
 --         return {
 --           render()
---             expect(typeof this.props).toBe('table’')
+--             jestExpect(typeof this.props).toBe('table’')
 --             log.push('render')
 --             return <Child />
 --           },
@@ -1261,7 +1217,7 @@ xit('should not throw when updating an auxiliary component', function()
 --         x: PropTypes.number,
 --       end
 --       function Child(props, context)
---         expect(context.x).toBe(2)
+--         jestExpect(context.x).toBe(2)
 --         return <div />
 --       end
 --       Child.contextTypes = {
@@ -1269,7 +1225,7 @@ xit('should not throw when updating an auxiliary component', function()
 --       end
 
 --       local div = document.createElement('div')
---       expect(() =>
+--       jestExpect(() =>
 --         ReactDOM.render(<Parent ref={c => c and log.push('ref')} />, div),
 --       ).toErrorDev(
 --         'Warning: The <Parent /> component appears to be a function component that returns a class instance. ' +
@@ -1280,7 +1236,7 @@ xit('should not throw when updating an auxiliary component', function()
 --       )
 --       ReactDOM.render(<Parent ref={c => c and log.push('ref')} />, div)
 
---       expect(log).toEqual([
+--       jestExpect(log).toEqual([
 --         'will mount',
 --         'render',
 --         'did mount',
@@ -1305,7 +1261,7 @@ xit('should not throw when updating an auxiliary component', function()
 --  end
 
 --     local div = document.createElement('div')
---     expect(() => ReactDOM.render(<MyComponent />, div)).toErrorDev(
+--     jestExpect(() => ReactDOM.render(<MyComponent />, div)).toErrorDev(
 --       'MyComponent.getDerivedStateFromProps(): A valid state object (or nil) must ' +
 --         'be returned. You have returned undefined.',
 --     )
@@ -1315,9 +1271,6 @@ xit('should not throw when updating an auxiliary component', function()
 --   })
 
   it("should warn if state is not initialized before getDerivedStateFromProps", function()
-    -- ROBLOX FIXME: expect type
-    local expect: any = expect
-
     local MyComponent = React.Component:extend("MyComponent")
     function MyComponent.getDerivedStateFromProps()
       return nil
@@ -1326,7 +1279,7 @@ xit('should not throw when updating an auxiliary component', function()
       return nil
     end
 
-    expect(function()
+    jestExpect(function()
       ReactNoop.act(function()
         ReactNoop.render(React.createElement(MyComponent))
       end)
@@ -1345,8 +1298,6 @@ xit('should not throw when updating an auxiliary component', function()
   end)
 
   it("should invoke both deprecated and new lifecycles if both are present", function()
-    -- ROBLOX FIXME: expect type
-    local expect: any = expect
     local log = {}
 
     local MyComponent = React.Component:extend("MyComponent")
@@ -1372,7 +1323,7 @@ xit('should not throw when updating an auxiliary component', function()
       return nil
     end
 
-    expect(function()
+    jestExpect(function()
       ReactNoop.act(function()
         ReactNoop.render(React.createElement(MyComponent, {foo = "bar"}))
       end)
@@ -1384,14 +1335,14 @@ xit('should not throw when updating an auxiliary component', function()
       },
       {withoutStack = true}
     )
-    expect(log).toEqual({"componentWillMount", "UNSAFE_componentWillMount"})
+    jestExpect(log).toEqual({"componentWillMount", "UNSAFE_componentWillMount"})
 
     log = {}
 
     ReactNoop.act(function()
       ReactNoop.render(React.createElement(MyComponent, {foo = "baz"}))
     end)
-    expect(log).toEqual({
+    jestExpect(log).toEqual({
       "componentWillReceiveProps",
       "UNSAFE_componentWillReceiveProps",
       "componentWillUpdate",
@@ -1439,20 +1390,18 @@ xit('should not throw when updating an auxiliary component', function()
 --       ReactNoop.render(<Parent />)
 --     })
 
---     expect(divRef.current.textContent).toBe('remote:0, local:0')
+--     jestExpect(divRef.current.textContent).toBe('remote:0, local:0')
 
 --     -- Trigger setState() calls
 --     childInstance.updateState()
---     expect(divRef.current.textContent).toBe('remote:1, local:1')
+--     jestExpect(divRef.current.textContent).toBe('remote:1, local:1')
 
 --     -- Trigger batched setState() calls
 --     divRef.current.click()
---     expect(divRef.current.textContent).toBe('remote:2, local:2')
+--     jestExpect(divRef.current.textContent).toBe('remote:2, local:2')
 --   })
 
   it('should pass the return value from getSnapshotBeforeUpdate to componentDidUpdate', function()
-    -- ROBLOX FIXME: expect type
-    local expect: any = expect
     local log = {}
 
     local MyComponent = React.Component:extend("MyComponent")
@@ -1496,7 +1445,7 @@ xit('should not throw when updating an auxiliary component', function()
         })
       ))
     end)
-    expect(log).toEqual({"render"})
+    jestExpect(log).toEqual({"render"})
     log = {}
 
     ReactNoop.act(function()
@@ -1506,7 +1455,7 @@ xit('should not throw when updating an auxiliary component', function()
         })
       ))
     end)
-    expect(log).toEqual({
+    jestExpect(log).toEqual({
       "render",
       "getSnapshotBeforeUpdate() prevProps:foo prevState:1",
       "componentDidUpdate() prevProps:foo prevState:1 snapshot:abc",
@@ -1520,7 +1469,7 @@ xit('should not throw when updating an auxiliary component', function()
         })
       ))
     end)
-    expect(log).toEqual({
+    jestExpect(log).toEqual({
       "render",
       "getSnapshotBeforeUpdate() prevProps:bar prevState:2",
       "componentDidUpdate() prevProps:bar prevState:2 snapshot:abc",
@@ -1530,7 +1479,7 @@ xit('should not throw when updating an auxiliary component', function()
     ReactNoop.act(function()
       ReactNoop.render(React.createElement("Frame"))
     end)
-    expect(log).toEqual({})
+    jestExpect(log).toEqual({})
   end)
 
   it('should pass previous state to shouldComponentUpdate even with getDerivedStateFromProps', function()
@@ -1564,14 +1513,14 @@ xit('should not throw when updating an auxiliary component', function()
     ReactNoop.act(function()
       ReactNoop.render(React.createElement(SimpleComponent, {value = "initial"}))
     end)
-    expect(capturedValue).to.equal("initial")
+    jestExpect(capturedValue).toBe("initial")
     ReactNoop.act(function()
       ReactNoop.render(React.createElement(SimpleComponent, {value = "updated"}))
     end)
-    expect(capturedValue).to.equal("updated")
+    jestExpect(capturedValue).toBe("updated")
   end)
 
---   -- Don't think we can convert this, since it relies on refs and DOM objects
+--   -- ROBLOX TODO? Don't think we can convert this, since it relies on refs and DOM objects
 --   xit('should call getSnapshotBeforeUpdate before mutations are committed', function()
 --     local log = []
 
@@ -1579,17 +1528,17 @@ xit('should not throw when updating an auxiliary component', function()
 --       divRef = React.createRef()
 --       getSnapshotBeforeUpdate(prevProps, prevState)
 --         log.push('getSnapshotBeforeUpdate')
---         expect(this.divRef.current.textContent).toBe(
+--         jestExpect(this.divRef.current.textContent).toBe(
 --           `value:${prevProps.value}`,
 --         )
 --         return 'foobar'
 --       end
 --       componentDidUpdate(prevProps, prevState, snapshot)
 --         log.push('componentDidUpdate')
---         expect(this.divRef.current.textContent).toBe(
+--         jestExpect(this.divRef.current.textContent).toBe(
 --           `value:${this.props.value}`,
 --         )
---         expect(snapshot).toBe('foobar')
+--         jestExpect(snapshot).toBe('foobar')
 --       end
 --       render()
 --         log.push('render')
@@ -1599,11 +1548,11 @@ xit('should not throw when updating an auxiliary component', function()
 
 --     local div = document.createElement('div')
 --     ReactDOM.render(<MyComponent value="foo" />, div)
---     expect(log).toEqual(['render'])
+--     jestExpect(log).toEqual(['render'])
 --     log.length = 0
 
 --     ReactDOM.render(<MyComponent value="bar" />, div)
---     expect(log).toEqual([
+--     jestExpect(log).toEqual([
 --       'render',
 --       'getSnapshotBeforeUpdate',
 --       'componentDidUpdate',
@@ -1611,7 +1560,7 @@ xit('should not throw when updating an auxiliary component', function()
 --     log.length = 0
 --   })
 
---   -- We have no distinction between nil and undefined, so this might not be
+--   -- ROBLOX TODO? We have no distinction between nil and undefined, so this might not be
 --   -- useful unless we want to try to capture missing return
 --   xit('should warn if getSnapshotBeforeUpdate returns undefined', function()
 --     class MyComponent extends React.Component {
@@ -1624,7 +1573,7 @@ xit('should not throw when updating an auxiliary component', function()
 
 --     local div = document.createElement('div')
 --     ReactDOM.render(<MyComponent value="foo" />, div)
---     expect(() => ReactDOM.render(<MyComponent value="bar" />, div)).toErrorDev(
+--     jestExpect(() => ReactDOM.render(<MyComponent value="bar" />, div)).toErrorDev(
 --       'MyComponent.getSnapshotBeforeUpdate(): A snapshot value (or nil) must ' +
 --         'be returned. You have returned undefined.',
 --     )
@@ -1634,9 +1583,6 @@ xit('should not throw when updating an auxiliary component', function()
 --   })
 
   it("should warn if getSnapshotBeforeUpdate is defined with no componentDidUpdate", function()
-    -- ROBLOX FIXME: expect type
-    local expect: any = expect
-
     local MyComponent = React.Component:extend("MyComponent")
     function MyComponent:getSnapshotBeforeUpdate()
       return nil
@@ -1645,7 +1591,7 @@ xit('should not throw when updating an auxiliary component', function()
       return nil
     end
 
-    expect(function()
+    jestExpect(function()
       ReactNoop.act(function()
         ReactNoop.render(React.createElement(MyComponent))
       end).toErrorDev(
@@ -1661,9 +1607,6 @@ xit('should not throw when updating an auxiliary component', function()
   end)
 
   it('warns about deprecated unsafe lifecycles', function()
-    -- ROBLOX FIXME: expect type
-    local expect: any = expect
-
     local MyComponent = React.Component:extend("MyComponent")
     function MyComponent:componentWillMount() end
     function MyComponent:componentWillReceiveProps() end
@@ -1672,7 +1615,7 @@ xit('should not throw when updating an auxiliary component', function()
       return nil
     end
 
-    expect(function()
+    jestExpect(function()
       ReactNoop.act(function()
         ReactNoop.render(React.createElement(MyComponent, {x = 1}))
       end)

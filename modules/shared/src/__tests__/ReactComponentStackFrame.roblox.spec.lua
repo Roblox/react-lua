@@ -1,10 +1,11 @@
 return function()
 	local Workspace = script.Parent.Parent.Parent
 	local Packages = Workspace.Parent
+    local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
 	local LuauPolyfill = require(Packages.LuauPolyfill)
 	local Object = LuauPolyfill.Object
 	local String = LuauPolyfill.String
-	
+
 	local RobloxJest = require(Workspace.RobloxJest)
 	local ReactComponentStackFrame = nil
 
@@ -33,10 +34,10 @@ return function()
 			end
 
 			local frame = describeNativeComponentFrame(FooComponent, false)
-			expect(frame).to.be.ok()
+			jestExpect(frame).toBeDefined()
 			local lines = String.trim(frame):split("\n")
 
-			expect(#lines).to.equal(1)
+			jestExpect(#lines).toBe(1)
 			assertStringContains(lines[1], "FooComponent")
 		end)
 	end)
@@ -177,7 +178,7 @@ return function()
 					lineNumber = 7,
 				}, nil)
 
-				expect(frame:find(fileName)).never.to.be.ok()
+				jestExpect(frame:find(fileName)).never.toBeDefined()
 			end)
 		end)
 	end)

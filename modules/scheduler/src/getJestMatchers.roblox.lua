@@ -19,14 +19,16 @@ local function captureAssertion(fn)
 
 		return {
 			pass = false,
-			message = message,
+			message = function()
+				return message
+			end,
 		}
 	end
 
 	return { pass = true }
 end
 
-return function(expect)
+return function(jestExpect)
 	local function assertYieldsWereCleared(scheduler)
 		local actualYields = scheduler.unstable_clearYields()
 		if #actualYields ~= 0 then
@@ -35,52 +37,52 @@ return function(expect)
 		end
 	end
 
-	local function expectToFlushAndYield(scheduler, expectedYields)
+	local function expectToFlushAndYield(_matcherContext, scheduler, expectedYields)
 		assertYieldsWereCleared(scheduler)
 		scheduler.unstable_flushAllWithoutAsserting()
 		local actualYields = scheduler.unstable_clearYields()
 
 		return captureAssertion(function()
-			expect(actualYields).toEqual(expectedYields)
+			jestExpect(actualYields).toEqual(expectedYields)
 		end)
 	end
 
-	local function expectToFlushAndYieldThrough(scheduler, expectedYields)
+	local function expectToFlushAndYieldThrough(_matcherContext, scheduler, expectedYields)
 		assertYieldsWereCleared(scheduler)
 		scheduler.unstable_flushNumberOfYields(#expectedYields)
 		local actualYields = scheduler.unstable_clearYields()
 
 		return captureAssertion(function()
-			expect(actualYields).toEqual(expectedYields)
+			jestExpect(actualYields).toEqual(expectedYields)
 		end)
 	end
 
-	local function expectToFlushWithoutYielding(scheduler)
-		return expectToFlushAndYield(scheduler, {})
+	local function expectToFlushWithoutYielding(_matcherContext, scheduler)
+		return expectToFlushAndYield(_matcherContext, scheduler, {})
 	end
 
-	local function expectToFlushExpired(scheduler, expectedYields)
+	local function expectToFlushExpired(_matcherContext, scheduler, expectedYields)
 		assertYieldsWereCleared(scheduler)
 		scheduler.unstable_flushExpired()
 		local actualYields = scheduler.unstable_clearYields()
 
 		return captureAssertion(function()
-			expect(actualYields).toEqual(expectedYields)
+			jestExpect(actualYields).toEqual(expectedYields)
 		end)
 	end
 
-	local function expectToHaveYielded(scheduler, expectedYields)
+	local function expectToHaveYielded(_matcherContext, scheduler, expectedYields)
 		local actualYields = scheduler.unstable_clearYields()
 
 		return captureAssertion(function()
-			expect(actualYields).toEqual(expectedYields)
+			jestExpect(actualYields).toEqual(expectedYields)
 		end)
 	end
 
-	local function expectToFlushAndThrow(scheduler, rest)
+	local function expectToFlushAndThrow(_matcherContext, scheduler, rest)
 		assertYieldsWereCleared(scheduler)
 		return captureAssertion(function()
-			expect(function()
+			jestExpect(function()
 				scheduler.unstable_flushAllWithoutAsserting()
 			end).toThrow(rest)
 		end)

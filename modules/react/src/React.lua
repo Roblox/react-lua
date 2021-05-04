@@ -1,5 +1,4 @@
 -- upstream: https://github.com/facebook/react/blob/56e9feead0f91075ba0a4f725c9e4e343bca1c67/packages/react/src/React.js
--- deviation: TODO: This is currently just a stub!
 local React = script.Parent
 local Workspace = React.Parent
 local createMutableSource = require(React.ReactMutableSource)

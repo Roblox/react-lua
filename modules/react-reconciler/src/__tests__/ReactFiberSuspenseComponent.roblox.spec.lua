@@ -2,6 +2,8 @@
 return function()
 	local Reconciler = script.Parent.Parent
 	local Workspace = script.Parent.Parent.Parent
+	local Packages = Workspace.Parent
+	local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
 	local RobloxJest = require(Workspace.RobloxJest)
 
 	local ReactFiberSuspenseComponent
@@ -40,9 +42,9 @@ return function()
 						hasInvisibleParent and "does not have" or "has"
 					)
 					it(testName, function()
-						expect(
+						jestExpect(
 							shouldCaptureSuspense(fiber, hasInvisibleParent)
-						).to.equal(expected)
+						).toBe(expected)
 					end)
 				end
 			end

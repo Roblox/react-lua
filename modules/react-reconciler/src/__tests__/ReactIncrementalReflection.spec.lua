@@ -1,4 +1,4 @@
--- * Upstream: https://github.com/facebook/react/blob/d13f5b9538e48f74f7c571ef3cde652ca887cca0/packages/react-reconciler/src/__tests__/ReactIncrementalReflection-test.js
+-- upstream: https://github.com/facebook/react/blob/d13f5b9538e48f74f7c571ef3cde652ca887cca0/packages/react-reconciler/src/__tests__/ReactIncrementalReflection-test.js
 -- * Copyright (c) Facebook, Inc. and its affiliates.
 -- *
 -- * This source code is licensed under the MIT license found in the
@@ -15,6 +15,9 @@ local Scheduler
 local console = require(Workspace.Shared.console)
 
 return function()
+    local Packages = Workspace.Parent
+    local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
+
     describe('ReactIncrementalReflection', function()
         local RobloxJest = require(Workspace.RobloxJest)
         beforeEach(function()
@@ -64,7 +67,6 @@ return function()
         end
 
         it('handles isMounted even when the initial render is deferred', function()
-            local expect: any = expect
             local instances = {}
             local Component = React.Component:extend("Component")
 
@@ -88,25 +90,24 @@ return function()
                 return React.createElement(Component, nil)
             end
 
-            ReactNoop.render(React.createElement(Foo)) 
-            
+            ReactNoop.render(React.createElement(Foo))
+
             -- Render part way through but don't yet commit the updates.
-            expect(Scheduler).toFlushAndYieldThrough({
+            jestExpect(Scheduler).toFlushAndYieldThrough({
                 'componentWillMount: false',
             })
-            expect(instances[1]:_isMounted()).toEqual(false) 
-            
+            jestExpect(instances[1]:_isMounted()).toBe(false)
+
             -- Render the rest and commit the updates.
-            expect(function()
-                return expect(Scheduler).toFlushAndYield({
+            jestExpect(function()
+                return jestExpect(Scheduler).toFlushAndYield({
                     'componentDidMount: true',
                 })
             end).toErrorDev('Using UNSAFE_componentWillMount in strict mode is not recommended', {withoutStack = true})
-            expect(instances[1]:_isMounted()).toEqual(true)
+            jestExpect(instances[1]:_isMounted()).toBe(true)
         end)
-        -- ROBLOX TODO: componentWillUnmount not getting called
-        xit('handles isMounted when an unmount is deferred', function()
-            local expect: any = expect
+
+        it('handles isMounted when an unmount is deferred', function()
             local instances = {}
             local Component = React.Component:extend('Component')
 
@@ -141,32 +142,31 @@ return function()
             end
 
             ReactNoop.render(React.createElement(Foo, {mount = true}))
-            expect(function()
-                return expect(Scheduler).toFlushAndYield({
+            jestExpect(function()
+                return jestExpect(Scheduler).toFlushAndYield({
                     'Component',
                 })
             end).toErrorDev('Using UNSAFE_componentWillMount in strict mode is not recommended', {withoutStack = true})
 
-            expect(instances[1]:_isMounted()).toEqual(true)
+            jestExpect(instances[1]:_isMounted()).toBe(true)
 
             ReactNoop.render(React.createElement(Foo, {mount = false}))
             -- Render part way through but don't yet commit the updates so it is not
             -- fully unmounted yet.
-            expect(Scheduler).toFlushAndYieldThrough({
+            jestExpect(Scheduler).toFlushAndYieldThrough({
                 'Other',
             })
 
-            expect(instances[1]:_isMounted()).toEqual(true)
+            jestExpect(instances[1]:_isMounted()).toBe(true)
 
             -- Finish flushing the unmount.
-            expect(Scheduler).toFlushAndYield({
+            jestExpect(Scheduler).toFlushAndYield({
                 'componentWillUnmount: true',
             })
-            expect(instances[1]:_isMounted()).toEqual(false)
+            jestExpect(instances[1]:_isMounted()).toBe(false)
         end)
         -- ROBLOX TODO: 292: received[1][2]: value of type 'nil' expected[1][2]: value of type 'table'
         xit('finds no node before insertion and correct node before deletion', function()
-            local expect: any = expect
             local classInstance = nil
             local function findInstance(inst)
                 -- We ignore warnings fired by findInstance because we are testing
@@ -271,7 +271,7 @@ return function()
 
             ReactNoop.render(React.createElement(Foo, {step = 0}))
              -- Flush past Component but don't complete rendering everything yet.
-            expect(Scheduler).toFlushAndYieldThrough({
+            jestExpect(Scheduler).toFlushAndYieldThrough({
                 {
                     'componentWillMount',
                     nil,
@@ -280,14 +280,13 @@ return function()
                 'render sibling',
             })
 
-            -- ROBLOX TODO: toBeDefined not implmented
-            --expect(classInstance).toBeDefined()
-
+            jestExpect(classInstance).toBeDefined()
             -- The instance has been complete but is still not committed so it should
             -- not find any host nodes in it.
-            expect(findInstance(classInstance)).toEqual(nil)
-            expect(function()
-                return expect(Scheduler).toFlushAndYield({
+            jestExpect(findInstance(classInstance)).toBe(nil)
+            jestExpect(function()
+                -- ROBLOX FIXME: toFlushAndYield gets an empty array
+                return jestExpect(Scheduler).toFlushAndYield({
                     {
                         'componentDidMount',
                         span(),
@@ -299,14 +298,14 @@ return function()
             }, {withoutStack = true})
 
             local hostSpan = classInstance.span
-            expect(hostSpan).tobeDefined()
+            jestExpect(hostSpan).toBeDefined()
 
-            expect(findInstance(classInstance)).toEqual(hostSpan)
+            jestExpect(findInstance(classInstance)).toBe(hostSpan)
 
             -- Flush next step which will cause an update but not yet render a new host
             -- node.
             ReactNoop.render(React.createElement(Foo, {step = 1}))
-            expect(Scheduler).toFlushAndYield({
+            jestExpect(Scheduler).toFlushAndYield({
                 {
                     'componentWillUpdate',
                     hostSpan,
@@ -319,12 +318,12 @@ return function()
                 },
             })
 
-            expect(ReactNoop.findInstance(classInstance)).toEqual(hostSpan)
+            jestExpect(ReactNoop.findInstance(classInstance)).toBe(hostSpan)
 
             -- The next step will render a new host node but won't get committed yet.
             -- We expect this to mutate the original Fiber.
             ReactNoop.render(React.createElement(Foo, {step = 2}))
-            expect(Scheduler).toFlushAndYieldThrough({
+            jestExpect(Scheduler).toFlushAndYieldThrough({
                 {
                     'componentWillUpdate',
                     hostSpan,
@@ -334,10 +333,10 @@ return function()
             })
 
             -- This should still be the host span.
-            expect(ReactNoop.findInstance(classInstance)).toEqual(hostSpan)
+            jestExpect(ReactNoop.findInstance(classInstance)).toBe(hostSpan)
 
             -- When we finally flush the tree it will get committed.
-            expect(Scheduler).toFlushAndYield({
+            jestExpect(Scheduler).toFlushAndYield({
                 {
                     'componentDidUpdate',
                     div(),
@@ -345,17 +344,15 @@ return function()
             })
 
             local hostDiv = classInstance.div
-            expect(hostDiv).toBeDefined()
-
-            -- ROBLOX TODO: to not equal
-            expect(hostSpan).toEqual(hostDiv)
+            jestExpect(hostDiv).toBeDefined()
+            jestExpect(hostSpan).never.toBe(hostDiv)
 
             -- We should now find the new host node.
-            expect(ReactNoop.findInstance(classInstance)).toEqual(hostDiv)
+            jestExpect(ReactNoop.findInstance(classInstance)).toBe(hostDiv)
 
             -- Render to null but don't commit it yet.
             ReactNoop.render(React.createElement(Foo, {step = 3}))
-            expect(Scheduler).toFlushAndYieldThrough({
+            jestExpect(Scheduler).toFlushAndYieldThrough({
                 {
                     'componentWillUpdate',
                     hostDiv,
@@ -365,9 +362,9 @@ return function()
             })
 
             -- This should still be the host div since the deletion is not committed.
-            expect(ReactNoop.findInstance(classInstance)).toEqual(hostDiv)
+            jestExpect(ReactNoop.findInstance(classInstance)).toBe(hostDiv)
 
-            expect(Scheduler).toFlushAndYield({
+            jestExpect(Scheduler).toFlushAndYield({
                 {
                     'componentDidUpdate',
                     nil,
@@ -375,11 +372,11 @@ return function()
             })
 
             -- This should still be the host div since the deletion is not committed.
-            expect(ReactNoop.findInstance(classInstance)).toEqual(nil)
+            jestExpect(ReactNoop.findInstance(classInstance)).toBe(nil)
 
             -- Render a div again
             ReactNoop.render(React.createElement(Foo, {step = 4}))
-            expect(Scheduler).toFlushAndYield({
+            jestExpect(Scheduler).toFlushAndYield({
                 {
                     'componentWillUpdate',
                     nil,
@@ -394,7 +391,7 @@ return function()
 
             -- Unmount the component.
             ReactNoop.render({})
-            expect(Scheduler).toFlushAndYield({
+            jestExpect(Scheduler).toFlushAndYield({
                 {
                     'componentWillUnmount',
                     hostDiv,

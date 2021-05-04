@@ -13,7 +13,10 @@ local React
 local ReactNoop
 local Workspace = script.Parent.Parent.Parent
 local jest
-return function() 
+return function()
+    local Packages = Workspace.Parent
+    local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
+
     describe('ReactIncrementalUpdatesMinimalism', function()
         jest = require(Workspace.RobloxJest)
         beforeEach(function()
@@ -22,7 +25,6 @@ return function()
             ReactNoop = require(Workspace.ReactNoopRenderer)
         end)
         it('should render a simple component', function()
-            local expect: any = expect
             local function Child()
                 return React.createElement('div', nil, 'Hello World')
             end
@@ -32,18 +34,17 @@ return function()
 
             ReactNoop.render(React.createElement(Parent, nil))
             local x = ReactNoop.flushWithHostCounters()
-            expect(x).toEqual({
+            jestExpect(x).toEqual({
                 hostDiffCounter = 0,
                 hostUpdateCounter = 0,
             })
             ReactNoop.render(React.createElement(Parent, nil))
-            expect(ReactNoop.flushWithHostCounters()).toEqual({
+            jestExpect(ReactNoop.flushWithHostCounters()).toEqual({
                 hostDiffCounter = 1,
                 hostUpdateCounter = 1,
             })
         end)
         it('should not diff referentially equal host elements', function()
-            local expect: any = expect
             local function Leaf(props)
                 return React.createElement('span', nil, 'hello', React.createElement('b', nil), props.name)
             end
@@ -60,18 +61,17 @@ return function()
             end
 
             ReactNoop.render(React.createElement(Parent, nil))
-            expect(ReactNoop.flushWithHostCounters()).toEqual({
+            jestExpect(ReactNoop.flushWithHostCounters()).toEqual({
                 hostDiffCounter = 0,
                 hostUpdateCounter = 0,
             })
             ReactNoop.render(React.createElement(Parent, nil))
-            expect(ReactNoop.flushWithHostCounters()).toEqual({
+            jestExpect(ReactNoop.flushWithHostCounters()).toEqual({
                 hostDiffCounter = 0,
                 hostUpdateCounter = 0,
             })
         end)
         it('should not diff parents of setState targets', function()
-            local expect: any = expect
             local childInst
 
             local function Leaf(props)
@@ -96,14 +96,14 @@ return function()
             end
 
             ReactNoop.render(React.createElement(Parent, nil))
-            expect(ReactNoop.flushWithHostCounters()).toEqual({
+            jestExpect(ReactNoop.flushWithHostCounters()).toEqual({
                 hostDiffCounter = 0,
                 hostUpdateCounter = 0,
             })
             childInst:setState({
                 name = 'Robin',
             })
-            expect(ReactNoop.flushWithHostCounters()).toEqual({
+            jestExpect(ReactNoop.flushWithHostCounters()).toEqual({
                 -- Child > div
                 -- Child > Leaf > span
                 -- Child > Leaf > span > b
@@ -115,7 +115,7 @@ return function()
                 hostUpdateCounter = 4,
             })
             ReactNoop.render(React.createElement(Parent, nil))
-            expect(ReactNoop.flushWithHostCounters()).toEqual({
+            jestExpect(ReactNoop.flushWithHostCounters()).toEqual({
                 -- Parent > section
                 -- Parent > section > div
                 -- Parent > section > div > Leaf > span

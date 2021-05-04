@@ -6,14 +6,8 @@ local Module = require(script.Module)
 -- hitting the Module's cache
 local require = Module.requireOverride
 
-local createSpy = require(script.createSpy)
 local RobloxJest = {
-	createSpy = createSpy,
-	-- This is the actual jest api
-	fn = createSpy,
 	Matchers = {
-		toEqual = require(script.Matchers.toEqual),
-		toThrow = require(script.Matchers.toThrow),
 		toErrorDev = require(script.Matchers.toErrorDev),
 		toWarnDev = require(script.Matchers.toWarnDev),
 	},
@@ -22,6 +16,7 @@ local RobloxJest = {
 	mock = Module.mock,
 	unmock = Module.unmock,
 
+	-- ROBLOX TODO: use roblox-jest fake timers impl and delete these
 	useFakeTimers = FakeTimers.useFakeTimers,
 	useRealTimers = FakeTimers.useRealTimers,
 	runAllTimers = FakeTimers.runAllTimers,

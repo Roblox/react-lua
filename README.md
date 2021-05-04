@@ -135,16 +135,16 @@ To avoid this in the future, be sure that your foreman binary path is *before* t
 
 * Try to keep the directory structure, file name/location, and code symbol names aligned with React upstream. At the top of the mirrored files, put a comment in this format that includes the specific hash of the version of the file you're mirroring: 
 ```
--- upstream https://github.com/facebook/react/blob/9abc2785cb070148d64fae81e523246b90b92016/packages/scheduler/src/Scheduler.js
+-- ROBLOX upstream https://github.com/facebook/react/blob/9abc2785cb070148d64fae81e523246b90b92016/packages/scheduler/src/Scheduler.js
 ```
 
 
 * If you have a deviation from upstream code logic for Lua-specific reasons (1-based array indices, etc) put a comment above the deviated line:
 ```
--- deviation: use explicit nil check instead of falsey
+-- ROBLOX deviation: use explicit nil check instead of falsey
 ``` 
 
-* For deviations due to Lua langauge differences (no spread operator) that don't involve changing the logic, don't put a deviation comment. Just use the appropriate equivalent from the Cryo and other utility libraries.
+* For deviations due to Lua language differences (no spread operator) that don't involve changing the logic, don't put a deviation comment. Just use the appropriate equivalent from the Cryo and other utility libraries.
 
 * For files that are new and Roblox-specific, use the file name: ```Timeout.roblox.lua```
 

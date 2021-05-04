@@ -76,7 +76,7 @@ local function normalizeCodeLocInfo(str)
 end
 
 return function(consoleMethod, matcherName)
-	return function(callback, expectedMessages, options, ...)
+	return function(_matcherContext, callback, expectedMessages, options, ...)
 		local LuauPolyfill = require(Packages.LuauPolyfill)
 		local Array = LuauPolyfill.Array
 		local console = LuauPolyfill.console
@@ -233,7 +233,9 @@ return function(consoleMethod, matcherName)
 			-- // Any unexpected warnings should be treated as a failure.
 			if #unexpectedWarnings > 0 then
 				return {
-					message = unexpectedWarnings[1],
+					message = function()
+						return unexpectedWarnings[1]
+					end,
 					pass = false,
 				}
 			end
@@ -241,9 +243,11 @@ return function(consoleMethod, matcherName)
 			-- // Any remaining messages indicate a failed expectations.
 			if #expectedMessages > 0 then
 				return {
-					message = ("Expected warning was not recorded: %s\n  "):format(
-						expectedMessages[1]
-					),
+					message = function()
+						return ("Expected warning was not recorded: %s\n  "):format(
+							expectedMessages[1]
+						)
+					end,
 					pass = false,
 				}
 			end
@@ -253,22 +257,26 @@ return function(consoleMethod, matcherName)
 				if withoutStack ~= #warningsWithoutComponentStack then
 					local warnings = warningsWithoutComponentStack
 					return {
-						message = ("Expected %s warnings without a component stack but received %s:\n"):format(
-							withoutStack,
-							#warningsWithoutComponentStack
-						) .. table.concat(warnings, "\n"),
+						message = function()
+							return ("Expected %s warnings without a component stack but received %s:\n"):format(
+								withoutStack,
+								#warningsWithoutComponentStack
+								) .. table.concat(warnings, "\n")
+						end,
 						pass = false,
 					}
 				end
 			elseif withoutStack == true then
 				if #warningsWithComponentStack > 0 then
 					return {
-						message = "Received warning unexpectedly includes a component stack:\n" ..
-							("  %s\nIf this warning intentionally includes the component stack, remove ")
-								:format(warningsWithComponentStack[1]) ..
-							("{withoutStack: true} from the %s() call. If you have a mix of "):format(matcherName) ..
-							("warnings with and without stack in one %s() call, pass "):format(matcherName) ..
-							("{withoutStack: N} where N is the number of warnings without stacks."):format(matcherName),
+						message = function()
+							return "Received warning unexpectedly includes a component stack:\n" ..
+								("  %s\nIf this warning intentionally includes the component stack, remove ")
+									:format(warningsWithComponentStack[1]) ..
+								("{withoutStack: true} from the %s() call. If you have a mix of "):format(matcherName) ..
+								("warnings with and without stack in one %s() call, pass "):format(matcherName) ..
+								("{withoutStack: N} where N is the number of warnings without stacks."):format(matcherName)
+						end,
 						pass = false,
 					}
 				end
@@ -277,9 +285,11 @@ return function(consoleMethod, matcherName)
 				-- // If some warnings don't have it, it's an error.
 				if #warningsWithoutComponentStack > 0 then
 					return {
-						message = "Received warning unexpectedly does not include a component stack:\n" ..
-							("  %s\nIf this warning intentionally omits the component stack, add "):format(warningsWithoutComponentStack[1]) ..
-							("{withoutStack: true} to the %s call."):format(matcherName),
+						message = function()
+							return "Received warning unexpectedly does not include a component stack:\n" ..
+								("  %s\nIf this warning intentionally omits the component stack, add "):format(warningsWithoutComponentStack[1]) ..
+								("{withoutStack: true} to the %s call."):format(matcherName)
+						end,
 						pass = false,
 					}
 				end
@@ -293,20 +303,24 @@ return function(consoleMethod, matcherName)
 
 			if lastWarningWithMismatchingFormat ~= nil then
 				return {
-					message = ("Received %s arguments for a message with %s placeholders:\n  %s"):format(
-						#lastWarningWithMismatchingFormat.args,
-						lastWarningWithMismatchingFormat.expectedArgCount,
-						lastWarningWithMismatchingFormat.format
-					),
+					message = function()
+						return ("Received %s arguments for a message with %s placeholders:\n  %s"):format(
+							#lastWarningWithMismatchingFormat.args,
+							lastWarningWithMismatchingFormat.expectedArgCount,
+							lastWarningWithMismatchingFormat.format
+						)
+					end,
 					pass = false,
 				}
 			end
 			if lastWarningWithExtraComponentStack ~= nil then
 				return {
-					message = "Received more than one component stack for a warning:\n" ..
-						("  %s\nDid you accidentally pass a stack to warning() as the last argument? ")
-							:format(lastWarningWithExtraComponentStack.format) ..
-						"Don't forget warning() already injects the component stack automatically.",
+					message = function()
+						return "Received more than one component stack for a warning:\n" ..
+							("  %s\nDid you accidentally pass a stack to warning() as the last argument? ")
+								:format(lastWarningWithExtraComponentStack.format) ..
+							"Don't forget warning() already injects the component stack automatically."
+					end,
 					pass = false,
 				}
 			end

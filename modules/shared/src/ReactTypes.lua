@@ -83,7 +83,7 @@ export type ReactContext<T> = {
   displayName: string?,
   -- ...
   [any]: any,
-};
+}
 
 export type ReactPortal = {
   -- $$typeof: Symbol | number,
@@ -94,11 +94,11 @@ export type ReactPortal = {
   implementation: any,
   -- ...
   [any]: any
-};
+}
 
--- export type RefObject = {|
---   current: any,
--- |};
+export type RefObject = {
+  current: any,
+}
 
 -- deviation: No Luau support for literal types
 -- export type EventPriority = 0 | 1 | 2;
@@ -227,9 +227,9 @@ export type Wakeable = {
 -- }
 export type Thenable<R, U> = {
   then_: (
-    (R) -> Thenable<R, U> | U | nil,
-    (any) -> Thenable<R, U> | U | nil
-  ) -> Thenable<R, U>
-};
+    (R) -> () | Thenable<R, U> | U,
+    (any) -> () | Thenable<R, U> | U
+  ) -> () | Thenable<R, U>
+}
 
 return exports

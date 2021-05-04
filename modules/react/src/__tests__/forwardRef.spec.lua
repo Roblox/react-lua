@@ -11,6 +11,8 @@
 return function()
   local Workspace = script.Parent.Parent.Parent
   local Packages = Workspace.Parent
+  local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
+
   local Cryo = require(Packages.Cryo)
   local RobloxJest = require(Workspace.RobloxJest)
 
@@ -35,9 +37,6 @@ return function()
   end)
 
   it("should update refs when switching between children", function()
-    -- ROBLOX FIXME
-    local expect: any = expect
-
     local function FunctionComponent(props)
       local forwardedRef = props.forwardedRef
       local setRefOnDiv = props.setRefOnDiv
@@ -65,31 +64,25 @@ return function()
     local ref = React.createRef()
 
     ReactNoop.render(React.createElement(RefForwardingComponent, {ref=ref, setRefOnDiv=true}))
-    expect(Scheduler).toFlushWithoutYielding()
-    expect(ref.current.type).to.equal("div")
+    jestExpect(Scheduler).toFlushWithoutYielding()
+    jestExpect(ref.current.type).toBe("div")
 
     ReactNoop.render(React.createElement(RefForwardingComponent, {ref=ref, setRefOnDiv=false}))
-    expect(Scheduler).toFlushWithoutYielding()
-    expect(ref.current.type).to.equal("span")
+    jestExpect(Scheduler).toFlushWithoutYielding()
+    jestExpect(ref.current.type).toBe("span")
   end)
 
   it("should support rendering nil", function()
-    -- ROBLOX FIXME
-    local expect: any = expect
-
     local RefForwardingComponent = React.forwardRef(function(props, ref) return nil end)
 
     local ref = React.createRef()
 
     ReactNoop.render(React.createElement(RefForwardingComponent, {ref=ref}))
-    expect(Scheduler).toFlushWithoutYielding()
-    expect(ref.current).to.equal(nil)
+    jestExpect(Scheduler).toFlushWithoutYielding()
+    jestExpect(ref.current).toBe(nil)
   end)
 
   it('should support rendering nil for multiple children', function()
-    -- ROBLOX FIXME
-    local expect: any = expect
-
     local RefForwardingComponent = React.forwardRef(function(props, ref) return nil end)
 
     local ref = React.createRef()
@@ -101,8 +94,8 @@ return function()
         React.createElement("div"),
       })
     )
-    expect(Scheduler).toFlushWithoutYielding()
-    expect(ref.current).to.equal(nil)
+    jestExpect(Scheduler).toFlushWithoutYielding()
+    jestExpect(ref.current).toBe(nil)
   end)
 
   -- ROBLOX TODO: PropTypes not yet supported
@@ -136,20 +129,20 @@ return function()
     -- ReactNoop.render(
     --   <RefForwardingComponent ref={ref} optional="foo" required="bar" />,
     -- )
-    -- expect(Scheduler).toFlushWithoutYielding()
-    -- expect(ref.current.children).toEqual([
+    -- jestExpect(Scheduler).toFlushWithoutYielding()
+    -- jestExpect(ref.current.children).toEqual([
     --   {text: 'foo', hidden: false},
     --   {text: 'bar', hidden: false},
     -- ])
 
     -- ReactNoop.render(<RefForwardingComponent ref={ref} required="foo" />)
-    -- expect(Scheduler).toFlushWithoutYielding()
-    -- expect(ref.current.children).toEqual([
+    -- jestExpect(Scheduler).toFlushWithoutYielding()
+    -- jestExpect(ref.current.children).toEqual([
     --   {text: 'default', hidden: false},
     --   {text: 'foo', hidden: false},
     -- ])
 
-    -- expect(() =>
+    -- jestExpect(() =>
     --   ReactNoop.render(<RefForwardingComponent ref={ref} optional="foo" />),
     -- ).toErrorDev(
     --   'Warning: Failed prop type: The prop `required` is marked as required in ' +
@@ -159,23 +152,20 @@ return function()
   end)
 
   it("should warn if not provided a callback during creation", function()
-    -- ROBLOX FIXME
-    local expect: any = expect
-
     -- deviation: no `undefined` in Lua
-    -- expect(function()
+    -- jestExpect(function()
     --   React.forwardRef(nil)
     -- end).toErrorDev(
     --   "forwardRef requires a render function but was given undefined.",
     --   {withoutStack: true},
     -- )
-    expect(function()
+    jestExpect(function()
       React.forwardRef(nil)
     end).toErrorDev(
       "forwardRef requires a render function but was given nil.",
       {withoutStack = true}
     )
-    expect(function()
+    jestExpect(function()
       React.forwardRef("foo")
     end).toErrorDev(
       "forwardRef requires a render function but was given string.",
@@ -184,10 +174,7 @@ return function()
   end)
 
   it("should warn if no render function is provided", function()
-    -- ROBLOX FIXME
-    local expect: any = expect
-
-    expect(
+    jestExpect(
       React.forwardRef
     ).toErrorDev(
       "forwardRef requires a render function but was given nil.",
@@ -207,14 +194,14 @@ return function()
     -- end
     -- renderWithDefaultProps.defaultProps = {}
 
-    -- expect(function()
+    -- jestExpect(function()
     --   React.forwardRef(renderWithPropTypes)
     -- ).toErrorDev(
     --   "forwardRef render functions do not support propTypes or defaultProps. " ..
     --     "Did you accidentally pass a React component?",
     --   {withoutStack: true}
     -- )
-    -- expect(function()
+    -- jestExpect(function()
     --   React.forwardRef(renderWithDefaultProps)
     -- ).toErrorDev(
     --   "forwardRef render functions do not support propTypes or defaultProps. " ..
@@ -234,7 +221,7 @@ return function()
   xit("should warn if the render function provided does not use the forwarded ref parameter", function()
     -- local arityOfOne = props => <div {...props} />
 
-    -- expect(() =>
+    -- jestExpect(() =>
     --   React.forwardRef(arityOfOne),
     -- ).toErrorDev(
     --   'forwardRef render functions accept exactly two parameters: props and ref. ' +
@@ -253,7 +240,7 @@ return function()
   xit("should warn if the render function provided expects to use more than two parameters", function()
     -- local arityOfThree = (props, ref, x) => <div {...props} ref={ref} x={x} />
 
-    -- expect(() =>
+    -- jestExpect(() =>
     --   React.forwardRef(arityOfThree),
     -- ).toErrorDev(
     --   "forwardRef render functions accept exactly two parameters: props and ref. " +
@@ -285,7 +272,7 @@ return function()
 
     -- local ref = React.createRef()
 
-    -- expect(() =>
+    -- jestExpect(() =>
     --   ReactNoop.render(<RefForwardingComponent ref={ref} optional="foo" />),
     -- ).toErrorDev(
     --   'Warning: Failed prop type: The prop `required` is marked as required in ' +
@@ -313,7 +300,7 @@ return function()
 
     -- local ref = React.createRef()
 
-    -- expect(() =>
+    -- jestExpect(() =>
     --   ReactNoop.render(<RefForwardingComponent ref={ref} optional="foo" />),
     -- ).toErrorDev(
     --   'Warning: Failed prop type: The prop `required` is marked as required in ' +
@@ -322,11 +309,14 @@ return function()
     -- )
   end)
 
-  -- ROBLOX FIXME: Test fails with 'Expected value "4", got "3"'; not sure why
-  xit("should not bailout if forwardRef is not wrapped in memo", function()
-    -- ROBLOX FIXME
-    local expect: any = expect
-
+  -- ROBLOX FIXME: Passes in non-DEV, in DEV fails with 'Expected value "2", got "1"'
+  local skipIfDev = (function()
+    if _G.__DEV__ then
+      return itSKIP
+    end
+    return it
+  end)()
+  skipIfDev("should not bailout if forwardRef is not wrapped in memo", function()
     local Component = function(props)
       return React.createElement("div", props)
     end
@@ -341,19 +331,16 @@ return function()
     local ref = React.createRef()
 
     ReactNoop.render(React.createElement(RefForwardingComponent, {ref=ref, optional="foo"}))
-    expect(Scheduler).toFlushWithoutYielding()
-    expect(renderCount).to.equal(_G.__DEV__ and 2 or 1)
+    jestExpect(Scheduler).toFlushWithoutYielding()
+    jestExpect(renderCount).toBe(_G.__DEV__ and 2 or 1)
 
     ReactNoop.render(React.createElement(RefForwardingComponent, {ref=ref, optional="foo"}))
-    expect(Scheduler).toFlushWithoutYielding()
-    expect(renderCount).to.equal(_G.__DEV__ and 4 or 2)
+    jestExpect(Scheduler).toFlushWithoutYielding()
+    jestExpect(renderCount).toBe(_G.__DEV__ and 4 or 2)
   end)
 
   -- ROBLOX TODO: MemoComponent unimplemented (ReactFiberBeginWork.new:3454)
   xit("should bailout if forwardRef is wrapped in memo", function()
-    -- ROBLOX FIXME
-    local expect: any = expect
-
     local Component = function(props)
       return React.createElement("div", {ref=props.forwardedRef})
     end
@@ -370,36 +357,33 @@ return function()
     local ref = React.createRef()
 
     ReactNoop.render(React.createElement(RefForwardingComponent, {ref=ref, optional="foo"}))
-    expect(Scheduler).toFlushWithoutYielding()
-    expect(renderCount).to.equal(_G.__DEV__ and 2 or 1)
+    jestExpect(Scheduler).toFlushWithoutYielding()
+    jestExpect(renderCount).toBe(_G.__DEV__ and 2 or 1)
 
-    expect(ref.current.type).to.equal("div")
+    jestExpect(ref.current.type).toBe("div")
 
     ReactNoop.render(React.createElement(RefForwardingComponent, {ref=ref, optional="foo"}))
-    expect(Scheduler).toFlushWithoutYielding()
-    expect(renderCount).to.equal(_G.__DEV__ and 2 or 1)
+    jestExpect(Scheduler).toFlushWithoutYielding()
+    jestExpect(renderCount).toBe(_G.__DEV__ and 2 or 1)
 
     local differentRef = React.createRef()
 
     ReactNoop.render(
       React.createElement(RefForwardingComponent, {ref=differentRef, optional="foo"})
     )
-    expect(Scheduler).toFlushWithoutYielding()
-    expect(renderCount).to.equal(_G.__DEV__ and 4 or 2)
+    jestExpect(Scheduler).toFlushWithoutYielding()
+    jestExpect(renderCount).toBe(_G.__DEV__ and 4 or 2)
 
-    expect(ref.current).to.equal(nil)
-    expect(differentRef.current.type).to.equal("div")
+    jestExpect(ref.current).toBe(nil)
+    jestExpect(differentRef.current.type).toBe("div")
 
     ReactNoop.render(React.createElement(RefForwardingComponent, {ref=ref, optional="bar"}))
-    expect(Scheduler).toFlushWithoutYielding()
-    expect(renderCount).to.equal(_G.__DEV__ and 6 or 3)
+    jestExpect(Scheduler).toFlushWithoutYielding()
+    jestExpect(renderCount).toBe(_G.__DEV__ and 6 or 3)
   end)
 
   -- ROBLOX TODO: MemoComponent unimplemented (ReactFiberBeginWork.new:3454)
   xit('should custom memo comparisons to compose', function()
-    -- -- ROBLOX FIXME
-    -- local expect: any = expect
-
     -- local Component = function(props)
     --   return React.createElement("div", {ref=props.forwardedRef})
     -- end
@@ -420,20 +404,20 @@ return function()
     -- local ref = React.createRef()
 
     -- ReactNoop.render(React.createElement(RefForwardingComponent, {ref=ref, a="0", b="0", c="1"}))
-    -- expect(Scheduler).toFlushWithoutYielding()
-    -- expect(renderCount).to.equal(_G.__DEV__ and 2 or 1)
+    -- jestExpect(Scheduler).toFlushWithoutYielding()
+    -- jestExpect(renderCount).toBe(_G.__DEV__ and 2 or 1)
 
-    -- expect(ref.current.type).to.equal('div')
+    -- jestExpect(ref.current.type).toBe('div')
 
     -- -- Changing either a or b rerenders
     -- ReactNoop.render(React.createElement(RefForwardingComponent, {ref=ref, a="0", b="1", c="1"}))
-    -- expect(Scheduler).toFlushWithoutYielding()
-    -- expect(renderCount).to.equal(_G.__DEV__ and 4 or 2)
+    -- jestExpect(Scheduler).toFlushWithoutYielding()
+    -- jestExpect(renderCount).toBe(_G.__DEV__ and 4 or 2)
 
     -- -- Changing c doesn't rerender
     -- ReactNoop.render(React.createElement(RefForwardingComponent, {ref=ref, a="0", b="1", c="2"}))
-    -- expect(Scheduler).toFlushWithoutYielding()
-    -- expect(renderCount).to.equal(_G.__DEV__ and 4 or 2)
+    -- jestExpect(Scheduler).toFlushWithoutYielding()
+    -- jestExpect(renderCount).toBe(_G.__DEV__ and 4 or 2)
 
     -- local ComposedMemo = React.memo(
     --   RefForwardingComponent,
@@ -443,41 +427,38 @@ return function()
     -- )
 
     -- ReactNoop.render(React.createElement(ComposedMemo, {ref=ref, a="0", b="0", c="0"}))
-    -- expect(Scheduler).toFlushWithoutYielding()
-    -- expect(renderCount).to.equal(_G.__DEV__ and 6 or 3)
+    -- jestExpect(Scheduler).toFlushWithoutYielding()
+    -- jestExpect(renderCount).toBe(_G.__DEV__ and 6 or 3)
 
     -- -- Changing just b no longer updates
     -- ReactNoop.render(React.createElement(ComposedMemo, {ref=ref, a="0", b="1", c="0"}))
-    -- expect(Scheduler).toFlushWithoutYielding()
-    -- expect(renderCount).to.equal(_G.__DEV__ and 6 or 3)
+    -- jestExpect(Scheduler).toFlushWithoutYielding()
+    -- jestExpect(renderCount).toBe(_G.__DEV__ and 6 or 3)
 
     -- -- Changing just a and c updates
     -- ReactNoop.render(React.createElement(ComposedMemo, {ref=ref, a="2", b="2", c="2"}))
-    -- expect(Scheduler).toFlushWithoutYielding()
-    -- expect(renderCount).to.equal(_G.__DEV__ and 8 or 4)
+    -- jestExpect(Scheduler).toFlushWithoutYielding()
+    -- jestExpect(renderCount).toBe(_G.__DEV__ and 8 or 4)
 
     -- -- Changing just c does not update
     -- ReactNoop.render(React.createElement(ComposedMemo, {ref=ref, a="2", b="2", c="3"}))
-    -- expect(Scheduler).toFlushWithoutYielding()
-    -- expect(renderCount).to.equal(_G.__DEV__ and 8 or 4)
+    -- jestExpect(Scheduler).toFlushWithoutYielding()
+    -- jestExpect(renderCount).toBe(_G.__DEV__ and 8 or 4)
 
     -- -- Changing ref still rerenders
     -- local differentRef = React.createRef()
 
     -- ReactNoop.render(React.createElement(ComposedMemo, {ref=differentRef, a="2", b="2", c="3"}))
-    -- expect(Scheduler).toFlushWithoutYielding()
-    -- expect(renderCount).to.equal(_G.__DEV__ and 10 or 5)
+    -- jestExpect(Scheduler).toFlushWithoutYielding()
+    -- jestExpect(renderCount).toBe(_G.__DEV__ and 10 or 5)
 
-    -- expect(ref.current).to.equal(nil)
-    -- expect(differentRef.current.type).to.equal("div")
+    -- jestExpect(ref.current).toBe(nil)
+    -- jestExpect(differentRef.current.type).toBe("div")
   end)
 
   -- ROBLOX TODO: MemoComponent unimplemented (ReactFiberBeginWork.new:3454)
   xit("warns on forwardRef(memo(...))", function()
-    -- ROBLOX FIXME
-    local expect: any = expect
-
-    expect(function()
+    jestExpect(function()
       React.forwardRef(
         React.memo(function(props, ref)
           return nil

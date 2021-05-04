@@ -1,4 +1,4 @@
--- Upstream: https://github.com/facebook/react/blob/d13f5b9538e48f74f7c571ef3cde652ca887cca0/packages/react-reconciler/src/__tests__/ReactIncremental-test.js
+-- upstream: https://github.com/facebook/react/blob/d13f5b9538e48f74f7c571ef3cde652ca887cca0/packages/react-reconciler/src/__tests__/ReactIncremental-test.js
 --  * Copyright (c) Facebook, Inc. and its affiliates.
 --  *
 --  * This source code is licensed under the MIT license found in the
@@ -16,6 +16,9 @@ local Scheduler
 local PropTypes = nil
 local HttpService = game:GetService("HttpService")
 return function ()
+    local Packages = Workspace.Parent
+    local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
+
     describe('ReactIncremental', function()
         local RobloxJest = require(Workspace.RobloxJest)
         beforeEach(function()
@@ -60,7 +63,6 @@ return function ()
         end
 
         it('should render a simple component', function()
-            local expect: any = expect
             local function Bar()
                 return React.createElement('div', nil, 'Hello World')
             end
@@ -69,10 +71,9 @@ return function ()
             end
 
             ReactNoop.render(React.createElement(Foo, nil))
-            expect(Scheduler).toFlushWithoutYielding()
+            jestExpect(Scheduler).toFlushWithoutYielding()
         end)
         it('should render a simple component, in steps if needed', function()
-            local expect: any = expect
             local function Bar()
                 Scheduler.unstable_yieldValue('Bar')
 
@@ -98,19 +99,18 @@ return function ()
             end)
 
             -- Do one step of work.
-            expect(ReactNoop.flushNextYield()).toEqual({
+            jestExpect(ReactNoop.flushNextYield()).toEqual({
                 'Foo',
             })
 
             -- Do the rest of the work.
-            expect(Scheduler).toFlushAndYield({
+            jestExpect(Scheduler).toFlushAndYield({
                 'Bar',
                 'Bar',
                 'callback',
             })
         end)
         it('updates a previous render', function()
-            local expect: any = expect
             local function Header()
                 Scheduler.unstable_yieldValue('Header')
 
@@ -141,7 +141,7 @@ return function ()
             }), function()
                 return Scheduler.unstable_yieldValue('renderCallbackCalled')
             end)
-            expect(Scheduler).toFlushAndYield({
+            jestExpect(Scheduler).toFlushAndYield({
                 'Foo',
                 'Header',
                 'Content',
@@ -163,7 +163,7 @@ return function ()
 
             -- Since this is an update, it should bail out and reuse the work from
             -- Header and Content.
-            expect(Scheduler).toFlushAndYield({
+            jestExpect(Scheduler).toFlushAndYield({
                 'Foo',
                 'Content',
                 'firstRenderCallbackCalled',
@@ -171,7 +171,6 @@ return function ()
             })
         end)
         it('can cancel partially rendered work and restart', function()
-            local expect: any = expect
             local function Bar(props)
                 Scheduler.unstable_yieldValue('Bar')
 
@@ -187,7 +186,7 @@ return function ()
             ReactNoop.render(React.createElement(Foo, {
                 text = 'foo',
             }))
-            expect(Scheduler).toFlushAndYield({
+            jestExpect(Scheduler).toFlushAndYield({
                 'Foo',
                 'Bar',
                 'Bar',
@@ -196,7 +195,7 @@ return function ()
                 text = 'bar',
             }))
             -- Flush part of the work
-            expect(Scheduler).toFlushAndYieldThrough({
+            jestExpect(Scheduler).toFlushAndYieldThrough({
                 'Foo',
                 'Bar',
             })
@@ -208,16 +207,15 @@ return function ()
             ReactNoop.render(React.createElement(Foo, {
                 text = 'baz',
             }))
-            expect(Scheduler).toFlushAndYieldThrough({
+            jestExpect(Scheduler).toFlushAndYieldThrough({
                 'Foo',
                 'Bar',
             })
-            expect(Scheduler).toFlushAndYield({
+            jestExpect(Scheduler).toFlushAndYield({
                 'Bar',
             })
         end)
         it('should call callbacks even if updates are aborted', function()
-            local expect: any = expect
             local inst
             local Foo = React.Component:extend("Foo")
 
@@ -233,7 +231,7 @@ return function ()
             end
 
             ReactNoop.render(React.createElement(Foo, nil))
-            expect(Scheduler).toFlushWithoutYielding()
+            jestExpect(Scheduler).toFlushWithoutYielding()
 
             -- Flush part of the work
             inst:setState(function()
@@ -245,7 +243,7 @@ return function ()
             end, function()
                 return Scheduler.unstable_yieldValue('callback1')
             end)
-            expect(Scheduler).toFlushAndYieldThrough({
+            jestExpect(Scheduler).toFlushAndYieldThrough({
                 'setState1',
             })
 
@@ -264,13 +262,13 @@ return function ()
             end)
 
             -- Flush the rest of the work which now includes the low priority
-            expect(Scheduler).toFlushAndYield({
+            jestExpect(Scheduler).toFlushAndYield({
                 'setState1',
                 'setState2',
                 'callback1',
                 'callback2',
             })
-            expect(inst.state).toEqual({
+            jestExpect(inst.state).toEqual({
                 text = 'bar',
                 text2 = 'baz',
             })
@@ -278,7 +276,6 @@ return function ()
         -- ROBLOX TODO: ReactFiberBeginWork.new:3546: FIXME (roblox): beginWork: LegacyHiddenComponent is unimplemented
         -- @gate experimental
         xit('can deprioritize unfinished work and resume it later', function()
-            local expect: any = expect
             local function Bar(props)
                 Scheduler.unstable_yieldValue('Bar')
                 return React.createElement('div', nil, props.children)
@@ -307,7 +304,7 @@ return function ()
             ReactNoop.render(React.createElement(Foo, {
                 text = 'foo',
             }))
-            expect(Scheduler).toFlushAndYield({
+            jestExpect(Scheduler).toFlushAndYield({
                 'Foo',
                 'Bar',
                 'Bar',
@@ -320,12 +317,12 @@ return function ()
             ReactNoop.render(React.createElement(Foo, {
                 text = 'bar',
             }))
-            expect(Scheduler).toFlushAndYieldThrough({
+            jestExpect(Scheduler).toFlushAndYieldThrough({
                 'Foo',
                 'Bar',
                 'Bar',
             })
-            expect(Scheduler).toFlushAndYield({
+            jestExpect(Scheduler).toFlushAndYield({
                 'Middle',
                 'Middle',
             })
@@ -334,7 +331,6 @@ return function ()
         -- ROBLOX TODO: ReactFiberBeginWork.new:3559: FIXME (roblox): beginWork: LegacyHiddenComponent is unimplemented
         -- @gate experimental
         xit('can deprioritize a tree from without dropping work', function()
-            local expect: any = expect
             local function Bar(props)
                 Scheduler.unstable_yieldValue('Bar')
 
@@ -361,12 +357,12 @@ return function ()
                     text = 'foo',
                 }))
             end)
-            expect(Scheduler).toHaveYielded({
+            jestExpect(Scheduler).toHaveYielded({
                 'Foo',
                 'Bar',
                 'Bar',
             })
-            expect(Scheduler).toFlushAndYield({
+            jestExpect(Scheduler).toFlushAndYield({
                 'Middle',
                 'Middle',
             })
@@ -377,7 +373,7 @@ return function ()
                     text = 'foo',
                 }))
             end)
-            expect(Scheduler).toHaveYielded({
+            jestExpect(Scheduler).toHaveYielded({
                 'Foo',
                 'Bar',
                 'Bar',
@@ -385,7 +381,7 @@ return function ()
 
             -- The hidden content was deprioritized from high to low priority. A low
             -- priority callback should have been scheduled. Flush it now.
-            expect(Scheduler).toFlushAndYield({
+            jestExpect(Scheduler).toFlushAndYield({
                 'Middle',
                 'Middle',
             })
@@ -421,7 +417,7 @@ return function ()
         --         text = 'foo',
         --     }))
         --     ReactNoop.flushDeferredPri(52)
-        --     expect(Scheduler).toHaveYielded({
+        --     jestExpect(Scheduler).toHaveYielded({
         --         'Foo',
         --         'Bar',
         --         'Tester',
@@ -431,12 +427,12 @@ return function ()
         --         text = 'bar',
         --     }))
         --     ReactNoop.flushDeferredPri(45 + 5)
-        --     expect(Scheduler).toHaveYielded({
+        --     jestExpect(Scheduler).toHaveYielded({
         --         'Foo',
         --         'Bar',
         --         'Bar',
         --     })
-        --     expect(Scheduler).toFlushAndYield({
+        --     jestExpect(Scheduler).toFlushAndYield({
         --         'Middle',
         --     })
         -- end)
@@ -498,7 +494,7 @@ return function ()
         --         text = 'foo',
         --     }))
         --     ReactNoop.flushDeferredPri(52 + 5)
-        --     expect(Scheduler).toHaveYielded({
+        --     jestExpect(Scheduler).toHaveYielded({
         --         'Foo',
         --         'Bar',
         --         'Tester',
@@ -508,10 +504,10 @@ return function ()
         --         text = 'bar',
         --     }))
         --     ReactNoop.flushDeferredPri(15)
-        --     expect(Scheduler).toHaveYielded({
+        --     jestExpect(Scheduler).toHaveYielded({
         --         'Foo',
         --     })
-        --     expect(Scheduler).toFlushAndYield({
+        --     jestExpect(Scheduler).toFlushAndYield({
         --         'Bar',
         --         'Middle',
         --         'Bar',
@@ -520,14 +516,14 @@ return function ()
         --         text = 'foo',
         --     }))
         --     ReactNoop.flushDeferredPri(40)
-        --     expect(Scheduler).toHaveYielded({
+        --     jestExpect(Scheduler).toHaveYielded({
         --         'Foo',
         --         'Bar',
         --     })
         --     ReactNoop.render(React.createElement(Foo, {
         --         text = 'bar',
         --     }))
-        --     expect(Scheduler).toFlushAndYield({
+        --     jestExpect(Scheduler).toFlushAndYield({
         --         'Foo',
         --         'Bar',
         --         'Bar',
@@ -573,14 +569,14 @@ return function ()
         --         prop = 'foo',
         --     }))
         --     ReactNoop.flushDeferredPri(20)
-        --     expect(Scheduler).toHaveYielded({
+        --     jestExpect(Scheduler).toHaveYielded({
         --         'Foo constructor: foo',
         --         'Foo',
         --     })
         --     foo:setState({
         --         value = 'bar',
         --     })
-        --     expect(Scheduler).toFlushAndYield({
+        --     jestExpect(Scheduler).toFlushAndYield({
         --         'Foo',
         --         'Bar',
         --     })
@@ -643,7 +639,7 @@ return function ()
         --         prop = 'foo',
         --     }))
         --     ReactNoop.flushDeferredPri(25)
-        --     expect(Scheduler).toHaveYielded({
+        --     jestExpect(Scheduler).toHaveYielded({
         --         'constructor: foo',
         --         'componentWillMount: foo',
         --         'render: foo',
@@ -652,9 +648,9 @@ return function ()
         --     foo:setState({
         --         value = 'bar',
         --     })
-        --     expect(Scheduler).toFlushWithoutYielding()
-        --     expect(constructorCount).toEqual(1)
-        --     expect(Scheduler).toHaveYielded({
+        --     jestExpect(Scheduler).toFlushWithoutYielding()
+        --     jestExpect(constructorCount).toEqual(1)
+        --     jestExpect(Scheduler).toHaveYielded({
         --         'componentWillMount: foo',
         --         'render: foo',
         --         'Foo did complete',
@@ -695,7 +691,7 @@ return function ()
         --         step = 0,
         --     }))
         --     ReactNoop.flushDeferredPri(55 + 25 + 5 + 5)
-        --     expect(Scheduler).toHaveYielded({
+        --     jestExpect(Scheduler).toHaveYielded({
         --         'Foo',
         --         'Bar',
         --         'Middle',
@@ -706,8 +702,8 @@ return function ()
         --         text2 = 'bar',
         --         step = 0,
         --     }))
-        --     expect(Scheduler).toFlushWithoutYielding()
-        --     expect(Scheduler).toHaveYielded({
+        --     jestExpect(Scheduler).toFlushWithoutYielding()
+        --     jestExpect(Scheduler).toHaveYielded({
         --         'Foo',
         --         'Bar',
         --         'Middle',
@@ -718,12 +714,12 @@ return function ()
         --         step = 1,
         --     }))
         --     ReactNoop.flushDeferredPri(30 + 25 + 5)
-        --     expect(Scheduler).toHaveYielded({
+        --     jestExpect(Scheduler).toHaveYielded({
         --         'Foo',
         --         'Bar',
         --     })
         --     ReactNoop.flushDeferredPri(30 + 5)
-        --     expect(Scheduler).toHaveYielded({
+        --     jestExpect(Scheduler).toHaveYielded({
         --         'Middle',
         --         'Bar',
         --     })
@@ -733,11 +729,11 @@ return function ()
         --         step = 1,
         --     }))
         --     ReactNoop.flushDeferredPri(30)
-        --     expect(Scheduler).toHaveYielded({
+        --     jestExpect(Scheduler).toHaveYielded({
         --         'Foo',
         --         'Bar',
         --     })
-        --     expect(Scheduler).toFlushAndYield({
+        --     jestExpect(Scheduler).toFlushAndYield({
         --         'Middle',
         --     })
         -- end)
@@ -798,20 +794,20 @@ return function ()
         --     end
 
         --     ReactNoop.render(React.createElement(Parent, nil))
-        --     expect(Scheduler).toFlushWithoutYielding()
+        --     jestExpect(Scheduler).toFlushWithoutYielding()
         --     child:setState({step = 1})
         --     ReactNoop.flushDeferredPri(30)
-        --     expect(Scheduler).toHaveYielded({
+        --     jestExpect(Scheduler).toHaveYielded({
         --         'Child',
         --         'Grandchild',
         --     })
         --     ReactNoop.flushSync(function()
         --         sibling:setState({})
         --     end)
-        --     expect(Scheduler).toHaveYielded({
+        --     jestExpect(Scheduler).toHaveYielded({
         --         'Sibling',
         --     })
-        --     expect(Scheduler).toFlushAndYield({
+        --     jestExpect(Scheduler).toFlushAndYield({
         --         'GreatGrandchild',
         --     })
         -- end)
@@ -877,7 +873,7 @@ return function ()
         --         text = 'foo',
         --         step = 0,
         --     }))
-        --     expect(Scheduler).toFlushAndYield({
+        --     jestExpect(Scheduler).toFlushAndYield({
         --         'Foo',
         --         'Bar',
         --         'Content',
@@ -890,12 +886,12 @@ return function ()
         --         step = 1,
         --     }))
         --     ReactNoop.flushDeferredPri(30 + 5)
-        --     expect(Scheduler).toHaveYielded({
+        --     jestExpect(Scheduler).toHaveYielded({
         --         'Foo',
         --         'Bar',
         --     })
         --     ReactNoop.flushDeferredPri(30 + 25 + 5)
-        --     expect(Scheduler).toHaveYielded({
+        --     jestExpect(Scheduler).toHaveYielded({
         --         'Content',
         --         'Middle',
         --         'Bar',
@@ -905,16 +901,15 @@ return function ()
         --         step = 1,
         --     }))
         --     ReactNoop.flushDeferredPri(30)
-        --     expect(Scheduler).toHaveYielded({
+        --     jestExpect(Scheduler).toHaveYielded({
         --         'Foo',
         --         'Bar',
         --     })
-        --     expect(Scheduler).toFlushAndYield({
+        --     jestExpect(Scheduler).toFlushAndYield({
         --         'Middle',
         --     })
         -- end)
         it('memoizes work even if shouldComponentUpdate returns false', function()
-            local expect: any = expect
             local Foo = React.Component:extend('Foo')
 
             function Foo:shouldComponentUpdate(nextProps)
@@ -933,15 +928,15 @@ return function ()
             end
 
             ReactNoop.render(React.createElement(Foo, {step = 1}))
-            expect(Scheduler).toFlushAndYield({
+            jestExpect(Scheduler).toFlushAndYield({
                 'render',
             })
             ReactNoop.render(React.createElement(Foo, {step = 2}))
-            expect(Scheduler).toFlushAndYield({
+            jestExpect(Scheduler).toFlushAndYield({
                 'shouldComponentUpdate: false',
             })
             ReactNoop.render(React.createElement(Foo, {step = 3}))
-            expect(Scheduler).toFlushAndYield({
+            jestExpect(Scheduler).toFlushAndYield({
                 -- If the memoized props were not updated during last bail out, sCU will
                 -- keep returning false.
                 'shouldComponentUpdate: true',
@@ -949,7 +944,6 @@ return function ()
             })
         end)
         it('can update in the middle of a tree using setState', function()
-            local expect: any = expect
             local instance
             local Bar = React.Component:extend('Bar')
 
@@ -968,21 +962,20 @@ return function ()
             end
 
             ReactNoop.render(React.createElement(Foo, nil))
-            expect(Scheduler).toFlushWithoutYielding()
-            expect(instance.state).toEqual({
+            jestExpect(Scheduler).toFlushWithoutYielding()
+            jestExpect(instance.state).toEqual({
                 a = 'a',
             })
             instance:setState({
                 b = 'b',
             })
-            expect(Scheduler).toFlushWithoutYielding()
-            expect(instance.state).toEqual({
+            jestExpect(Scheduler).toFlushWithoutYielding()
+            jestExpect(instance.state).toEqual({
                 a = 'a',
                 b = 'b',
             })
         end)
         it('can queue multiple state updates', function()
-            local expect: any = expect
             local instance
             local Bar = React.Component:extend('Bar')
 
@@ -1001,7 +994,7 @@ return function ()
             end
 
             ReactNoop.render(React.createElement(Foo))
-            expect(Scheduler).toFlushWithoutYielding()
+            jestExpect(Scheduler).toFlushWithoutYielding()
             -- Call setState multiple times before flushing
             instance:setState({
                 b = 'b',
@@ -1012,8 +1005,8 @@ return function ()
             instance:setState({
                 d = 'd',
             })
-            expect(Scheduler).toFlushWithoutYielding()
-            expect(instance.state).toEqual({
+            jestExpect(Scheduler).toFlushWithoutYielding()
+            jestExpect(instance.state).toEqual({
                 a = 'a',
                 b = 'b',
                 c = 'c',
@@ -1021,7 +1014,6 @@ return function ()
             })
         end)
         it('can use updater form of setState', function()
-            local expect: any = expect
             local instance
             local Bar = React.Component:extend('Bar')
 
@@ -1045,18 +1037,17 @@ return function ()
             end
 
             ReactNoop.render(React.createElement(Foo, {multiplier=2}))
-            expect(Scheduler).toFlushWithoutYielding()
-            expect(instance.state.num).toEqual(1)
+            jestExpect(Scheduler).toFlushWithoutYielding()
+            jestExpect(instance.state.num).toEqual(1)
             instance:setState(updater)
-            expect(Scheduler).toFlushWithoutYielding()
-            expect(instance.state.num).toEqual(2)
+            jestExpect(Scheduler).toFlushWithoutYielding()
+            jestExpect(instance.state.num).toEqual(2)
             instance:setState(updater)
             ReactNoop.render(React.createElement(Foo, {multiplier = 3}))
-            expect(Scheduler).toFlushWithoutYielding()
-            expect(instance.state.num).toEqual(6)
+            jestExpect(Scheduler).toFlushWithoutYielding()
+            jestExpect(instance.state.num).toEqual(6)
         end)
         it('can call setState inside update callback', function()
-            local expect: any = expect
             local instance
             local Bar = React.Component:extend('Bar')
 
@@ -1085,15 +1076,14 @@ return function ()
             end
 
             ReactNoop.render(React.createElement(Foo, {multiplier = 2}))
-            expect(Scheduler).toFlushWithoutYielding()
+            jestExpect(Scheduler).toFlushWithoutYielding()
             instance:setState(updater)
             instance:setState(updater, callback)
-            expect(Scheduler).toFlushWithoutYielding()
-            expect(instance.state.num).toEqual(4)
-            expect(instance.state.called).toEqual(true)
+            jestExpect(Scheduler).toFlushWithoutYielding()
+            jestExpect(instance.state.num).toEqual(4)
+            jestExpect(instance.state.called).toEqual(true)
         end)
         it('can replaceState', function()
-            local expect: any = expect
             local instance
             local Bar = React.Component:extend('Bar')
 
@@ -1108,7 +1098,7 @@ return function ()
             end
 
             ReactNoop.render(React.createElement(Foo, nil))
-            expect(Scheduler).toFlushWithoutYielding()
+            jestExpect(Scheduler).toFlushWithoutYielding()
             instance:setState({
                 b = 'b',
             })
@@ -1118,13 +1108,12 @@ return function ()
             instance.updater.enqueueReplaceState(instance, {
                 d = 'd',
             })
-            expect(Scheduler).toFlushWithoutYielding()
-            expect(instance.state).toEqual({
+            jestExpect(Scheduler).toFlushWithoutYielding()
+            jestExpect(instance.state).toEqual({
                 d = 'd',
             })
         end)
         it('can forceUpdate', function()
-            local expect: any = expect
             local function Baz()
                 Scheduler.unstable_yieldValue('Baz')
 
@@ -1153,20 +1142,19 @@ return function ()
             end
 
             ReactNoop.render(React.createElement(Foo, nil))
-            expect(Scheduler).toFlushAndYield({
+            jestExpect(Scheduler).toFlushAndYield({
                 'Foo',
                 'Bar',
                 'Baz',
             })
             instance:forceUpdate()
-            expect(Scheduler).toFlushAndYield({
+            jestExpect(Scheduler).toFlushAndYield({
                 'Bar',
                 'Baz',
             })
         end)
-        -- ROBLOX TODO: received[1]: value of type 'string' expected[1]: value of type 'nil'
-        xit('should clear forceUpdate after update is flushed', function()
-            local expect: any = expect
+
+        it('should clear forceUpdate after update is flushed', function()
             local a = 0
             local Foo = React.PureComponent:extend('Foo')
 
@@ -1183,21 +1171,21 @@ return function ()
                 ref = foo,
                 b = 0,
             }))
-            expect(Scheduler).toFlushAndYield({
+            jestExpect(Scheduler).toFlushAndYield({
                 'A: 0, B: 0',
             })
 
             a = 1
 
             foo.current:forceUpdate()
-            expect(Scheduler).toFlushAndYield({
+            jestExpect(Scheduler).toFlushAndYield({
                 'A: 1, B: 0',
             })
             ReactNoop.render(React.createElement(Foo, {
                 ref = foo,
                 b = 0,
             }))
-            expect(Scheduler).toFlushAndYield({})
+            jestExpect(Scheduler).toFlushAndYield({})
         end)
 
         -- ROBLOX: xited upstream
@@ -1257,21 +1245,21 @@ return function ()
 
         --     ReactNoop.render(React.createElement(Foo, {step = 0}))
         --     ReactNoop.flushDeferredPri(40)
-        --     expect(Scheduler).toHaveYielded({
+        --     jestExpect(Scheduler).toHaveYielded({
         --         'Foo',
         --         'Bar:A',
         --         'Bar:B',
         --         'Bar:C',
         --     })
-        --     expect(instances.size).toBe(3)
+        --     jestExpect(instances.size).toBe(3)
         --     ReactNoop.render(React.createElement(Foo, {step = 1}))
         --     ReactNoop.flushDeferredPri(50)
-        --     expect(Scheduler).toHaveYielded({
+        --     jestExpect(Scheduler).toHaveYielded({
         --         'Foo',
         --         'Bar:B2',
         --         'Bar:D',
         --     })
-        --     expect(instances.size).toBe(4)
+        --     jestExpect(instances.size).toBe(4)
         -- end)
         -- xit('gets new props when setting state on a partly updated component', function()
         --     local instances = {}
@@ -1323,17 +1311,17 @@ return function ()
         --     end
 
         --     ReactNoop.render(React.createElement('div', nil, React.createElement(Foo, {step = 0}), React.createElement(Baz, nil), React.createElement(Baz, nil)))
-        --     expect(Scheduler).toFlushWithoutYielding()
+        --     jestExpect(Scheduler).toFlushWithoutYielding()
         --     ReactNoop.render(React.createElement('div', nil, React.createElement(Foo, {step = 1}), React.createElement(Baz, nil), React.createElement(Baz, nil)))
         --     ReactNoop.flushDeferredPri(45)
-        --     expect(Scheduler).toHaveYielded({
+        --     jestExpect(Scheduler).toHaveYielded({
         --         'Foo',
         --         'Bar:A-1',
         --         'Bar:B-1',
         --         'Baz',
         --     })
         --     instances[0].performAction()
-        --     expect(Scheduler).toFlushAndYield({
+        --     jestExpect(Scheduler).toFlushAndYield({
         --         'Bar:A-1',
         --         'Baz',
         --     })
@@ -1379,12 +1367,12 @@ return function ()
 
         --     ReactNoop.render(React.createElement(App, {x = 0}))
         --     ReactNoop.flushDeferredPri(30)
-        --     expect(Scheduler).toHaveYielded({
+        --     jestExpect(Scheduler).toHaveYielded({
         --         'App',
         --         'componentWillMount:0-0',
         --     })
         --     ReactNoop.render(React.createElement(App, {x = 1}))
-        --     expect(Scheduler).toFlushAndYield({
+        --     jestExpect(Scheduler).toFlushAndYield({
         --         'App',
         --         'componentWillReceiveProps:0-1',
         --         'componentWillMount:1-1',
@@ -1428,13 +1416,13 @@ return function ()
 
         --     ReactNoop.render(React.createElement(App, {x = 0}))
         --     ReactNoop.flushDeferredPri(20)
-        --     expect(Scheduler).toHaveYielded({
+        --     jestExpect(Scheduler).toHaveYielded({
         --         'App',
         --         'componentWillMount:0(ctor)',
         --         'render:0(willMount)',
         --     })
         --     ReactNoop.render(React.createElement(App, {x = 1}))
-        --     expect(Scheduler).toFlushAndYield({
+        --     jestExpect(Scheduler).toFlushAndYield({
         --         'App',
         --         'componentWillMount:0(willMount)',
         --         'render:1(willMount)',
@@ -1491,7 +1479,7 @@ return function ()
         --     end
 
         --     ReactNoop.render(React.createElement(App, {x = 0}))
-        --     expect(Scheduler).toFlushAndYield({
+        --     jestExpect(Scheduler).toFlushAndYield({
         --         'App',
         --         'componentWillMount:0',
         --         'render:0',
@@ -1500,7 +1488,7 @@ return function ()
         --     })
         --     ReactNoop.render(React.createElement(App, {x = 1}))
         --     ReactNoop.flushDeferredPri(30)
-        --     expect(Scheduler).toHaveYielded({
+        --     jestExpect(Scheduler).toHaveYielded({
         --         'App',
         --         'componentWillReceiveProps:0-1',
         --         'shouldComponentUpdate:0-1',
@@ -1509,7 +1497,7 @@ return function ()
         --         'Sibling',
         --     })
         --     ReactNoop.render(React.createElement(App, {x = 2}))
-        --     expect(Scheduler).toFlushAndYield({
+        --     jestExpect(Scheduler).toFlushAndYield({
         --         'App',
         --         'componentWillReceiveProps:1-2',
         --         'shouldComponentUpdate:1-2',
@@ -1520,8 +1508,7 @@ return function ()
         --     })
         -- end)
         it('calls getDerivedStateFromProps even for state-only updates', function()
-            local expect: any = expect
-            local instance
+                local instance
             local LifeCycle = React.Component:extend("LifeCycle")
 
             function LifeCycle.getDerivedStateFromProps(props, prevState)
@@ -1548,26 +1535,25 @@ return function ()
             end
 
             ReactNoop.render(React.createElement(LifeCycle, nil))
-            expect(Scheduler).toFlushAndYield({
+            jestExpect(Scheduler).toFlushAndYield({
                 'getDerivedStateFromProps',
                 'render',
             })
-            expect(instance.state).toEqual({
+            jestExpect(instance.state).toEqual({
                 foo = 'foo',
             })
             instance:changeState()
-            expect(Scheduler).toFlushAndYield({
+            jestExpect(Scheduler).toFlushAndYield({
                 'getDerivedStateFromProps',
                 'render',
                 'componentDidUpdate',
             })
-            expect(instance.state).toEqual({
+            jestExpect(instance.state).toEqual({
                 foo = 'foo',
             })
         end)
         it('does not call getDerivedStateFromProps if neither state nor props have changed', function()
-            local expect: any = expect
-            local Child = React.Component:extend("Child")
+                local Child = React.Component:extend("Child")
 
             function Child:render()
                 Scheduler.unstable_yieldValue('Child')
@@ -1598,7 +1584,7 @@ return function ()
             end
 
             ReactNoop.render(React.createElement(Parent, nil))
-            expect(Scheduler).toFlushAndYield({
+            jestExpect(Scheduler).toFlushAndYield({
                 'getDerivedStateFromProps',
                 'Parent',
                 'Child',
@@ -1606,11 +1592,11 @@ return function ()
 
             -- Schedule an update on the child. The parent should not re-render.
             child.current:setState({})
-            expect(Scheduler).toFlushAndYield({
+            jestExpect(Scheduler).toFlushAndYield({
                 'Child',
             })
         end)
-        -- ROBLOX: xited upstream
+        -- ROBLOX deviation: xited upstream, so leave commented out
         -- xit('does not call componentWillReceiveProps for state-only updates', function()
         --     local instances = {}
         --     local LifeCycle = {}
@@ -1698,7 +1684,7 @@ return function ()
         --     end
 
         --     ReactNoop.render(React.createElement(App, {y = 0}))
-        --     expect(Scheduler).toFlushAndYield({
+        --     jestExpect(Scheduler).toFlushAndYield({
         --         'App',
         --         'Wrap',
         --         'componentWillMount:0',
@@ -1708,13 +1694,13 @@ return function ()
         --     })
         --     instances[1].tick()
         --     ReactNoop.flushDeferredPri(25)
-        --     expect(Scheduler).toHaveYielded({
+        --     jestExpect(Scheduler).toHaveYielded({
         --         'shouldComponentUpdate:0-1',
         --         'componentWillUpdate:0-1',
         --         'render:1',
         --     })
         --     instances[1].tick()
-        --     expect(Scheduler).toFlushAndYield({
+        --     jestExpect(Scheduler).toFlushAndYield({
         --         'shouldComponentUpdate:1-2',
         --         'componentWillUpdate:1-2',
         --         'render:2',
@@ -1722,7 +1708,7 @@ return function ()
         --     })
         --     instances[0].tick()
         --     ReactNoop.flushDeferredPri(30)
-        --     expect(Scheduler).toHaveYielded({
+        --     jestExpect(Scheduler).toHaveYielded({
         --         'Wrap',
         --         'componentWillReceiveProps',
         --         'shouldComponentUpdate:2-2',
@@ -1730,7 +1716,7 @@ return function ()
         --         'render:2',
         --     })
         --     instances[1].tick()
-        --     expect(Scheduler).toFlushAndYield({
+        --     jestExpect(Scheduler).toFlushAndYield({
         --         'shouldComponentUpdate:2-3',
         --         'componentWillUpdate:2-3',
         --         'render:3',
@@ -1785,21 +1771,21 @@ return function ()
         --     end
 
         --     ReactNoop.render(React.createElement(App, {x = 0}))
-        --     expect(Scheduler).toFlushAndYield({
+        --     jestExpect(Scheduler).toFlushAndYield({
         --         'componentWillMount',
         --         'render',
         --         'render sibling',
         --         'componentDidMount',
         --     })
         --     ReactNoop.render(React.createElement(App, {x = 0}))
-        --     expect(Scheduler).toFlushAndYield({
+        --     jestExpect(Scheduler).toFlushAndYield({
         --         'componentWillReceiveProps',
         --         'shouldComponentUpdate',
         --         'render sibling',
         --     })
         --     ReactNoop.render(React.createElement(App, {x = 1}))
         --     ReactNoop.flushDeferredPri(30)
-        --     expect(Scheduler).toHaveYielded({
+        --     jestExpect(Scheduler).toHaveYielded({
         --         'componentWillReceiveProps',
         --         'shouldComponentUpdate',
         --         'componentWillUpdate',
@@ -1807,8 +1793,8 @@ return function ()
         --         'render sibling',
         --     })
         --     ReactNoop.render(React.createElement(App, {x = 1}))
-        --     expect(Scheduler).toFlushWithoutYielding()
-        --     expect(Scheduler).toHaveYielded({
+        --     jestExpect(Scheduler).toFlushWithoutYielding()
+        --     jestExpect(Scheduler).toHaveYielded({
         --         'componentWillReceiveProps',
         --         'shouldComponentUpdate',
         --         'render sibling',
@@ -1816,8 +1802,7 @@ return function ()
         --     })
         -- end)
         it('can nest batchedUpdates', function()
-            local expect: any = expect
-            local instance
+                local instance
             local Foo = React.Component:extend("Foo")
 
             function Foo:render()
@@ -1827,7 +1812,7 @@ return function ()
             end
 
             ReactNoop.render(React.createElement(Foo, nil))
-            expect(Scheduler).toFlushWithoutYielding()
+            jestExpect(Scheduler).toFlushWithoutYielding()
             ReactNoop.flushSync(function()
                 ReactNoop.batchedUpdates(function()
                     instance:setState({n = 1}, function()
@@ -1851,7 +1836,7 @@ return function ()
 
             -- ReactNoop.flush() not needed because updates are synchronous
 
-            expect(Scheduler).toHaveYielded({
+            jestExpect(Scheduler).toHaveYielded({
                 'end inner batchedUpdates',
                 'end outer batchedUpdates',
                 'setState 1',
@@ -1859,12 +1844,11 @@ return function ()
                 'setState 3',
                 'setState 4',
             })
-            expect(instance.state.n).toEqual(4)
+            jestExpect(instance.state.n).toEqual(4)
         end)
-        -- ROBLOX TODO: Expected function to throw with 'callback error'
-        xit('can handle if setState callback throws', function()
-            local expect: any = expect
-            local instance
+
+        it('can handle if setState callback throws', function()
+                local instance
             local Foo = React.Component:extend("Foo")
 
             function Foo:init()
@@ -1877,7 +1861,7 @@ return function ()
             end
 
             ReactNoop.render(React.createElement(Foo, nil))
-            expect(Scheduler).toFlushWithoutYielding()
+            jestExpect(Scheduler).toFlushWithoutYielding()
 
             local function updater(self, prevState)
                 local n = prevState.n
@@ -1897,22 +1881,21 @@ return function ()
             instance:setState(updater, function()
                 return Scheduler.unstable_yieldValue('third callback')
             end)
-            expect(function()
-                expect(Scheduler).toFlushWithoutYielding()
+            jestExpect(function()
+                jestExpect(Scheduler).toFlushWithoutYielding()
             end).toThrow('callback error')
 
             -- The third callback isn't called because the second one throws
-            expect(Scheduler).toHaveYielded({
+            jestExpect(Scheduler).toHaveYielded({
                 'first callback',
                 'second callback',
             })
-            expect(instance.state.n).toEqual(3)
+            jestExpect(instance.state.n).toEqual(3)
         end)
 
-        -- ROBLOX TODO: not getting to Legacy context API error
+        -- ROBLOX FIXME: getting the wrong toErrorDev: contextTypes was defined as an instance property on Recurse
         xit('merges and masks context', function()
-            local expect: any = expect
-            local Intl = React.Component:extend("Intl")
+                local Intl = React.Component:extend("Intl")
 
             function Intl:getChildContext()
                 return{
@@ -1925,7 +1908,7 @@ return function ()
                 return self.props.children
             end
 
-            -- deviation: PropTypes workaround
+            -- ROBLOX deviation: PropTypes workaround
             Intl.childContextTypes = {
                 locale = '',
             }
@@ -1943,7 +1926,7 @@ return function ()
                 return self.props.children
             end
 
-            -- deviation: PropTypes workaround
+            -- ROBLOX deviation: PropTypes workaround
             Router.childContextTypes = {
                 route = '',
             }
@@ -1956,7 +1939,7 @@ return function ()
                 return self.context.locale
             end
 
-            -- deviation: PropTypes workaround
+            -- ROBLOX deviation: PropTypes workaround
             ShowLocale.contextTypes = {
                 locale = '',
             }
@@ -1968,7 +1951,7 @@ return function ()
                 return self.context.route
             end
 
-            -- deviation: PropTypes workaround
+            -- ROBLOX deviation: PropTypes workaround
             ShowRoute.contextTypes = {
                 route = '',
             }
@@ -2017,9 +2000,9 @@ return function ()
 
             ReactNoop.render(React.createElement(Intl, {
                 locale = 'fr',
-            }, React.createElement(ShowLocale, nil), React.createElement('div', nil, React.createElement(ShowBoth, nil))))
-            expect(function()
-                return expect(Scheduler).toFlushAndYield({
+            }, React.createElement(ShowLocale), React.createElement('div', nil, React.createElement(ShowBoth))))
+            jestExpect(function()
+                return jestExpect(Scheduler).toFlushAndYield({
                     'Intl {}',
                     'ShowLocale {"locale":"fr"}',
                     'ShowBoth {"locale":"fr"}',
@@ -2027,25 +2010,25 @@ return function ()
             end).toErrorDev('Legacy context API has been detected within a strict-mode tree.\n\n' .. 'The old API will be supported in all 16.x releases, but applications ' .. 'using it should migrate to the new version.\n\n' .. 'Please update the following components: Intl, ShowBoth, ShowLocale')
             ReactNoop.render(React.createElement(Intl, {
                 locale = 'de',
-            }, React.createElement(ShowLocale, nil), React.createElement('div', nil, React.createElement(ShowBoth, nil))))
-            expect(Scheduler).toFlushAndYield({
+            }, React.createElement(ShowLocale), React.createElement('div', nil, React.createElement(ShowBoth))))
+            jestExpect(Scheduler).toFlushAndYield({
                 'Intl {}',
                 'ShowLocale {"locale":"de"}',
                 'ShowBoth {"locale":"de"}',
             })
             ReactNoop.render(React.createElement(Intl, {
                 locale = 'sv',
-            }, React.createElement(ShowLocale, nil), React.createElement('div', nil, React.createElement(ShowBoth, nil))))
-            expect(Scheduler).toFlushAndYieldThrough({
+            }, React.createElement(ShowLocale), React.createElement('div', nil, React.createElement(ShowBoth))))
+            jestExpect(Scheduler).toFlushAndYieldThrough({
                 'Intl {}',
             })
             ReactNoop.render(React.createElement(Intl, {
                 locale = 'en',
-            }, React.createElement(ShowLocale, nil), React.createElement(Router, {
+            }, React.createElement(ShowLocale), React.createElement(Router, {
                 route = '/about',
-            }, React.createElement(Indirection, nil)), React.createElement(ShowBoth, nil)))
-            expect(function()
-                return expect(Scheduler).toFlushAndYield({
+            }, React.createElement(Indirection)), React.createElement(ShowBoth)))
+            jestExpect(function()
+                return jestExpect(Scheduler).toFlushAndYield({
                     'ShowLocale {"locale":"sv"}',
                     'ShowBoth {"locale":"sv"}',
                     'Intl {}',
@@ -2056,7 +2039,7 @@ return function ()
                     'ShowRoute {"route":"/about"}',
                     'ShowNeither {}',
                     'Intl {}',
-                    -- deviaiton: JSON results flipped
+                    -- ROBLOX deviation: JSON results flipped
                     'ShowBoth {"route":"/about","locale":"ru"}',
                     'ShowBoth {"route":"/about","locale":"en"}',
                     'ShowBoth {"locale":"en"}',
@@ -2064,9 +2047,8 @@ return function ()
             end).toErrorDev('Legacy context API has been detected within a strict-mode tree.\n\n' .. 'The old API will be supported in all 16.x releases, but applications ' .. 'using it should migrate to the new version.\n\n' .. 'Please update the following components: Router, ShowRoute')
         end)
 
-        -- ROBLOX TODO: not getting to Legacy context API error
+        -- ROBLOX FIXME: getting the wrong toErrorDev: contextTypes was defined as an instance property on Recurse
         xit('does not leak own context into context provider', function()
-            local expect: any = expect
             local Recurse = React.Component:extend("Recurse")
 
             function Recurse:getChildContext()
@@ -2081,10 +2063,10 @@ return function ()
                     return nil
                 end
 
-                return React.createElement(Recurse, nil)
+                return React.createElement(Recurse)
             end
 
-            -- deviation: placeholder 0 instead of using PropTypes.number
+            -- ROBLOX deviation: placeholder 0 instead of using PropTypes.number
             Recurse.contextTypes = {
                 n = 0
             }
@@ -2092,9 +2074,9 @@ return function ()
                 n = 0
             }
 
-            ReactNoop.render(React.createElement(Recurse, nil))
-            expect(function()
-                return expect(Scheduler).toFlushAndYield({
+            ReactNoop.render(React.createElement(Recurse))
+            jestExpect(function()
+                return jestExpect(Scheduler).toFlushAndYield({
                     'Recurse {}',
                     'Recurse {"n":2}',
                     'Recurse {"n":1}',
@@ -2106,7 +2088,6 @@ return function ()
         if not ReactFeatureFlags.disableModulePatternComponents then
             -- ROBLOX TODO: PropTypes
             xit('does not leak own context into context provider (factory components)', function()
-                local expect: any = expect
                 local function Recurse(props, context)
                     return{
                         getChildContext = function()
@@ -2136,8 +2117,8 @@ return function ()
                 -- }
 
                 ReactNoop.render(React.createElement(Recurse, nil))
-                expect(function()
-                    return expect(Scheduler).toFlushAndYield({
+                jestExpect(function()
+                    return jestExpect(Scheduler).toFlushAndYield({
                         'Recurse {}',
                         'Recurse {"n":2}',
                         'Recurse {"n":1}',
@@ -2152,7 +2133,6 @@ return function ()
         -- ROBLOX TODO: ReactFiberBeginWork.new:3559: FIXME (roblox): beginWork: LegacyHiddenComponent is unimplemented
         -- @gate experimental
         xit('provides context when reusing work', function()
-            local expect: any = expect
             local Intl = React.Component:extend("Intl")
 
             function Intl:getChildContext()
@@ -2191,13 +2171,13 @@ return function ()
             }, React.createElement(ShowLocale, nil), React.createElement(Intl, {
                 locale = 'ru',
             }, React.createElement(ShowLocale, nil))), React.createElement(ShowLocale, nil)))
-            expect(Scheduler).toFlushAndYieldThrough({
+            jestExpect(Scheduler).toFlushAndYieldThrough({
                 'Intl {}',
                 'ShowLocale {"locale":"fr"}',
                 'ShowLocale {"locale":"fr"}',
             })
-            expect(function()
-                return expect(Scheduler).toFlushAndYield({
+            jestExpect(function()
+                return jestExpect(Scheduler).toFlushAndYield({
                     'ShowLocale {"locale":"fr"}',
                     'Intl {}',
                     'ShowLocale {"locale":"ru"}',
@@ -2206,7 +2186,6 @@ return function ()
         end)
         -- ROBLOX TODO: PropTypes
         xit('reads context when setState is below the provider', function()
-            local expect: any = expect
             local statefulInst
             local Intl = React.Component:extend("Intl")
 
@@ -2276,8 +2255,8 @@ return function ()
             ReactNoop.render(React.createElement(Intl, {
                 locale = 'fr',
             }, React.createElement(IndirectionFn, nil, React.createElement(IndirectionClass, nil, React.createElement(Stateful, nil, React.createElement(ShowLocaleClass, nil), React.createElement(ShowLocaleFn, nil))))))
-            expect(function()
-                return expect(Scheduler).toFlushAndYield({
+            jestExpect(function()
+                return jestExpect(Scheduler).toFlushAndYield({
                     'Intl:read {}',
                     'Intl:provide {"locale":"fr"}',
                     'IndirectionFn {}',
@@ -2287,15 +2266,14 @@ return function ()
                 })
             end).toErrorDev('Legacy context API has been detected within a strict-mode tree.\n\n' .. 'The old API will be supported in all 16.x releases, but applications ' .. 'using it should migrate to the new version.\n\n' .. 'Please update the following components: Intl, ShowLocaleClass, ShowLocaleFn')
             statefulInst:setState({x = 1})
-            expect(Scheduler).toFlushWithoutYielding()
+            jestExpect(Scheduler).toFlushWithoutYielding()
             -- All work has been memoized because setState()
             -- happened below the context and could not have affected it.
-            expect(Scheduler).toHaveYielded({})
+            jestExpect(Scheduler).toHaveYielded({})
         end)
         -- ROBLOX TODO: received[3] (IndirectionFn {"locale":"fr"}) ~= expected[3] (IndirectionFn {})
         -- could be PropsType workaround is causing issues.
         xit('reads context when setState is above the provider', function()
-            local expect: any = expect
             local statefulInst
             local Intl = React.Component:extend("Intl")
 
@@ -2371,8 +2349,8 @@ return function ()
             end
 
             ReactNoop.render(React.createElement(Stateful, nil, React.createElement(IndirectionFn, nil, React.createElement(IndirectionClass, nil, React.createElement(ShowLocaleClass, nil), React.createElement(ShowLocaleFn, nil)))))
-            expect(function()
-                return expect(Scheduler).toFlushAndYield({
+            jestExpect(function()
+                return jestExpect(Scheduler).toFlushAndYield({
                     'Intl:read {}',
                     'Intl:provide {"locale":"fr"}',
                     'IndirectionFn {}',
@@ -2384,7 +2362,7 @@ return function ()
             statefulInst:setState({
                 locale = 'gr',
             })
-            expect(Scheduler).toFlushAndYield({
+            jestExpect(Scheduler).toFlushAndYield({
                 -- Intl is below setState() so it might have been
                 -- affected by it. Therefore we re-render and recompute
                 -- its child context.
@@ -2400,8 +2378,6 @@ return function ()
             })
         end)
         it('maintains the correct context when providers bail out due to low priority', function()
-            local expect: any = expect
-
             -- Child must be a context provider to trigger the bug
             local Child = React.Component:extend("Child")
             function Child:getChildContext()
@@ -2436,21 +2412,31 @@ return function ()
 
             -- Init
             ReactNoop.render(React.createElement(Root, nil))
-            expect(function()
-                return expect(Scheduler).toFlushWithoutYielding()
+            jestExpect(function()
+                return jestExpect(Scheduler).toFlushWithoutYielding()
             end).toErrorDev('Legacy context API has been detected within a strict-mode tree.\n\n' .. 'The old API will be supported in all 16.x releases, but applications ' .. 'using it should migrate to the new version.\n\n' .. 'Please update the following components: Child')
 
             -- Trigger an update in the middle of the tree
             instance:setState({})
-            expect(Scheduler).toFlushWithoutYielding()
+            jestExpect(Scheduler).toFlushWithoutYielding()
         end)
-        -- ROBLOX TODO: FIXME (roblox): forceUnmountCurrentAndReconcile is unimplemented
+        -- ROBLOX FIXME: the unwind information appears to be missing the message at the top
         xit('maintains the correct context when unwinding due to an error in render', function()
-            local expect: any = expect
+            -- ROBLOX deviation: hoist declaration so correct value is captured
+            local ContextProvider = React.Component:extend("ContextProvider")
             local Root = React.Component:extend("Root")
 
+            function Root:componentDidCatch(_error)
+                -- If context is pushed/popped correctly,
+                -- This method will be used to handle the intentionally-thrown Error.
+            end
+
+            function Root:render()
+                return React.createElement(ContextProvider, {depth = 1})
+            end
+
+
             local instance
-            local ContextProvider = React.Component:extend("ContextProvider")
 
             function ContextProvider:init(props, context)
                 self.state = {}
@@ -2459,6 +2445,7 @@ return function ()
                     instance = self
                 end
             end
+            ContextProvider.childContextTypes = {}
             function ContextProvider:getChildContext()
                 return {}
             end
@@ -2474,36 +2461,26 @@ return function ()
                         })
                     end
 
-                    return React.createElement('div', nil)
+                    return React.createElement(function() end)
                 end)()
             end
 
-            function Root:componentDidCatch(_error)
-                -- If context is pushed/popped correctly,
-                -- This method will be used to handle the intentionally-thrown Error.
-            end
 
             -- Init
-            function Root:render()
-                return React.createElement(ContextProvider, {depth = 1})
-            end
-
-            ContextProvider.childContextTypes = {}
-
-            ReactNoop.render(React.createElement(Root, nil))
-            expect(function()
-                return expect(Scheduler).toFlushWithoutYielding()
+            ReactNoop.render(React.createElement(Root))
+            jestExpect(function()
+                return jestExpect(Scheduler).toFlushWithoutYielding()
             end).toErrorDev('Legacy context API has been detected within a strict-mode tree.\n\n' .. 'The old API will be supported in all 16.x releases, but applications ' .. 'using it should migrate to the new version.\n\n' .. 'Please update the following components: ContextProvider')
+
             -- Trigger an update in the middle of the tree
             -- This is necessary to reproduce the error as it currently exists.
             instance:setState({throwError = true})
-            expect(function()
-                return expect(Scheduler).toFlushWithoutYielding()
+            jestExpect(function()
+                return jestExpect(Scheduler).toFlushWithoutYielding()
             end).toErrorDev('Error boundaries should implement getDerivedStateFromError()')
         end)
         -- ROBLOX TODO: not getting to Legacy context API error
         xit('should not recreate masked context unless inputs have changed', function()
-            local expect: any = expect
             local scuCounter = 0
             local MyComponent = React.Component:extend("MyComponent")
 
@@ -2535,8 +2512,8 @@ return function ()
             end
 
             ReactNoop.render(React.createElement(MyComponent, nil))
-            expect(function()
-                return expect(Scheduler).toFlushAndYield({
+            jestExpect(function()
+                return jestExpect(Scheduler).toFlushAndYield({
                     'render',
                     'componentDidMount',
                     'shouldComponentUpdate',
@@ -2594,27 +2571,27 @@ return function ()
         --     end
 
         --     ReactNoop.render(React.createElement(Root, nil, 'A'))
-        --     expect(Scheduler).toFlushWithoutYielding()
-        --     expect(renderCounter).toBe(1)
+        --     jestExpect(Scheduler).toFlushWithoutYielding()
+        --     jestExpect(renderCounter).toBe(1)
         --     ReactNoop.render(React.createElement(Root, nil, 'B'))
         --     ReactNoop.flushDeferredPri(20 + 30 + 5)
-        --     expect(renderCounter).toBe(2)
-        --     expect(scuPrevProps).toEqual({
+        --     jestExpect(renderCounter).toBe(2)
+        --     jestExpect(scuPrevProps).toEqual({
         --         {
         --             children = 'A',
         --         },
         --     })
-        --     expect(scuNextProps).toEqual({
+        --     jestExpect(scuNextProps).toEqual({
         --         {
         --             children = 'B',
         --         },
         --     })
-        --     expect(cduPrevProps).toEqual({})
-        --     expect(cduNextProps).toEqual({})
+        --     jestExpect(cduPrevProps).toEqual({})
+        --     jestExpect(cduNextProps).toEqual({})
         --     ReactNoop.render(React.createElement(Root, nil, 'B'))
-        --     expect(Scheduler).toFlushWithoutYielding()
-        --     expect(renderCounter).toBe(2)
-        --     expect(scuPrevProps).toEqual({
+        --     jestExpect(Scheduler).toFlushWithoutYielding()
+        --     jestExpect(renderCounter).toBe(2)
+        --     jestExpect(scuPrevProps).toEqual({
         --         {
         --             children = 'A',
         --         },
@@ -2622,7 +2599,7 @@ return function ()
         --             children = 'B',
         --         },
         --     })
-        --     expect(scuNextProps).toEqual({
+        --     jestExpect(scuNextProps).toEqual({
         --         {
         --             children = 'B',
         --         },
@@ -2630,12 +2607,12 @@ return function ()
         --             children = 'B',
         --         },
         --     })
-        --     expect(cduPrevProps).toEqual({
+        --     jestExpect(cduPrevProps).toEqual({
         --         {
         --             children = 'A',
         --         },
         --     })
-        --     expect(cduNextProps).toEqual({
+        --     jestExpect(cduNextProps).toEqual({
         --         {
         --             children = 'B',
         --         },
@@ -2643,7 +2620,6 @@ return function ()
         -- end)
         -- ROBLOX TODO: PropTypes
         xit('updates descendants with new context values', function()
-            local expect: any = expect
             local instance
             local TopContextProvider = React.Component:extend("TopContextProvider")
 
@@ -2680,19 +2656,18 @@ return function ()
             }
 
             ReactNoop.render(React.createElement(TopContextProvider, nil, React.createElement(Middle, nil, React.createElement(Child, nil))))
-            expect(function()
-                return expect(Scheduler).toFlushAndYield({
+            jestExpect(function()
+                return jestExpect(Scheduler).toFlushAndYield({
                     'count:0',
                 })
             end).toErrorDev('Legacy context API has been detected within a strict-mode tree.\n\n' .. 'The old API will be supported in all 16.x releases, but applications ' .. 'using it should migrate to the new version.\n\n' .. 'Please update the following components: Child, TopContextProvider')
             instance.updateCount()
-            expect(Scheduler).toFlushAndYield({
+            jestExpect(Scheduler).toFlushAndYield({
                 'count:1',
             })
         end)
         -- ROBLOX TODO: PropTypes
         xit('updates descendants with multiple context-providing ancestors with new context values', function()
-            local expect: any = expect
             local instance
             local TopContextProvider = React.Component:extend("TopContextProvider")
 
@@ -2733,19 +2708,18 @@ return function ()
             }
 
             ReactNoop.render(React.createElement(TopContextProvider, nil, React.createElement(MiddleContextProvider, nil, React.createElement(Child, nil))))
-            expect(function()
-                return expect(Scheduler).toFlushAndYield({
+            jestExpect(function()
+                return jestExpect(Scheduler).toFlushAndYield({
                     'count:0',
                 })
             end).toErrorDev('Legacy context API has been detected within a strict-mode tree.\n\n' .. 'The old API will be supported in all 16.x releases, but applications ' .. 'using it should migrate to the new version.\n\n' .. 'Please update the following components: Child, MiddleContextProvider, TopContextProvider')
             instance.updateCount()
-            expect(Scheduler).toFlushAndYield({
+            jestExpect(Scheduler).toFlushAndYield({
                 'count:1',
             })
         end)
         -- ROBLOX TODO: PropTypes
         xit('should not update descendants with new context values if shouldComponentUpdate returns false', function()
-            local expect: any = expect
             local instance
             local TopContextProvider = React.Component:extend("TopContextProvider")
 
@@ -2792,17 +2766,16 @@ return function ()
             }
 
             ReactNoop.render(React.createElement(TopContextProvider, nil, React.createElement(MiddleScu, nil, React.createElement(MiddleContextProvider, nil, React.createElement(Child, nil)))))
-            expect(function()
-                return expect(Scheduler).toFlushAndYield({
+            jestExpect(function()
+                return jestExpect(Scheduler).toFlushAndYield({
                     'count:0',
                 })
             end).toErrorDev('Legacy context API has been detected within a strict-mode tree.\n\n' .. 'The old API will be supported in all 16.x releases, but applications ' .. 'using it should migrate to the new version.\n\n' .. 'Please update the following components: Child, MiddleContextProvider, TopContextProvider')
             instance.updateCount()
-            expect(Scheduler).toFlushWithoutYielding()
+            jestExpect(Scheduler).toFlushWithoutYielding()
         end)
         -- ROBLOX TODO: PropTypes
         xit('should update descendants with new context values if setState() is called in the middle of the tree', function()
-            local expect: any = expect
             local middleInstance
             local topInstance
             local TopContextProvider = React.Component:extend("TopContextProvider")
@@ -2869,20 +2842,19 @@ return function ()
             }
 
             ReactNoop.render(React.createElement(TopContextProvider, nil, React.createElement(MiddleScu, nil, React.createElement(MiddleContextProvider, nil, React.createElement(Child, nil)))))
-            expect(function()
-                return expect(Scheduler).toFlushAndYield({
+            jestExpect(function()
+                return jestExpect(Scheduler).toFlushAndYield({
                     'count:0, name:brian',
                 })
             end).toErrorDev('Legacy context API has been detected within a strict-mode tree.\n\n' .. 'The old API will be supported in all 16.x releases, but applications ' .. 'using it should migrate to the new version.\n\n' .. 'Please update the following components: Child, MiddleContextProvider, TopContextProvider')
             topInstance.updateCount()
-            expect(Scheduler).toFlushWithoutYielding()
+            jestExpect(Scheduler).toFlushWithoutYielding()
             middleInstance.updateName('not brian')
-            expect(Scheduler).toFlushAndYield({
+            jestExpect(Scheduler).toFlushAndYield({
                 'count:1, name:not brian',
             })
         end)
         it('does not interrupt for update at same priority', function()
-            local expect: any = expect
             local function Child(props)
                 Scheduler.unstable_yieldValue('Child: ' .. tostring(props.step))
                 return nil
@@ -2897,18 +2869,17 @@ return function ()
             end
 
             ReactNoop.render(React.createElement(Parent, {step = 1}))
-            expect(Scheduler).toFlushAndYieldThrough({
+            jestExpect(Scheduler).toFlushAndYieldThrough({
                 'Parent: 1',
             })
             ReactNoop.render(React.createElement(Parent, {step = 2}))
-            expect(Scheduler).toFlushAndYield({
+            jestExpect(Scheduler).toFlushAndYield({
                 'Child: 1',
                 'Parent: 2',
                 'Child: 2',
             })
         end)
         it('does not interrupt for update at lower priority', function()
-            local expect: any = expect
             local function Child(props)
                 Scheduler.unstable_yieldValue('Child: ' .. tostring(props.step))
 
@@ -2924,24 +2895,22 @@ return function ()
             end
 
             ReactNoop.render(React.createElement(Parent, {step = 1}))
-            expect(Scheduler).toFlushAndYieldThrough({
+            jestExpect(Scheduler).toFlushAndYieldThrough({
                 'Parent: 1',
             })
 
             -- Interrupt at lower priority
             ReactNoop.expire(2000)
             ReactNoop.render(React.createElement(Parent, {step = 2}))
-            expect(Scheduler).toFlushAndYield({
+            jestExpect(Scheduler).toFlushAndYield({
                 'Child: 1',
                 'Parent: 2',
                 'Child: 2',
             })
         end)
         it('does interrupt for update at higher priority', function()
-            local expect: any = expect
             local function Child(props)
                 Scheduler.unstable_yieldValue('Child: ' .. tostring(props.step))
-
                 return nil
             end
 
@@ -2954,7 +2923,7 @@ return function ()
             end
 
             ReactNoop.render(React.createElement(Parent, {step = 1}))
-            expect(Scheduler).toFlushAndYieldThrough({
+            jestExpect(Scheduler).toFlushAndYieldThrough({
                 'Parent: 1',
             })
 
@@ -2962,18 +2931,17 @@ return function ()
             ReactNoop.flushSync(function()
                 return ReactNoop.render(React.createElement(Parent, {step = 2}))
             end)
-            expect(Scheduler).toHaveYielded({
+            jestExpect(Scheduler).toHaveYielded({
                 'Parent: 2',
                 'Child: 2',
             })
-            expect(Scheduler).toFlushAndYield({})
+            jestExpect(Scheduler).toFlushAndYield({})
         end)
 
         -- ROBLOX TODO: sort out default map.set reassignment.
         -- We sometimes use Maps with Fibers as keys.
         -- xit('does not break with a bad Map polyfill', function()
-        --     local expect: any = expect
-        --     local realMapSet = Map.prototype.set
+        --     --     local realMapSet = Map.prototype.set
 
         --     local function triggerCodePathThatUsesFibersAsMapKeys()
         --         local function Thing()
@@ -3002,8 +2970,8 @@ return function ()
         --         }
 
         --         ReactNoop.render(React.createElement(Boundary, nil))
-        --         expect(function()
-        --             expect(Scheduler).toFlushWithoutYielding()
+        --         jestExpect(function()
+        --             jestExpect(Scheduler).toFlushWithoutYielding()
         --         end).toErrorDev({
         --             'Legacy context API has been detected within a strict-mode tree',
         --         })
@@ -3027,7 +2995,7 @@ return function ()
         --     ReactNoop = require('react-noop-renderer')
         --     Scheduler = require('scheduler')
 
-        --     expect(receivedNonExtensibleObjects).toBe(__DEV__)
+        --     jestExpect(receivedNonExtensibleObjects).toBe(__DEV__)
         --     jest.resetModules()
 
         --     Map.prototype.set = function(key, value)

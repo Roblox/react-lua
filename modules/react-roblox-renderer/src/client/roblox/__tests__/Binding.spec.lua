@@ -1,6 +1,9 @@
 return function()
 	local Workspace = script.Parent.Parent.Parent.Parent.Parent
-	local createSpy = require(Workspace.RobloxJest.createSpy)
+	local Packages = Workspace.Parent
+	local jestModule = require(Packages.Dev.JestRoblox)
+	local jestExpect = jestModule.Globals.expect
+	local jest = jestModule.Globals.jest
 	local Type = require(script.Parent.Parent.Type)
 
 	local Binding = require(script.Parent.Parent.Binding)
@@ -9,16 +12,16 @@ return function()
 		it("should return a Binding object and an update function", function()
 			local binding, update = Binding.create(1)
 
-			expect(Type.of(binding)).to.equal(Type.Binding)
-			expect(typeof(update)).to.equal("function")
+			jestExpect(Type.of(binding)).toBe(Type.Binding)
+			jestExpect(update).toEqual(jestExpect.any("function"))
 		end)
 
 		it("should support tostring on bindings", function()
 			local binding, update = Binding.create(1)
-			expect(tostring(binding)).to.equal("RoactBinding(1)")
+			jestExpect(tostring(binding)).toBe("RoactBinding(1)")
 
 			update("foo")
-			expect(tostring(binding)).to.equal("RoactBinding(foo)")
+			jestExpect(tostring(binding)).toBe("RoactBinding(foo)")
 		end)
 	end)
 
@@ -26,30 +29,32 @@ return function()
 		it("should provide a getter and setter", function()
 			local binding, update = Binding.create(1)
 
-			expect(binding:getValue()).to.equal(1)
+			jestExpect(binding:getValue()).toBe(1)
 
 			update(3)
 
-			expect(binding:getValue()).to.equal(3)
+			jestExpect(binding:getValue()).toBe(3)
 		end)
 
 		it("should let users subscribe and unsubscribe to its updates", function()
 			local binding, update = Binding.create(1)
 
-			local spy = createSpy()
-			local disconnect = Binding.subscribe(binding, spy.value)
+			local spy = jest:fn()
+			local disconnect = Binding.subscribe(
+				binding,
+				function(...) spy(...) end
+			)
 
-			expect(spy.callCount).to.equal(0)
-
+			jestExpect(spy).never.toBeCalled()
 			update(2)
 
-			expect(spy.callCount).to.equal(1)
-			spy:assertCalledWith(2)
+			jestExpect(spy).toHaveBeenCalledTimes(1)
+			jestExpect(spy).toHaveBeenCalledWith(2)
 
 			disconnect()
 			update(3)
 
-			expect(spy.callCount).to.equal(1)
+			jestExpect(spy).toHaveBeenCalledTimes(1)
 		end)
 	end)
 
@@ -62,52 +67,61 @@ return function()
 				return value % 2 == 0
 			end)
 
-			expect(word:getValue()).to.equal("hi")
-			expect(wordLength:getValue()).to.equal(2)
-			expect(isEvenLength:getValue()).to.equal(true)
+			jestExpect(word:getValue()).toBe("hi")
+			jestExpect(wordLength:getValue()).toBe(2)
+			jestExpect(isEvenLength:getValue()).toBe(true)
 
 			updateWord("sup")
 
-			expect(word:getValue()).to.equal("sup")
-			expect(wordLength:getValue()).to.equal(3)
-			expect(isEvenLength:getValue()).to.equal(false)
+			jestExpect(word:getValue()).toBe("sup")
+			jestExpect(wordLength:getValue()).toBe(3)
+			jestExpect(isEvenLength:getValue()).toBe(false)
 		end)
 
 		it("should cascade updates when subscribed", function()
 			-- base binding
 			local word, updateWord = Binding.create("hi")
 
-			local wordSpy = createSpy()
-			local disconnectWord = Binding.subscribe(word, wordSpy.value)
+			local wordSpy = jest:fn()
+			local disconnectWord = Binding.subscribe(
+				word,
+				function(...) wordSpy(...) end
+			)
 
 			-- binding -> base binding
 			local length = word:map(string.len)
 
-			local lengthSpy = createSpy()
-			local disconnectLength = Binding.subscribe(length, lengthSpy.value)
+			local lengthSpy = jest:fn()
+			local disconnectLength = Binding.subscribe(
+				length,
+				function(...) lengthSpy(...) end
+			)
 
 			-- binding -> binding -> base binding
 			local isEvenLength = length:map(function(value)
 				return value % 2 == 0
 			end)
 
-			local isEvenLengthSpy = createSpy()
-			local disconnectIsEvenLength = Binding.subscribe(isEvenLength, isEvenLengthSpy.value)
+			local isEvenLengthSpy = jest:fn()
+			local disconnectIsEvenLength = Binding.subscribe(
+				isEvenLength,
+				function(...) isEvenLengthSpy(...) end
+			)
 
-			expect(wordSpy.callCount).to.equal(0)
-			expect(lengthSpy.callCount).to.equal(0)
-			expect(isEvenLengthSpy.callCount).to.equal(0)
+			jestExpect(wordSpy).never.toBeCalled()
+			jestExpect(lengthSpy).never.toBeCalled()
+			jestExpect(isEvenLengthSpy).never.toBeCalled()
 
 			updateWord("nice")
 
-			expect(wordSpy.callCount).to.equal(1)
-			wordSpy:assertCalledWith("nice")
+			jestExpect(wordSpy).toBeCalledTimes(1)
+			jestExpect(wordSpy).toBeCalledWith("nice")
 
-			expect(lengthSpy.callCount).to.equal(1)
-			lengthSpy:assertCalledWith(4)
+			jestExpect(lengthSpy).toBeCalledTimes(1)
+			jestExpect(lengthSpy).toBeCalledWith(4)
 
-			expect(isEvenLengthSpy.callCount).to.equal(1)
-			isEvenLengthSpy:assertCalledWith(true)
+			jestExpect(isEvenLengthSpy).toBeCalledTimes(1)
+			jestExpect(isEvenLengthSpy).toBeCalledWith(true)
 
 			disconnectWord()
 			disconnectLength()
@@ -115,9 +129,9 @@ return function()
 
 			updateWord("goodbye")
 
-			expect(wordSpy.callCount).to.equal(1)
-			expect(isEvenLengthSpy.callCount).to.equal(1)
-			expect(lengthSpy.callCount).to.equal(1)
+			jestExpect(wordSpy).toBeCalledTimes(1)
+			jestExpect(isEvenLengthSpy).toBeCalledTimes(1)
+			jestExpect(lengthSpy).toBeCalledTimes(1)
 		end)
 
 		it("should throw when updated directly", function()
@@ -126,9 +140,9 @@ return function()
 				return v
 			end)
 
-			expect(function()
+			jestExpect(function()
 				Binding.update(mapped, 5)
-			end).to.throw()
+			end).toThrow()
 		end)
 	end)
 
@@ -145,10 +159,11 @@ return function()
 			})
 
 			local bindingValue = joinedBinding:getValue()
-			expect(bindingValue).to.be.a("table")
-			expect(bindingValue[1]).to.equal(1)
-			expect(bindingValue[2]).to.equal(2)
-			expect(bindingValue.foo).to.equal(3)
+			jestExpect(bindingValue).toEqual({
+				[1] = 1,
+				[2] = 2,
+				foo = 3
+			})
 		end)
 
 		it("should update when any one of the subscribed bindings updates", function()
@@ -162,37 +177,40 @@ return function()
 				foo = binding3,
 			})
 
-			local spy = createSpy()
-			Binding.subscribe(joinedBinding, spy.value)
+			local spy = jest:fn()
+			Binding.subscribe(
+				joinedBinding,
+				function(...) spy(...) end
+			)
 
-			expect(spy.callCount).to.equal(0)
+			jestExpect(spy).never.toBeCalled()
 
 			update1(3)
-			expect(spy.callCount).to.equal(1)
+			jestExpect(spy).toBeCalledTimes(1)
 
-			local args = spy:captureValues("value")
-			expect(args.value).to.be.a("table")
-			expect(args.value[1]).to.equal(3)
-			expect(args.value[2]).to.equal(2)
-			expect(args.value["foo"]).to.equal(3)
+			jestExpect(spy).toBeCalledWith({
+				[1] = 3,
+				[2] = 2,
+				["foo"] = 3
+			})
 
 			update2(4)
-			expect(spy.callCount).to.equal(2)
+			jestExpect(spy).toBeCalledTimes(2)
 
-			args = spy:captureValues("value")
-			expect(args.value).to.be.a("table")
-			expect(args.value[1]).to.equal(3)
-			expect(args.value[2]).to.equal(4)
-			expect(args.value["foo"]).to.equal(3)
+			jestExpect(spy).toBeCalledWith({
+				[1] = 3,
+				[2] = 4,
+				["foo"] = 3
+			})
 
 			update3(8)
-			expect(spy.callCount).to.equal(3)
+			jestExpect(spy).toBeCalledTimes(3)
 
-			args = spy:captureValues("value")
-			expect(args.value).to.be.a("table")
-			expect(args.value[1]).to.equal(3)
-			expect(args.value[2]).to.equal(4)
-			expect(args.value["foo"]).to.equal(8)
+			jestExpect(spy).toBeCalledWith({
+				[1] = 3,
+				[2] = 4,
+				["foo"] = 8
+			})
 		end)
 
 		it("should disconnect from all upstream bindings", function()
@@ -201,27 +219,28 @@ return function()
 
 			local joined = Binding.join({binding1, binding2})
 
-			local spy = createSpy()
-			local disconnect = Binding.subscribe(joined, spy.value)
+			local spy = jest:fn()
+			local disconnect = Binding.subscribe(
+				joined,
+				function(...) spy(...) end
+			)
 
-			expect(spy.callCount).to.equal(0)
+			jestExpect(spy).never.toBeCalled()
 
 			update1(3)
-			expect(spy.callCount).to.equal(1)
+			jestExpect(spy).toBeCalledTimes(1)
 
 			update2(3)
-			expect(spy.callCount).to.equal(2)
+			jestExpect(spy).toBeCalledTimes(2)
 
 			disconnect()
 			update1(4)
-			expect(spy.callCount).to.equal(2)
+			jestExpect(spy).toBeCalledTimes(2)
 
 			update2(2)
-			expect(spy.callCount).to.equal(2)
+			jestExpect(spy).toBeCalledTimes(2)
 
-			local value = joined:getValue()
-			expect(value[1]).to.equal(4)
-			expect(value[2]).to.equal(2)
+			jestExpect(joined:getValue()).toEqual({ 4, 2 })
 		end)
 
 		it("should be okay with calling disconnect multiple times", function()
@@ -236,27 +255,27 @@ return function()
 		it("should throw if updated directly", function()
 			local joined = Binding.join({})
 
-			expect(function()
+			jestExpect(function()
 				Binding.update(joined, 0)
 			end)
 		end)
 
 		if _G.__DEV__ then
 			it("should throw when a non-table value is passed", function()
-				expect(function()
+				jestExpect(function()
 					Binding.join("hi")
-				end).to.throw()
+				end).toThrow()
 			end)
 
 			it("should throw when a non-binding value is passed via table", function()
-				expect(function()
+				jestExpect(function()
 					local binding = Binding.create(123)
 
 					Binding.join({
 						binding,
 						"abcde",
 					})
-				end).to.throw()
+				end).toThrow()
 			end)
 		end
 	end)

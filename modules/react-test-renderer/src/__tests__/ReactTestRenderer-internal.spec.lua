@@ -27,8 +27,8 @@ local RobloxJest
 -- Isolate noop renderer
 -- local ReactNoop = require(Workspace.ReactNoopRenderer)
 -- local Scheduler = require(Workspace.Scheduler)
-
-local LuauPolyfill = require(Workspace.Parent.LuauPolyfill)
+local Packages = Workspace.Parent
+local LuauPolyfill = require(Packages.LuauPolyfill)
 local Array = LuauPolyfill.Array
 local Symbol = LuauPolyfill.Symbol
 
@@ -66,6 +66,7 @@ end
 
 return function ()
     RobloxJest = require(Workspace.RobloxJest)
+    local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
 
     describe('ReactTestRenderer', function()
         beforeEach(function()
@@ -91,7 +92,6 @@ return function ()
 
         end)
         it('renders a simple component', function()
-            local expect: any = expect
             local function Link()
                 return React.createElement('a', {
                     role = 'link',
@@ -101,7 +101,7 @@ return function ()
 
             local renderer = ReactTestRenderer.create(React.createElement(Link, nil))
 
-            expect(renderer.toJSON()).toEqual({
+            jestExpect(renderer.toJSON()).toEqual({
                 type = 'a',
                 props = {
                     role = 'link',
@@ -110,17 +110,15 @@ return function ()
             })
         end)
         it('renders a top-level empty component', function()
-            local expect: any = expect
             local function Empty()
                 return nil
             end
 
             local renderer = ReactTestRenderer.create(React.createElement(Empty, nil))
 
-            expect(renderer.toJSON()).toEqual(nil)
+            jestExpect(renderer.toJSON()).toEqual(nil)
         end)
         it('exposes a type flag', function()
-            local expect:any = expect
             local function Link()
                 return React.createElement('a', {
                     role = 'link',
@@ -130,15 +128,14 @@ return function ()
             local renderer = ReactTestRenderer.create(React.createElement(Link, nil))
             local object = renderer.toJSON()
             -- ROBLOX FIXME: needs to stringify $$typeof because Symbol module is reset. Un-stringify once we've found a solution.
-            expect(tostring(object['$$typeof'])).toEqual(tostring(Symbol.for_('react.test.json')))
+            jestExpect(tostring(object['$$typeof'])).toEqual(tostring(Symbol.for_('react.test.json')))
 
             -- $$typeof should not be enumerable.
             for key, _ in pairs(object) do
-              expect(key).never.toEqual('$$typeof')
+              jestExpect(key).never.toEqual('$$typeof')
             end
         end)
         it('can render a composite component', function()
-            local expect: any = expect
             local Component = React.Component:extend("Component")
 
             local Child = function()
@@ -153,7 +150,7 @@ return function ()
 
             local renderer = ReactTestRenderer.create(React.createElement(Component, nil))
 
-            expect(renderer.toJSON()).toEqual({
+            jestExpect(renderer.toJSON()).toEqual({
                 type = 'div',
                 props = {
                     className = 'purple',
@@ -168,7 +165,6 @@ return function ()
             })
         end)
         it('renders some basics with an update', function()
-            local expect: any = expect
             local renders = 0
             local Component = React.Component:extend("Component")
 
@@ -200,7 +196,7 @@ return function ()
 
             local renderer = ReactTestRenderer.create(React.createElement(Component, nil))
 
-            expect(renderer.toJSON()).toEqual({
+            jestExpect(renderer.toJSON()).toEqual({
                 type = 'div',
                 props = {
                     className = 'purple',
@@ -214,10 +210,9 @@ return function ()
                     },
                 },
             })
-            expect(renders).toEqual(6)
+            jestExpect(renders).toEqual(6)
         end)
         it('exposes the instance', function()
-            local expect: any = expect
             local Mouse = React.Component:extend("Mouse")
 
             function Mouse:init()
@@ -236,7 +231,7 @@ return function ()
 
             local renderer = ReactTestRenderer.create(React.createElement(Mouse, nil))
 
-            expect(renderer.toJSON()).toEqual({
+            jestExpect(renderer.toJSON()).toEqual({
                 type = 'div',
                 props = {},
                 children = {
@@ -247,7 +242,7 @@ return function ()
             local mouse = renderer.getInstance()
 
             mouse:handleMoose()
-            expect(renderer.toJSON()).toEqual({
+            jestExpect(renderer.toJSON()).toEqual({
                 type = 'div',
                 children = {
                     'moose',
@@ -256,10 +251,9 @@ return function ()
             })
         end)
         it('updates types', function()
-            local expect: any = expect
             local renderer = ReactTestRenderer.create(React.createElement('div', nil, 'mouse'))
 
-            expect(renderer.toJSON()).toEqual({
+            jestExpect(renderer.toJSON()).toEqual({
                 type = 'div',
                 props = {},
                 children = {
@@ -267,7 +261,7 @@ return function ()
                 },
             })
             renderer.update(React.createElement('span', nil, 'mice'))
-            expect(renderer.toJSON()).toEqual({
+            jestExpect(renderer.toJSON()).toEqual({
                 type = 'span',
                 props = {},
                 children = {
@@ -276,7 +270,6 @@ return function ()
             })
         end)
         it('updates children', function()
-            local expect: any = expect
             local renderer = ReactTestRenderer.create(React.createElement('div', nil, React.createElement('span', {
                 key = 'a',
             }, 'A'), React.createElement('span', {
@@ -285,7 +278,7 @@ return function ()
                 key = 'c',
             }, 'C')))
 
-            expect(renderer.toJSON()).toEqual({
+            jestExpect(renderer.toJSON()).toEqual({
                 type = 'div',
                 props = {},
                 children = {
@@ -319,7 +312,7 @@ return function ()
             }, 'C'), React.createElement('span', {
                 key = 'b',
             }, 'B')))
-            expect(renderer.toJSON()).toEqual({
+            jestExpect(renderer.toJSON()).toEqual({
                 type = 'div',
                 props = {},
                 children = {
@@ -348,7 +341,6 @@ return function ()
             })
         end)
         it('does the full lifecycle', function()
-            local expect: any = expect
             local log = {}
             local Log = React.Component:extend("Log")
 
@@ -373,7 +365,7 @@ return function ()
                 name = 'Bar',
             }))
             renderer.unmount()
-            expect(log).toEqual({
+            jestExpect(log).toEqual({
                 'render Foo',
                 'mount Foo',
                 'render Bar',
@@ -383,7 +375,6 @@ return function ()
             })
         end)
         it('gives a ref to native components', function()
-            local expect: any = expect
             local log = {}
 
             ReactTestRenderer.create(React.createElement('div', {
@@ -391,10 +382,9 @@ return function ()
                     return table.insert(log, r)
                 end,
             }))
-            expect(log).toEqual({nil})
+            jestExpect(log).toEqual({nil})
         end)
         it('warns correctly for refs on SFCs', function()
-            local expect: any = expect
             local function Bar()
                 return React.createElement('div', nil, 'Hello, world')
             end
@@ -416,7 +406,7 @@ return function ()
             end
 
             ReactTestRenderer.create(React.createElement(Baz, nil))
-            expect(function()
+            jestExpect(function()
                 return ReactTestRenderer.create(React.createElement(Foo, nil))
             end).toErrorDev('Warning: Function components cannot be given refs. Attempts ' ..
                 'to access this ref will fail. ' ..
@@ -426,7 +416,6 @@ return function ()
                 '    in Foo (at **)')
         end)
         it('allows an optional createNodeMock function', function()
-            local expect: any = expect
             local mockDivInstance = {
                 appendChild = function() end,
             }
@@ -505,7 +494,7 @@ return function ()
                     return table.insert(log, r)
                 end,
             }), {})
-            expect(log).toEqual({
+            jestExpect(log).toEqual({
                 mockDivInstance,
                 mockInputInstance,
                 mockListItemInstance,
@@ -515,7 +504,6 @@ return function ()
             })
         end)
         it('supports unmounting when using refs', function()
-            local expect: any = expect
             local Foo = React.Component:extend("Foo")
 
             -- ROBLOX deviation: using createRef in place of string refs
@@ -533,12 +521,11 @@ return function ()
                 end,
             })
 
-            expect(function()
+            jestExpect(function()
                 return inst.unmount()
             end).never.toThrow()
         end)
         it('supports unmounting inner instances', function()
-            local expect: any = expect
             local count = 0
             local Foo = React.Component:extend("Foo")
 
@@ -555,13 +542,12 @@ return function ()
                 end,
             })
 
-            expect(function()
+            jestExpect(function()
                 return inst.unmount()
             end).never.toThrow()
-            expect(count).toEqual(1)
+            jestExpect(count).toEqual(1)
         end)
         it('supports updates when using refs', function()
-            local expect: any = expect
             local log = {}
             local createNodeMock = function(element)
                 table.insert(log, element.type)
@@ -586,13 +572,12 @@ return function ()
             local inst = ReactTestRenderer.create(React.createElement(Foo, {useDiv = true}), {createNodeMock = createNodeMock})
 
             inst.update(React.createElement(Foo, {useDiv = false}))
-            expect(log).toEqual({
+            jestExpect(log).toEqual({
                 'div',
                 'span',
             })
         end)
         it('supports error boundaries', function()
-            local expect: any = expect
             local log = {}
             local Angry = React.Component:extend("Angry")
 
@@ -640,14 +625,14 @@ return function ()
 
             local renderer = ReactTestRenderer.create(React.createElement(Boundary, nil))
 
-            expect(renderer.toJSON()).toEqual({
+            jestExpect(renderer.toJSON()).toEqual({
                 type = 'div',
                 props = {},
                 children = {
                     'Happy Birthday!',
                 },
             })
-            expect(log).toEqual({
+            jestExpect(log).toEqual({
                 'Boundary render',
                 'Angry render',
                 'Boundary componentDidMount',
@@ -656,7 +641,6 @@ return function ()
             })
         end)
         it('can update text nodes', function()
-            local expect: any = expect
             local Component = React.Component:extend("Component")
 
             function Component:render()
@@ -665,7 +649,7 @@ return function ()
 
             local renderer = ReactTestRenderer.create(React.createElement(Component, nil, 'Hi'))
 
-            expect(renderer.toJSON()).toEqual({
+            jestExpect(renderer.toJSON()).toEqual({
                 type = 'div',
                 children = {
                     'Hi',
@@ -676,7 +660,7 @@ return function ()
                 'Hi',
                 'Bye',
             }))
-            expect(renderer.toJSON()).toEqual({
+            jestExpect(renderer.toJSON()).toEqual({
                 type = 'div',
                 children = {
                     'Hi',
@@ -685,7 +669,7 @@ return function ()
                 props = {},
             })
             renderer.update(React.createElement(Component, nil, 'Bye'))
-            expect(renderer.toJSON()).toEqual({
+            jestExpect(renderer.toJSON()).toEqual({
                 type = 'div',
                 children = {
                     'Bye',
@@ -693,7 +677,7 @@ return function ()
                 props = {},
             })
             renderer.update(React.createElement(Component, nil, 42))
-            expect(renderer.toJSON()).toEqual({
+            jestExpect(renderer.toJSON()).toEqual({
                 type = 'div',
                 children = {
                     '42',
@@ -701,7 +685,7 @@ return function ()
                 props = {},
             })
             renderer.update(React.createElement(Component, nil, React.createElement('div', nil)))
-            expect(renderer.toJSON()).toEqual({
+            jestExpect(renderer.toJSON()).toEqual({
                 type = 'div',
                 children = {
                     {
@@ -714,7 +698,6 @@ return function ()
             })
         end)
         it('toTree() renders simple components returning host components', function()
-            local expect: any = expect
             local Qoo = function()
                 return React.createElement('span', {
                     className = 'Qoo',
@@ -726,7 +709,7 @@ return function ()
             cleanNodeOrArray(tree)
 
             -- ROBLOX deviation: no need to pretty format
-            expect(tree).toEqual({
+            jestExpect(tree).toEqual({
                 nodeType = 'component',
                 type = Qoo,
                 props = {},
@@ -745,7 +728,6 @@ return function ()
             })
         end)
         it('toTree() handles nested Fragments', function()
-            local expect: any = expect
             local Foo = function()
                 return React.createElement(React.Fragment, nil, React.createElement(React.Fragment, nil, 'foo'))
             end
@@ -755,7 +737,7 @@ return function ()
             cleanNodeOrArray(tree)
 
             -- ROBLOX deviation: no need to pretty format
-            expect(tree).toEqual({
+            jestExpect(tree).toEqual({
                 nodeType = 'component',
                 type = Foo,
                 instance = nil,
@@ -764,7 +746,6 @@ return function ()
             })
         end)
         it('toTree() handles null rendering components', function()
-            local expect: any = expect
             local Foo = React.Component:extend("Foo")
 
             function Foo:render()
@@ -774,14 +755,14 @@ return function ()
             local renderer = ReactTestRenderer.create(React.createElement(Foo, nil))
             local tree = renderer.toTree()
 
-            -- ROBLOX deviation: toBeInstanceOf not yet implemented, workaround by checking elementType 
-            expect(tree.instance._reactInternals.elementType.__componentName).toEqual("Foo")
+            -- ROBLOX deviation: toBeInstanceOf not yet implemented, workaround by checking elementType
+            jestExpect(tree.instance._reactInternals.elementType.__componentName).toEqual("Foo")
             cleanNodeOrArray(tree)
 
             -- ROBLOX FIXME: set metatable value to nil to stop infinite recursion, should be removed once we
             -- move to Roblox Jest
             tree.type.__index = nil
-            expect(tree).toEqual({
+            jestExpect(tree).toEqual({
                 type = Foo,
                 nodeType = 'component',
                 props = {},
@@ -790,8 +771,6 @@ return function ()
             })
         end)
         it('toTree() handles simple components that return arrays', function()
-            local expect: any = expect
-
             local Foo = function(_ref)
                 local children = _ref.children
 
@@ -803,7 +782,7 @@ return function ()
             cleanNodeOrArray(tree)
 
             -- ROBLOX deviation: no need to pretty format
-            expect(tree).toEqual({
+            jestExpect(tree).toEqual({
                 type = Foo,
                 nodeType = 'component',
                 props = {},
@@ -831,8 +810,6 @@ return function ()
             })
         end)
         it('toTree() handles complicated tree of arrays', function()
-            local expect: any = expect
-
             local Foo = React.Component:extend("Foo")
 
             function Foo:render()
@@ -849,7 +826,7 @@ return function ()
             tree.rendered[1].type.__index = nil
 
             -- ROBLOX deviation: no need to pretty format
-            expect(tree).toEqual({
+            jestExpect(tree).toEqual({
                 type = 'div',
                 instance = nil,
                 nodeType = 'host',
@@ -909,25 +886,23 @@ return function ()
             })
         end)
         it('toTree() handles complicated tree of fragments', function()
-            local expect: any = expect
-
             local renderer = ReactTestRenderer.create(
                 React.createElement(
-                    React.Fragment, 
-                    nil, 
+                    React.Fragment,
+                    nil,
                     React.createElement(
-                        React.Fragment, 
-                        nil, 
-                        React.createElement('div', nil, 'One'), 
-                        React.createElement('div', nil, 'Two'), 
-                        React.createElement(React.Fragment, nil, React.createElement('div', nil, 'Three'))), 
+                        React.Fragment,
+                        nil,
+                        React.createElement('div', nil, 'One'),
+                        React.createElement('div', nil, 'Two'),
+                        React.createElement(React.Fragment, nil, React.createElement('div', nil, 'Three'))),
                     React.createElement('div', nil, 'Four'))
             )
             local tree = renderer.toTree()
 
             cleanNodeOrArray(tree)
             -- ROBLOX deviation: no need to pretty format
-            expect(tree).toEqual({
+            jestExpect(tree).toEqual({
                 {
                     type = 'div',
                     nodeType = 'host',
@@ -967,7 +942,6 @@ return function ()
             })
         end)
         it('root instance and createNodeMock ref return the same value', function()
-            local expect: any = expect
             local createNodeMock = function(ref)
                 return {node = ref}
             end
@@ -980,10 +954,9 @@ return function ()
             }), {createNodeMock = createNodeMock})
             local root = renderer.getInstance()
 
-            expect(root).toEqual(refInst)
+            jestExpect(root).toEqual(refInst)
         end)
         it('toTree() renders complicated trees of composites and hosts', function()
-            local expect: any = expect
             -- SFC returning host. no children props.
             local Qoo = function()
                 return React.createElement('span', {
@@ -1030,9 +1003,9 @@ return function ()
             local tree = renderer.toTree()
 
             -- we test for the presence of instances before nulling them out
-            -- ROBLOX deviation: toBeInstanceOf not yet implemented, workaround by checking elementType 
-            expect(tree.instance._reactInternals.elementType.__componentName).toEqual("Bam")
-            expect(tree.rendered.instance._reactInternals.elementType.__componentName).toEqual("Bar")
+            -- ROBLOX deviation: toBeInstanceOf not yet implemented, workaround by checking elementType
+            jestExpect(tree.instance._reactInternals.elementType.__componentName).toEqual("Bam")
+            jestExpect(tree.rendered.instance._reactInternals.elementType.__componentName).toEqual("Bar")
 
             cleanNodeOrArray(tree)
 
@@ -1042,7 +1015,7 @@ return function ()
             tree.rendered.type.__index = nil
 
 
-            expect(tree).toEqual({
+            jestExpect(tree).toEqual({
                 type = Bam,
                 nodeType = 'component',
                 props = {},
@@ -1102,29 +1075,27 @@ return function ()
             })
         end)
         it('can update text nodes when rendered as root', function()
-            local expect: any = expect
             local renderer = ReactTestRenderer.create({
                 'Hello',
                 'world',
             })
 
-            expect(renderer.toJSON()).toEqual({
+            jestExpect(renderer.toJSON()).toEqual({
                 'Hello',
                 'world',
             })
             renderer.update(42)
-            expect(renderer.toJSON()).toEqual('42')
+            jestExpect(renderer.toJSON()).toEqual('42')
             renderer.update({
                 42,
                 'world',
             })
-            expect(renderer.toJSON()).toEqual({
+            jestExpect(renderer.toJSON()).toEqual({
                 '42',
                 'world',
             })
         end)
         it('can render and update root fragments', function()
-            local expect: any = expect
             local Component = function(props)
                 return props.children
             end
@@ -1137,12 +1108,12 @@ return function ()
                 }, 'Bye'),
             })
 
-            expect(renderer.toJSON()).toEqual({
+            jestExpect(renderer.toJSON()).toEqual({
                 'Hi',
                 'Bye',
             })
             renderer.update(React.createElement('div', nil))
-            expect(renderer.toJSON()).toEqual({
+            jestExpect(renderer.toJSON()).toEqual({
                 type = 'div',
                 children = nil,
                 props = {},
@@ -1153,7 +1124,7 @@ return function ()
                 }, 'goodbye'),
                 'world',
             })
-            expect(renderer.toJSON()).toEqual({
+            jestExpect(renderer.toJSON()).toEqual({
                 {
                     type = 'div',
                     children = {
@@ -1165,7 +1136,6 @@ return function ()
             })
         end)
         it('supports context providers and consumers', function()
-            local expect: any = expect
             local context = React.createContext('a')
             local Consumer = context.Consumer
             local Provider = context.Provider
@@ -1184,11 +1154,11 @@ return function ()
             local renderer = ReactTestRenderer.create(React.createElement(App, nil))
             local child = renderer.root:findByType(Child)
 
-            expect(child.children).toEqual({
+            jestExpect(child.children).toEqual({
                 'b',
             })
             -- ROBLOX deviation: no need to pretty format
-            expect(renderer.toTree()).toEqual({
+            jestExpect(renderer.toTree()).toEqual({
                 instance = nil,
                 nodeType = 'component',
                 props = {},
@@ -1205,8 +1175,6 @@ return function ()
             })
         end)
         it('supports modes', function()
-            local expect: any = expect
-
             local function Child(props)
                 return props.value
             end
@@ -1221,11 +1189,11 @@ return function ()
             }))
             local child = renderer.root:findByType(Child)
 
-            expect(child.children).toEqual({
+            jestExpect(child.children).toEqual({
                 'a',
             })
             -- ROBLOX deviation: no need to pretty format
-            expect(renderer.toTree()).toEqual({
+            jestExpect(renderer.toTree()).toEqual({
                 instance = nil,
                 nodeType = 'component',
                 props = {
@@ -1244,8 +1212,6 @@ return function ()
             })
         end)
         it('supports forwardRef', function()
-            local expect: any = expect
-
             local InnerRefed = React.forwardRef(function(props, ref)
                 return React.createElement('div', nil, React.createElement('span', {ref = ref}))
             end)
@@ -1270,7 +1236,7 @@ return function ()
             -- move to Roblox Jest
             tree.type.__index = nil
             -- ROBLOX deviation: no need to pretty format
-            expect(tree).toEqual({
+            jestExpect(tree).toEqual({
                 instance = nil,
                 nodeType = 'component',
                 props = {},
@@ -1294,7 +1260,6 @@ return function ()
         end)
         -- ROBLOX TODO: set up React Noop in this file
         -- xit('can concurrently render context with a "primary" renderer', function()
-        --     local expect: any = expect
         --     local Context = React.createContext(nil)
         --     local Indirection = React.Fragment
         --     local App = function()
@@ -1305,17 +1270,16 @@ return function ()
         --     end
 
         --     ReactNoop.render(React.createElement(App, nil))
-        --     expect(Scheduler).toFlushWithoutYielding()
+        --     jestExpect(Scheduler).toFlushWithoutYielding()
         --     ReactTestRenderer.create(React.createElement(App, nil))
         -- end)
         it('calling findByType() with an invalid component will fall back to "Unknown" for component name', function()
-            local expect: any = expect
             local App = function()
                 return nil
             end
             local renderer = ReactTestRenderer.create(React.createElement(App, nil))
             local NonComponent = {}
-            expect(function()
+            jestExpect(function()
                 renderer.root:findByType(NonComponent)
             end).toThrow('No instances found with node type: "Unknown"')
         end)

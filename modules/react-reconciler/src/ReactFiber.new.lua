@@ -127,7 +127,6 @@ local REACT_LEGACY_HIDDEN_TYPE = ReactSymbols.REACT_LEGACY_HIDDEN_TYPE
 -- 	end
 -- end
 
--- deviation: Pre-declare functions
 local createFiberFromScope, createFiberFromProfiler, createFiberFromFragment,
 	createFiberFromFundamental, createFiberFromSuspense, createFiberFromOffscreen,
 	createFiberFromLegacyHidden, createFiberFromSuspenseList
@@ -195,7 +194,7 @@ function FiberNode(
 			node.actualStartTime = Number.NaN
 			node.selfBaseDuration = Number.NaN
 			node.treeBaseDuration = Number.NaN
-	
+
 			-- It's okay to replace the initial doubles with smis after initialization.
 			-- This won't trigger the performance cliff mentioned above,
 			-- and it simplifies other profiler code (including DevTools).
@@ -475,12 +474,11 @@ local function createHostRootFiber(tag: RootTag): Fiber
 	return createFiber(HostRoot, nil, nil, mode)
 end
 
--- deviation: FIXME: `owner: Fiber | nil` - Narrowing doesn't work in function body
 local function createFiberFromTypeAndProps(
 	type: any, -- React$ElementType
 	key: string?,
 	pendingProps: any,
-	owner,
+	owner: nil | Fiber,
 	mode: TypeOfMode,
 	lanes: Lanes
 ): Fiber
@@ -818,9 +816,9 @@ local function createFiberFromPortal(
 end
 
 -- Used for stashing WIP properties to replay failed work in DEV.
--- deviation: FIXME: `target: Fiber | nil` - Narrowing doesn't work in function body
+-- ROBLOX FIXME: `target: Fiber | nil` - Narrowing doesn't work even with nil check
 local function assignFiberPropertiesInDEV(
-	target,
+	target: Fiber,
 	source: Fiber
 ): Fiber
 	if target == nil then

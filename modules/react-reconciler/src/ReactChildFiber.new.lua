@@ -17,6 +17,9 @@ local Workspace = script.Parent.Parent
 local Packages = Workspace.Parent
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local Array = LuauPolyfill.Array
+type Array<T> = { [number]: T }
+type Set<T> = { [T]: boolean }
+type Object = { [any]: any }
 -- ROBLOX: use patched console from shared
 local console = require(Workspace.Shared.console)
 
@@ -69,11 +72,6 @@ local emptyRefsObject = require(script.Parent["ReactFiberClassComponent.new"]).e
 local ReactFiberHotReloading = require(script.Parent["ReactFiberHotReloading.new"])
 local isCompatibleFamilyForHotReloading = ReactFiberHotReloading.isCompatibleFamilyForHotReloading
 local StrictMode = require(script.Parent.ReactTypeOfMode).StrictMode
-
--- deviation: Common types
-type Array<T> = { [number]: T }
-type Set<T> = { [T]: boolean }
-type Object = { [any]: any }
 
 local exports = {}
 
@@ -378,8 +376,8 @@ local function ChildReconciler(shouldTrackSideEffects)
   local function useFiber(fiber: Fiber, pendingProps: any): Fiber
     -- We currently set sibling to nil and index to 0 here because it is easy
     -- to forget to do before returning it. E.g. for the single child case.
-    -- deviation: set index to 1 for 1-indexing
     local clone = createWorkInProgress(fiber, pendingProps)
+    -- ROBLOX deviation: set index to 1 for 1-indexing
     clone.index = 1
     clone.sibling = nil
     return clone

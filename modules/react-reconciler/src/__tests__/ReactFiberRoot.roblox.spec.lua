@@ -12,6 +12,8 @@
 return function()
 	local Workspace = script.Parent.Parent.Parent
 	local RobloxJest = require(Workspace.RobloxJest)
+	local Packages = Workspace.Parent
+	local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
 
 	local ReactFiberRoot
 	local ReactRootTags
@@ -29,7 +31,7 @@ return function()
 	it("should properly initialize a fiber created with createFiberRoot", function()
 		local fiberRoot = ReactFiberRoot.createFiberRoot({}, ReactRootTags.BlockingRoot, false, nil)
 
-		expect(fiberRoot.current).to.be.ok()
-		expect(fiberRoot.current.updateQueue).to.be.ok()
+		jestExpect(fiberRoot.current).toBeDefined()
+		jestExpect(fiberRoot.current.updateQueue).toBeDefined()
 	end)
 end

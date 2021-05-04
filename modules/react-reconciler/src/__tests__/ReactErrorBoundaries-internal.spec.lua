@@ -1,4 +1,4 @@
--- Upstream = https:--github.com/facebook/react/blob/d13f5b9538e48f74f7c571ef3cde652ca887cca0/packages/react-dom/src/__tests__/ReactErrorBoundaries-test.internal.js
+-- Upstream = https://github.com/facebook/react/blob/d13f5b9538e48f74f7c571ef3cde652ca887cca0/packages/react-dom/src/__tests__/ReactErrorBoundaries-test.internal.js
 --  * Copyright (c) Facebook, Inc. and its affiliates.
 --  *
 --  * This source code is licensed under the MIT license found in the
@@ -41,6 +41,8 @@ local textContent = function(node)
 end
 
 return function()
+	local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
+
     describe('ReactErrorBoundaries', function()
         local BrokenConstructor
         local BrokenComponentWillMount
@@ -69,7 +71,7 @@ return function()
             RobloxJest.mock(Workspace.Scheduler, function()
               return require(Workspace.Scheduler.unstable_mock)
             end)
-        
+
             RobloxJest.useFakeTimers()
 
             -- PropTypes = require('prop-types')
@@ -130,7 +132,7 @@ return function()
                 )
                 error('Hello', 0)
             end
-            
+
             function BrokenComponentWillMount:componentDidMount()
                 Scheduler.unstable_yieldValue(
                     'BrokenComponentWillMount componentDidMount'
@@ -147,7 +149,7 @@ return function()
                     'BrokenComponentWillMount componentWillUpdate'
                 )
             end
-            
+
             function BrokenComponentWillMount:componentDidUpdate()
                 Scheduler.unstable_yieldValue(
                     'BrokenComponentWillMount componentDidUpdate'
@@ -764,35 +766,32 @@ return function()
             end
         end)
         it('does not swallow exceptions on mounting without boundaries', function()
-            local expect: any = expect
-            expect(function()
+            jestExpect(function()
                 ReactNoop.act(function()
                     ReactNoop.render(React.createElement(BrokenRender))
                 end)
             end).toThrow('Hello')
 
 
-            expect(function()
+            jestExpect(function()
                 ReactNoop.act(function()
                     ReactNoop.render(React.createElement(BrokenComponentWillMount))
                 end)
             end).toThrow('Hello')
 
 
-            expect(function()
+            jestExpect(function()
                 ReactNoop.act(function()
                     ReactNoop.render(React.createElement(BrokenComponentDidMount))
                 end)
             end).toThrow('Hello')
         end)
         it('does not swallow exceptions on updating without boundaries', function()
-            local expect: any = expect
-
             -- ROBLOX deviation: using legacy root of Noop renderer instead of ReactDOM
             local root = ReactNoop.createLegacyRoot()
 
             root.render(React.createElement(BrokenComponentWillUpdate))
-            expect(function()
+            jestExpect(function()
                 root.render(React.createElement(BrokenComponentWillUpdate))
             end).toThrow('Hello')
 
@@ -800,73 +799,67 @@ return function()
 
 
             root.render(React.createElement(BrokenComponentWillReceiveProps))
-            expect(function()
+            jestExpect(function()
                 root.render(React.createElement(BrokenComponentWillReceiveProps))
             end).toThrow('Hello')
 
             root = ReactNoop.createLegacyRoot()
 
             root.render(React.createElement(BrokenComponentDidUpdate))
-            expect(function()
+            jestExpect(function()
                 root.render(React.createElement(BrokenComponentDidUpdate))
             end).toThrow('Hello')
         end)
         it('does not swallow exceptions on unmounting without boundaries', function()
-            local expect: any = expect
-
             -- ROBLOX deviation: using legacy root of Noop renderer instead of ReactDOM
             local root = ReactNoop.createLegacyRoot()
 
             root.render(React.createElement(BrokenComponentWillUnmount))
-            expect(function()
+            jestExpect(function()
                 -- ROBLOX deviation: render nil to unmount
                 root.render(nil)
             end).toThrow('Hello')
         end)
         it('prevents errors from leaking into other roots', function()
-            local expect: any = expect
-
             local root1 = ReactNoop.createLegacyRoot()
             local root2 = ReactNoop.createLegacyRoot()
             local root3 = ReactNoop.createLegacyRoot()
 
             root1.render(React.createElement('span', nil, 'Before 1'))
-            expect(function()
+            jestExpect(function()
                 root2.render(React.createElement(BrokenRender))
             end).toThrow('Hello')
             root3.render(React.createElement(ErrorBoundary, nil, React.createElement(BrokenRender)))
-            expect(root1.getChildren()[1].text).toEqual('Before 1')
-            expect(root2.getChildren()[1]).toEqual(nil)
+            jestExpect(root1.getChildren()[1].text).toEqual('Before 1')
+            jestExpect(root2.getChildren()[1]).toEqual(nil)
 
             -- ROBLOX deviation: using textContent helper in place of upstream .textContent()
-            expect(textContent(root3)).toEqual('Caught an error: Hello.')
+            jestExpect(textContent(root3)).toEqual('Caught an error: Hello.')
 
             root1.render(React.createElement('span', nil, 'After 1'), root1)
             root2.render(React.createElement('span', nil, 'After 2'), root2)
             root3.render(React.createElement(ErrorBoundary, {forceRetry = true}, 'After 3'), root3)
-            expect(root1.getChildren()[1].text).toEqual('After 1')
-            expect(root2.getChildren()[1].text).toEqual('After 2')
-            expect(root3.getChildren()[1].text).toEqual('After 3')
+            jestExpect(root1.getChildren()[1].text).toEqual('After 1')
+            jestExpect(root2.getChildren()[1].text).toEqual('After 2')
+            jestExpect(root3.getChildren()[1].text).toEqual('After 3')
             root1.render(nil)
             root2.render(nil)
             root3.render(nil)
-            expect(root1.getChildren()[1]).toEqual(nil)
-            expect(root2.getChildren()[1]).toEqual(nil)
-            expect(root3.getChildren()[1]).toEqual(nil)
+            jestExpect(root1.getChildren()[1]).toEqual(nil)
+            jestExpect(root2.getChildren()[1]).toEqual(nil)
+            jestExpect(root3.getChildren()[1]).toEqual(nil)
         end)
         it('logs a single error when using error boundary', function()
-            local expect: any = expect
-
             -- ROBLOX deviation: using legacy root of Noop renderer instead of ReactDOM
             local root = ReactNoop.createLegacyRoot()
 
-            expect(function()
+            jestExpect(function()
                 return root.render(React.createElement(ErrorBoundary, nil, React.createElement(BrokenRender)))
             end).toErrorDev('The above error occurred in the <BrokenRender> component:', {logAllErrors = true})
 
             -- ROBLOX deviation: using textContent helper in place of upstream .textContent()
-            expect(textContent(root)).toEqual('Caught an error: Hello.')
-            expect(Scheduler).toHaveYielded({
+            jestExpect(textContent(root)).toEqual('Caught an error: Hello.')
+            jestExpect(Scheduler).toHaveYielded({
                 'ErrorBoundary constructor',
                 'ErrorBoundary componentWillMount',
                 'ErrorBoundary render success',
@@ -881,19 +874,17 @@ return function()
             })
             -- ROBLOX deviation: render nil to unmount
             root.render(nil)
-            expect(Scheduler).toHaveYielded({
+            jestExpect(Scheduler).toHaveYielded({
                 'ErrorBoundary componentWillUnmount',
             })
         end)
         it('renders an error state if child throws in render', function()
-            local expect: any = expect
-
             -- ROBLOX deviation: using legacy root of Noop renderer instead of ReactDOM
             local root = ReactNoop.createLegacyRoot()
             root.render(React.createElement(ErrorBoundary, nil, React.createElement(BrokenRender)))
             -- ROBLOX deviation: using textContent helper in place of upstream .textContent()
-            expect(textContent(root)).toEqual('Caught an error: Hello.')
-            expect(Scheduler).toHaveYielded({
+            jestExpect(textContent(root)).toEqual('Caught an error: Hello.')
+            jestExpect(Scheduler).toHaveYielded({
                 'ErrorBoundary constructor',
                 'ErrorBoundary componentWillMount',
                 'ErrorBoundary render success',
@@ -908,20 +899,18 @@ return function()
             })
             -- ROBLOX deviation: render nil to unmount
             root.render(nil)
-            expect(Scheduler).toHaveYielded({
+            jestExpect(Scheduler).toHaveYielded({
                 'ErrorBoundary componentWillUnmount',
             })
         end)
         it('renders an error state if child throws in constructor', function()
-            local expect: any = expect
-
             -- ROBLOX deviation: using legacy root of Noop renderer instead of ReactDOM
             local root = ReactNoop.createLegacyRoot()
 
             root.render(React.createElement(ErrorBoundary, nil, React.createElement(BrokenConstructor)))
             -- ROBLOX deviation: using textContent helper in place of upstream .textContent()
-            expect(textContent(root)).toEqual('Caught an error: Hello.')
-            expect(Scheduler).toHaveYielded({
+            jestExpect(textContent(root)).toEqual('Caught an error: Hello.')
+            jestExpect(Scheduler).toHaveYielded({
                 'ErrorBoundary constructor',
                 'ErrorBoundary componentWillMount',
                 'ErrorBoundary render success',
@@ -934,20 +923,18 @@ return function()
             })
             -- ROBLOX deviation: render nil to unmount
             root.render(nil)
-            expect(Scheduler).toHaveYielded({
+            jestExpect(Scheduler).toHaveYielded({
                 'ErrorBoundary componentWillUnmount',
             })
         end)
         it('renders an error state if child throws in componentWillMount', function()
-            local expect: any = expect
-
             -- ROBLOX deviation: using legacy root of Noop renderer instead of ReactDOM
             local root = ReactNoop.createLegacyRoot()
 
             root.render(React.createElement(ErrorBoundary, nil, React.createElement(BrokenComponentWillMount)))
             -- ROBLOX deviation: using textContent helper in place of upstream .textContent()
-            expect(textContent(root)).toEqual('Caught an error: Hello.')
-            expect(Scheduler).toHaveYielded({
+            jestExpect(textContent(root)).toEqual('Caught an error: Hello.')
+            jestExpect(Scheduler).toHaveYielded({
                 'ErrorBoundary constructor',
                 'ErrorBoundary componentWillMount',
                 'ErrorBoundary render success',
@@ -961,13 +948,11 @@ return function()
             })
             -- ROBLOX deviation: render nil to unmount
             root.render(nil)
-            expect(Scheduler).toHaveYielded({
+            jestExpect(Scheduler).toHaveYielded({
                 'ErrorBoundary componentWillUnmount',
             })
         end)
         it('renders an error state if context provider throws in componentWillMount', function()
-            local expect: any = expect
-
             -- ROBLOX deviation: using legacy root of Noop renderer instead of ReactDOM
             local root = ReactNoop.createLegacyRoot()
 
@@ -989,14 +974,12 @@ return function()
             }
 
             root.render(React.createElement(ErrorBoundary, nil, React.createElement(BrokenComponentWillMountWithContext)))
-            expect(textContent(root)).toEqual('Caught an error: Hello.')
+            jestExpect(textContent(root)).toEqual('Caught an error: Hello.')
         end)
         if not ReactFeatureFlags.disableModulePatternComponents then
             -- ROBLOX TODO: toErrorDev expects name of function component, needs LUAFDN-207
             xit('renders an error state if module-style context provider throws in componentWillMount', function()
-                local expect: any = expect
-
-                -- ROBLOX deviation: using legacy root of Noop renderer instead of ReactDOM
+                    -- ROBLOX deviation: using legacy root of Noop renderer instead of ReactDOM
                 local root = ReactNoop.createLegacyRoot()
 
                 local function BrokenComponentWillMountWithContext()
@@ -1017,16 +1000,15 @@ return function()
                 -- BrokenComponentWillMountWithContext.childContextTypes = {
                 --     foo = 0,
                 -- }
-                
-                expect(function()
+
+                jestExpect(function()
                     return root.render(React.createElement(ErrorBoundary, nil, React.createElement(BrokenComponentWillMountWithContext)))
                     -- ROBLOX deviation: warning expects Unknown as Component name because we have no way of reporting function component name
                 end).toErrorDev('Warning: The <Unknown /> component appears to be a function component that ' .. 'returns a class instance. ' .. 'Change Unknown to a class that extends React.Component instead. ' .. "If you can't use a class try assigning the prototype on the function as a workaround. " .. '`BrokenComponentWillMountWithContext.prototype = React.Component.prototype`. ' .. "Don't use an arrow function since it cannot be called with `new` by React.")
-                expect(textContent(root)).toEqual('Caught an error: Hello.')
+                jestExpect(textContent(root)).toEqual('Caught an error: Hello.')
             end)
         end
         it('mounts the error message if mounting fails', function()
-            local expect: any = expect
             local function renderError(error_)
                 local errorMessage = error_
                 -- ROBLOX deviation: additional logic to deal with pre-polyfill error object
@@ -1042,7 +1024,7 @@ return function()
             local root = ReactNoop.createLegacyRoot()
 
             root.render(React.createElement(ErrorBoundary, {renderError = renderError}, React.createElement(BrokenRender)))
-            expect(Scheduler).toHaveYielded({
+            jestExpect(Scheduler).toHaveYielded({
                 'ErrorBoundary constructor',
                 'ErrorBoundary componentWillMount',
                 'ErrorBoundary render success',
@@ -1061,21 +1043,19 @@ return function()
             })
             -- ROBLOX deviation: render nil to unmount
             root.render(nil)
-            expect(Scheduler).toHaveYielded({
+            jestExpect(Scheduler).toHaveYielded({
                 'ErrorBoundary componentWillUnmount',
                 'ErrorMessage componentWillUnmount',
             })
         end)
         it('propagates errors on retry on mounting', function()
-            local expect: any = expect
-
             -- ROBLOX deviation: using legacy root of Noop renderer instead of ReactDOM
             local root = ReactNoop.createLegacyRoot()
 
             root.render(React.createElement(ErrorBoundary, nil, React.createElement(RetryErrorBoundary, nil, React.createElement(BrokenRender))))
             -- ROBLOX deviation: using textContent helper in place of upstream .textContent()
-            expect(textContent(root)).toEqual('Caught an error: Hello.')
-            expect(Scheduler).toHaveYielded({
+            jestExpect(textContent(root)).toEqual('Caught an error: Hello.')
+            jestExpect(Scheduler).toHaveYielded({
                 'ErrorBoundary constructor',
                 'ErrorBoundary componentWillMount',
                 'ErrorBoundary render success',
@@ -1100,19 +1080,17 @@ return function()
             })
             -- ROBLOX deviation: render nil to unmount
             root.render(nil)
-            expect(Scheduler).toHaveYielded({
+            jestExpect(Scheduler).toHaveYielded({
                 'ErrorBoundary componentWillUnmount',
             })
         end)
         it('propagates errors inside boundary during componentWillMount', function()
-            local expect: any = expect
-
             -- ROBLOX deviation: using legacy root of Noop renderer instead of ReactDOM
             local root = ReactNoop.createLegacyRoot()
             root.render(React.createElement(ErrorBoundary, nil, React.createElement(BrokenComponentWillMountErrorBoundary)))
             -- ROBLOX deviation: using textContent helper in place of upstream .textContent()
-            expect(textContent(root)).toEqual('Caught an error: Hello.')
-            expect(Scheduler).toHaveYielded({
+            jestExpect(textContent(root)).toEqual('Caught an error: Hello.')
+            jestExpect(Scheduler).toHaveYielded({
                 'ErrorBoundary constructor',
                 'ErrorBoundary componentWillMount',
                 'ErrorBoundary render success',
@@ -1126,20 +1104,18 @@ return function()
             })
             -- ROBLOX deviation: render nil to unmount
             root.render(nil)
-            expect(Scheduler).toHaveYielded({
+            jestExpect(Scheduler).toHaveYielded({
                 'ErrorBoundary componentWillUnmount',
             })
         end)
         it('propagates errors inside boundary while rendering error state', function()
-            local expect: any = expect
-
             -- ROBLOX deviation: using legacy root of Noop renderer instead of ReactDOM
             local root = ReactNoop.createLegacyRoot()
 
             root.render(React.createElement(ErrorBoundary, nil, React.createElement(BrokenRenderErrorBoundary, nil, React.createElement(BrokenRender))))
             -- ROBLOX deviation: using textContent helper in place of upstream .textContent()
-            expect(textContent(root)).toEqual('Caught an error: Hello.')
-            expect(Scheduler).toHaveYielded({
+            jestExpect(textContent(root)).toEqual('Caught an error: Hello.')
+            jestExpect(Scheduler).toHaveYielded({
                 'ErrorBoundary constructor',
                 'ErrorBoundary componentWillMount',
                 'ErrorBoundary render success',
@@ -1161,20 +1137,18 @@ return function()
             })
             -- ROBLOX deviation: render nil to unmount
             root.render(nil)
-            expect(Scheduler).toHaveYielded({
+            jestExpect(Scheduler).toHaveYielded({
                 'ErrorBoundary componentWillUnmount',
             })
         end)
         it('does not call componentWillUnmount when aborting initial mount', function()
-            local expect: any = expect
-
             -- ROBLOX deviation: using legacy root of Noop renderer instead of ReactDOM
             local root = ReactNoop.createLegacyRoot()
 
             root.render(React.createElement(ErrorBoundary, nil, React.createElement(Normal), React.createElement(BrokenRender), React.createElement(Normal)))
             -- ROBLOX deviation: using textContent helper in place of upstream .textContent()
-            expect(textContent(root)).toEqual('Caught an error: Hello.')
-            expect(Scheduler).toHaveYielded({
+            jestExpect(textContent(root)).toEqual('Caught an error: Hello.')
+            jestExpect(Scheduler).toHaveYielded({
                 'ErrorBoundary constructor',
                 'ErrorBoundary componentWillMount',
                 'ErrorBoundary render success',
@@ -1198,12 +1172,11 @@ return function()
             })
             -- ROBLOX deviation: render nil to unmount
             root.render(nil)
-            expect(Scheduler).toHaveYielded({
+            jestExpect(Scheduler).toHaveYielded({
                 'ErrorBoundary componentWillUnmount',
             })
         end)
         it('resets callback refs if mounting aborts', function()
-            local expect: any = expect
             local function childRef(x)
                 -- throw new Error(typeof(x))
                 -- ROBLOX deviation: use explicit '[object HTMLDivElement]' string because Lua uses tables
@@ -1222,8 +1195,8 @@ return function()
 
             root.render(React.createElement(ErrorBoundary, {errorMessageRef = errorMessageRef}, React.createElement('div', {ref = childRef}), React.createElement(BrokenRender)))
             -- ROBLOX deviation: using textContent helper in place of upstream .textContent()
-            expect(textContent(root)).toEqual('Caught an error: Hello.')
-            expect(Scheduler).toHaveYielded({
+            jestExpect(textContent(root)).toEqual('Caught an error: Hello.')
+            jestExpect(Scheduler).toHaveYielded({
                 'ErrorBoundary constructor',
                 'ErrorBoundary componentWillMount',
                 'ErrorBoundary render success',
@@ -1239,7 +1212,7 @@ return function()
             })
             -- ROBLOX deviation: render nil to unmount
             root.render(nil)
-            expect(Scheduler).toHaveYielded({
+            jestExpect(Scheduler).toHaveYielded({
                 'ErrorBoundary componentWillUnmount',
                 'Error message ref is set to nil',
             })
@@ -1247,15 +1220,13 @@ return function()
         it('resets object refs if mounting aborts', function()
             local childRef = React.createRef()
             local errorMessageRef = React.createRef()
-            local expect: any = expect
-
             -- ROBLOX deviation: using legacy root of Noop renderer instead of ReactDOM
             local root = ReactNoop.createLegacyRoot()
 
             root.render(React.createElement(ErrorBoundary, {errorMessageRef = errorMessageRef}, React.createElement('div', {ref = childRef}), React.createElement(BrokenRender)))
             -- ROBLOX deviation: using textContent helper in place of upstream .textContent()
-            expect(textContent(root)).toEqual('Caught an error: Hello.')
-            expect(Scheduler).toHaveYielded({
+            jestExpect(textContent(root)).toEqual('Caught an error: Hello.')
+            jestExpect(Scheduler).toHaveYielded({
                 'ErrorBoundary constructor',
                 'ErrorBoundary componentWillMount',
                 'ErrorBoundary render success',
@@ -1269,24 +1240,22 @@ return function()
                 'ErrorBoundary componentDidMount',
             })
             -- ROBLOX deviation: workaround for object '[object HTMLDivElement]'
-            expect(tostring(errorMessageRef.current):find('table: ') ~= nil).toEqual(true)
+            jestExpect(tostring(errorMessageRef.current):find('table: ') ~= nil).toEqual(true)
             -- ROBLOX deviation: render nil to unmount
             root.render(nil)
-            expect(Scheduler).toHaveYielded({
+            jestExpect(Scheduler).toHaveYielded({
                 'ErrorBoundary componentWillUnmount',
             })
-            expect(errorMessageRef.current).toEqual(nil)
+            jestExpect(errorMessageRef.current).toEqual(nil)
         end)
         it('successfully mounts if no error occurs', function()
-            local expect: any = expect
-
             -- ROBLOX deviation: using legacy root of Noop renderer instead of ReactDOM
             local root = ReactNoop.createLegacyRoot()
 
             root.render(React.createElement(ErrorBoundary, nil, React.createElement('div', nil, {'Mounted successfully.'})))
             -- ROBLOX deviation: using textContent helper in place of upstream .textContent()
-            expect(textContent(root)).toEqual('Mounted successfully.')
-            expect(Scheduler).toHaveYielded({
+            jestExpect(textContent(root)).toEqual('Mounted successfully.')
+            jestExpect(Scheduler).toHaveYielded({
                 'ErrorBoundary constructor',
                 'ErrorBoundary componentWillMount',
                 'ErrorBoundary render success',
@@ -1294,13 +1263,11 @@ return function()
             })
             -- ROBLOX deviation: render nil to unmount
             root.render(nil)
-            expect(Scheduler).toHaveYielded({
+            jestExpect(Scheduler).toHaveYielded({
                 'ErrorBoundary componentWillUnmount',
             })
         end)
         it('catches if child throws in constructor during update', function()
-            local expect: any = expect
-
             -- ROBLOX deviation: using legacy root of Noop renderer instead of ReactDOM
             local root = ReactNoop.createLegacyRoot()
 
@@ -1311,8 +1278,8 @@ return function()
             }), React.createElement(BrokenConstructor)))
 
             -- ROBLOX deviation: using textContent helper in place of upstream .textContent()
-            expect(textContent(root)).toEqual('Caught an error: Hello.')
-            expect(Scheduler).toHaveYielded({
+            jestExpect(textContent(root)).toEqual('Caught an error: Hello.')
+            jestExpect(Scheduler).toHaveYielded({
                 'ErrorBoundary componentWillReceiveProps',
                 'ErrorBoundary componentWillUpdate',
                 'ErrorBoundary render success',
@@ -1335,13 +1302,11 @@ return function()
             })
             -- ROBLOX deviation: render nil to unmount
             root.render(nil)
-            expect(Scheduler).toHaveYielded({
+            jestExpect(Scheduler).toHaveYielded({
                 'ErrorBoundary componentWillUnmount',
             })
         end)
         it('catches if child throws in componentWillMount during update', function()
-            local expect: any = expect
-
             -- ROBLOX deviation: using legacy root of Noop renderer instead of ReactDOM
             local root = ReactNoop.createLegacyRoot()
 
@@ -1350,8 +1315,8 @@ return function()
             root.render(React.createElement(ErrorBoundary, nil, React.createElement(Normal), React.createElement(Normal, {
                 logName = 'Normal2',
             }), React.createElement(BrokenComponentWillMount)))
-            expect(textContent(root)).toEqual('Caught an error: Hello.')
-            expect(Scheduler).toHaveYielded({
+            jestExpect(textContent(root)).toEqual('Caught an error: Hello.')
+            jestExpect(Scheduler).toHaveYielded({
                 'ErrorBoundary componentWillReceiveProps',
                 'ErrorBoundary componentWillUpdate',
                 'ErrorBoundary render success',
@@ -1375,21 +1340,19 @@ return function()
             })
             -- ROBLOX deviation: render nil to unmount
             root.render(nil)
-            expect(Scheduler).toHaveYielded({
+            jestExpect(Scheduler).toHaveYielded({
                 'ErrorBoundary componentWillUnmount',
             })
         end)
         it('catches if child throws in componentWillReceiveProps during update', function()
-            local expect: any = expect
-
             -- ROBLOX deviation: using legacy root of Noop renderer instead of ReactDOM
             local root = ReactNoop.createLegacyRoot()
 
             root.render(React.createElement(ErrorBoundary, nil, React.createElement(Normal), React.createElement(BrokenComponentWillReceiveProps)))
             Scheduler.unstable_clearYields()
             root.render(React.createElement(ErrorBoundary, nil, React.createElement(Normal), React.createElement(BrokenComponentWillReceiveProps)))
-            expect(textContent(root)).toEqual('Caught an error: Hello.')
-            expect(Scheduler).toHaveYielded({
+            jestExpect(textContent(root)).toEqual('Caught an error: Hello.')
+            jestExpect(Scheduler).toHaveYielded({
                 'ErrorBoundary componentWillReceiveProps',
                 'ErrorBoundary componentWillUpdate',
                 'ErrorBoundary render success',
@@ -1409,21 +1372,19 @@ return function()
             })
             -- ROBLOX deviation: render nil to unmount
             root.render(nil)
-            expect(Scheduler).toHaveYielded({
+            jestExpect(Scheduler).toHaveYielded({
                 'ErrorBoundary componentWillUnmount',
             })
         end)
         it('catches if child throws in componentWillUpdate during update', function()
-            local expect: any = expect
-
             -- ROBLOX deviation: using legacy root of Noop renderer instead of ReactDOM
             local root = ReactNoop.createLegacyRoot()
 
             root.render(React.createElement(ErrorBoundary, nil, React.createElement(Normal), React.createElement(BrokenComponentWillUpdate)))
             Scheduler.unstable_clearYields()
             root.render(React.createElement(ErrorBoundary, nil, React.createElement(Normal), React.createElement(BrokenComponentWillUpdate)))
-            expect(textContent(root)).toEqual('Caught an error: Hello.')
-            expect(Scheduler).toHaveYielded({
+            jestExpect(textContent(root)).toEqual('Caught an error: Hello.')
+            jestExpect(Scheduler).toHaveYielded({
                 'ErrorBoundary componentWillReceiveProps',
                 'ErrorBoundary componentWillUpdate',
                 'ErrorBoundary render success',
@@ -1443,13 +1404,11 @@ return function()
             })
             -- ROBLOX deviation: render nil to unmount
             root.render(nil)
-            expect(Scheduler).toHaveYielded({
+            jestExpect(Scheduler).toHaveYielded({
                 'ErrorBoundary componentWillUnmount',
             })
         end)
         it('catches if child throws in render during update', function()
-            local expect: any = expect
-
             -- ROBLOX deviation: using legacy root of Noop renderer instead of ReactDOM
             local root = ReactNoop.createLegacyRoot()
 
@@ -1458,8 +1417,8 @@ return function()
             root.render(React.createElement(ErrorBoundary, nil, React.createElement(Normal), React.createElement(Normal, {
                 logName = 'Normal2',
             }), React.createElement(BrokenRender)))
-            expect(textContent(root)).toEqual('Caught an error: Hello.')
-            expect(Scheduler).toHaveYielded({
+            jestExpect(textContent(root)).toEqual('Caught an error: Hello.')
+            jestExpect(Scheduler).toHaveYielded({
                 'ErrorBoundary componentWillReceiveProps',
                 'ErrorBoundary componentWillUpdate',
                 'ErrorBoundary render success',
@@ -1483,7 +1442,7 @@ return function()
             })
             -- ROBLOX deviation: render nil to unmount
             root.render(nil)
-            expect(Scheduler).toHaveYielded({
+            jestExpect(Scheduler).toHaveYielded({
                 'ErrorBoundary componentWillUnmount',
             })
         end)
@@ -1504,13 +1463,11 @@ return function()
                 Scheduler.unstable_yieldValue('Error message ref is set to ' .. XAsString)
             end
 
-            local expect: any = expect
-
             -- ROBLOX deviation: using legacy root of Noop renderer instead of ReactDOM
             local root = ReactNoop.createLegacyRoot()
 
             root.render(React.createElement(ErrorBoundary, {errorMessageRef = errorMessageRef}, React.createElement('div', {ref = child1Ref})))
-            expect(Scheduler).toHaveYielded({
+            jestExpect(Scheduler).toHaveYielded({
                 'ErrorBoundary constructor',
                 'ErrorBoundary componentWillMount',
                 'ErrorBoundary render success',
@@ -1518,8 +1475,8 @@ return function()
                 'ErrorBoundary componentDidMount',
             })
             root.render(React.createElement(ErrorBoundary, {errorMessageRef = errorMessageRef}, React.createElement('div', {ref = child1Ref}), React.createElement('div', {ref = child2Ref}), React.createElement(BrokenRender)))
-            expect(textContent(root)).toEqual('Caught an error: Hello.')
-            expect(Scheduler).toHaveYielded({
+            jestExpect(textContent(root)).toEqual('Caught an error: Hello.')
+            jestExpect(Scheduler).toHaveYielded({
                 'ErrorBoundary componentWillReceiveProps',
                 'ErrorBoundary componentWillUpdate',
                 'ErrorBoundary render success',
@@ -1538,21 +1495,19 @@ return function()
                 'ErrorBoundary componentDidUpdate',
             })
             root.render(nil)
-            expect(Scheduler).toHaveYielded({
+            jestExpect(Scheduler).toHaveYielded({
                 'ErrorBoundary componentWillUnmount',
                 'Error message ref is set to nil',
             })
         end)
         it('recovers from componentWillUnmount errors on update', function()
-            local expect: any = expect
-
             -- ROBLOX deviation: using legacy root of Noop renderer instead of ReactDOM
             local root = ReactNoop.createLegacyRoot()
             root.render(React.createElement(ErrorBoundary, nil, React.createElement(BrokenComponentWillUnmount), React.createElement(BrokenComponentWillUnmount), React.createElement(Normal)))
             Scheduler.unstable_clearYields()
             root.render(React.createElement(ErrorBoundary, nil, React.createElement(BrokenComponentWillUnmount)))
-            expect(textContent(root)).toEqual('Caught an error: Hello.')
-            expect(Scheduler).toHaveYielded({
+            jestExpect(textContent(root)).toEqual('Caught an error: Hello.')
+            jestExpect(Scheduler).toHaveYielded({
                 'ErrorBoundary componentWillReceiveProps',
                 'ErrorBoundary componentWillUpdate',
                 'ErrorBoundary render success',
@@ -1584,20 +1539,18 @@ return function()
                 'ErrorBoundary componentDidUpdate',
             })
             root.render(nil)
-            expect(Scheduler).toHaveYielded({
+            jestExpect(Scheduler).toHaveYielded({
                 'ErrorBoundary componentWillUnmount',
             })
         end)
         it('recovers from nested componentWillUnmount errors on update', function()
-            local expect: any = expect
-
             -- ROBLOX deviation: using legacy root of Noop renderer instead of ReactDOM
             local root = ReactNoop.createLegacyRoot()
             root.render(React.createElement(ErrorBoundary, nil, React.createElement(Normal, nil, React.createElement(BrokenComponentWillUnmount)), React.createElement(BrokenComponentWillUnmount)))
             Scheduler.unstable_clearYields()
             root.render(React.createElement(ErrorBoundary, nil, React.createElement(Normal, nil, React.createElement(BrokenComponentWillUnmount))))
-            expect(textContent(root)).toEqual('Caught an error: Hello.')
-            expect(Scheduler).toHaveYielded({
+            jestExpect(textContent(root)).toEqual('Caught an error: Hello.')
+            jestExpect(Scheduler).toHaveYielded({
                 'ErrorBoundary componentWillReceiveProps',
                 'ErrorBoundary componentWillUpdate',
                 'ErrorBoundary render success',
@@ -1630,7 +1583,7 @@ return function()
                 'ErrorBoundary componentDidUpdate',
             })
             root.render(nil)
-            expect(Scheduler).toHaveYielded({
+            jestExpect(Scheduler).toHaveYielded({
                 'ErrorBoundary componentWillUnmount',
             })
         end)
@@ -1641,8 +1594,6 @@ return function()
             local function renderOuterError(error_)
                 return React.createElement('div', nil, 'Caught an outer error: ', error_, '.')
             end
-
-            local expect: any = expect
 
             -- ROBLOX deviation: using legacy root of Noop renderer instead of ReactDOM
             local root = ReactNoop.createLegacyRoot()
@@ -1661,8 +1612,8 @@ return function()
                 logName = 'InnerErrorBoundary',
                 renderError = renderInnerError,
             })))
-            expect(textContent(root)).toEqual('Caught an inner error: Hello.')
-            expect(Scheduler).toHaveYielded({
+            jestExpect(textContent(root)).toEqual('Caught an inner error: Hello.')
+            jestExpect(Scheduler).toHaveYielded({
                 -- Update outer boundary
                 'OuterErrorBoundary componentWillReceiveProps',
                 'OuterErrorBoundary componentWillUpdate',
@@ -1686,29 +1637,26 @@ return function()
                 'InnerErrorBoundary componentDidUpdate',
             })
             root.render(nil)
-            expect(Scheduler).toHaveYielded({
+            jestExpect(Scheduler).toHaveYielded({
                 'OuterErrorBoundary componentWillUnmount',
                 'InnerErrorBoundary componentWillUnmount',
             })
         end)
         it('can recover from error state', function()
-            local expect: any = expect
-
             -- ROBLOX deviation: using legacy root of Noop renderer instead of ReactDOM
             local root = ReactNoop.createLegacyRoot()
             root.render(React.createElement(ErrorBoundary, nil, React.createElement(BrokenRender)))
             root.render(React.createElement(ErrorBoundary, nil, React.createElement(Normal)))
             -- Error boundary doesn't retry by itself
-            expect(textContent(root)).toEqual('Caught an error: Hello.')
+            jestExpect(textContent(root)).toEqual('Caught an error: Hello.')
             -- Force the success path:
             Scheduler.unstable_clearYields()
 
             root.render(React.createElement(ErrorBoundary, {forceRetry = true}, React.createElement(Normal)))
 
-            -- ROBLOX deviation: use :find() to mimic toContain functionality
-            expect(textContent(root):find('Caught an error')).toEqual(nil)
+            jestExpect(textContent(root)).never.toContain('Caught an error')
 
-            expect(Scheduler).toHaveYielded({
+            jestExpect(Scheduler).toHaveYielded({
                 'ErrorBoundary componentWillReceiveProps',
                 'ErrorBoundary componentWillUpdate',
                 'ErrorBoundary render success',
@@ -1722,61 +1670,53 @@ return function()
             })
 
             root.render(nil)
-            expect(Scheduler).toHaveYielded({
+            jestExpect(Scheduler).toHaveYielded({
                 'ErrorBoundary componentWillUnmount',
                 'Normal componentWillUnmount',
             })
         end)
         it('can update multiple times in error state', function()
-            local expect: any = expect
-
             -- ROBLOX deviation: using legacy root of Noop renderer instead of ReactDOM
             local root = ReactNoop.createLegacyRoot()
             root.render(React.createElement(ErrorBoundary, nil, React.createElement(BrokenRender)))
-            expect(textContent(root)).toEqual('Caught an error: Hello.')
+            jestExpect(textContent(root)).toEqual('Caught an error: Hello.')
             root.render(React.createElement(ErrorBoundary, nil, React.createElement(BrokenRender)))
-            expect(textContent(root)).toEqual('Caught an error: Hello.')
+            jestExpect(textContent(root)).toEqual('Caught an error: Hello.')
 
             -- ROBLOX deviation: render nil to clear children for textContent
             root.render(nil)
             root.render(React.createElement('div', nil, 'Other screen'))
-            expect(textContent(root)).toEqual('Other screen')
+            jestExpect(textContent(root)).toEqual('Other screen')
             root.render(nil)
         end)
         it("doesn't get into inconsistent state during removals", function()
-            local expect: any = expect
-
             -- ROBLOX deviation: using legacy root of Noop renderer instead of ReactDOM
             local root = ReactNoop.createLegacyRoot()
 
             root.render(React.createElement(ErrorBoundary, nil, React.createElement(Normal), React.createElement(BrokenComponentWillUnmount), React.createElement(Normal)))
             root.render(React.createElement(ErrorBoundary))
-            expect(textContent(root)).toEqual('Caught an error: Hello.')
+            jestExpect(textContent(root)).toEqual('Caught an error: Hello.')
             Scheduler.unstable_clearYields()
             root.render(nil)
-            expect(Scheduler).toHaveYielded({
+            jestExpect(Scheduler).toHaveYielded({
                 'ErrorBoundary componentWillUnmount',
             })
         end)
         it("doesn't get into inconsistent state during additions", function()
-            local expect: any = expect
-
             -- ROBLOX deviation: using legacy root of Noop renderer instead of ReactDOM
             local root = ReactNoop.createLegacyRoot()
             root.render(React.createElement(ErrorBoundary))
             root.render(React.createElement(ErrorBoundary, nil, React.createElement(Normal), React.createElement(BrokenRender), React.createElement(Normal)))
-            expect(textContent(root)).toEqual('Caught an error: Hello.')
+            jestExpect(textContent(root)).toEqual('Caught an error: Hello.')
             Scheduler.unstable_clearYields()
             root.render(nil)
-            expect(Scheduler).toHaveYielded({
+            jestExpect(Scheduler).toHaveYielded({
                 'ErrorBoundary componentWillUnmount',
             })
         end)
         it("doesn't get into inconsistent state during reorders", function()
-            local expect: any = expect
-
             local fail_ = false
-            
+
             local MaybeBrokenRender = React.Component:extend("MaybeBrokenRender")
             function MaybeBrokenRender:render()
                 if fail_ then
@@ -1814,16 +1754,15 @@ return function()
             -- ROBLOX deviation: using legacy root of Noop renderer instead of ReactDOM
             local root = ReactNoop.createLegacyRoot()
             root.render(React.createElement(ErrorBoundary, nil, getAMixOfNormalAndBrokenRenderElements()))
-            -- ROBLOX deviation: use :find() to mimic toContain functionality
-            expect(textContent(root):find('Caught an error')).toEqual(nil)
+            jestExpect(textContent(root)).never.toContain('Caught an error')
 
             fail_ = true
 
             root.render(React.createElement(ErrorBoundary, nil, getAMixOfNormalAndBrokenRenderElements()))
-            expect(textContent(root)).toEqual('Caught an error: Hello.')
+            jestExpect(textContent(root)).toEqual('Caught an error: Hello.')
             Scheduler.unstable_clearYields()
             root.render(nil)
-            expect(Scheduler).toHaveYielded({
+            jestExpect(Scheduler).toHaveYielded({
                 'ErrorBoundary componentWillUnmount',
             })
         end)
@@ -1846,8 +1785,6 @@ return function()
             end
 
             local statefulInst
-            local expect: any = expect
-
             -- ROBLOX deviation: using legacy root of Noop renderer instead of ReactDOM
             local root = ReactNoop.createLegacyRoot()
             root.render(React.createElement(ErrorBoundary, nil, React.createElement(Stateful, {
@@ -1856,11 +1793,11 @@ return function()
                 end,
             })))
             Scheduler.unstable_clearYields()
-            expect(function()
+            jestExpect(function()
                 fail_ = true
                 statefulInst:forceUpdate()
             end).never.toThrow()
-            expect(Scheduler).toHaveYielded({
+            jestExpect(Scheduler).toHaveYielded({
                 'Stateful render [!]',
                 'ErrorBoundary static getDerivedStateFromError',
                 'ErrorBoundary componentWillUpdate',
@@ -1868,19 +1805,17 @@ return function()
                 'ErrorBoundary componentDidUpdate',
             })
             root.render(nil)
-            expect(Scheduler).toHaveYielded({
+            jestExpect(Scheduler).toHaveYielded({
                 'ErrorBoundary componentWillUnmount',
             })
         end)
         it('catches errors in componentDidMount', function()
-            local expect: any = expect
-
             -- ROBLOX deviation: using legacy root of Noop renderer instead of ReactDOM
             local root = ReactNoop.createLegacyRoot()
             root.render(React.createElement(ErrorBoundary, nil, React.createElement(BrokenComponentWillUnmount, nil, React.createElement(Normal)), React.createElement(BrokenComponentDidMount), React.createElement(Normal, {
                 logName = 'LastChild',
             })))
-            expect(Scheduler).toHaveYielded({
+            jestExpect(Scheduler).toHaveYielded({
                 'ErrorBoundary constructor',
                 'ErrorBoundary componentWillMount',
                 'ErrorBoundary render success',
@@ -1922,19 +1857,17 @@ return function()
                 'ErrorBoundary componentDidUpdate',
             })
             root.render(nil)
-            expect(Scheduler).toHaveYielded({
+            jestExpect(Scheduler).toHaveYielded({
                 'ErrorBoundary componentWillUnmount',
             })
         end)
         it('catches errors in componentDidUpdate', function()
-            local expect: any = expect
-
             -- ROBLOX deviation: using legacy root of Noop renderer instead of ReactDOM
             local root = ReactNoop.createLegacyRoot()
             root.render(React.createElement(ErrorBoundary, nil, React.createElement(BrokenComponentDidUpdate)))
             Scheduler.unstable_clearYields()
             root.render(React.createElement(ErrorBoundary, nil, React.createElement(BrokenComponentDidUpdate)))
-            expect(Scheduler).toHaveYielded({
+            jestExpect(Scheduler).toHaveYielded({
                 'ErrorBoundary componentWillReceiveProps',
                 'ErrorBoundary componentWillUpdate',
                 'ErrorBoundary render success',
@@ -1952,33 +1885,31 @@ return function()
                 'ErrorBoundary componentDidUpdate',
             })
             root.render(nil)
-            expect(Scheduler).toHaveYielded({
+            jestExpect(Scheduler).toHaveYielded({
                 'ErrorBoundary componentWillUnmount',
             })
         end)
-        -- ROBLOX TODO: Eyeballing result shows expected functionality. ReactNoop.act() doesn't flush in the same way 
+        -- ROBLOX TODO: Eyeballing result shows expected functionality. ReactNoop.act() doesn't flush in the same way
         -- that ReactDOM's act method does; need to resolve this with either ReactDOM port or closer match of act() in another renderer
         xit('catches errors in useEffect', function()
-            local expect: any = expect
-
             -- ROBLOX deviation: using legacy root of Noop renderer instead of ReactDOM
             local root = ReactNoop.createLegacyRoot()
             ReactNoop.act(function()
                 root.render(React.createElement(ErrorBoundary, nil, React.createElement(BrokenUseEffect, nil, 'Initial value')))
-                expect(Scheduler).toHaveYielded({
+                jestExpect(Scheduler).toHaveYielded({
                     'ErrorBoundary constructor',
                     'ErrorBoundary componentWillMount',
                     'ErrorBoundary render success',
                     'BrokenUseEffect render',
                     'ErrorBoundary componentDidMount',
                 })
-                expect(textContent(root)).toEqual('Initial value')
+                jestExpect(textContent(root)).toEqual('Initial value')
                 Scheduler.unstable_clearYields()
-                
+
             end)
 
             -- verify flushed passive effects and handle the error
-            expect(Scheduler).toHaveYielded({
+            jestExpect(Scheduler).toHaveYielded({
                 'BrokenUseEffect useEffect [!]',
                 -- Handle the error
                 'ErrorBoundary static getDerivedStateFromError',
@@ -1986,16 +1917,14 @@ return function()
                 'ErrorBoundary render error',
                 'ErrorBoundary componentDidUpdate',
             })
-            expect(textContent(root)).toEqual('Caught an error: Hello.')
+            jestExpect(textContent(root)).toEqual('Caught an error: Hello.')
         end)
         it('catches errors in useLayoutEffect', function()
-            local expect: any = expect
-
             -- ROBLOX deviation: using legacy root of Noop renderer instead of ReactDOM
             local root = ReactNoop.createLegacyRoot()
 
             root.render(React.createElement(ErrorBoundary, nil, React.createElement(BrokenUseLayoutEffect, nil, 'Initial value')))
-            expect(Scheduler).toHaveYielded({
+            jestExpect(Scheduler).toHaveYielded({
                 'ErrorBoundary constructor',
                 'ErrorBoundary componentWillMount',
                 'ErrorBoundary render success',
@@ -2010,11 +1939,9 @@ return function()
                 'ErrorBoundary render error',
                 'ErrorBoundary componentDidUpdate',
             })
-            expect(textContent(root)).toEqual('Caught an error: Hello.')
+            jestExpect(textContent(root)).toEqual('Caught an error: Hello.')
         end)
         it('propagates errors inside boundary during componentDidMount', function()
-            local expect: any = expect
-
             -- ROBLOX deviation: using legacy root of Noop renderer instead of ReactDOM
             local root = ReactNoop.createLegacyRoot()
 
@@ -2023,8 +1950,8 @@ return function()
                     return React.createElement('div', nil, 'We should never catch our own error: ', error_.message, '.')
                 end,
             })))
-            expect(textContent(root)).toEqual('Caught an error: Hello.')
-            expect(Scheduler).toHaveYielded({
+            jestExpect(textContent(root)).toEqual('Caught an error: Hello.')
+            jestExpect(Scheduler).toHaveYielded({
                 'ErrorBoundary constructor',
                 'ErrorBoundary componentWillMount',
                 'ErrorBoundary render success',
@@ -2043,7 +1970,7 @@ return function()
                 'ErrorBoundary componentDidUpdate',
             })
             root.render(nil)
-            expect(Scheduler).toHaveYielded({
+            jestExpect(Scheduler).toHaveYielded({
                 'ErrorBoundary componentWillUnmount',
             })
         end)
@@ -2054,8 +1981,6 @@ return function()
             local function renderUpdateError(error_)
                 return React.createElement('div', nil, 'Caught an updating error: ', error_, '.')
             end
-
-            local expect: any = expect
 
             -- ROBLOX deviation: using legacy root of Noop renderer instead of ReactDOM
             local root = ReactNoop.createLegacyRoot()
@@ -2091,8 +2016,8 @@ return function()
             }), React.createElement(BrokenComponentDidUpdate, {
                 errorText = 'E4',
             }))))
-            expect(textContent(root)).toEqual('Caught an unmounting error: E2.Caught an updating error: E4.')
-            expect(Scheduler).toHaveYielded({
+            jestExpect(textContent(root)).toEqual('Caught an unmounting error: E2.Caught an updating error: E4.')
+            jestExpect(Scheduler).toHaveYielded({
                 -- Begin update phase
                 'OuterErrorBoundary componentWillReceiveProps',
                 'OuterErrorBoundary componentWillUpdate',
@@ -2137,7 +2062,7 @@ return function()
                 'InnerUpdateBoundary componentDidUpdate',
             })
             root.render(nil)
-            expect(Scheduler).toHaveYielded({
+            jestExpect(Scheduler).toHaveYielded({
                 'OuterErrorBoundary componentWillUnmount',
                 'InnerUnmountBoundary componentWillUnmount',
                 'InnerUpdateBoundary componentWillUnmount',
@@ -2150,56 +2075,52 @@ return function()
             local err2
             local ok, result
 
-            local expect: any = expect
-
             -- ROBLOX deviation: using legacy root of Noop renderer instead of ReactDOM
             local root = ReactNoop.createLegacyRoot()
 
             ok, result = pcall(function()
-    
-                expect(function()
+
+                jestExpect(function()
                     return root.render(React.createElement(X))
                 end).toErrorDev(
                   'React.createElement: type is invalid -- expected a string ' ..
                     '(for built-in components) or a class/function ' ..
                     '(for composite components) but got: null.'
                 )
-                
+
             end)
             if not ok then
                 err1 = result
             end
 
             ok, result = pcall(function()
-    
-                expect(function()
+
+                jestExpect(function()
                     return root.render(React.createElement(Y))
                 end).toErrorDev(
                   'React.createElement: type is invalid -- expected a string ' ..
                     '(for built-in components) or a class/function ' ..
                     '(for composite components) but got: null.'
                 )
-                
+
             end)
             if not ok then
                 err2 = result
             end
 
             -- ROBLOX deviation: workaround for toMatch()
-            expect(err1.message:find('but got: nil') ~= nil).toEqual(true)
-            expect(err2.message:find('but got: nil') ~= nil).toEqual(true)
+            jestExpect(err1.message:find('but got: nil') ~= nil).toEqual(true)
+            jestExpect(err2.message:find('but got: nil') ~= nil).toEqual(true)
         end)
         it('renders empty output if error boundary does not handle the error', function()
-            local expect: any = expect
-
             -- ROBLOX deviation: using legacy root of Noop renderer instead of ReactDOM
             local root = ReactNoop.createLegacyRoot()
 
-            expect(function()
+            jestExpect(function()
                 return root.render(React.createElement('div', nil, 'Sibling', React.createElement(NoopErrorBoundary, nil, React.createElement(BrokenRender))))
             end).toThrow('Hello')
-            expect(textContent(root)).toEqual('')
-            expect(Scheduler).toHaveYielded({
+            jestExpect(textContent(root)).toEqual('')
+            jestExpect(Scheduler).toHaveYielded({
                 'NoopErrorBoundary constructor',
                 'NoopErrorBoundary componentWillMount',
                 'NoopErrorBoundary render',
@@ -2215,13 +2136,11 @@ return function()
             })
         end)
         it('passes first error when two errors happen in commit', function()
-            local expect: any = expect
-
             local errors = {}
             local caughtError
-            
+
             local Child = React.Component:extend("Child")
-            
+
             function Child:render()
                 return React.createElement('div')
             end
@@ -2238,7 +2157,7 @@ return function()
                 table.insert(errors, 'parent sad')
                 error('parent sad')
             end
-                        
+
             -- ROBLOX deviation: using legacy root of Noop renderer instead of ReactDOM
             local root = ReactNoop.createLegacyRoot()
 
@@ -2255,24 +2174,22 @@ return function()
                 caughtError = result
             end
 
-            expect(errors).toEqual({
+            jestExpect(errors).toEqual({
                 'child sad',
                 'parent sad',
             })
             -- Error should be the first thrown
-            expect(caughtError:sub(-#'child sad')).toEqual('child sad')
+            jestExpect(caughtError:sub(-#'child sad')).toEqual('child sad')
         end)
         it('propagates uncaught error inside unbatched initial mount', function()
             local function Foo()
                 error('foo error', 0)
             end
 
-            local expect: any = expect
-
             -- ROBLOX deviation: using legacy root of Noop renderer instead of ReactDOM
             local root = ReactNoop.createLegacyRoot()
 
-            expect(function()
+            jestExpect(function()
                 ReactNoop.batchedUpdates(function()
                     root.render(React.createElement(Foo))
                 end)
@@ -2281,9 +2198,9 @@ return function()
         it('handles errors that occur in before-mutation commit hook', function()
             local errors = {}
             local caughtError
-            
+
             local Child = React.Component:extend("Child")
-            
+
             function Child:getSnapshotBeforeUpdate()
                 table.insert(errors, 'child sad')
                 error('child sad')
@@ -2303,8 +2220,6 @@ return function()
                 return React.createElement(Child, self.props)
             end
 
-            local expect: any = expect
-
             -- ROBLOX deviation: using legacy root of Noop renderer instead of ReactDOM
             local root = ReactNoop.createLegacyRoot()
 
@@ -2318,15 +2233,14 @@ return function()
                 end
                 caughtError = result
             end
-            expect(errors).toEqual({
+            jestExpect(errors).toEqual({
                 'child sad',
                 'parent sad',
             })
             -- Error should be the first thrown
-            expect(caughtError:sub(-#'child sad')).toEqual('child sad')
+            jestExpect(caughtError:sub(-#'child sad')).toEqual('child sad')
         end)
         it('should warn if an error boundary with only componentDidCatch does not update state', function()
-            local expect: any = expect
             local InvalidErrorBoundary = React.Component:extend("InvalidErrorBoundary")
 
             function InvalidErrorBoundary:componentDidCatch(error, info)
@@ -2346,7 +2260,7 @@ return function()
             local root = ReactNoop.createLegacyRoot()
 
             -- deviation: ReactNoop runs with a StrictMode root and logs more warnings
-            expect(function()
+            jestExpect(function()
                 root.render(React.createElement(InvalidErrorBoundary, nil, React.createElement(Throws)))
             end).toErrorDev({'Warning: The above error occurred in one of your React components:\
 \
@@ -2357,10 +2271,9 @@ React will try to recreate this component tree from scratch using the error boun
     in InvalidErrorBoundary (at **)',
     'Warning: InvalidErrorBoundary: Error boundaries should implement getDerivedStateFromError(). In that method, return a state update to display an error message or fallback UI.'
             })
-            expect(textContent(root)).toEqual('')
+            jestExpect(textContent(root)).toEqual('')
         end)
         it('should call both componentDidCatch and getDerivedStateFromError if both exist on a component', function()
-            local expect: any = expect
             -- ROBLOX deviation: using legacy root of Noop renderer instead of ReactDOM
             local root = ReactNoop.createLegacyRoot()
 
@@ -2394,26 +2307,21 @@ React will try to recreate this component tree from scratch using the error boun
             end
 
             root.render(React.createElement(ErrorBoundaryWithBothMethods, nil, React.createElement(Throws)))
-            expect(textContent(root)).toEqual('ErrorBoundary')
+            jestExpect(textContent(root)).toEqual('ErrorBoundary')
 
             -- ROBLOX deviation: using a string 'expected' thrownError in place of JS's error object.
-            expect(componentDidCatchError).toEqual('expected')
-            expect(getDerivedStateFromErrorError).toEqual('expected')
+            jestExpect(componentDidCatchError).toEqual('expected')
+            jestExpect(getDerivedStateFromErrorError).toEqual('expected')
         end)
         -- ROBLOX TODO: ReactDOMComponent not translated
         xit('should catch errors from invariants in completion phase', function()
-            local expect: any = expect
-
             -- ROBLOX deviation: using legacy root of Noop renderer instead of ReactDOM
             local root = ReactNoop.createLegacyRoot()
 
             root.render(React.createElement(ErrorBoundary, nil, React.createElement('input', nil, React.createElement('div'))))
-            -- ROBLOX deviation: use :find() to mimic toContain functionality
-            expect(textContent(root):find('Caught an error: input is a void element tag')).never.toEqual(nil)
+            jestExpect(textContent(root)).toContain('Caught an error: input is a void element tag')
         end)
         it('should catch errors from errors in the throw phase from boundaries', function()
-            local expect: any = expect
-
             -- ROBLOX deviation: using legacy root of Noop renderer instead of ReactDOM
             local root = ReactNoop.createLegacyRoot()
             local thrownError = 'original error'
@@ -2431,14 +2339,17 @@ React will try to recreate this component tree from scratch using the error boun
             end
 
             root.render(React.createElement(ErrorBoundary, nil, React.createElement(EvilErrorBoundary, nil, React.createElement(Throws))))
-            -- ROBLOX deviation: use :find() to mimic toContain functionality
-            expect(textContent(root):find('Caught an error: gotta catch em all.')).never.toEqual(nil)
+            jestExpect(textContent(root)).toContain('Caught an error: gotta catch em all.')
         end)
         -- ROBLOX TODO: when focused this test passes, however it causes 'runAllTimers flushes all scheduled callbacks' and
-        -- 'executes callbacks in order of priority' tests to fail in SchedulerNoDOM
-        xit('should protect errors from errors in the stack generation', function()
-            local expect: any = expect
-
+        -- 'executes callbacks in order of priority' tests to fail in SchedulerNoDOM but only in __DEV__ mode
+        local skipIfDev = (function()
+            if _G.__DEV__ then
+              return itSKIP
+            end
+            return it
+        end)()
+        skipIfDev('should protect errors from errors in the stack generation', function()
             -- ROBLOX deviation: using legacy root of Noop renderer instead of ReactDOM
             local root = ReactNoop.createLegacyRoot()
             local evilError = setmetatable({
@@ -2476,13 +2387,10 @@ React will try to recreate this component tree from scratch using the error boun
 
             root.render(React.createElement(ErrorBoundary, nil, React.createElement(Wrapper)))
             -- ROBLOX deviation: using textContent helper in place of upstream .textContent()
-            -- ROBLOX deviation: use :find() to mimic toContain functionality
-            expect(textContent(root):find('Caught an error: gotta catch em all.')).never.toEqual(nil)
+            jestExpect(textContent(root)).toContain('Caught an error: gotta catch em all.')
         end)
         -- @gate skipUnmountedBoundaries
         it('catches errors thrown in componentWillUnmount', function()
-            local expect: any = expect
-
             -- ROBLOX deviation: using legacy root of Noop renderer instead of ReactDOM
             local root = ReactNoop.createLegacyRoot()
 
@@ -2538,9 +2446,9 @@ React will try to recreate this component tree from scratch using the error boun
                 id = 'InnerBoundary',
                 fallbackID = 'InnerFallback',
             }, React.createElement(LocalBrokenComponentWillUnmount))))
-            expect(root.getChildren()[1].text).toEqual('sibling')
-            expect(root.getChildren()[2].text).toEqual('broken')
-            expect(Scheduler).toHaveYielded({
+            jestExpect(root.getChildren()[1].text).toEqual('sibling')
+            jestExpect(root.getChildren()[2].text).toEqual('broken')
+            jestExpect(Scheduler).toHaveYielded({
                 'OuterBoundary render success',
                 'Component render sibling',
                 'InnerBoundary render success',
@@ -2553,9 +2461,9 @@ React will try to recreate this component tree from scratch using the error boun
                 id = 'sibling',
             })))
             -- React should skip over the unmounting boundary and find the nearest still-mounted boundary.
-            expect(textContent(root)).toEqual('OuterFallback')
-            expect(textContent(root)).toEqual('OuterFallback')
-            expect(Scheduler).toHaveYielded({
+            jestExpect(textContent(root)).toEqual('OuterFallback')
+            jestExpect(textContent(root)).toEqual('OuterFallback')
+            jestExpect(Scheduler).toHaveYielded({
                 'OuterBoundary render success',
                 'Component render sibling',
                 'BrokenComponentWillUnmount componentWillUnmount',
@@ -2566,8 +2474,6 @@ React will try to recreate this component tree from scratch using the error boun
         end)
         -- @gate skipUnmountedBoundaries
         it('catches errors thrown while detaching refs', function()
-            local expect: any = expect
-
             -- ROBLOX deviation: using legacy root of Noop renderer instead of ReactDOM
             local root = ReactNoop.createLegacyRoot()
 
@@ -2630,9 +2536,9 @@ React will try to recreate this component tree from scratch using the error boun
                 id = 'InnerBoundary',
                 fallbackID = 'InnerFallback',
             }, React.createElement(LocalBrokenCallbackRef))))
-            expect(root.getChildren()[1].text).toEqual('sibling')
-            expect(root.getChildren()[2].text).toEqual('ref')
-            expect(Scheduler).toHaveYielded({
+            jestExpect(root.getChildren()[1].text).toEqual('sibling')
+            jestExpect(root.getChildren()[2].text).toEqual('ref')
+            jestExpect(Scheduler).toHaveYielded({
                 'OuterBoundary render success',
                 'Component render sibling',
                 'InnerBoundary render success',
@@ -2647,9 +2553,9 @@ React will try to recreate this component tree from scratch using the error boun
             })))
             -- React should skip over the unmounting boundary and find the nearest still-mounted boundary.
             local rootChildren = root.getChildren()
-            expect(rootChildren[1].text).toEqual('OuterFallback')
-            expect(rootChildren[#rootChildren].text).toEqual('OuterFallback')
-            expect(Scheduler).toHaveYielded({
+            jestExpect(rootChildren[1].text).toEqual('OuterFallback')
+            jestExpect(rootChildren[#rootChildren].text).toEqual('OuterFallback')
+            jestExpect(Scheduler).toHaveYielded({
                 'OuterBoundary render success',
                 'Component render sibling',
                 'LocalBrokenCallbackRef ref false',

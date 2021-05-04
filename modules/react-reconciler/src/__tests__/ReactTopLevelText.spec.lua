@@ -8,8 +8,6 @@
  * @emails react-core
  * @jest-environment node
 ]]
---!strict
-
 local Workspace = script.Parent.Parent.Parent
 local React
 local ReactNoop
@@ -19,10 +17,12 @@ local Scheduler
 -- probably move to one of the other test files once it is official.
 return function()
   local RobloxJest = require(Workspace.RobloxJest)
+  local Packages = Workspace.Parent
+	local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
 
   beforeEach(function()
     RobloxJest.resetModules()
-    -- deviation: In react, jest _always_ mocks Scheduler -> unstable_mock;
+    -- ROBLOX deviation: In react, jest _always_ mocks Scheduler -> unstable_mock;
     -- in our case, we need to do it anywhere we want to use the scheduler,
     -- directly or indirectly, until we have some form of bundling logic
     RobloxJest.mock(Workspace.Scheduler, function()
@@ -35,32 +35,28 @@ return function()
   end)
 
   it("should render a component returning strings directly from render", function()
-    -- FIXME: expect coercion
-    local expect: any = expect
     local Text = function(props) return props.value end
     ReactNoop.render(
       React.createElement(Text, {value="foo"})
     )
-    expect(Scheduler).toFlushWithoutYielding()
+    jestExpect(Scheduler).toFlushWithoutYielding()
     -- ROBLOX TODO: replace the below expects with toMatchRenderedOutput
-    -- expect(ReactNoop).toMatchRenderedOutput('foo')
+    -- jestExpect(ReactNoop).toMatchRenderedOutput('foo')
     local renderedOutput = ReactNoop.getChildren()
-    expect(#renderedOutput).to.equal(1)
-    expect(renderedOutput[1].text).to.equal('foo')
+    jestExpect(#renderedOutput).toBe(1)
+    jestExpect(renderedOutput[1].text).toBe('foo')
   end)
 
   it("should render a component returning numbers directly from renderß", function()
-    -- FIXME: expect coercion
-    local expect: any = expect
     local Text = function(props) return props.value end
     ReactNoop.render(
       React.createElement(Text, {value=10})
     )
-    expect(Scheduler).toFlushWithoutYielding()
+    jestExpect(Scheduler).toFlushWithoutYielding()
     -- ROBLOX TODO: replace the below expects with toMatchRenderedOutput
-    -- expect(ReactNoop).toMatchRenderedOutput('10')
+    -- jestExpect(ReactNoop).toMatchRenderedOutput('10')
     local renderedOutput = ReactNoop.getChildren()
-    expect(#renderedOutput).to.equal(1)
-    expect(renderedOutput[1].text).to.equal('10')
+    jestExpect(#renderedOutput).toBe(1)
+    jestExpect(renderedOutput[1].text).toBe('10')
   end)
 end

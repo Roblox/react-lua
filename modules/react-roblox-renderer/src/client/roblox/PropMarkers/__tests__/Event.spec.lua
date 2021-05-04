@@ -1,11 +1,14 @@
 return function()
+	local Workspace = script.Parent.Parent.Parent.Parent.Parent.Parent
+	local Packages = Workspace.Parent
+	local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
 	local Type = require(script.Parent.Parent.Parent.Type)
 
 	local Event = require(script.Parent.Parent.Event)
 
 	it("should yield event objects when indexed", function()
-		expect(Type.of(Event.MouseButton1Click)).to.equal(Type.HostEvent)
-		expect(Type.of(Event.Touched)).to.equal(Type.HostEvent)
+		jestExpect(Type.of(Event.MouseButton1Click)).toBe(Type.HostEvent)
+		jestExpect(Type.of(Event.Touched)).toBe(Type.HostEvent)
 	end)
 
 	it("should yield the same object when indexed again", function()
@@ -13,7 +16,7 @@ return function()
 		local b = Event.MouseButton1Click
 		local c = Event.Touched
 
-		expect(a).to.equal(b)
-		expect(a).never.to.equal(c)
+		jestExpect(a).toBe(b)
+		jestExpect(a).never.toBe(c)
 	end)
 end

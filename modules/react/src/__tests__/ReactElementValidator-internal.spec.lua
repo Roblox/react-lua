@@ -9,6 +9,8 @@
 return function()
 	local Workspace = script.Parent.Parent.Parent
 	local RobloxJest = require(Workspace.RobloxJest)
+    local Packages = Workspace.Parent
+    local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
 
 	local React
 	local ReactNoop
@@ -22,7 +24,7 @@ return function()
 
 		beforeEach(function()
 			RobloxJest.resetModules()
-			-- deviation: In react, jest _always_ mocks Scheduler -> unstable_mock;
+			-- ROBLOX deviation: In react, jest _always_ mocks Scheduler -> unstable_mock;
 			-- in our case, we need to do it anywhere we want to use the scheduler,
 			-- until we have some form of bundling logic
 			RobloxJest.mock(Workspace.Scheduler, function()
@@ -33,7 +35,7 @@ return function()
 			ReactFeatureFlags = require(Workspace.Shared.ReactFeatureFlags)
 			ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false
 			React = require(Workspace.React)
-			-- deviation: Use Noop to drive these tests instead of DOM renderer
+			-- ROBLOX deviation: Use Noop to drive these tests instead of DOM renderer
 			ReactNoop = require(Workspace.ReactNoopRenderer)
 			-- ReactDOM = require("react-dom")
 			-- ReactTestUtils = require("react-dom/test-utils")
@@ -44,8 +46,7 @@ return function()
 		end)
 
 		it("warns for keys for arrays of elements in rest args", function()
-			local expect: any = expect
-			expect(function()
+			jestExpect(function()
 				React.createElement(ComponentClass, nil, {
 					React.createElement(ComponentClass),
 					React.createElement(ComponentClass),
@@ -54,7 +55,6 @@ return function()
 		end)
 
 		it("warns for keys for arrays of elements with owner info", function()
-			local expect: any = expect
 			local InnerClass = React.Component:extend("InnerClass")
 			function InnerClass:render()
 				return React.createElement(ComponentClass, nil, self.props.childSet)
@@ -70,8 +70,8 @@ return function()
 				})
 			end
 
-			expect(function()
-				-- deviation: Use Noop to drive these tests instead of DOM renderer
+			jestExpect(function()
+				-- ROBLOX deviation: Use Noop to drive these tests instead of DOM renderer
 				ReactNoop.act(function()
 					ReactNoop.render(React.createElement(ComponentWrapper))
 				end)
@@ -83,7 +83,6 @@ return function()
 		end)
 
 		it("warns for keys for arrays with no owner or parent info", function()
-			local expect: any = expect
 			local function Anonymous()
 				return React.createElement("div")
 			end
@@ -94,8 +93,8 @@ return function()
 				React.createElement("div"),
 			}
 
-			expect(function()
-			-- deviation: Use Noop to drive these tests instead of DOM renderer
+			jestExpect(function()
+			-- ROBLOX deviation: Use Noop to drive these tests instead of DOM renderer
 				ReactNoop.act(function()
 					ReactNoop.render(React.createElement(Anonymous, nil, divs))
 				end)
@@ -107,14 +106,13 @@ return function()
 		end)
 
 		it("warns for keys for arrays of elements with no owner info", function()
-			local expect: any = expect
 			local divs = {
 				React.createElement("div"),
 				React.createElement("div"),
 			}
 
-			expect(function()
-				-- deviation: Use Noop to drive these tests instead of DOM renderer
+			jestExpect(function()
+				-- ROBLOX deviation: Use Noop to drive these tests instead of DOM renderer
 				ReactNoop.act(function()
 					ReactNoop.render(React.createElement("div", nil, divs))
 				end)
@@ -129,7 +127,6 @@ return function()
 		-- ROBLOX FIXME: LUAFDN-207 We can't properly process stack info due to
 		-- absence of function names; address this when we have `debug.info`
 		xit("warns for keys with component stack info", function()
-			local expect: any = expect
 			local function Component()
 				return React.createElement("div", nil, {
 					React.createElement("div"),
@@ -145,8 +142,8 @@ return function()
 				})
 			end
 
-			expect(function()
-				-- deviation: Use Noop to drive these tests instead of DOM renderer
+			jestExpect(function()
+				-- ROBLOX deviation: Use Noop to drive these tests instead of DOM renderer
 				ReactNoop.act(function()
 					ReactNoop.render(React.createElement(GrandParent, nil))
 				end)
@@ -162,9 +159,6 @@ return function()
 		end)
 
 		it("does not warn for keys when passing children down", function()
-			-- ROBLOX FIXME: Expect coercion
-			local expect: any = expect
-
 			local function Wrapper(props)
 				return React.createElement(
 					"Frame",
@@ -177,7 +171,7 @@ return function()
 			-- ROBLOX deviation: Use Noop to drive these tests instead of DOM
 			-- renderer; additionally, add an expectation to make sure we get
 			-- _no_ errors
-			expect(function()
+			jestExpect(function()
 				ReactNoop.act(function()
 					ReactNoop.render(
 						React.createElement(
@@ -196,8 +190,7 @@ return function()
 		-- equivalent children
 		it("does not warn for keys when providing keys via children tables", function()
 			-- ROBLOX FIXME: Expect coercion
-			local expect: any = expect
-			expect(function()
+			jestExpect(function()
 				ReactNoop.act(function()
 					ReactNoop.render(
 						React.createElement("Frame", nil, {
@@ -209,8 +202,8 @@ return function()
 			end).toErrorDev({})
 		end)
 
+		-- ROBLOX deviation: no @@iterator in Lua
 		xit("warns for keys for iterables of elements in rest args", function()
-			local expect: any = expect
 			local iterable = {
 				["@@iterator"] = function()
 					local i = 0
@@ -231,7 +224,7 @@ return function()
 				end,
 			}
 
-			expect(function()
+			jestExpect(function()
 				return React.createElement(ComponentClass, nil, iterable)
 			end).toErrorDev('Each child in a list should have a unique "key" prop.')
 		end)
@@ -243,6 +236,7 @@ return function()
 			})
 		end)
 
+		-- ROBLOX deviation: no @@iterator in Lua
 		xit("does not warns for iterable elements with keys", function()
 			local iterable = {
 				["@@iterator"] = function()
@@ -278,8 +272,8 @@ return function()
 			React.createElement(ComponentClass, nil, {{}, {}})
 		end)
 
+		-- ROBLOX TODO: implement PropTypes support
 		xit("should give context for PropType errors in nested components.", function()
-			local expect: any = expect
 			-- // In this test, we're making sure that if a proptype error is found in a
 			-- // component, we give a small hint as to which parent instantiated that
 			-- // component as per warnings about key usage in ReactElementValidator.
@@ -294,7 +288,7 @@ return function()
 				return React.createElement(MyComp, {color = 123})
 			end
 
-			expect(function()
+			jestExpect(function()
 				ReactTestUtils.renderIntoDocument(React.createElement(ParentComp))
 			end).toErrorDev(
 				"Warning: Failed prop type: " ..
@@ -306,10 +300,9 @@ return function()
 		end)
 
 		it("gives a helpful error when passing invalid types", function()
-			local expect: any = expect
 			local function Foo() end
 
-			expect(function()
+			jestExpect(function()
 				React.createElement(nil)
 				React.createElement(true)
 				React.createElement({x = 17})
@@ -359,13 +352,12 @@ return function()
 		end)
 
 		xit("includes the owner name when passing null, undefined, boolean, or number", function()
-			local expect: any = expect
 			local function ParentComp()
 				return React.createElement(nil)
 			end
 
-			expect(function()
-				expect(function()
+			jestExpect(function()
+				jestExpect(function()
 					ReactTestUtils.renderIntoDocument(React.createElement(ParentComp))
 				end).toThrowError(
 					"Element type is invalid: expected a string (for built-in components) " ..
@@ -380,8 +372,8 @@ return function()
 			)
 		end)
 
+		-- ROBLOX TODO: implement PropTypes
 		itSKIP("should check default prop values", function()
-			local expect: any = expect
 			local Component = React.Component:extend("Component")
 			function Component:render()
 				return React.createElement("Frame", nil, self.props.prop)
@@ -391,7 +383,7 @@ return function()
 			}
 			Component.defaultProps = {prop = nil}
 
-			expect(function()
+			jestExpect(function()
 				return ReactTestUtils.renderIntoDocument(React.createElement(Component))
 			end).toErrorDev(
 				"Warning: Failed prop type: The prop `prop` is marked as required in " ..
@@ -400,8 +392,8 @@ return function()
 			)
 		end)
 
+		-- ROBLOX TODO: implement PropTypes
 		itSKIP("should not check the default for explicit null", function()
-			local expect: any = expect
 			local Component = React.Component:extend("Component")
 			function Component:render()
 				return React.createElement("Frame", nil, self.props.prop)
@@ -413,7 +405,7 @@ return function()
 				prop = "text",
 			}
 
-			expect(function()
+			jestExpect(function()
 				ReactTestUtils.renderIntoDocument(React.createElement(Component, {prop = nil}))
 			end).toErrorDev(
 				"Warning: Failed prop type: The prop `prop` is marked as required in " ..
@@ -422,8 +414,8 @@ return function()
 			)
 		end)
 
+		-- ROBLOX TODO: implement PropTypes
 		itSKIP("should check declared prop types", function()
-			local expect: any = expect
 			local Component = React.Component:extend("Component")
 			function Component:render()
 				return React.createElement("Frame", nil, self.props.prop)
@@ -432,7 +424,7 @@ return function()
 				prop = PropTypes.string.isRequired,
 			}
 
-			expect(function()
+			jestExpect(function()
 				ReactTestUtils.renderIntoDocument(React.createElement(Component))
 				ReactTestUtils.renderIntoDocument(
 					React.createElement(Component, {prop = 42})
@@ -454,8 +446,8 @@ return function()
 			}))
 		end)
 
+		-- ROBLOX TODO: implement PropTypes
 		itSKIP("should warn if a PropType creator is used as a PropType", function()
-			local expect: any = expect
 			local Component = React.Component:extend("Component")
 			function Component:render()
 				return React.createElement("Frame", nil, self.props.myProp.value)
@@ -464,7 +456,7 @@ return function()
 				myProp = PropTypes.shape,
 			}
 
-			expect(function()
+			jestExpect(function()
 				ReactTestUtils.renderIntoDocument(
 					React.createElement(Component, {myProp = {value = "hi"}})
 				)
@@ -477,8 +469,8 @@ return function()
 			)
 		end)
 
+		-- ROBLOX TODO: implement PropTypes
 		itSKIP("should warn if component declares PropTypes instead of propTypes", function()
-			local expect: any = expect
 			local MisspelledPropTypesComponent = React.Component:extend("MisspelledPropTypesComponent")
 			function MisspelledPropTypesComponent:render()
 				return React.createElement("Frame", nil, self.props.prop)
@@ -487,7 +479,7 @@ return function()
 				prop = PropTypes.string,
 			}
 
-			expect(function()
+			jestExpect(function()
 				ReactTestUtils.renderIntoDocument(
 					React.createElement(MisspelledPropTypesComponent, {prop = "Hi"})
 				)
@@ -498,14 +490,16 @@ return function()
 			)
 		end)
 
-		itSKIP("warns for fragments with illegal attributes", function()
-			local expect: any = expect
+		it("warns for fragments with illegal attributes", function()
 			local Foo = React.Component:extend("Foo")
 			function Foo:render()
 				return React.createElement(React.Fragment, {a = 1}, "123")
 			end
-			expect(function()
-				ReactTestUtils.renderIntoDocument(React.createElement(Foo))
+			jestExpect(function()
+				-- ROBLOX deviation: Use Noop to drive these tests instead of DOM renderer
+				ReactNoop.act(function()
+					ReactNoop.render(React.createElement(Foo))
+				end)
 			end).toErrorDev(
 				"Invalid prop `a` supplied to `React.Fragment`. React.Fragment " ..
 					"can only have `key` and `children` props."
@@ -513,17 +507,16 @@ return function()
 		end)
 
 		if not _G.__EXPERIMENTAL__ then
-			-- deviation: createFactory is deprecated in React so it is removed in
+			-- ROBLOX deviation: createFactory is deprecated in React so it is removed in
 			-- the Lua version
 			itSKIP("should warn when accessing .type on an element factory", function()
-				local expect: any = expect
-				local function TestComponent()
+					local function TestComponent()
 					return React.createElement("Frame")
 				end
 
 				local TestFactory
 
-				expect(function()
+				jestExpect(function()
 					TestFactory = React.createFactory(TestComponent)
 				end).toWarnDev(
 					"Warning: React.createFactory() is deprecated and will be removed in a " ..
@@ -531,7 +524,7 @@ return function()
 						"directly instead.",
 					{withoutStack = true}
 				)
-				expect(function()
+				jestExpect(function()
 					return TestFactory.type
 				end).toWarnDev(
 					"Warning: Factory.type is deprecated. Access the class directly before " ..
@@ -540,11 +533,11 @@ return function()
 				)
 
 				-- // Warn once, not again
-				expect(TestFactory.type).toBe(TestComponent)
+				jestExpect(TestFactory.type).toBe(TestComponent)
 			end)
 		end
 
-		-- deviation: usage of web browser document global
+		-- ROBLOX deviation: usage of web browser document global
 		itSKIP("does not warn when using DOM node as children", function()
 			-- local DOMContainer = React.Component:extend("DOMContainer")
 			-- function DOMContainer:render()
@@ -561,7 +554,7 @@ return function()
 			-- )
 		end)
 
-		-- deviation: not applicable in Lua
+		-- ROBLOX deviation: not applicable in Lua
 		itSKIP('should not enumerate enumerable numbers (#4776)', function()
 			-- Number.prototype['@@iterator'] = function()
 			-- 	error("number iterator called")
@@ -585,10 +578,9 @@ return function()
 		end)
 
 		it("does not blow up on key warning with undefined type", function()
-			local expect: any = expect
 			local Foo = nil
 
-			expect(function()
+			jestExpect(function()
 				React.createElement(Foo, {
 					__source = {
 						fileName = "fileName.lua",
@@ -605,6 +597,7 @@ return function()
 			)
 		end)
 
+		-- ROBLOX TODO: enable this when Lazy is implemented
 		itSKIP("does not call lazy initializers eagerly", function()
 			local didCall = false
 			local Lazy = React.lazy(function()
@@ -612,13 +605,12 @@ return function()
 				return { ["then"] = function() end }
 			end)
 			React.createElement(Lazy)
-			expect(didCall).to.equal(false)
+			jestExpect(didCall).toBe(false)
 		end)
 
 		-- ROBLOX deviation: validate extra warning when using table keys as the
 		-- keys provided to child elements
 		it("warns when keys are provided via both the 'key' prop AND table keys", function()
-			local expect: any = expect
 			local Component = React.Component:extend("Component")
 			function Component:render()
 				return React.createElement("div", nil, {
@@ -627,8 +619,8 @@ return function()
 				})
 			end
 
-			expect(function()
-				-- deviation: Use Noop to drive these tests instead of DOM renderer
+			jestExpect(function()
+				-- ROBLOX deviation: Use Noop to drive these tests instead of DOM renderer
 				ReactNoop.act(function()
 					ReactNoop.render(React.createElement(Component))
 				end)

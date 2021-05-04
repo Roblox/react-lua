@@ -13,6 +13,8 @@ return function()
   describe('ReactFiberHostContext', function()
     local Workspace = script.Parent.Parent.Parent
     local RobloxJest = require(Workspace.RobloxJest)
+    local Packages = Workspace.Parent
+    local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
 
     local ReactFiberReconciler
     local ConcurrentRoot
@@ -22,7 +24,7 @@ return function()
       RobloxJest.resetModules()
       React = require(Workspace.React)
       ReactFiberReconciler = function(config)
-        -- deviation: upstream has jest.mock return a function via
+        -- ROBLOX deviation: upstream has jest.mock return a function via
         -- scripts/setupHostConfigs.js, but it's easier for us to do it here
         RobloxJest.mock(Workspace.ReactReconciler.ReactFiberHostConfig, function()
           return config
@@ -33,7 +35,6 @@ return function()
     end)
 
     it('works with nil host context', function()
-      local expect: any = expect
       local creates = 0
       local Renderer = ReactFiberReconciler({
         prepareForCommit = function()
@@ -83,19 +84,18 @@ return function()
         --[[ callback: ]] nil
       )
 
-      expect(creates).to.equal(2)
+      jestExpect(creates).toBe(2)
     end)
 
     it('should send the context to prepareForCommit and resetAfterCommit', function()
-				local expect: any = expect
-        local rootContext = {}
+      local rootContext = {}
       local Renderer = ReactFiberReconciler({
         prepareForCommit= function(hostContext)
-          expect(hostContext).to.equal(rootContext)
+          jestExpect(hostContext).toBe(rootContext)
           return nil
         end,
         resetAfterCommit= function(hostContext)
-          expect(hostContext).to.equal(rootContext)
+          jestExpect(hostContext).toBe(rootContext)
         end,
         getRootHostContext= function()
           return nil

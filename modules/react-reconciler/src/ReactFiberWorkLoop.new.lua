@@ -2990,7 +2990,7 @@ end
 
 exports.markLegacyErrorBoundaryAsFailed = function(instance)
   if legacyErrorBoundariesThatAlreadyFailed == nil then
-    legacyErrorBoundariesThatAlreadyFailed = {instance = true}
+    legacyErrorBoundariesThatAlreadyFailed = {[instance] = true}
   else
     legacyErrorBoundariesThatAlreadyFailed[instance] = true
   end
@@ -3989,7 +3989,7 @@ local function flushWorkAndMicroTasks(onDone: (any?) -> ())
   end
 end
 
--- deviation: FIXME stub of Promise that we should fill in later
+-- ROBLOX FIXME stub of Promise that we should fill in later
 local Promise = {
   resolve = function()
     return {

@@ -16,6 +16,8 @@ local ReactNoop
 local Scheduler
 
 return function()
+    local Packages = Workspace.Parent
+    local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
     local RobloxJest = require(Workspace.RobloxJest)
 
     beforeEach(function()
@@ -26,7 +28,7 @@ return function()
       RobloxJest.mock(Workspace.Scheduler, function()
         return require(Workspace.Scheduler.unstable_mock)
       end)
-  
+
       React = require(Workspace.React)
       ReactNoop = require(Workspace.ReactNoopRenderer)
       Scheduler = require(Workspace.Scheduler)
@@ -35,14 +37,12 @@ return function()
     -- ROBLOX deviation: this test doesn't make sense in not JSX
     -- it('should fail gracefully on error in the host environment', () => {
     --     ReactNoop.render(<errorInBeginPhase />);
-    --     expect(Scheduler).toFlushAndThrow('Error in host config.');
+    --     jestExpect(Scheduler).toFlushAndThrow('Error in host config.');
     --   });
 
     it("should ignore error if it doesn't throw on retry", function()
-        local expect: any = expect
         local didInit = false
 
-        
         local function badLazyInit()
             local needsInit = not didInit
             didInit = true
@@ -57,6 +57,6 @@ return function()
             return React.createElement("TextLabel", {Text="Hello"})
         end
         ReactNoop.render(React.createElement(App))
-        expect(Scheduler).toFlushWithoutYielding()
+        jestExpect(Scheduler).toFlushWithoutYielding()
     end)
 end

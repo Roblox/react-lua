@@ -13,6 +13,7 @@ local Packages = Workspace.Parent
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local Object = LuauPolyfill.Object
 local Error = LuauPolyfill.Error
+local Array = LuauPolyfill.Array
 
 local React = require(Workspace.React)
 
@@ -82,7 +83,7 @@ local function areHookInputsEqual(nextDeps, prevDeps)
   return true
 end
 
--- deviation: bind functions to upvalue
+-- ROBLOX deviation: bind functions to upvalue
 function createUpdater(renderer)
   local updater = {
     _renderer = renderer,
@@ -131,7 +132,7 @@ function createUpdater(renderer)
     local currentState = updater._renderer._newState or publicInstance.state
 
     if typeof(partialState) == 'function' then
-      -- deviation: in React, the partial state function is called on the
+      -- ROBLOX deviation: in React, the partial state function is called on the
       -- publicInstance, meaning that `this` is accessible, and scoped correctly,
       -- inside of the state updater; with Lua, you would need to define your
       -- functions differently, by explicitly adding the first argument for 'self'
@@ -176,13 +177,13 @@ function basicStateReducer(state, action)
   end
 end
 
--- deviation: Declaring this earlier so luau recognizes it
+-- ROBLOX deviation: hoist declaration
 local currentlyValidatingElement = nil
 
 local ReactShallowRenderer = {}
 ReactShallowRenderer.__index = ReactShallowRenderer
 
--- deviation: Collapse static create function and constructor together; since
+-- ROBLOX deviation: Collapse static create function and constructor together; since
 -- Lua only has the former anyway
 function ReactShallowRenderer.createRenderer()
   local self = setmetatable({}, ReactShallowRenderer)
@@ -220,7 +221,7 @@ See https://fb.me/react-invalid-hook-call for tips about how to debug and fix se
 end
 
 function ReactShallowRenderer:_createDispatcher()
-  -- deviation: This function returns two values instead of an array. Lua does
+  -- ROBLOX deviation: This function returns two values instead of an array. Lua does
   -- not support destructuring, but _does_ support multiple return values
   local function useReducer(reducer, initialArg, init)
     self:_validateCurrentlyRenderingComponent()
@@ -528,20 +529,18 @@ function ReactShallowRenderer:render(element, maybeContext)
       tostring(elementType)
     )))
   end
-  -- deviation: include check for isReactComponent since our "class" components
+  -- ROBLOX deviation: include check for isReactComponent since our "class" components
   -- aren't functions like React's are
   if
     not (
       isForwardRef(element) or
       typeof(element.type) == 'function' or
-      element.type.isReactComponent == true or
+      (typeof(element.type) == 'table' and element.type.isReactComponent == true) or
       isMemo(element)
     )
   then
     local elementType = typeof(element.type)
-    -- FIXME: Implement Array.isArray
-    -- if Array.isArray(element.type) then
-    if elementType == "table" then
+    if Array.isArray(element.type) then
       elementType = "array"
     end
     error(Error(string.format(
@@ -567,7 +566,7 @@ function ReactShallowRenderer:render(element, maybeContext)
   local previousElement = self._element
   self._rendering = true
   self._element = element
-  -- deviation: functions can't have properties in Lua, so we can't access
+  -- ROBLOX deviation: functions can't have properties in Lua, so we can't access
   -- `contextTypes` if `elementType` is a function; as far as I can tell, React
   -- doesn't support `contextTypes` on function components anyways, so the
   -- behavior should be compatible
@@ -598,7 +597,7 @@ function ReactShallowRenderer:render(element, maybeContext)
       self:_updateClassComponent(elementType, element, self._context)
     else
       if shouldConstruct(elementType) then
-        -- deviation: we don't have 'new', so we need to enumerate the element
+        -- ROBLOX deviation: we don't have 'new', so we need to enumerate the element
         -- types we can support
         if typeof(elementType) == 'function' then
           self._instance = elementType(
@@ -658,7 +657,7 @@ function ReactShallowRenderer:render(element, maybeContext)
             -- elementType could still be a ForwardRef if it was
             -- nested inside Memo.
             if typeof(elementType) == "table" and elementType["$$typeof"] == ForwardRef then
-              if not typeof(elementType.render) == 'function' then
+              if typeof(elementType.render) ~= 'function' then
                 error(Error(string.format(
                   "forwardRef requires a render function but was given %s.",
                   typeof(elementType.render)
@@ -841,7 +840,7 @@ function getDisplayName(element)
     return element.type
   else
     local elementType
-    if isMemo(element) then 
+    if isMemo(element) then
       elementType = element.type.type
     else
       elementType = element.type
@@ -885,7 +884,7 @@ function getMaskedContext(contextTypes, unmaskedContext)
   if contextTypes and not unmaskedContext then
     return emptyObject
   end
-  -- deviation: we can't mask context types for function components, so be 'unsafe' to make tests pass
+  -- ROBLOX deviation: we can't mask context types for function components, so be 'unsafe' to make tests pass
   if not contextTypes and unmaskedContext then
     contextTypes = unmaskedContext
   end

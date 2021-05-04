@@ -30,6 +30,7 @@ local arrayReverse = function(arr)
 end
 
 return function()
+  local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
   local RobloxJest = require(Workspace.RobloxJest)
 
   beforeEach(function()
@@ -88,7 +89,6 @@ return function()
   local function sharedContextTests(label, getConsumer)
     describe("reading context with "..label, function()
       it('simple mount and update', function()
-        local expect: any = expect
         local Context = React.createContext(1)
         local Consumer = getConsumer(Context)
 
@@ -107,17 +107,16 @@ return function()
         end
 
         ReactNoop.render(React.createElement(App, {value=2}))
-        expect(Scheduler).toFlushWithoutYielding()
-        expect(ReactNoop.getChildren()).toEqual({span("Result: 2")})
+        jestExpect(Scheduler).toFlushWithoutYielding()
+        jestExpect(ReactNoop.getChildren()).toEqual({span("Result: 2")})
 
         -- Update
         ReactNoop.render(React.createElement(App, {value=3}))
-        expect(Scheduler).toFlushWithoutYielding()
-        expect(ReactNoop.getChildren()).toEqual({span("Result: 3")})
+        jestExpect(Scheduler).toFlushWithoutYielding()
+        jestExpect(ReactNoop.getChildren()).toEqual({span("Result: 3")})
       end)
 
       it("propagates through shouldComponentUpdate false", function()
-        local expect: any = expect
         local Context = React.createContext(1)
         local ContextConsumer = getConsumer(Context)
 
@@ -160,7 +159,7 @@ return function()
         end
 
         ReactNoop.render(React.createElement(App, {value=2}))
-        expect(Scheduler).toFlushAndYield({
+        jestExpect(Scheduler).toFlushAndYield({
           "App",
           "Provider",
           "Indirection",
@@ -168,20 +167,19 @@ return function()
           "Consumer",
           "Consumer render prop",
         })
-        expect(ReactNoop.getChildren()).toEqual({span("Result: 2")})
+        jestExpect(ReactNoop.getChildren()).toEqual({span("Result: 2")})
 
         -- Update
         ReactNoop.render(React.createElement(App, {value=3}))
-        expect(Scheduler).toFlushAndYield({
+        jestExpect(Scheduler).toFlushAndYield({
           "App",
           "Provider",
           "Consumer render prop",
         })
-        expect(ReactNoop.getChildren()).toEqual({span("Result: 3")})
+        jestExpect(ReactNoop.getChildren()).toEqual({span("Result: 3")})
       end)
 
       it("consumers bail out if context value is the same", function()
-        local expect: any = expect
         local Context = React.createContext(1)
         local ContextConsumer = getConsumer(Context)
 
@@ -224,7 +222,7 @@ return function()
         end
 
         ReactNoop.render(React.createElement(App, {value=2}))
-        expect(Scheduler).toFlushAndYield({
+        jestExpect(Scheduler).toFlushAndYield({
           "App",
           "Provider",
           "Indirection",
@@ -232,20 +230,19 @@ return function()
           "Consumer",
           "Consumer render prop",
         })
-        expect(ReactNoop.getChildren()).toEqual({span("Result: 2")})
+        jestExpect(ReactNoop.getChildren()).toEqual({span("Result: 2")})
 
         -- Update with the same context value
         ReactNoop.render(React.createElement(App, {value=2}))
-        expect(Scheduler).toFlushAndYield({
+        jestExpect(Scheduler).toFlushAndYield({
           "App",
           "Provider",
           -- Don't call render prop again
         })
-        expect(ReactNoop.getChildren()).toEqual({span("Result: 2")})
+        jestExpect(ReactNoop.getChildren()).toEqual({span("Result: 2")})
       end)
 
       it("nested providers", function()
-        local expect: any = expect
         local Context = React.createContext(1)
         local Consumer = getConsumer(Context)
 
@@ -288,17 +285,16 @@ return function()
         end
 
         ReactNoop.render(React.createElement(App, {value=2}))
-        expect(Scheduler).toFlushWithoutYielding()
-        expect(ReactNoop.getChildren()).toEqual({span("Result: 8")})
+        jestExpect(Scheduler).toFlushWithoutYielding()
+        jestExpect(ReactNoop.getChildren()).toEqual({span("Result: 8")})
 
         -- Update
         ReactNoop.render(React.createElement(App, {value=3}))
-        expect(Scheduler).toFlushWithoutYielding()
-        expect(ReactNoop.getChildren()).toEqual({span("Result: 12")})
+        jestExpect(Scheduler).toFlushWithoutYielding()
+        jestExpect(ReactNoop.getChildren()).toEqual({span("Result: 12")})
       end)
 
       it("should provide the correct (default) values to consumers outside of a provider", function()
-        local expect: any = expect
         local FooContext = React.createContext({value = "foo-initial"})
         local BarContext = React.createContext({value = "bar-initial"})
         local FooConsumer = getConsumer(FooContext)
@@ -306,7 +302,7 @@ return function()
 
         local function Verify(props)
           local actual, expected = props[1], props[2]
-          expect(expected).to.equal(actual)
+          jestExpect(expected).toBe(actual)
           return nil
         end
 
@@ -328,11 +324,10 @@ return function()
             return React.createElement(Verify, {actual=value, expected="bar-initial"})
           end),
         })
-        expect(Scheduler).toFlushWithoutYielding()
+        jestExpect(Scheduler).toFlushWithoutYielding()
       end)
 
       it('multiple consumers in different branches', function()
-        local expect: any = expect
         local Context = React.createContext(1)
         local Consumer = getConsumer(Context)
 
@@ -380,31 +375,30 @@ return function()
         end
 
         ReactNoop.render(React.createElement(App, {value=2}))
-        expect(Scheduler).toFlushWithoutYielding()
-        expect(ReactNoop.getChildren()).toEqual({
+        jestExpect(Scheduler).toFlushWithoutYielding()
+        jestExpect(ReactNoop.getChildren()).toEqual({
           span('Result: 4'),
           span('Result: 2'),
         })
 
         -- Update
         ReactNoop.render(React.createElement(App, {value=3}))
-        expect(Scheduler).toFlushWithoutYielding()
-        expect(ReactNoop.getChildren()).toEqual({
+        jestExpect(Scheduler).toFlushWithoutYielding()
+        jestExpect(ReactNoop.getChildren()).toEqual({
           span('Result: 6'),
           span('Result: 3'),
         })
 
         -- Another update
         ReactNoop.render(React.createElement(App, {value=4}))
-        expect(Scheduler).toFlushWithoutYielding()
-        expect(ReactNoop.getChildren()).toEqual({
+        jestExpect(Scheduler).toFlushWithoutYielding()
+        jestExpect(ReactNoop.getChildren()).toEqual({
           span('Result: 8'),
           span('Result: 4'),
         })
       end)
 
       it('compares context values with Object.is semantics', function()
-        local expect: any = expect
         local Context = React.createContext(1)
         local ContextConsumer = getConsumer(Context)
 
@@ -447,23 +441,22 @@ return function()
           -- deviation: string NaN in place of NaN
           value = "NaN"
         }))
-        expect(Scheduler).toFlushAndYield({'App', 'Provider', 'Indirection', 'Indirection', 'Consumer', 'Consumer render prop'})
-        expect(ReactNoop.getChildren()).toEqual({span('Result: NaN')})
+        jestExpect(Scheduler).toFlushAndYield({'App', 'Provider', 'Indirection', 'Indirection', 'Consumer', 'Consumer render prop'})
+        jestExpect(ReactNoop.getChildren()).toEqual({span('Result: NaN')})
 
         -- Update
         ReactNoop.render( React.createElement(App, {
           -- deviation: string NaN in place of NaN
           value = "NaN"
         }))
-        expect(Scheduler).toFlushAndYield({'App', 'Provider'
+        jestExpect(Scheduler).toFlushAndYield({'App', 'Provider'
           -- Consumer should not re-render again
           -- 'Consumer render prop',
         })
-        expect(ReactNoop.getChildren()).toEqual({span('Result: NaN')})
+        jestExpect(ReactNoop.getChildren()).toEqual({span('Result: NaN')})
       end)
 
       it('context unwinds when interrupted', function()
-        local expect: any = expect
         local Context = React.createContext('Default')
         local ContextConsumer = getConsumer(Context)
 
@@ -512,14 +505,13 @@ return function()
         ReactNoop.render( React.createElement(App, {
           value = "A"
         }))
-        expect(Scheduler).toFlushWithoutYielding()
-        expect(ReactNoop.getChildren()).toEqual({
+        jestExpect(Scheduler).toFlushWithoutYielding()
+        jestExpect(ReactNoop.getChildren()).toEqual({
           -- The second provider should use the default value.
           span('Result: Does not unwind')})
       end)
 
       it('can skip consumers with bitmask', function()
-        local expect: any = expect
         local Context = React.createContext({
           foo = 0,
           bar = 0
@@ -590,32 +582,31 @@ return function()
           foo = 1,
           bar = 1
         }))
-        expect(Scheduler).toFlushAndYield({'Foo', 'Bar'})
-        expect(ReactNoop.getChildren()).toEqual({span('Foo: 1'), span('Bar: 1')}) -- Update only foo
+        jestExpect(Scheduler).toFlushAndYield({'Foo', 'Bar'})
+        jestExpect(ReactNoop.getChildren()).toEqual({span('Foo: 1'), span('Bar: 1')}) -- Update only foo
 
         ReactNoop.render( React.createElement(App, {
           foo = 2,
           bar = 1
         }))
-        expect(Scheduler).toFlushAndYield({'Foo'})
-        expect(ReactNoop.getChildren()).toEqual({span('Foo: 2'), span('Bar: 1')}) -- Update only bar
+        jestExpect(Scheduler).toFlushAndYield({'Foo'})
+        jestExpect(ReactNoop.getChildren()).toEqual({span('Foo: 2'), span('Bar: 1')}) -- Update only bar
 
         ReactNoop.render( React.createElement(App, {
           foo = 2,
           bar = 2
         }))
-        expect(Scheduler).toFlushAndYield({'Bar'})
-        expect(ReactNoop.getChildren()).toEqual({span('Foo: 2'), span('Bar: 2')}) -- Update both
+        jestExpect(Scheduler).toFlushAndYield({'Bar'})
+        jestExpect(ReactNoop.getChildren()).toEqual({span('Foo: 2'), span('Bar: 2')}) -- Update both
 
         ReactNoop.render( React.createElement(App, {
           foo = 3,
           bar = 3
         }))
-        expect(Scheduler).toFlushAndYield({'Foo', 'Bar'})
-        expect(ReactNoop.getChildren()).toEqual({span('Foo: 3'), span('Bar: 3')})
+        jestExpect(Scheduler).toFlushAndYield({'Foo', 'Bar'})
+        jestExpect(ReactNoop.getChildren()).toEqual({span('Foo: 3'), span('Bar: 3')})
       end)
       it('can skip parents with bitmask bailout while updating their children', function()
-        local expect: any = expect
         local Context = React.createContext({
           foo = 0,
           bar = 0
@@ -689,36 +680,35 @@ return function()
           foo = 1,
           bar = 1
         }))
-        expect(Scheduler).toFlushAndYield({'Foo', 'Bar', 'Foo'})
-        expect(ReactNoop.getChildren()).toEqual({span('Foo: 1'), span('Bar: 1'), span('Foo: 1')})
+        jestExpect(Scheduler).toFlushAndYield({'Foo', 'Bar', 'Foo'})
+        jestExpect(ReactNoop.getChildren()).toEqual({span('Foo: 1'), span('Bar: 1'), span('Foo: 1')})
 
         -- Update only foo
         ReactNoop.render(React.createElement(App, {
           foo = 2,
           bar = 1
         }))
-        expect(Scheduler).toFlushAndYield({'Foo', 'Foo'})
-        expect(ReactNoop.getChildren()).toEqual({span('Foo: 2'), span('Bar: 1'), span('Foo: 2')})
+        jestExpect(Scheduler).toFlushAndYield({'Foo', 'Foo'})
+        jestExpect(ReactNoop.getChildren()).toEqual({span('Foo: 2'), span('Bar: 1'), span('Foo: 2')})
 
         -- Update only bar
         ReactNoop.render(React.createElement(App, {
           foo = 2,
           bar = 2
         }))
-        expect(Scheduler).toFlushAndYield({'Bar'})
-        expect(ReactNoop.getChildren()).toEqual({span('Foo: 2'), span('Bar: 2'), span('Foo: 2')}) 
+        jestExpect(Scheduler).toFlushAndYield({'Bar'})
+        jestExpect(ReactNoop.getChildren()).toEqual({span('Foo: 2'), span('Bar: 2'), span('Foo: 2')})
 
         -- Update both
         ReactNoop.render(React.createElement(App, {
           foo = 3,
           bar = 3
         }))
-        expect(Scheduler).toFlushAndYield({'Foo', 'Bar', 'Foo'})
-        expect(ReactNoop.getChildren()).toEqual({span('Foo: 3'), span('Bar: 3'), span('Foo: 3')})
+        jestExpect(Scheduler).toFlushAndYield({'Foo', 'Bar', 'Foo'})
+        jestExpect(ReactNoop.getChildren()).toEqual({span('Foo: 3'), span('Bar: 3'), span('Foo: 3')})
       end)
 
       it("does not re-render if there's an update in a child", function()
-        local expect: any = expect
         local Context = React.createContext(0)
         local Consumer = getConsumer(Context)
         local child
@@ -756,17 +746,16 @@ return function()
         ReactNoop.render( React.createElement(App, {
           value = 1
         }))
-        expect(Scheduler).toFlushAndYield({'Consumer render prop', 'Child'})
-        expect(ReactNoop.getChildren()).toEqual({span('Context: 1, Step: 0')})
+        jestExpect(Scheduler).toFlushAndYield({'Consumer render prop', 'Child'})
+        jestExpect(ReactNoop.getChildren()).toEqual({span('Context: 1, Step: 0')})
         child:setState({
           step = 1
         })
-        expect(Scheduler).toFlushAndYield({'Child'})
-        expect(ReactNoop.getChildren()).toEqual({span('Context: 1, Step: 1')})
+        jestExpect(Scheduler).toFlushAndYield({'Child'})
+        jestExpect(ReactNoop.getChildren()).toEqual({span('Context: 1, Step: 1')})
       end)
 
       it('consumer bails out if value is unchanged and something above bailed out', function()
-        local expect: any = expect
         local Context = React.createContext(0)
         local Consumer = getConsumer(Context)
 
@@ -808,28 +797,27 @@ return function()
         ReactNoop.render( React.createElement(App, {
           value = 1
         }))
-        expect(Scheduler).toFlushAndYield({'App', 'PureIndirection', 'ChildWithInlineRenderCallback', 'Consumer', 'ChildWithCachedRenderCallback', 'Consumer'})
-        expect(ReactNoop.getChildren()).toEqual({span(1), span(1)})
+        jestExpect(Scheduler).toFlushAndYield({'App', 'PureIndirection', 'ChildWithInlineRenderCallback', 'Consumer', 'ChildWithCachedRenderCallback', 'Consumer'})
+        jestExpect(ReactNoop.getChildren()).toEqual({span(1), span(1)})
 
         -- Update (bailout)
         ReactNoop.render( React.createElement(App, {
           value = 1
         }))
-        expect(Scheduler).toFlushAndYield({'App'})
-        expect(ReactNoop.getChildren()).toEqual({span(1), span(1)})
+        jestExpect(Scheduler).toFlushAndYield({'App'})
+        jestExpect(ReactNoop.getChildren()).toEqual({span(1), span(1)})
 
         -- Update (no bailout)
         ReactNoop.render( React.createElement(App, {
           value = 2
         }))
-        expect(Scheduler).toFlushAndYield({'App', 'Consumer', 'Consumer'})
-        expect(ReactNoop.getChildren()).toEqual({span(2), span(2)})
+        jestExpect(Scheduler).toFlushAndYield({'App', 'Consumer', 'Consumer'})
+        jestExpect(ReactNoop.getChildren()).toEqual({span(2), span(2)})
       end)
 
       -- @gate experimental
       -- ROBLOX TODO: ReactFiberBeginWork.new:3546: FIXME (roblox): beginWork: LegacyHiddenComponent is unimplemented
       xit("context consumer doesn't bail out inside hidden subtree", function()
-        local expect: any = expect
         local Context = React.createContext('dark')
         local Consumer = getConsumer(Context)
 
@@ -849,8 +837,8 @@ return function()
         ReactNoop.render( React.createElement(App, {
           theme = "dark"
         }))
-        expect(Scheduler).toFlushAndYield({'dark'})
-        expect(ReactNoop.getChildren()).toEqual( React.createElement("div", {
+        jestExpect(Scheduler).toFlushAndYield({'dark'})
+        jestExpect(ReactNoop.getChildren()).toEqual( React.createElement("div", {
           hidden = true
         }, React.createElement("span", {
           prop = "dark"
@@ -858,8 +846,8 @@ return function()
         ReactNoop.render( React.createElement(App, {
           theme = "light"
         }))
-        expect(Scheduler).toFlushAndYield({'light'})
-        expect(ReactNoop.getChildren()).toEqual( React.createElement("div", {
+        jestExpect(Scheduler).toFlushAndYield({'light'})
+        jestExpect(ReactNoop.getChildren()).toEqual( React.createElement("div", {
           hidden = true
         }, React.createElement("span", {
           prop = "light"
@@ -868,7 +856,6 @@ return function()
 
       -- This is a regression case for https://github.com/facebook/react/issues/12389.
       it('does not run into an infinite loop', function()
-        local expect: any = expect
         local Context = React.createContext(nil)
         local Consumer = getConsumer(Context)
 
@@ -897,15 +884,16 @@ return function()
         end
 
         ReactNoop.render(React.createElement(App, {reverse=false}))
-        expect(Scheduler).toFlushWithoutYielding()
+        jestExpect(Scheduler).toFlushWithoutYielding()
         ReactNoop.render(React.createElement(App, {reverse=true}))
-        expect(Scheduler).toFlushWithoutYielding()
+        jestExpect(Scheduler).toFlushWithoutYielding()
         ReactNoop.render(React.createElement(App, {reverse=false}))
-        expect(Scheduler).toFlushWithoutYielding()
+        jestExpect(Scheduler).toFlushWithoutYielding()
       end)
 
-    --   -- This is a regression case for https://github.com/facebook/react/issues/12686
-    --   it('does not skip some siblings', () => {
+      -- This is a regression case for https://github.com/facebook/react/issues/12686
+      xit('does not skip some siblings', function()
+        -- ROBLOX FIXME: enable this test
     --     local Context = React.createContext(0)
     --     local ContextConsumer = getConsumer(Context)
 
@@ -954,28 +942,28 @@ return function()
     --     -- Initial mount
     --     local inst
     --     ReactNoop.render(<App ref={ref => (inst = ref)} />)
-    --     expect(Scheduler).toFlushAndYield(['App'])
-    --     expect(ReactNoop.getChildren()).toEqual([
+    --     jestExpect(Scheduler).toFlushAndYield(['App'])
+    --     jestExpect(ReactNoop.getChildren()).toEqual([
     --       span('static 1'),
     --       span('static 2'),
     --     ])
     --     -- Update the first time
     --     inst.setState({step: 1})
-    --     expect(Scheduler).toFlushAndYield(['App', 'Consumer'])
-    --     expect(ReactNoop.getChildren()).toEqual([
+    --     jestExpect(Scheduler).toFlushAndYield(['App', 'Consumer'])
+    --     jestExpect(ReactNoop.getChildren()).toEqual([
     --       span('static 1'),
     --       span('static 2'),
     --       span(1),
     --     ])
     --     -- Update the second time
     --     inst.setState({step: 2})
-    --     expect(Scheduler).toFlushAndYield(['App', 'Consumer'])
-    --     expect(ReactNoop.getChildren()).toEqual([
+    --     jestExpect(Scheduler).toFlushAndYield(['App', 'Consumer'])
+    --     jestExpect(ReactNoop.getChildren()).toEqual([
     --       span('static 1'),
     --       span('static 2'),
     --       span(2),
     --     ])
-    --   })
+      end)
     end)
   end
 
@@ -990,11 +978,10 @@ return function()
   sharedContextTests(
     "useContext inside function component",
     function(Context)
-      local expect: any = expect
       return function(props)
         local observedBits = props.unstable_observedBits
         local contextValue
-        expect(function()
+        jestExpect(function()
           contextValue = useContext(Context, observedBits)
         end).toErrorDev(
           observedBits ~= nil
@@ -1010,11 +997,10 @@ return function()
   sharedContextTests(
     "useContext inside forwardRef component",
     function(Context)
-      local expect: any = expect
       return React.forwardRef(function(props, ref)
         local observedBits = props.unstable_observedBits
         local contextValue
-        expect(function()
+        jestExpect(function()
           contextValue = useContext(Context, observedBits)
         end).toErrorDev(
           observedBits ~= nil
@@ -1027,19 +1013,19 @@ return function()
       end)
     end
   )
-  -- ROBLOX TODO: Memo component unimplemented
+  -- ROBLOX FIXME: implement Memo component
   -- sharedContextTests(
   --   "useContext inside memoized function component",
   --   function(Context)
   --     return React.memo(function (props)
   --       local observedBits = props.unstable_observedBits
   --       local contextValue
-  --       expect(function()
+  --       jestExpect(function()
   --         contextValue = useContext(Context, observedBits)
   --       end).toErrorDev(
   --         observedBits ~= nil
   --           and "useContext() second argument is reserved for future use in React. " ..
-  --               "Passing it is not supported. You passed: "..tostring(observedBits).."."
+  --               "Passing it is not supported. You passed: " .. tostring(observedBits) .. "."
   --           or {}
   --       )
   --       local render = props.children
@@ -1078,7 +1064,6 @@ return function()
 
   describe('Context.Provider', function()
     it('warns if calculateChangedBits returns larger than a 31-bit integer', function()
-        local expect: any = expect
         local Context = React.createContext(
           0,
           function(a, b) return math.pow(2, 32) - 1 end -- Return 32 bit int
@@ -1089,12 +1074,12 @@ return function()
         end
 
         ReactNoop.render(React.createElement(App, {value=1}))
-        expect(Scheduler).toFlushWithoutYielding()
+        jestExpect(Scheduler).toFlushWithoutYielding()
 
         -- Update
         ReactNoop.render(React.createElement(App, {value=2}))
-        expect(function()
-            expect(Scheduler).toFlushWithoutYielding()
+        jestExpect(function()
+            jestExpect(Scheduler).toFlushWithoutYielding()
         end).toErrorDev(
           'calculateChangedBits: Expected the return value to be a 31-bit ' ..
             'integer. Instead received: 4294967295'
@@ -1103,7 +1088,6 @@ return function()
 
     -- ROBLOX TODO: toErrorDev, needs LUAFDN-196
     xit('warns if no value prop provided', function()
-        local expect: any = expect
         local Context = React.createContext()
 
         ReactNoop.render(React.createElement(
@@ -1111,8 +1095,8 @@ return function()
           {anyPropNameOtherThanValue="value could be anything"}
         ))
 
-        expect(function()
-            expect(Scheduler).toFlushWithoutYielding()
+        jestExpect(function()
+            jestExpect(Scheduler).toFlushWithoutYielding()
         end).toErrorDev(
           'The `value` prop is required for the `<Context.Provider>`. Did you misspell it or forget to pass it?',
           {
@@ -1123,7 +1107,6 @@ return function()
 
     -- ROBLOX TODO: spyOnDev
     xit('warns if multiple renderers concurrently render the same context', function()
-        local expect: any = expect
         -- ROBLOX TODO: how do we do this elsewhere?
         -- spyOnDev(console, 'error');
         local Context = React.createContext(0)
@@ -1144,7 +1127,7 @@ return function()
 
         ReactNoop.render(React.createElement(App, {value=1}))
         -- Render past the Provider, but don't commit yet
-        expect(Scheduler).toFlushAndYieldThrough({'Foo'})
+        jestExpect(Scheduler).toFlushAndYieldThrough({'Foo'})
 
         -- Get a new copy of ReactNoop
         RobloxJest.resetModules()
@@ -1157,10 +1140,10 @@ return function()
 
         -- Render the provider again using a different renderer
         ReactNoop.render(React.createElement(App, {value=1}))
-        expect(Scheduler).toFlushAndYield({'Foo', 'Foo'})
+        jestExpect(Scheduler).toFlushAndYield({'Foo', 'Foo'})
 
         if _G.__DEV__ then
-          expect(console.error.calls.argsFor(0){1}).toContain(
+          jestExpect(console.error.calls.argsFor(0){1}).toContain(
             'Detected multiple renderers concurrently rendering the same ' ..
               'context provider. This is currently unsupported'
           )
@@ -1168,7 +1151,6 @@ return function()
     end)
 
     it('provider bails out if children and value are unchanged (like sCU)', function()
-        local expect: any = expect
         local Context = React.createContext(0)
 
         local function Child()
@@ -1185,23 +1167,22 @@ return function()
 
         -- Initial mount
         ReactNoop.render(React.createElement(App, {value=1}))
-        expect(Scheduler).toFlushAndYield({'App', 'Child'})
-        expect(ReactNoop.getChildren()).toEqual({span('Child')})
+        jestExpect(Scheduler).toFlushAndYield({'App', 'Child'})
+        jestExpect(ReactNoop.getChildren()).toEqual({span('Child')})
 
         -- Update
         ReactNoop.render(React.createElement(App, {value=1}))
-        expect(Scheduler).toFlushAndYield({
+        jestExpect(Scheduler).toFlushAndYield({
           'App',
           -- Child does not re-render
         })
-        expect(ReactNoop.getChildren()).toEqual({span('Child')})
+        jestExpect(ReactNoop.getChildren()).toEqual({span('Child')})
     end)
 
     -- ROBLOX TODO: fails due to incomplete support of legacy context; since
     -- legacy context doesn't resemble anything that Roact ever shipped, we'll
     -- likely never need to actually implement it
     xit('provider does not bail out if legacy context changed above', function()
-      local expect: any = expect
       local Context = React.createContext(0)
 
       local function Child()
@@ -1251,46 +1232,45 @@ return function()
           )
         )
       )
-      expect(function()
-        expect(Scheduler).toFlushAndYield({'LegacyProvider', 'App', 'Child'})
+      jestExpect(function()
+        jestExpect(Scheduler).toFlushAndYield({'LegacyProvider', 'App', 'Child'})
       end).toErrorDev(
         'Legacy context API has been detected within a strict-mode tree.\n\n' ..
           'The old API will be supported in all 16.x releases, but applications ' ..
           'using it should migrate to the new version.\n\n' ..
           'Please update the following components: LegacyProvider'
       )
-      expect(ReactNoop.getChildren()).toEqual({span('Child')})
+      jestExpect(ReactNoop.getChildren()).toEqual({span('Child')})
 
       -- Update App with same value (should bail out)
       appRef.current.setState({value = 1})
-      expect(Scheduler).toFlushAndYield({'App'})
-      expect(ReactNoop.getChildren()).toEqual({span('Child')})
+      jestExpect(Scheduler).toFlushAndYield({'App'})
+      jestExpect(ReactNoop.getChildren()).toEqual({span('Child')})
 
       -- Update LegacyProvider (should not bail out)
       legacyProviderRef.current.setState({value = 1})
-      expect(Scheduler).toFlushAndYield({'LegacyProvider', 'App', 'Child'})
-      expect(ReactNoop.getChildren()).toEqual({span('Child')})
+      jestExpect(Scheduler).toFlushAndYield({'LegacyProvider', 'App', 'Child'})
+      jestExpect(ReactNoop.getChildren()).toEqual({span('Child')})
 
       -- Update App with same value (should bail out)
       appRef.current.setState({value = 1})
-      expect(Scheduler).toFlushAndYield({'App'})
-      expect(ReactNoop.getChildren()).toEqual({span('Child')})
+      jestExpect(Scheduler).toFlushAndYield({'App'})
+      jestExpect(ReactNoop.getChildren()).toEqual({span('Child')})
     end)
   end)
 
   describe('Context.Consumer', function()
     -- ROBLOX TODO: implement spyOnDev (should pass in release for now)
     xit('warns if child is not a function', function()
-      local expect: any = expect
       -- spyOnDev(console, 'error')
       local Context = React.createContext(0)
       ReactNoop.render(React.createElement(Context.Consumer))
       -- deviation: This line is relying on a default JS error message
       -- containing "is not a function"; for us, the relevant error message is
       -- "attempt to call a nil value"
-      expect(Scheduler).toFlushAndThrow('attempt to call a nil value')
+      jestExpect(Scheduler).toFlushAndThrow('attempt to call a nil value')
       if _G.__DEV__ then
-        expect(console.error.calls.argsFor(0){0}).toContain(
+        jestExpect(console.error.calls.argsFor(0){0}).toContain(
           'A context consumer was rendered with multiple children, or a child ' ..
             "that isn't a function"
         )
@@ -1298,7 +1278,6 @@ return function()
     end)
 
     it('can read other contexts inside consumer render prop', function()
-      local expect: any = expect
       local FooContext = React.createContext(0)
       local BarContext = React.createContext(0)
 
@@ -1333,20 +1312,20 @@ return function()
       end
 
       ReactNoop.render(React.createElement(App, {foo=1, bar=1}))
-      expect(Scheduler).toFlushAndYield({'Foo: 1, Bar: 1'})
-      expect(ReactNoop.getChildren()).toEqual({span('Foo: 1, Bar: 1')})
+      jestExpect(Scheduler).toFlushAndYield({'Foo: 1, Bar: 1'})
+      jestExpect(ReactNoop.getChildren()).toEqual({span('Foo: 1, Bar: 1')})
 
       -- Update foo
       ReactNoop.render(React.createElement(App, {foo=2, bar=1}))
-      expect(Scheduler).toFlushAndYield({'Foo: 2, Bar: 1'})
-      expect(ReactNoop.getChildren()).toEqual({span('Foo: 2, Bar: 1')});
+      jestExpect(Scheduler).toFlushAndYield({'Foo: 2, Bar: 1'})
+      jestExpect(ReactNoop.getChildren()).toEqual({span('Foo: 2, Bar: 1')});
 
       -- Update bar
       ReactNoop.render(React.createElement(App, {foo=2, bar=2}))
       -- ROBLOX FIXME: Fails here; update doesn't trigger the inner consumer
       -- that's using `readContext`
-      expect(Scheduler).toFlushAndYield({'Foo: 2, Bar: 2'})
-      expect(ReactNoop.getChildren()).toEqual({span('Foo: 2, Bar: 2')})
+      jestExpect(Scheduler).toFlushAndYield({'Foo: 2, Bar: 2'})
+      jestExpect(ReactNoop.getChildren()).toEqual({span('Foo: 2, Bar: 2')})
     end)
 
     -- Context consumer bails out on propagating "deep" updates when `value` hasn't changed.
@@ -1355,7 +1334,6 @@ return function()
     -- can call this.setState(), but an autobound render callback "blocked" the update.
     -- https://github.com/facebook/react/pull/12470#issuecomment-376917711
     it('consumer does not bail out if there were no bailouts above it', function()
-      local expect: any = expect
       local Context = React.createContext(0)
       local Consumer = Context.Consumer
 
@@ -1389,13 +1367,13 @@ return function()
           inst = ref
         end
       }))
-      expect(Scheduler).toFlushAndYield({"App", "App#renderConsumer"})
-      expect(ReactNoop.getChildren()).toEqual({span("hello")})
+      jestExpect(Scheduler).toFlushAndYield({"App", "App#renderConsumer"})
+      jestExpect(ReactNoop.getChildren()).toEqual({span("hello")})
 
       -- Update
       inst:setState({text="goodbye"})
-      expect(Scheduler).toFlushAndYield({"App", "App#renderConsumer"})
-      expect(ReactNoop.getChildren()).toEqual({span("goodbye")})
+      jestExpect(Scheduler).toFlushAndYield({"App", "App#renderConsumer"})
+      jestExpect(ReactNoop.getChildren()).toEqual({span("goodbye")})
     end)
   end)
 end

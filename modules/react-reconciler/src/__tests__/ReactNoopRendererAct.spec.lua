@@ -17,6 +17,8 @@ local Scheduler
 
 return function()
 	local RobloxJest = require(Workspace.RobloxJest)
+	local Packages = Workspace.Parent
+	local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
 
 	beforeEach(function()
 		RobloxJest.resetModules()
@@ -33,30 +35,27 @@ return function()
 	end)
 
 
-	-- FIXME (roblox): enable this test in DEV
-	if not _G.__DEV__ then
-		it('can use act to flush effects', function()
-			local expect: any = expect
-			local function App(props)
-				React.useEffect(props.callback)
-				return nil
-			end
+	it('can use act to flush effects', function()
+		local function App(props)
+			React.useEffect(props.callback)
+			return nil
+		end
 
-			local calledLog = {}
-			ReactNoop.act(function()
-				ReactNoop.render(
-					React.createElement(App, {
-						callback = function()
-							table.insert(calledLog, #calledLog)
-						end,
-					})
-				)
-			end)
-			expect(Scheduler).toFlushWithoutYielding()
-			expect(calledLog).toEqual({0})
+		local calledLog = {}
+		ReactNoop.act(function()
+			ReactNoop.render(
+				React.createElement(App, {
+					callback = function()
+						table.insert(calledLog, #calledLog)
+					end,
+				})
+			)
 		end)
-	end
+		jestExpect(Scheduler).toFlushWithoutYielding()
+		jestExpect(calledLog).toEqual({0})
+	end)
 
+	-- ROBLOX TODO: act should return a Promise when it receives a Promise
 	-- it('should work with async/await', function()
 	-- 	local function App()
 	-- 		local [ctr, setCtr] = React.useState(0)
@@ -75,8 +74,8 @@ return function()
 	-- 	await ReactNoop.act(async () => {
 	-- 		ReactNoop.render(<App />)
 	-- 	})
-	-- 	expect(Scheduler).toHaveYielded(['stage 1', 'stage 2'])
-	-- 	expect(Scheduler).toFlushWithoutYielding()
-	-- 	expect(ReactNoop.getChildren()).toEqual([{text: '1', hidden: false}])
+	-- 	jestExpect(Scheduler).toHaveYielded(['stage 1', 'stage 2'])
+	-- 	jestExpect(Scheduler).toFlushWithoutYielding()
+	-- 	jestExpect(ReactNoop.getChildren()).toEqual([{text: '1', hidden: false}])
 	-- })
 end

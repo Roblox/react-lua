@@ -12,6 +12,8 @@
 return function()
 	local Workspace = script.Parent.Parent.Parent
 	local RobloxJest = require(Workspace.RobloxJest)
+	local Packages = Workspace.Parent
+	local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
 
 	local ReactFiberContext
 	local ReactFiber
@@ -33,15 +35,13 @@ return function()
 
 	describe("Context stack", function()
 		it("should throw when pushing to top level of non-empty stack", function()
-			-- FIXME: expect coercion
-			local expect: any = expect
 			local fiber = ReactFiber.createHostRootFiber(ReactRootTags.BlockingRoot)
 			local context = {
 				foo = 1,
 			}
 			-- The first call here is a valid use of pushTopLevelContextObject
 			ReactFiberContext.pushTopLevelContextObject(fiber, context, true)
-			expect(function()
+			jestExpect(function()
 				local moreContext = {
 					bar = 2,
 				}
@@ -50,10 +50,8 @@ return function()
 		end)
 
 		it("should throw if when invalidating a provider that isn't initialized", function()
-			-- FIXME: expect coercion
-			local expect: any = expect
 			local fiber = ReactFiber.createHostRootFiber(ReactRootTags.BlockingRoot)
-			expect(function()
+			jestExpect(function()
 				ReactFiberContext.invalidateContextProvider(fiber, nil, true)
 			end).toThrow("Expected to have an instance by this point.")
 		end)

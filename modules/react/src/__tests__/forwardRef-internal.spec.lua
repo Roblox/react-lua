@@ -11,6 +11,8 @@
 return function()
   local Workspace = script.Parent.Parent.Parent
   local Packages = Workspace.Parent
+  local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
+  local Error = require(Packages.LuauPolyfill).Error
   local RobloxJest = require(Workspace.RobloxJest)
   local Cryo = require(Packages.Cryo)
 
@@ -36,9 +38,6 @@ return function()
   end)
 
   it("should work without a ref to be forwarded", function()
-    -- ROBLOX FIXME
-    local expect: any = expect
-
     local Child = React.Component:extend("Child")
     function Child:render()
       Scheduler.unstable_yieldValue(self.props.value)
@@ -54,14 +53,11 @@ return function()
     end)
 
     ReactNoop.render(React.createElement(RefForwardingComponent, {value=123}))
-    expect(Scheduler).toFlushAndYield({123})
+    jestExpect(Scheduler).toFlushAndYield({123})
   end)
 
   -- ROBLOX TODO: Fails in DEV (nothing yielded from `toFlushAndYield`), unclear why
   it("should forward a ref for a single child", function()
-    -- ROBLOX FIXME
-    local expect: any = expect
-
     local Child = React.Component:extend("Child")
     function Child:render()
       Scheduler.unstable_yieldValue(self.props.value)
@@ -80,16 +76,13 @@ return function()
     local ref = React.createRef()
 
     ReactNoop.render(React.createElement(RefForwardingComponent, {ref=ref, value=123}))
-    expect(Scheduler).toFlushAndYield({123})
+    jestExpect(Scheduler).toFlushAndYield({123})
     -- ROBLOX FIXME: When instanceof is implemented, use it
-    -- expect(Object.instanceof(ref.current, Child)).to.equal(true)
-    expect(getmetatable(ref.current).__index).to.equal(Child)
+    -- jestExpect(Object.instanceof(ref.current, Child)).toBe(true)
+    jestExpect(getmetatable(ref.current).__index).toBe(Child)
   end)
 
   it("should forward a ref for multiple children", function()
-    -- ROBLOX FIXME
-    local expect: any = expect
-
     local Child = React.Component:extend("Child")
     function Child:render()
       Scheduler.unstable_yieldValue(self.props.value)
@@ -114,16 +107,13 @@ return function()
         React.createElement("div")
       )
     )
-    expect(Scheduler).toFlushAndYield({123})
+    jestExpect(Scheduler).toFlushAndYield({123})
     -- ROBLOX FIXME: When instanceof is implemented, use it
-    -- expect(Object.instanceof(ref.current, Child)).to.equal(true)
-    expect(getmetatable(ref.current).__index).to.equal(Child)
+    -- jestExpect(Object.instanceof(ref.current, Child)).toBe(true)
+    jestExpect(getmetatable(ref.current).__index).toBe(Child)
   end)
 
   it("should maintain child instance and ref through updates", function()
-    -- ROBLOX FIXME
-    local expect: any = expect
-
     local Child = React.Component:extend("Child")
     function Child:render()
       Scheduler.unstable_yieldValue(self.props.value)
@@ -138,7 +128,7 @@ return function()
     local RefForwardingComponent = React.forwardRef(function(props, ref)
       return React.createElement(Wrapper, Cryo.Dictionary.join(props, {forwardedRef=ref}))
     end)
-  
+
     local setRefCount = 0
     local ref
 
@@ -148,24 +138,20 @@ return function()
     end
 
     ReactNoop.render(React.createElement(RefForwardingComponent, {ref=setRef, value=123}))
-    expect(Scheduler).toFlushAndYield({123})
+    jestExpect(Scheduler).toFlushAndYield({123})
     -- ROBLOX FIXME: When instanceof is implemented, use it
-    -- expect(Object.instanceof(ref, Child)).to.equal(true)
-    expect(getmetatable(ref).__index).to.equal(Child)
-    expect(setRefCount).to.equal(1)
+    -- jestExpect(Object.instanceof(ref, Child)).toBe(true)
+    jestExpect(getmetatable(ref).__index).toBe(Child)
+    jestExpect(setRefCount).toBe(1)
     ReactNoop.render(React.createElement(RefForwardingComponent, {ref=setRef, value=456}))
-    expect(Scheduler).toFlushAndYield({456})
+    jestExpect(Scheduler).toFlushAndYield({456})
     -- ROBLOX FIXME: When instanceof is implemented, use it
-    -- expect(Object.instanceof(ref, Child)).to.equal(true)
-    expect(getmetatable(ref).__index).to.equal(Child)
-    expect(setRefCount).to.equal(1)
+    -- jestExpect(Object.instanceof(ref, Child)).toBe(true)
+    jestExpect(getmetatable(ref).__index).toBe(Child)
+    jestExpect(setRefCount).toBe(1)
   end)
 
-  -- ROBLOX TODO: Fails to yield last two values, likely something wrong with error boundaries
-  xit("should not break lifecycle error handling", function()
-    -- ROBLOX FIXME
-    local expect: any = expect
-
+  it("should not break lifecycle error handling", function()
     local ErrorBoundary = React.Component:extend("ErrorBoundary")
     function ErrorBoundary:init()
       self.state = {error=nil}
@@ -206,7 +192,7 @@ return function()
         React.createElement(RefForwardingComponent, {ref=ref})
       )
     )
-    expect(Scheduler).toFlushAndYield({
+    jestExpect(Scheduler).toFlushAndYield({
       "ErrorBoundary.render: try",
       "Wrapper",
       "BadRender throw",
@@ -220,13 +206,10 @@ return function()
       "ErrorBoundary.componentDidCatch", -- ROBLOX FIXME: not yielding these last two
       "ErrorBoundary.render: catch",
     })
-    expect(ref.current).to.equal(nil)
+    jestExpect(ref.current).toBe(nil)
   end)
 
   it("should not re-run the render callback on a deep setState", function()
-    -- ROBLOX FIXME
-    local expect: any = expect
-
     local inst
 
     local Inner = React.Component:extend("Inner")
@@ -252,9 +235,9 @@ return function()
     end
 
     ReactNoop.render(React.createElement(App))
-    expect(Scheduler).toFlushAndYield({"App", "Forward", "Middle", "Inner"})
+    jestExpect(Scheduler).toFlushAndYield({"App", "Forward", "Middle", "Inner"})
 
     inst:setState({})
-    expect(Scheduler).toFlushAndYield({"Inner"})
+    jestExpect(Scheduler).toFlushAndYield({"Inner"})
   end)
 end

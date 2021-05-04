@@ -50,7 +50,7 @@ return function(type)
 	end
 
 	if typeof(type) == 'table' and type ~= nil then
-		-- deviation: In React, component classes are of type 'function'; for
+		-- ROBLOX deviation: In React, component classes are of type 'function'; for
 		-- us, they're tables with a special value on their metatable
 		if type.isReactComponent then
 			return true

@@ -1,5 +1,8 @@
 --!nonstrict
 return function()
+	local Workspace = script.Parent.Parent.Parent
+	local Packages = Workspace.Parent.Parent.Packages
+    local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
 	local Heap = require(script.Parent.Parent.SchedulerMinHeap)
 
 	local function verifyOrder(heap)
@@ -43,7 +46,7 @@ return function()
 	describe("peek", function()
 		it("should return nil from an empty minHeap", function()
 			local h = {}
-			expect(Heap.peek(h)).never.to.be.ok()
+			jestExpect(Heap.peek(h)).never.toBeDefined()
 			verifyOrder(h)
 		end)
 
@@ -53,7 +56,7 @@ return function()
 			verifyOrder(h)
 
 			local node = Heap.peek(h)
-			expect(node.sortIndex).to.equal(42)
+			jestExpect(node.sortIndex).toBe(42)
 		end)
 
 		it("return the smaller value on a minHeap of two elements", function()
@@ -64,7 +67,7 @@ return function()
 			verifyOrder(h)
 
 			local node = Heap.peek(h)
-			expect(node.sortIndex).to.equal(1)
+			jestExpect(node.sortIndex).toBe(1)
 		end)
 
 		it("return the smallest value on a minHeap of 10 elements", function()
@@ -82,7 +85,7 @@ return function()
 			verifyOrder(h)
 
 			local node = Heap.peek(h)
-			expect(node.sortIndex).to.equal(1)
+			jestExpect(node.sortIndex).toBe(1)
 		end)
 	end)
 
@@ -97,9 +100,9 @@ return function()
 
 			local node = Heap.pop(h)
 			verifyOrder(h)
-			expect(node.sortIndex).to.equal(1)
+			jestExpect(node.sortIndex).toBe(1)
 			node = Heap.peek(h)
-			expect(node.sortIndex).to.equal(2)
+			jestExpect(node.sortIndex).toBe(2)
 		end)
 	end)
 end

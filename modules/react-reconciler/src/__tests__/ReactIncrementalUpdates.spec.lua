@@ -1,4 +1,4 @@
--- Upstream: https://github.com/facebook/react/blob/d13f5b9538e48f74f7c571ef3cde652ca887cca0/packages/react-reconciler/src/__tests__/ReactIncrementalUpdates-test.js
+-- upstream: https://github.com/facebook/react/blob/d13f5b9538e48f74f7c571ef3cde652ca887cca0/packages/react-reconciler/src/__tests__/ReactIncrementalUpdates-test.js
 --  * Copyright (c) Facebook, Inc. and its affiliates.
 --  *
 --  * This source code is licensed under the MIT license found in the
@@ -15,6 +15,9 @@ local ReactNoop
 local Scheduler
 local InputContinuousLanePriority = 10
 return function()
+    local Packages = Workspace.Parent
+    local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
+
     describe('ReactIncrementalUpdates', function()
         local RobloxJest = require(Workspace.RobloxJest)
         local function gate(fn)
@@ -37,7 +40,7 @@ return function()
             RobloxJest.mock(Workspace.Scheduler, function()
               return require(Workspace.Scheduler.unstable_mock)
             end)
-        
+
             React = require(Workspace.React)
             ReactNoop = require(Workspace.ReactNoopRenderer)
             Scheduler = require(Workspace.Scheduler)
@@ -53,7 +56,6 @@ return function()
         end
 
         it('applies updates in order of priority', function()
-            local expect: any = expect
             local state
             local Foo = React.Component:extend('Foo')
             function Foo:init()
@@ -76,20 +78,19 @@ return function()
                 return React.createElement("div")
             end
             ReactNoop.render(React.createElement(Foo))
-            expect(Scheduler).toFlushAndYieldThrough({'commit'})
-            expect(state).toEqual({
+            jestExpect(Scheduler).toFlushAndYieldThrough({'commit'})
+            jestExpect(state).toEqual({
                 a = 'a',
             })
-            expect(Scheduler).toFlushWithoutYielding()
+            jestExpect(Scheduler).toFlushWithoutYielding()
 
-            expect(state).toEqual({
+            jestExpect(state).toEqual({
                 a = 'a',
                 b = 'b',
                 c = 'c',
             })
         end)
         it('applies updates with equal priority in insertion order', function()
-            local expect: any = expect
             local state
             local Foo = React.Component:extend('Foo')
             function Foo:init()
@@ -107,15 +108,14 @@ return function()
                 return React.createElement("div", nil)
             end
             ReactNoop.render(React.createElement(Foo, nil))
-            expect(Scheduler).toFlushWithoutYielding()
-            expect(state).toEqual({
+            jestExpect(Scheduler).toFlushWithoutYielding()
+            jestExpect(state).toEqual({
                 a = 'a',
                 b = 'b',
                 c = 'c',
             })
         end)
         it('only drops updates with equal or lesser priority when replaceState is called', function()
-            local expect: any = expect
             local instance
             local Foo = React.Component:extend('Foo')
             function Foo:init()
@@ -138,7 +138,7 @@ return function()
 
 
             ReactNoop.render(React.createElement(Foo, nil))
-            expect(Scheduler).toFlushAndYield({
+            jestExpect(Scheduler).toFlushAndYield({
                 'render',
                 'componentDidMount',
             })
@@ -169,20 +169,20 @@ return function()
             -- Even though a replaceState has been already scheduled, it hasn't been
             -- flushed yet because it has async priority.
 
-            expect(instance.state).toEqual({
+            jestExpect(instance.state).toEqual({
                 a = 'a',
                 b = 'b',
             })
-            expect(Scheduler).toHaveYielded({
+            jestExpect(Scheduler).toHaveYielded({
                 'render',
                 'componentDidUpdate',
             })
-            expect(Scheduler).toFlushAndYield({
+            jestExpect(Scheduler).toFlushAndYield({
                 'render',
                 'componentDidUpdate',
             })
             -- Now the rest of the updates are flushed, including the replaceState.
-            expect(instance.state).toEqual({
+            jestExpect(instance.state).toEqual({
                 c = 'c',
                 d = 'd',
             })
@@ -190,7 +190,6 @@ return function()
         -- Test fails due to update priority bug
         it('can abort an update, schedule additional updates, and resume', function()
             local instance
-            local expect: any = expect
             local Foo = React.Component:extend('Foo')
             function Foo:init()
                 self.state = {}
@@ -206,25 +205,25 @@ return function()
             end
 
             ReactNoop.render(React.createElement(Foo))
-            expect(Scheduler).toFlushWithoutYielding()
+            jestExpect(Scheduler).toFlushWithoutYielding()
 
             local function createUpdate(letter)
                 return function()
                     Scheduler.unstable_yieldValue(letter)
                     return{[letter] = letter}
                 end
-            end 
+            end
             -- Schedule some async updates
 
             instance:setState(createUpdate('a'))
             instance:setState(createUpdate('b'))
             instance:setState(createUpdate('c')) -- // Begin the updates but don't flush them yet
-            expect(Scheduler).toFlushAndYieldThrough({
+            jestExpect(Scheduler).toFlushAndYieldThrough({
                 'a',
                 'b',
                 'c',
-            }) 
-            expect(ReactNoop.getChildren()).toEqual({
+            })
+            jestExpect(ReactNoop.getChildren()).toEqual({
                 span(''),
             }) -- Schedule some more updates at different priorities
             instance:setState(createUpdate('d'))
@@ -233,17 +232,17 @@ return function()
                 instance:setState(createUpdate('f'))
             end)
             instance:setState(createUpdate('g')) -- The sync updates should have flushed, but not the async ones
-            expect(Scheduler).toHaveYielded({
+            jestExpect(Scheduler).toHaveYielded({
                 'e',
                 'f',
             })
-            expect(ReactNoop.getChildren()).toEqual({
+            jestExpect(ReactNoop.getChildren()).toEqual({
                 span('ef'),
             })
             -- Now flush the remaining work. Even though e and f were already processed,
             -- they should be processed again, to ensure that the terminal state
             -- is deterministic.
-            expect(Scheduler).toFlushAndYield({
+            jestExpect(Scheduler).toFlushAndYield({
                 'a',
                 'b',
                 'c',
@@ -252,14 +251,13 @@ return function()
                 'f',
                 'g',
             })
-            expect(ReactNoop.getChildren()).toEqual({
+            jestExpect(ReactNoop.getChildren()).toEqual({
                 span('abcdefg'),
             })
         end)
         -- Test fails due to update priority bug
         it('can abort an update, schedule a replaceState, and resume', function()
             local instance
-            local expect: any = expect
 
             local Foo = React.Component:extend('Foo')
             function Foo:init()
@@ -273,10 +271,10 @@ return function()
                 return React.createElement("span", {
                     prop = table.concat(keylist, '')
                 })
-            end 
+            end
 
             ReactNoop.render(React.createElement(Foo))
-            expect(Scheduler).toFlushWithoutYielding()
+            jestExpect(Scheduler).toFlushWithoutYielding()
 
             local function createUpdate(letter)
                 return function()
@@ -284,19 +282,19 @@ return function()
                     return{[letter] = letter}
                 end
             end
-            
+
             -- Schedule some async updates
             instance:setState(createUpdate('a'))
             instance:setState(createUpdate('b'))
             instance:setState(createUpdate('c'))
 
             -- Begin the updates but don't flush them yet
-            expect(Scheduler).toFlushAndYieldThrough({
+            jestExpect(Scheduler).toFlushAndYieldThrough({
                 'a',
                 'b',
                 'c',
             })
-            expect(ReactNoop.getChildren()).toEqual({
+            jestExpect(ReactNoop.getChildren()).toEqual({
                 span(''),
             })
 
@@ -309,17 +307,17 @@ return function()
             instance:setState(createUpdate('g'))
 
             -- The sync updates should have flushed, but not the async ones
-            expect(Scheduler).toHaveYielded({
+            jestExpect(Scheduler).toHaveYielded({
                 'e',
                 'f',
             })
-            expect(ReactNoop.getChildren()).toEqual({
+            jestExpect(ReactNoop.getChildren()).toEqual({
                 span('f'),
             })
             -- Now flush the remaining work. Even though e and f were already processed,
             -- they should be processed again, to ensure that the terminal state
             -- is deterministic.
-            expect(Scheduler).toFlushAndYield({
+            jestExpect(Scheduler).toFlushAndYield({
                 'a',
                 'b',
                 'c',
@@ -328,13 +326,12 @@ return function()
                 'f',
                 'g',
             })
-            expect(ReactNoop.getChildren()).toEqual({
+            jestExpect(ReactNoop.getChildren()).toEqual({
                 span('fg'),
             })
         end)
         it('passes accumulation of previous updates to replaceState updater function', function()
             local instance
-            local expect: any = expect
             local Foo = React.Component:extend('Foo')
             function Foo:init()
                 self.state = {}
@@ -346,7 +343,7 @@ return function()
             end
 
             ReactNoop.render(React.createElement(Foo))
-            expect(Scheduler).toFlushWithoutYielding()
+            jestExpect(Scheduler).toFlushWithoutYielding()
             instance:setState({a = 'a'})
             instance:setState({b = 'b'})
             -- No longer a public API, but we can test that it works internally by
@@ -354,14 +351,13 @@ return function()
             instance.updater.enqueueReplaceState(instance, function(_, previousState)
                 return {previousState = previousState}
             end)
-            expect(Scheduler).toFlushWithoutYielding()
-            expect(instance.state.previousState).toEqual({
+            jestExpect(Scheduler).toFlushWithoutYielding()
+            jestExpect(instance.state.previousState).toEqual({
                     a = 'a',
                     b = 'b',
             })
         end)
         it('does not call callbacks that are scheduled by another callback until a later commit', function()
-            local expect: any = expect
             local Foo = React.Component:extend('Foo')
             function Foo:init()
                 self.state = {}
@@ -388,7 +384,7 @@ return function()
             end
 
             ReactNoop.render(React.createElement(Foo, nil))
-            expect(Scheduler).toFlushAndYield({
+            jestExpect(Scheduler).toFlushAndYield({
                 'render',
                 'did mount',
                 'render',
@@ -398,7 +394,6 @@ return function()
             })
         end)
         it('gives setState during reconciliation the same priority as whatever level is currently reconciling', function()
-            local expect: any = expect
             local instance
 
             local Foo = React.Component:extend('Foo')
@@ -420,8 +415,8 @@ return function()
             end
 
             ReactNoop.render(React.createElement(Foo, nil))
-            expect(function()
-                return expect(Scheduler).toFlushAndYield({
+            jestExpect(function()
+                return jestExpect(Scheduler).toFlushAndYield({
                     'render',
                 })
             end).toErrorDev('Using UNSAFE_componentWillReceiveProps in strict mode is not recommended', {withoutStack = true})
@@ -432,17 +427,16 @@ return function()
                 ReactNoop.render(React.createElement(Foo, nil))
                 return "test"
             end)
-            expect(instance.state).toEqual({
+            jestExpect(instance.state).toEqual({
                 a = 'a',
                 b = 'b',
             })
-            expect(Scheduler).toHaveYielded({
+            jestExpect(Scheduler).toHaveYielded({
                 'componentWillReceiveProps',
                 'render',
             })
         end)
         it('updates triggered from inside a class setState updater', function()
-            local expect: any = expect
             local instance
             local Foo = React.Component:extend('Foo')
             function Foo:init()
@@ -456,7 +450,7 @@ return function()
             end
 
             ReactNoop.render(React.createElement(Foo))
-            expect(Scheduler).toFlushAndYield({ 
+            jestExpect(Scheduler).toFlushAndYield({
                 -- Initial render
                 'render',
             })
@@ -469,10 +463,10 @@ return function()
                     a = 'a',
                 }
             end)
-            expect(function()
-                -- deviation: using local defined gate which references ReactFeatureFlags as
+            jestExpect(function()
+                -- ROBLOX deviation: using local defined gate which references ReactFeatureFlags as
                 -- opposed to upstream's gate() which is defined in setupTests in Jest files
-                return expect(Scheduler).toFlushAndYield(gate(function(flags)
+                return jestExpect(Scheduler).toFlushAndYield(gate(function(flags)
                         if flags.deferRenderPhaseUpdateToNextBatch then
                             return{
                                 'setState updater', -- In the new reconciler, updates inside the render phase are
@@ -491,7 +485,7 @@ return function()
                         }
                 end))
             end).toErrorDev('An update (setState, replaceState, or forceUpdate) was scheduled ' .. 'from inside an update function. Update functions should be pure, ' .. 'with zero side-effects. Consider using componentDidUpdate or a ' .. 'callback.')
-            expect(instance.state).toEqual({
+            jestExpect(instance.state).toEqual({
                 a = 'a',
                 b = 'b',
             }) -- Test deduplication (no additional warnings expected)
@@ -503,7 +497,7 @@ return function()
                     b = 'b',
                 }
             end)
-            expect(Scheduler).toFlushAndYield(gate(function(flags)
+            jestExpect(Scheduler).toFlushAndYield(gate(function(flags)
                 return(function()
                     if flags.deferRenderPhaseUpdateToNextBatch then
                         return{ -- In the new reconciler, updates inside the render phase are
@@ -521,7 +515,6 @@ return function()
             end))
         end)
         it('getDerivedStateFromProps should update base state of updateQueue (based on product bug)', function()
-            local expect: any = expect
             -- Based on real-world bug.
             local foo
             local bar
@@ -551,7 +544,7 @@ return function()
                 -- The noop callback is needed to trigger the specific internal path that
                 -- led to this bug. Removing it causes it to "accidentally" work.
             end)
-            expect(ReactNoop.getChildren()).toEqual({
+            jestExpect(ReactNoop.getChildren()).toEqual({
                 span('derived state'),
             })
             ReactNoop.flushSync(function()
@@ -560,18 +553,17 @@ return function()
                     value = 'update state',
                 }, function() end)
             end)
-            expect(ReactNoop.getChildren()).toEqual({
+            jestExpect(ReactNoop.getChildren()).toEqual({
                 span('derived state'),
             })
             ReactNoop.flushSync(function()
                 bar:setState({})
             end)
-            expect(ReactNoop.getChildren()).toEqual({
+            jestExpect(ReactNoop.getChildren()).toEqual({
                 span('derived state'),
             })
         end)
         it('regression: does not expire soon due to layout effects in the last batch', function()
-            local expect: any = expect
             local useState = React.useState
             local useLayoutEffect = React.useLayoutEffect
 
@@ -592,19 +584,18 @@ return function()
 
             ReactNoop.act(function()
                 ReactNoop.render(React.createElement(App))
-                expect(Scheduler).toFlushExpired({})
-                expect(Scheduler).toFlushAndYield({
+                jestExpect(Scheduler).toFlushExpired({})
+                jestExpect(Scheduler).toFlushAndYield({
                     'Render: 0',
                     'Commit: 0',
                     'Render: 1',
                 })
                 Scheduler.unstable_advanceTime(10000)
                 setCount(2)
-                expect(Scheduler).toFlushExpired({})
+                jestExpect(Scheduler).toFlushExpired({})
             end)
         end)
         it('regression: does not expire soon due to previous flushSync', function()
-            local expect: any = expect
             local function Text(_ref)
                 local text = _ref.text
                 Scheduler.unstable_yieldValue(text)
@@ -616,17 +607,16 @@ return function()
                     text = 'A',
                 }))
             end)
-            expect(Scheduler).toHaveYielded({
+            jestExpect(Scheduler).toHaveYielded({
                 'A',
             })
             Scheduler.unstable_advanceTime(10000)
             ReactNoop.render(React.createElement(Text, {
                 text = 'B',
             }))
-            expect(Scheduler).toFlushExpired({})
+            jestExpect(Scheduler).toFlushExpired({})
         end)
         it('regression: does not expire soon due to previous expired work', function()
-            local expect: any = expect
             local function Text(_ref2)
                 local text = _ref2.text
 
@@ -639,18 +629,17 @@ return function()
                 text = 'A',
             }))
             Scheduler.unstable_advanceTime(10000)
-            expect(Scheduler).toFlushExpired({
+            jestExpect(Scheduler).toFlushExpired({
                 'A',
             })
             Scheduler.unstable_advanceTime(10000)
             ReactNoop.render(React.createElement(Text, {
                 text = 'B',
             }))
-            expect(Scheduler).toFlushExpired({})
+            jestExpect(Scheduler).toFlushExpired({})
         end)
-        -- ROBLOX TODO: implement resuming work
-        xit('when rebasing, does not exclude updates that were already committed, regardless of priority', function()
-            local expect: any = expect
+
+        it('when rebasing, does not exclude updates that were already committed, regardless of priority', function()
             local useState = React.useState
             local useLayoutEffect = React.useLayoutEffect
             local pushToLog
@@ -687,12 +676,12 @@ return function()
             ReactNoop.act(function ()
                 root.render(React.createElement(App));
             end)
-            expect(Scheduler).toHaveYielded({
+            jestExpect(Scheduler).toHaveYielded({
                 'Committed: ',
             })
             -- ROBLOX TODO: replace the below expects with toMatchRenderedOutput
-            -- expect(root).toMatchRenderedOutput('')
-            expect(root.getChildren()[1].text).toEqual('')
+            -- jestExpect(root).toMatchRenderedOutput('')
+            jestExpect(root.getChildren()[1].text).toEqual('')
 
             ReactNoop.act(function ()
                 pushToLog('A')
@@ -704,7 +693,7 @@ return function()
                   end)
                 end)
             end)
-            expect(Scheduler).toHaveYielded({
+            jestExpect(Scheduler).toHaveYielded({
                 -- A and B are pending. B is higher priority, so we'll render that first.
                 'Committed: B',
                 -- Because A comes first in the queue, we're now in rebase mode. B must
@@ -720,21 +709,19 @@ return function()
                 'Committed: ABCD',
             })
             -- ROBLOX TODO: replace the below expects with toMatchRenderedOutput
-            -- expect(root).toMatchRenderedOutput('ABCD')
-            expect(root.getChildren()[1].text).toEqual('ABCD')
+            -- jestExpect(root).toMatchRenderedOutput('ABCD')
+            jestExpect(root.getChildren()[1].text).toEqual('ABCD')
         end)
-        -- ROBLOX TODO: implement resuming work
         xit('when rebasing, does not exclude updates that were already committed, regardless of priority (classes)', function()
-            local expect: any = expect
-            local pushToLog
+            local instance
             local App = React.Component:extend('App')
             function App:init()
                 self.state = {log= ''}
-                self.pushToLog = function(msg)
-                    self:setState(function (prevState)
-                        return {log= prevState.log .. msg}
-                    end)
-                end
+            end
+            function App:pushToLog(msg)
+                self:setState(function (prevState)
+                    return {log = prevState.state.log .. msg}
+                end)
             end
 
             function App:componentDidUpdate()
@@ -746,45 +733,46 @@ return function()
                         Scheduler.unstable_runWithPriority(
                             Scheduler.unstable_UserBlockingPriority,
                             function()
-                                self.pushToLog('C')
+                                self:pushToLog('C')
                             end
                         )
                     end)
-                    self.pushToLog('D')
+                    self:pushToLog('D')
                 end
             end
 
             function App:render()
-                pushToLog = self.pushToLog
+                instance = self
                 return self.state.log
             end
 
             local root = ReactNoop.createRoot()
             local app = React.createElement(App)
+            -- ROBLOX FIXME: fails probably due to this not being as Promise as in upstream
             ReactNoop.act(function()
                 root.render(app)
             end)
-            expect(Scheduler).toHaveYielded({})
-            
+            jestExpect(Scheduler).toHaveYielded({})
+
             -- ROBLOX TODO: replace the below expects with toMatchRenderedOutput
-            -- expect(root).toMatchRenderedOutput('')
+            -- jestExpect(root).toMatchRenderedOutput('')
             local renderedOutput = root.getChildren()
-            expect(#renderedOutput).toEqual(1)
-            expect(root.log).toEqual(nil)
+            jestExpect(#renderedOutput).toEqual(1)
+            jestExpect(root.log).toEqual(nil)
 
             ReactNoop.act(function()
-                pushToLog('A')
+                instance:pushToLog('A')
                 -- TODO: Double wrapping is temporary while we remove Scheduler runWithPriority.
                 ReactNoop.unstable_runWithPriority(InputContinuousLanePriority, function()
                     Scheduler.unstable_runWithPriority(
                         Scheduler.unstable_UserBlockingPriority,
                         function()
-                            pushToLog('B')
+                            instance:pushToLog('B')
                         end
                     )
                 end)
             end)
-            expect(Scheduler).toHaveYielded({
+            jestExpect(Scheduler).toHaveYielded({
                 -- A and B are pending. B is higher priority, so we'll render that first.
                 'Committed: B',
                 -- Because A comes first in the queue, we're now in rebase mode. B must
@@ -799,10 +787,9 @@ return function()
                 'Committed: BCD',
                 'Committed: ABCD',
             })
-            expect(root).toMatchRenderedOutput('ABCD')
+            jestExpect(root).toMatchRenderedOutput('ABCD')
         end)
         it("base state of update queue is initialized to its fiber's memoized state", function()
-            local expect: any = expect
             local app
             local App = React.Component:extend('App')
             function App:init()
@@ -835,17 +822,17 @@ return function()
             ReactNoop.act(function()
                 root.render(React.createElement(App, {prop= "A"}))
             end)
-            
+
             -- ROBLOX TODO: replace the below expects with toMatchRenderedOutput
-            -- expect(root).toMatchRenderedOutput('0')
-            expect(root.getChildren()[1].text).toEqual("0") -- Changing the prop causes the count to increase by 100
+            -- jestExpect(root).toMatchRenderedOutput('0')
+            jestExpect(root.getChildren()[1].text).toEqual("0") -- Changing the prop causes the count to increase by 100
 
             ReactNoop.act(function()
                 root.render(React.createElement(App, {prop= "B"}))
             end)
             -- ROBLOX TODO: replace the below expects with toMatchRenderedOutput
-            -- expect(root).toMatchRenderedOutput('100')
-            expect(root.getChildren()[1].text).toEqual("100")
+            -- jestExpect(root).toMatchRenderedOutput('100')
+            jestExpect(root.getChildren()[1].text).toEqual("100")
             -- Now increment the count by 1 with a state update. And, in the same
             -- batch, change the prop back to its original value.
 
@@ -859,8 +846,8 @@ return function()
             end) -- There were two total prop changes, plus an increment
 
             -- ROBLOX TODO: replace the below expects with toMatchRenderedOutput
-            -- expect(root).toMatchRenderedOutput('201')
-            expect(root.getChildren()[1].text).toEqual("201")
+            -- jestExpect(root).toMatchRenderedOutput('201')
+            jestExpect(root.getChildren()[1].text).toEqual("201")
         end)
     end)
 end

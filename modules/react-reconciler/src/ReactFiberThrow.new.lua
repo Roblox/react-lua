@@ -72,9 +72,9 @@ local markFailedErrorBoundaryForHotReloading = require(script.Parent["ReactFiber
 -- } = require(Workspace../ReactFiberSuspenseContext.new'
 
 -- ROBLOX FIXME: these will incur a dependency cycle
--- onUncaughtError woudl be very easy to extract out, or to transplant into this file
+-- onUncaughtError would be very easy to extract out, or to transplant into this file
 local ReactFiberWorkLoop
-local markLegacyErrorBoundaryAsFailedRef
+local markLegacyErrorBoundaryAsFailedRef, isAlreadyFailedLegacyErrorBoundaryRef
 
 -- ROBLOX deviation: lazy initialize ReactFiberWorkLoop to prevent cyclic module dependency
 local markLegacyErrorBoundaryAsFailed = function(...)
@@ -92,9 +92,12 @@ end
 --   pingSuspendedRoot,
 -- } = require(Workspace../ReactFiberWorkLoop.new'
 
--- ROBLOX FIXME: workaround temporary
-local isAlreadyFailedLegacyErrorBoundary = function(instance)
-  return false
+local isAlreadyFailedLegacyErrorBoundary = function(...)
+  if ReactFiberWorkLoop == nil then
+    ReactFiberWorkLoop = require(script.Parent["ReactFiberWorkLoop.new"])
+  end
+  isAlreadyFailedLegacyErrorBoundaryRef = ReactFiberWorkLoop.isAlreadyFailedLegacyErrorBoundary
+  return isAlreadyFailedLegacyErrorBoundaryRef(...)
 end
 
 local logCapturedError = require(script.Parent.ReactFiberErrorLogger).logCapturedError
@@ -167,7 +170,7 @@ function createClassErrorUpdate(
         -- This gets reset before we yield back to the browser.
         -- TODO: Warn in strict mode if getDerivedStateFromError is
         -- not defined.
-        -- ROBLOX devation: used to the `this` upstream, but I *think* they mean `inst`
+        -- ROBLOX FIXME: used to be `this` upstream, needs verification by ReactIncremental unwinding test
         markLegacyErrorBoundaryAsFailed(inst)
 
         -- Only log here if componentDidCatch is the only error boundary method defined
@@ -175,7 +178,7 @@ function createClassErrorUpdate(
       end
       local error_ = errorInfo.value
       local stack = errorInfo.stack
-      -- ROBLOX devation: used to the `this` upstream, but I *think* they mean `inst`
+      -- ROBLOX FIXME: used to be `this` upstream, needs verification by ReactIncremental unwinding test
       inst:componentDidCatch(error_, {
         componentStack = stack or '',
       })

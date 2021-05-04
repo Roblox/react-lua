@@ -8,8 +8,6 @@
  * @emails react-core
  * @jest-environment node
 ]]
---!strict
-
 local Workspace = script.Parent.Parent.Parent
 local React
 local ReactNoop
@@ -19,6 +17,8 @@ local Scheduler
 -- probably move to one of the other test files once it is official.
 return function()
   local RobloxJest = require(Workspace.RobloxJest)
+	local Packages = Workspace.Parent
+	local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
 
   beforeEach(function()
     RobloxJest.resetModules()
@@ -35,8 +35,6 @@ return function()
   end)
 
   it("should render a simple fragment at the top of a component", function()
-    -- FIXME: expect coercion
-    local expect: any = expect
     local function Fragment()
       return {
         a = React.createElement("TextLabel", {
@@ -48,12 +46,10 @@ return function()
       }
     end
     ReactNoop.render(React.createElement(Fragment))
-    expect(Scheduler).toFlushWithoutYielding()
+    jestExpect(Scheduler).toFlushWithoutYielding()
   end)
 
   it("should preserve state when switching from a single child", function()
-    -- FIXME: expect coercion
-    local expect: any = expect
     local instance = nil
 
     local Stateful = React.Component:extend("Stateful")
@@ -76,23 +72,21 @@ return function()
     end
 
     ReactNoop.render(React.createElement(Fragment))
-    expect(Scheduler).toFlushWithoutYielding()
+    jestExpect(Scheduler).toFlushWithoutYielding()
 
     local instanceA = instance
 
-    expect(instanceA).never.to.equal(nil)
+    jestExpect(instanceA).never.toBe(nil)
 
     ReactNoop.render(React.createElement(Fragment, {condition = true}))
-    expect(Scheduler).toFlushWithoutYielding()
+    jestExpect(Scheduler).toFlushWithoutYielding()
 
     local instanceB = instance
 
-    expect(instanceB).to.equal(instanceA)
+    jestExpect(instanceB).toBe(instanceA)
   end)
 
   it("should not preserve state when switching to a nested array", function()
-    -- FIXME: expect coercion
-    local expect: any = expect
     local instance = nil
 
     local Stateful = React.Component:extend("Stateful")
@@ -116,22 +110,20 @@ return function()
     end
 
     ReactNoop.render(React.createElement(Fragment))
-    expect(Scheduler).toFlushWithoutYielding()
+    jestExpect(Scheduler).toFlushWithoutYielding()
 
     local instanceA = instance
-    expect(instanceA).never.to.equal(nil)
+    jestExpect(instanceA).never.toBe(nil)
 
     ReactNoop.render(React.createElement(Fragment, {condition = true}))
-    expect(Scheduler).toFlushWithoutYielding()
+    jestExpect(Scheduler).toFlushWithoutYielding()
 
     local instanceB = instance
 
-    expect(instanceB).never.to.equal(instanceA)
+    jestExpect(instanceB).never.toBe(instanceA)
   end)
 
   it("preserves state if an implicit key slot switches from/to nil", function()
-    -- FIXME: expect coercion
-    local expect: any = expect
     local instance = nil
 
     local Stateful = React.Component:extend("Stateful")
@@ -157,30 +149,28 @@ return function()
     end
 
     ReactNoop.render(React.createElement(Fragment))
-    expect(Scheduler).toFlushWithoutYielding()
+    jestExpect(Scheduler).toFlushWithoutYielding()
 
     local instanceA = instance
 
-    expect(instanceA).never.to.equal(nil)
+    jestExpect(instanceA).never.toBe(nil)
 
     ReactNoop.render(React.createElement(Fragment, {condition = true}))
-    expect(Scheduler).toFlushWithoutYielding()
+    jestExpect(Scheduler).toFlushWithoutYielding()
 
     local instanceB = instance
 
-    expect(instanceB).to.equal(instanceA)
+    jestExpect(instanceB).toBe(instanceA)
 
     ReactNoop.render(React.createElement(Fragment, {condition = false}))
-    expect(Scheduler).toFlushWithoutYielding()
+    jestExpect(Scheduler).toFlushWithoutYielding()
 
     local instanceC = instance
 
-    expect(instanceC).to.equal(instanceA)
+    jestExpect(instanceC).toBe(instanceA)
   end)
 
   it("should preserve state in a reorder", function()
-    -- FIXME: expect coercion
-    local expect: any = expect
     local instance = nil
 
     local Stateful = React.Component:extend("Stateful")
@@ -209,16 +199,16 @@ return function()
     end
 
     ReactNoop.render(React.createElement(Fragment))
-    expect(Scheduler).toFlushWithoutYielding()
+    jestExpect(Scheduler).toFlushWithoutYielding()
 
     local instanceA = instance
-    expect(instanceA).never.to.equal(nil)
+    jestExpect(instanceA).never.toBe(nil)
 
     ReactNoop.render(React.createElement(Fragment, {condition = true}))
-    expect(Scheduler).toFlushWithoutYielding()
+    jestExpect(Scheduler).toFlushWithoutYielding()
 
     local instanceB = instance
 
-    expect(instanceB).to.equal(instanceA)
+    jestExpect(instanceB).toBe(instanceA)
   end)
 end

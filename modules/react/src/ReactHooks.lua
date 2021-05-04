@@ -12,9 +12,12 @@ local Workspace = script.Parent.Parent
 local Packages = Workspace.Parent
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local Array = LuauPolyfill.Array
-
 -- ROBLOX: use patched console from shared
 local console = require(Workspace.Shared.console)
+
+local ReactTypes = require(Workspace.Shared.ReactTypes)
+type ReactContext<T> = ReactTypes.ReactContext<T>
+
 local invariant = require(Workspace.Shared.invariant)
 
 local ReactCurrentDispatcher = require(script.Parent.ReactCurrentDispatcher)
@@ -35,8 +38,12 @@ end
 
 local exports = {}
 
--- deviation: Stripped types from function signature
-exports.useContext = function(Context, unstable_observedBits, ...)
+-- ROBLOX TODO: Luau doesn't support function generics yet
+exports.useContext = function(
+	Context: ReactContext<any>,
+	unstable_observedBits: number | boolean | nil,realContext,
+	... -- ROBLOX deviation: Lua must specify ... here to capture additional args
+)
 	local dispatcher = resolveDispatcher()
 	if _G.__DEV__ then
 		if unstable_observedBits ~= nil then

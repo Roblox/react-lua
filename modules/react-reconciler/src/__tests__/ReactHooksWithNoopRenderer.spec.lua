@@ -40,12 +40,14 @@ local memo
 local act
 
 return function()
+  local Packages = Workspace.Parent
+  local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
   local RobloxJest = require(Workspace.RobloxJest)
 
   beforeEach(function()
     RobloxJest.resetModules()
     RobloxJest.useFakeTimers()
-    -- deviation: In react, jest _always_ mocks Scheduler -> unstable_mock;
+    -- ROBLOX deviation: In react, jest _always_ mocks Scheduler -> unstable_mock;
     -- in our case, we need to do it anywhere we want to use the scheduler,
     -- until we have some form of bundling logic
     RobloxJest.mock(Workspace.Scheduler, function()
@@ -164,9 +166,6 @@ return function()
   -- end
 
   it('resumes after an interruption', function()
-    -- FIXME: type of expect
-    local expect: any = expect
-
     local function Counter(props, ref)
       local count, updateCount = useState(0)
       useImperativeHandle(ref, function() return {updateCount = updateCount} end)
@@ -179,8 +178,8 @@ return function()
     ReactNoop.render(React.createElement(Counter,
       {label="Count", ref=counter}
     ))
-    expect(Scheduler).toFlushAndYield({'Count: 0'})
-    expect(ReactNoop.getChildren()).toEqual({span('Count: 0')})
+    jestExpect(Scheduler).toFlushAndYield({'Count: 0'})
+    jestExpect(ReactNoop.getChildren()).toEqual({span('Count: 0')})
 
     -- Schedule some updates
     ReactNoop.batchedUpdates(function()
@@ -192,8 +191,8 @@ return function()
     end)
 
     -- Partially flush without committing
-    expect(Scheduler).toFlushAndYieldThrough({'Count: 11'})
-    expect(ReactNoop.getChildren()).toEqual({span('Count: 0')})
+    jestExpect(Scheduler).toFlushAndYieldThrough({'Count: 11'})
+    jestExpect(ReactNoop.getChildren()).toEqual({span('Count: 0')})
 
     -- Interrupt with a high priority update
     ReactNoop.flushSync(function()
@@ -202,17 +201,14 @@ return function()
         {label="Total"}
       ))
     end)
-    expect(Scheduler).toHaveYielded({'Total: 0'})
+    jestExpect(Scheduler).toHaveYielded({'Total: 0'})
 
     -- Resume rendering
-    expect(Scheduler).toFlushAndYield({'Total: 11'})
-    expect(ReactNoop.getChildren()).toEqual({span('Total: 11')})
+    jestExpect(Scheduler).toFlushAndYield({'Total: 11'})
+    jestExpect(ReactNoop.getChildren()).toEqual({span('Total: 11')})
   end)
 
-  -- ROBLOX TODO: this causes ReactFiberLogger to console.error() a non-string, which causes polyfill to blow up
-  -- re-enable this test (which does work), once the polyfill is updated
-  xit('throws inside class components', function()
-    local expect: any = expect
+  it('throws inside class components', function()
     local BadCounter = React.Component:extend("BadCounter")
     function BadCounter:render()
       local count = useState(0)
@@ -220,7 +216,7 @@ return function()
     end
     ReactNoop.render(React.createElement(BadCounter))
 
-    expect(Scheduler).toFlushAndThrow(
+    jestExpect(Scheduler).toFlushAndThrow(
       'Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for' ..
         ' one of the following reasons:\n' ..
         '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' ..
@@ -237,7 +233,7 @@ return function()
     ReactNoop.render(
       React.createElement(GoodCounter, {initialCount=10})
     )
-    expect(Scheduler).toFlushAndYield({10})
+    jestExpect(Scheduler).toFlushAndYield({10})
   end)
 
   -- if !require('shared/ReactFeatureFlags').disableModulePatternComponents)
@@ -251,8 +247,8 @@ return function()
   --       end
   --     end
   --     ReactNoop.render(<Counter />)
-  --     expect(function()
-  --       expect(Scheduler).toFlushAndThrow(
+  --     jestExpect(function()
+  --       jestExpect(Scheduler).toFlushAndThrow(
   --         'Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen ' ..
   --           'for one of the following reasons:\n' ..
   --           '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' ..
@@ -274,24 +270,23 @@ return function()
   --       return <Text text={count} />
   --     end
   --     ReactNoop.render(<GoodCounter initialCount={10} />)
-  --     expect(Scheduler).toFlushAndYield([10])
+  --     jestExpect(Scheduler).toFlushAndYield([10])
   --   })
   -- end
 
-  -- it('throws when called outside the render phase', function()
-  --   expect(function() useState(0)).toThrow(
-  --     'Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for' ..
-  --       ' one of the following reasons:\n' ..
-  --       '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' ..
-  --       '2. You might be breaking the Rules of Hooks\n' ..
-  --       '3. You might have more than one copy of React in the same app\n' ..
-  --       'See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.',
-  --   )
-  -- })
+  it('throws when called outside the render phase', function()
+    jestExpect(function() useState(0) end).toThrow(
+      'Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for' ..
+        ' one of the following reasons:\n' ..
+        '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' ..
+        '2. You might be breaking the Rules of Hooks\n' ..
+        '3. You might have more than one copy of React in the same app\n' ..
+        'See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.'
+    )
+  end)
 
   describe('useState', function()
     it('simple mount and update', function()
-      local expect: any = expect
       local function Counter(props, ref)
         local count, updateCount = useState(0)
         useImperativeHandle(ref, function()
@@ -302,26 +297,25 @@ return function()
       Counter = forwardRef(Counter)
       local counter = React.createRef(nil)
       ReactNoop.render(React.createElement(Counter, {ref=counter}))
-      expect(Scheduler).toFlushAndYield({'Count: 0'})
-      expect(ReactNoop.getChildren()).toEqual({span('Count: 0')})
+      jestExpect(Scheduler).toFlushAndYield({'Count: 0'})
+      jestExpect(ReactNoop.getChildren()).toEqual({span('Count: 0')})
 
       act(function()
         return counter.current.updateCount(1)
       end)
-      expect(Scheduler).toHaveYielded({'Count: 1'})
-      expect(ReactNoop.getChildren()).toEqual({span('Count: 1')})
+      jestExpect(Scheduler).toHaveYielded({'Count: 1'})
+      jestExpect(ReactNoop.getChildren()).toEqual({span('Count: 1')})
 
       act(function()
         return counter.current.updateCount(function(count_)
           return count_ + 10
         end)
       end)
-      expect(Scheduler).toHaveYielded({'Count: 11'})
-      expect(ReactNoop.getChildren()).toEqual({span('Count: 11')})
+      jestExpect(Scheduler).toHaveYielded({'Count: 11'})
+      jestExpect(ReactNoop.getChildren()).toEqual({span('Count: 11')})
       end)
 
     it('lazy state initializer', function()
-      local expect: any = expect
       local function Counter(props, ref)
         local count, updateCount = useState(function()
           Scheduler.unstable_yieldValue('getInitialState')
@@ -333,16 +327,15 @@ return function()
       Counter = forwardRef(Counter)
       local counter = React.createRef(nil)
       ReactNoop.render(React.createElement(Counter, {initialState=42, ref=counter}))
-      expect(Scheduler).toFlushAndYield({'getInitialState', 'Count: 42'})
-      expect(ReactNoop.getChildren()).toEqual({span('Count: 42')})
+      jestExpect(Scheduler).toFlushAndYield({'getInitialState', 'Count: 42'})
+      jestExpect(ReactNoop.getChildren()).toEqual({span('Count: 42')})
 
       act(function() return counter.current.updateCount(7) end)
-      expect(Scheduler).toHaveYielded({'Count: 7'})
-      expect(ReactNoop.getChildren()).toEqual({span('Count: 7')})
+      jestExpect(Scheduler).toHaveYielded({'Count: 7'})
+      jestExpect(ReactNoop.getChildren()).toEqual({span('Count: 7')})
     end)
 
     it('multiple states', function()
-      local expect: any = expect
       local function Counter(props, ref)
         local count, updateCount = useState(0)
         local label, updateLabel = useState('Count')
@@ -357,18 +350,17 @@ return function()
       Counter = forwardRef(Counter)
       local counter = React.createRef(nil)
       ReactNoop.render(React.createElement(Counter, {ref=counter}))
-      expect(Scheduler).toFlushAndYield({'Count: 0'})
-      expect(ReactNoop.getChildren()).toEqual({span('Count: 0')})
+      jestExpect(Scheduler).toFlushAndYield({'Count: 0'})
+      jestExpect(ReactNoop.getChildren()).toEqual({span('Count: 0')})
 
       act(function() return counter.current.updateCount(7) end)
-      expect(Scheduler).toHaveYielded({'Count: 7'})
+      jestExpect(Scheduler).toHaveYielded({'Count: 7'})
 
       act(function() return counter.current.updateLabel('Total') end)
-      expect(Scheduler).toHaveYielded({'Total: 7'})
+      jestExpect(Scheduler).toHaveYielded({'Total: 7'})
     end)
 
     it('returns the same updater function every time', function()
-      local expect: any = expect
       local updater = nil
       local function Counter()
         local count, updateCount = useState(0)
@@ -376,27 +368,26 @@ return function()
         return React.createElement(Text, {text = 'Count: ' .. count})
       end
       ReactNoop.render(React.createElement(Counter))
-      expect(Scheduler).toFlushAndYield({'Count: 0'})
-      expect(ReactNoop.getChildren()).toEqual({span('Count: 0')})
+      jestExpect(Scheduler).toFlushAndYield({'Count: 0'})
+      jestExpect(ReactNoop.getChildren()).toEqual({span('Count: 0')})
 
       local firstUpdater = updater
 
       act(function() return firstUpdater(1) end)
-      expect(Scheduler).toHaveYielded({'Count: 1'})
-      expect(ReactNoop.getChildren()).toEqual({span('Count: 1')})
+      jestExpect(Scheduler).toHaveYielded({'Count: 1'})
+      jestExpect(ReactNoop.getChildren()).toEqual({span('Count: 1')})
 
       local secondUpdater = updater
 
       act(function() return firstUpdater(function(count) return count + 10 end) end)
-      expect(Scheduler).toHaveYielded({'Count: 11'})
-      expect(ReactNoop.getChildren()).toEqual({span('Count: 11')})
+      jestExpect(Scheduler).toHaveYielded({'Count: 11'})
+      jestExpect(ReactNoop.getChildren()).toEqual({span('Count: 11')})
 
-      expect(firstUpdater).toEqual(secondUpdater)
+      jestExpect(firstUpdater).toEqual(secondUpdater)
       end)
 
     -- ROBLOX TODO: toErrorDev expects name of function component, needs LUAFDN-207
     xit('warns on set after unmount', function()
-      local expect: any = expect
       local updateCount
       local function Counter(props, ref)
         _, updateCount = useState(0)
@@ -404,10 +395,10 @@ return function()
       end
 
       ReactNoop.render(React.createElement(Counter))
-      expect(Scheduler).toFlushWithoutYielding()
+      jestExpect(Scheduler).toFlushWithoutYielding()
       ReactNoop.render(nil)
-      expect(Scheduler).toFlushWithoutYielding()
-      expect(function()
+      jestExpect(Scheduler).toFlushWithoutYielding()
+      jestExpect(function()
         act(function()
           updateCount(1)
         end)
@@ -422,7 +413,6 @@ return function()
 
     -- ROBLOX TODO: toErrorDev expects name of function component, needs LUAFDN-207
     xit('dedupes the warning by component name', function()
-      local expect: any = expect
       local updateCountA
       local function CounterA(props, ref)
         local useStateCount = useState(0)
@@ -437,10 +427,10 @@ return function()
       end
 
       ReactNoop.render({React.createElement(CounterA, {key="A"}), React.createElement(CounterB, {key="B"})})
-      expect(Scheduler).toFlushWithoutYielding()
+      jestExpect(Scheduler).toFlushWithoutYielding()
       ReactNoop.render(nil)
-      expect(Scheduler).toFlushWithoutYielding()
-      expect(function()
+      jestExpect(Scheduler).toFlushWithoutYielding()
+      jestExpect(function()
         act(function()
           updateCountA(1)
         end)
@@ -455,7 +445,7 @@ return function()
       act(function()
         updateCountA(2)
       end)
-      expect(function()
+      jestExpect(function()
         act(function()
           updateCountB(1)
         end)
@@ -470,7 +460,6 @@ return function()
 
     -- ROBLOX TODO: MemoComponent unimplemented (ReactFiberBeginWork.new:3454)
     xit('works with memo', function()
-      local expect: any = expect
       local count, updateCount
       local function Counter()
         count, updateCount = useState(0)
@@ -479,23 +468,21 @@ return function()
       Counter = memo(Counter)
 
       ReactNoop.render(React.createElement(Counter))
-      expect(Scheduler).toFlushAndYield({'Count: 0'})
-      expect(ReactNoop.getChildren()).toEqual({span('Count: 0')})
+      jestExpect(Scheduler).toFlushAndYield({'Count: 0'})
+      jestExpect(ReactNoop.getChildren()).toEqual({span('Count: 0')})
 
       ReactNoop.render(React.createElement(Counter))
-      expect(Scheduler).toFlushAndYield({})
-      expect(ReactNoop.getChildren()).toEqual({span('Count: 0')})
+      jestExpect(Scheduler).toFlushAndYield({})
+      jestExpect(ReactNoop.getChildren()).toEqual({span('Count: 0')})
 
       act(function() return updateCount(1) end)
-      expect(Scheduler).toHaveYielded({'Count: 1'})
-      expect(ReactNoop.getChildren()).toEqual({span('Count: 1')})
+      jestExpect(Scheduler).toHaveYielded({'Count: 1'})
+      jestExpect(ReactNoop.getChildren()).toEqual({span('Count: 1')})
       end)
   end)
 
   describe('updates during the render phase', function()
     it('restarts the render function and applies the new updates on top', function()
-      local expect: any = expect
-
       local function ScrollView(props)
         local newRow = props.row
         local isScrollingDown, setIsScrollingDown = useState(false)
@@ -513,28 +500,28 @@ return function()
       end
 
       ReactNoop.render(React.createElement(ScrollView, {row=1}))
-      expect(Scheduler).toFlushAndYield({'Scrolling down: false'})
-      expect(ReactNoop.getChildren()).toEqual({span('Scrolling down: false')})
+      jestExpect(Scheduler).toFlushAndYield({'Scrolling down: false'})
+      jestExpect(ReactNoop.getChildren()).toEqual({span('Scrolling down: false')})
 
       ReactNoop.render(React.createElement(ScrollView, {row=5}))
-      expect(Scheduler).toFlushAndYield({'Scrolling down: true'})
-      expect(ReactNoop.getChildren()).toEqual({span('Scrolling down: true')})
+      jestExpect(Scheduler).toFlushAndYield({'Scrolling down: true'})
+      jestExpect(ReactNoop.getChildren()).toEqual({span('Scrolling down: true')})
 
       ReactNoop.render(React.createElement(ScrollView, {row=5}))
-      expect(Scheduler).toFlushAndYield({'Scrolling down: true'})
-      expect(ReactNoop.getChildren()).toEqual({span('Scrolling down: true')})
+      jestExpect(Scheduler).toFlushAndYield({'Scrolling down: true'})
+      jestExpect(ReactNoop.getChildren()).toEqual({span('Scrolling down: true')})
 
       ReactNoop.render(React.createElement(ScrollView, {row=10}))
-      expect(Scheduler).toFlushAndYield({'Scrolling down: true'})
-      expect(ReactNoop.getChildren()).toEqual({span('Scrolling down: true')})
+      jestExpect(Scheduler).toFlushAndYield({'Scrolling down: true'})
+      jestExpect(ReactNoop.getChildren()).toEqual({span('Scrolling down: true')})
 
       ReactNoop.render(React.createElement(ScrollView, {row=2}))
-      expect(Scheduler).toFlushAndYield({'Scrolling down: false'})
-      expect(ReactNoop.getChildren()).toEqual({span('Scrolling down: false')})
+      jestExpect(Scheduler).toFlushAndYield({'Scrolling down: false'})
+      jestExpect(ReactNoop.getChildren()).toEqual({span('Scrolling down: false')})
 
       ReactNoop.render(React.createElement(ScrollView, {row=2}))
-      expect(Scheduler).toFlushAndYield({'Scrolling down: false'})
-      expect(ReactNoop.getChildren()).toEqual({span('Scrolling down: false')})
+      jestExpect(Scheduler).toFlushAndYield({'Scrolling down: false'})
+      jestExpect(ReactNoop.getChildren()).toEqual({span('Scrolling down: false')})
     end)
 
     -- ROBLOX TODO: this test uses await, need to figure that out
@@ -563,7 +550,7 @@ return function()
   --         </>,
   --       )
   --     })
-  --     expect(Scheduler).toHaveYielded(['Foo [0]', 'Bar'])
+  --     jestExpect(Scheduler).toHaveYielded(['Foo [0]', 'Bar'])
 
   --     -- Bar will update Foo during its render phase. React should warn.
   --     await ReactNoop.act(async function()
@@ -573,8 +560,8 @@ return function()
   --           <Bar triggerUpdate={true} />
   --         </>,
   --       )
-  --       expect(function()
-  --         expect(Scheduler).toFlushAndYield(
+  --       jestExpect(function()
+  --         jestExpect(Scheduler).toFlushAndYield(
   --           __DEV__
   --             ? ['Foo [0]', 'Bar', 'Foo [2]']
   --             : ['Foo [0]', 'Bar', 'Foo [1]'],
@@ -593,7 +580,7 @@ return function()
   --           <Bar triggerUpdate={true} />
   --         </>,
   --       )
-  --       expect(Scheduler).toFlushAndYield(
+  --       jestExpect(Scheduler).toFlushAndYield(
   --         __DEV__
   --           ? ['Foo [2]', 'Bar', 'Foo [4]']
   --           : ['Foo [1]', 'Bar', 'Foo [2]'],
@@ -602,7 +589,6 @@ return function()
   --   })
 
     it('keeps restarting until there are no more new updates', function()
-      local expect: any = expect
       local function Counter()
         local count, setCount = useState(0)
         if count < 3 then
@@ -613,18 +599,17 @@ return function()
       end
 
       ReactNoop.render(React.createElement(Counter))
-      expect(Scheduler).toFlushAndYield({
+      jestExpect(Scheduler).toFlushAndYield({
         'Render: 0',
         'Render: 1',
         'Render: 2',
         'Render: 3',
         3,
       })
-      expect(ReactNoop.getChildren()).toEqual({span(3)})
+      jestExpect(ReactNoop.getChildren()).toEqual({span(3)})
     end)
 
     it('updates multiple times within same render function', function()
-      local expect: any = expect
       local function Counter()
         local count, setCount = useState(0)
         if count < 12 then
@@ -637,7 +622,7 @@ return function()
       end
 
       ReactNoop.render(React.createElement(Counter))
-      expect(Scheduler).toFlushAndYield({
+      jestExpect(Scheduler).toFlushAndYield({
         -- Should increase by three each time
         'Render: 0',
         'Render: 3',
@@ -646,13 +631,10 @@ return function()
         'Render: 12',
         12,
       })
-      expect(ReactNoop.getChildren()).toEqual({span(12)})
+      jestExpect(ReactNoop.getChildren()).toEqual({span(12)})
     end)
 
-    -- ROBLOX TODO: this causes ReactFiberLogger to console.error() a non-string, which causes polyfill to blow up
-    -- re-enable this test (which does work), once the polyfill is updated
-    xit('throws after too many iterations', function()
-      local expect: any = expect
+    it('throws after too many iterations', function()
       local function Counter()
         local count, setCount = useState(0)
         setCount(count + 1)
@@ -660,14 +642,13 @@ return function()
         return React.createElement(Text, {text=count})
       end
       ReactNoop.render(React.createElement(Counter))
-      expect(Scheduler).toFlushAndThrow(
+      jestExpect(Scheduler).toFlushAndThrow(
         'Too many re-renders. React limits the number of renders to prevent ' ..
           'an infinite loop.'
       )
     end)
 
     it('works with useReducer', function()
-      local expect: any = expect
       local function reducer(state, action)
         local returnVal = state
         if action == 'increment' then
@@ -685,19 +666,17 @@ return function()
       end
 
       ReactNoop.render(React.createElement(Counter))
-      expect(Scheduler).toFlushAndYield({
+      jestExpect(Scheduler).toFlushAndYield({
         'Render: 0',
         'Render: 1',
         'Render: 2',
         'Render: 3',
         3,
       })
-      expect(ReactNoop.getChildren()).toEqual({span(3)})
+      jestExpect(ReactNoop.getChildren()).toEqual({span(3)})
     end)
 
     it('uses reducer passed at time of render, not time of dispatch', function()
-      local expect: any = expect
-
       -- This test is a bit contrived but it demonstrates a subtle edge case.
 
       -- Reducer A increments by 1. Reducer B increments by 10.
@@ -723,21 +702,21 @@ return function()
 
       local function Counter(props, ref)
         local reducer_, setReducer = useState(function()
-            return reducerA 
+            return reducerA
           end)
         local count, dispatch = useReducer(reducer_, 0)
-        useImperativeHandle(ref, function() 
+        useImperativeHandle(ref, function()
             return {dispatch = dispatch}
           end)
         if count < 20 then
           dispatch('increment')
           -- Swap reducers each time we increment
           if reducer_ == reducerA then
-            setReducer(function() 
+            setReducer(function()
                 return reducerB
               end)
           else
-            setReducer(function() 
+            setReducer(function()
                 return reducerA
               end)
           end
@@ -749,7 +728,7 @@ return function()
       Counter = forwardRef(Counter)
       local counter = React.createRef(nil)
       ReactNoop.render(React.createElement(Counter, {ref = counter}))
-      expect(Scheduler).toFlushAndYield({
+      jestExpect(Scheduler).toFlushAndYield({
         -- The count should increase by alternating amounts of 10 and 1
         -- until we reach 21.
         'Render: 0',
@@ -758,7 +737,7 @@ return function()
         'Render: 21',
         21,
       })
-      expect(ReactNoop.getChildren()).toEqual({span(21)})
+      jestExpect(ReactNoop.getChildren()).toEqual({span(21)})
 
       -- Test that it works on update, too. This time the log is a bit different
       -- because we started with reducerB instead of reducerA.
@@ -766,7 +745,7 @@ return function()
         counter.current.dispatch('reset')
       end)
       ReactNoop.render(React.createElement(Counter, {ref = counter}))
-      expect(Scheduler).toHaveYielded({
+      jestExpect(Scheduler).toHaveYielded({
         'Render: 0',
         'Render: 1',
         'Render: 11',
@@ -774,7 +753,7 @@ return function()
         'Render: 22',
         22,
       })
-      expect(ReactNoop.getChildren()).toEqual({span(22)})
+      jestExpect(ReactNoop.getChildren()).toEqual({span(22)})
     end)
 
   --   it('discards render phase updates if something suspends', async function()
@@ -809,16 +788,16 @@ return function()
   --     local root = ReactNoop.createRoot()
   --     root.render(<Foo signal={true} />)
 
-  --     expect(Scheduler).toFlushAndYield([0])
-  --     expect(root).toMatchRenderedOutput(<span prop={0} />)
+  --     jestExpect(Scheduler).toFlushAndYield([0])
+  --     jestExpect(root).toMatchRenderedOutput(<span prop={0} />)
 
   --     root.render(<Foo signal={false} />)
-  --     expect(Scheduler).toFlushAndYield(['Suspend!'])
-  --     expect(root).toMatchRenderedOutput(<span prop={0} />)
+  --     jestExpect(Scheduler).toFlushAndYield(['Suspend!'])
+  --     jestExpect(root).toMatchRenderedOutput(<span prop={0} />)
 
   --     -- Rendering again should suspend again.
   --     root.render(<Foo signal={false} />)
-  --     expect(Scheduler).toFlushAndYield(['Suspend!'])
+  --     jestExpect(Scheduler).toFlushAndYield(['Suspend!'])
   --   })
 
   --   it('discards render phase updates if something suspends, but not other updates in the same component', async function()
@@ -859,25 +838,25 @@ return function()
   --     local root = ReactNoop.createRoot()
   --     root.render(<Foo signal={true} />)
 
-  --     expect(Scheduler).toFlushAndYield(['A:0'])
-  --     expect(root).toMatchRenderedOutput(<span prop="A:0" />)
+  --     jestExpect(Scheduler).toFlushAndYield(['A:0'])
+  --     jestExpect(root).toMatchRenderedOutput(<span prop="A:0" />)
 
   --     await ReactNoop.act(async function()
   --       root.render(<Foo signal={false} />)
   --       setLabel('B')
 
-  --       expect(Scheduler).toFlushAndYield(['Suspend!'])
-  --       expect(root).toMatchRenderedOutput(<span prop="A:0" />)
+  --       jestExpect(Scheduler).toFlushAndYield(['Suspend!'])
+  --       jestExpect(root).toMatchRenderedOutput(<span prop="A:0" />)
 
   --       -- Rendering again should suspend again.
   --       root.render(<Foo signal={false} />)
-  --       expect(Scheduler).toFlushAndYield(['Suspend!'])
+  --       jestExpect(Scheduler).toFlushAndYield(['Suspend!'])
 
   --       -- Flip the signal back to "cancel" the update. However, the update to
   --       -- label should still proceed. It shouldn't have been dropped.
   --       root.render(<Foo signal={true} />)
-  --       expect(Scheduler).toFlushAndYield(['B:0'])
-  --       expect(root).toMatchRenderedOutput(<span prop="B:0" />)
+  --       jestExpect(Scheduler).toFlushAndYield(['B:0'])
+  --       jestExpect(root).toMatchRenderedOutput(<span prop="B:0" />)
   --     })
   --   })
 
@@ -903,8 +882,8 @@ return function()
   --     await act(async function()
   --       root.render(<ScrollView row={10} />)
   --     })
-  --     expect(Scheduler).toHaveYielded(['Up'])
-  --     expect(root).toMatchRenderedOutput(<span prop="Up" />)
+  --     jestExpect(Scheduler).toHaveYielded(['Up'])
+  --     jestExpect(root).toMatchRenderedOutput(<span prop="Up" />)
 
   --     await act(async function()
   --       ReactNoop.discreteUpdates(function()
@@ -912,8 +891,8 @@ return function()
   --       })
   --       setRow(20)
   --     })
-  --     expect(Scheduler).toHaveYielded(['Up', 'Down'])
-  --     expect(root).toMatchRenderedOutput(<span prop="Down" />)
+  --     jestExpect(Scheduler).toHaveYielded(['Up', 'Down'])
+  --     jestExpect(root).toMatchRenderedOutput(<span prop="Down" />)
   --   })
 
   --   -- TODO: This should probably warn
@@ -936,14 +915,13 @@ return function()
 
   --     local root = ReactNoop.createRoot()
   --     root.render(<App />)
-  --     expect(Scheduler).toFlushAndYield([1])
-  --     expect(root).toMatchRenderedOutput(<span prop={1} />)
+  --     jestExpect(Scheduler).toFlushAndYield([1])
+  --     jestExpect(root).toMatchRenderedOutput(<span prop={1} />)
   --   })
   end)
 
   describe('useReducer', function()
     it('simple mount and update', function()
-      local expect: any = expect
       local INCREMENT = 'INCREMENT'
       local DECREMENT = 'DECREMENT'
 
@@ -970,26 +948,25 @@ return function()
       ReactNoop.render(React.createElement(Counter, {
         ref = counter
       }))
-      expect(Scheduler).toFlushAndYield({'Count: 0'})
-      expect(ReactNoop.getChildren()).toEqual({span('Count: 0')})
+      jestExpect(Scheduler).toFlushAndYield({'Count: 0'})
+      jestExpect(ReactNoop.getChildren()).toEqual({span('Count: 0')})
 
       act(function()
         return counter.current.dispatch(INCREMENT)
       end)
-      expect(Scheduler).toHaveYielded({'Count: 1'})
-      expect(ReactNoop.getChildren()).toEqual({span('Count: 1')})
+      jestExpect(Scheduler).toHaveYielded({'Count: 1'})
+      jestExpect(ReactNoop.getChildren()).toEqual({span('Count: 1')})
       act(function()
         counter.current.dispatch(DECREMENT)
         counter.current.dispatch(DECREMENT)
         counter.current.dispatch(DECREMENT)
       end)
 
-      expect(Scheduler).toHaveYielded({'Count: -2'})
-      expect(ReactNoop.getChildren()).toEqual({span('Count: -2')})
+      jestExpect(Scheduler).toHaveYielded({'Count: -2'})
+      jestExpect(ReactNoop.getChildren()).toEqual({span('Count: -2')})
     end)
 
     it('lazy init', function()
-      local expect: any = expect
       local INCREMENT = 'INCREMENT'
       local DECREMENT = 'DECREMENT'
 
@@ -1006,7 +983,7 @@ return function()
       local function Counter(props, ref)
         local count, dispatch = useReducer(reducer_, props, function(p)
             Scheduler.unstable_yieldValue('Init')
-            return p.initialCount  
+            return p.initialCount
         end)
         useImperativeHandle(ref, function()
           return {dispatch = dispatch} end)
@@ -1020,14 +997,14 @@ return function()
         initialCount = 10,
         ref = counter
       }))
-      expect(Scheduler).toFlushAndYield({'Init', 'Count: 10'})
-      expect(ReactNoop.getChildren()).toEqual({span('Count: 10')})
+      jestExpect(Scheduler).toFlushAndYield({'Init', 'Count: 10'})
+      jestExpect(ReactNoop.getChildren()).toEqual({span('Count: 10')})
 
-      act(function() 
+      act(function()
         return counter.current.dispatch(INCREMENT)
       end)
-      expect(Scheduler).toHaveYielded({'Count: 11'})
-      expect(ReactNoop.getChildren()).toEqual({span('Count: 11')})
+      jestExpect(Scheduler).toHaveYielded({'Count: 11'})
+      jestExpect(ReactNoop.getChildren()).toEqual({span('Count: 11')})
 
       act(function()
         counter.current.dispatch(DECREMENT)
@@ -1035,13 +1012,12 @@ return function()
         counter.current.dispatch(DECREMENT)
       end)
 
-      expect(Scheduler).toHaveYielded({'Count: 8'})
-      expect(ReactNoop.getChildren()).toEqual({span('Count: 8')})
+      jestExpect(Scheduler).toHaveYielded({'Count: 8'})
+      jestExpect(ReactNoop.getChildren()).toEqual({span('Count: 8')})
     end)
 
     -- Regression test for https://github.com/facebook/react/issues/14360
     it('handles dispatches with mixed priorities', function()
-      local expect: any = expect
       local INCREMENT = 'INCREMENT'
 
       local function reducer_(state, action)
@@ -1067,10 +1043,10 @@ return function()
       local counter = React.createRef(nil)
 
       ReactNoop.render(React.createElement(Counter, {ref = counter}))
-      expect(Scheduler).toFlushAndYield({
+      jestExpect(Scheduler).toFlushAndYield({
           'Count: 0',
       })
-      expect(ReactNoop.getChildren()).toEqual({
+      jestExpect(ReactNoop.getChildren()).toEqual({
           span('Count: 0'),
       })
       ReactNoop.batchedUpdates(function()
@@ -1081,16 +1057,16 @@ return function()
       ReactNoop.flushSync(function()
           counter.current.dispatch(INCREMENT)
       end)
-      expect(Scheduler).toHaveYielded({
+      jestExpect(Scheduler).toHaveYielded({
           'Count: 1',
       })
-      expect(ReactNoop.getChildren()).toEqual({
+      jestExpect(ReactNoop.getChildren()).toEqual({
           span('Count: 1'),
       })
-      expect(Scheduler).toFlushAndYield({
+      jestExpect(Scheduler).toFlushAndYield({
           'Count: 4',
       })
-      expect(ReactNoop.getChildren()).toEqual({
+      jestExpect(ReactNoop.getChildren()).toEqual({
           span('Count: 4'),
       })
     end)
@@ -1098,8 +1074,6 @@ return function()
 
   describe("useEffect", function()
     it("simple mount and update", function()
-      -- FIXME: type of expect
-      local expect: any = expect
       local function Counter(props)
         useEffect(function()
           Scheduler.unstable_yieldValue(("Passive effect [%d]"):format(props.count))
@@ -1114,10 +1088,10 @@ return function()
         }), function()
           Scheduler.unstable_yieldValue("Sync effect")
         end)
-        expect(Scheduler).toFlushAndYieldThrough({"Count: 0", "Sync effect"})
-        expect(ReactNoop.getChildren()).toEqual({span("Count: 0")})
+        jestExpect(Scheduler).toFlushAndYieldThrough({"Count: 0", "Sync effect"})
+        jestExpect(ReactNoop.getChildren()).toEqual({span("Count: 0")})
         -- Effects are deferred until after the commit
-        expect(Scheduler).toFlushAndYield({"Passive effect [0]"})
+        jestExpect(Scheduler).toFlushAndYield({"Passive effect [0]"})
       end)
 
       act(function()
@@ -1126,16 +1100,14 @@ return function()
         }), function()
           Scheduler.unstable_yieldValue("Sync effect")
         end)
-        expect(Scheduler).toFlushAndYieldThrough({"Count: 1", "Sync effect"})
-        expect(ReactNoop.getChildren()).toEqual({span("Count: 1")})
+        jestExpect(Scheduler).toFlushAndYieldThrough({"Count: 1", "Sync effect"})
+        jestExpect(ReactNoop.getChildren()).toEqual({span("Count: 1")})
         -- Effects are deferred until after the commit
-        expect(Scheduler).toFlushAndYield({"Passive effect [1]"})
+        jestExpect(Scheduler).toFlushAndYield({"Passive effect [1]"})
       end)
     end)
 
     it('flushes passive effects even with sibling deletions', function()
-      -- FIXME: type of expect
-      local expect: any = expect
       local function LayoutEffect(props)
         useLayoutEffect(function()
           Scheduler.unstable_yieldValue('Layout effect')
@@ -1151,28 +1123,26 @@ return function()
       local passive = React.createElement(PassiveEffect, {key="p"})
       act(function()
         ReactNoop.render({React.createElement(LayoutEffect, {key="l"}), passive})
-        expect(Scheduler).toFlushAndYieldThrough({
+        jestExpect(Scheduler).toFlushAndYieldThrough({
           'Layout',
           'Passive',
           'Layout effect',
         })
-        expect(ReactNoop.getChildren()).toEqual({
+        jestExpect(ReactNoop.getChildren()).toEqual({
           span('Layout'),
           span('Passive'),
         })
         -- Destroying the first child shouldn't prevent the passive effect from
         -- being executed
         ReactNoop.render({passive})
-        expect(Scheduler).toFlushAndYield({'Passive effect'})
-        expect(ReactNoop.getChildren()).toEqual({span('Passive')})
+        jestExpect(Scheduler).toFlushAndYield({'Passive effect'})
+        jestExpect(ReactNoop.getChildren()).toEqual({span('Passive')})
       end)
       -- exiting act calls flushPassiveEffects(), but there are none left to flush.
-      expect(Scheduler).toHaveYielded({})
+      jestExpect(Scheduler).toHaveYielded({})
     end)
 
     it('flushes passive effects even if siblings schedule an update', function()
-      -- FIXME: type of expect
-      local expect: any = expect
       local function PassiveEffect(props)
         useEffect(function()
           Scheduler.unstable_yieldValue('Passive effect')
@@ -1197,7 +1167,7 @@ return function()
       })
 
       act(function()
-        expect(Scheduler).toFlushAndYield({
+        jestExpect(Scheduler).toFlushAndYield({
           'Passive',
           'Layout',
           'Layout effect 0',
@@ -1207,15 +1177,13 @@ return function()
         })
       end)
 
-      expect(ReactNoop.getChildren()).toEqual({
+      jestExpect(ReactNoop.getChildren()).toEqual({
         span('Passive'),
         span('Layout'),
       })
     end)
 
     it('flushes passive effects even if siblings schedule a new root', function()
-      -- FIXME: type of expect
-      local expect: any = expect
       local function PassiveEffect(props)
         useEffect(function()
           Scheduler.unstable_yieldValue('Passive effect')
@@ -1239,14 +1207,14 @@ return function()
           React.createElement(PassiveEffect, {key="p"}),
           React.createElement(LayoutEffect, {key="l"})
         })
-        expect(Scheduler).toFlushAndYield({
+        jestExpect(Scheduler).toFlushAndYield({
           'Passive',
           'Layout',
           'Layout effect',
           'Passive effect',
           'New Root',
         })
-        expect(ReactNoop.getChildren()).toEqual({
+        jestExpect(ReactNoop.getChildren()).toEqual({
           span('Passive'),
           span('Layout'),
         })
@@ -1256,8 +1224,6 @@ return function()
     it(
       'flushes effects serially by flushing old effects before flushing ' ..
         "new ones, if they haven't already fired", function()
-      -- FIXME: type of expect
-      local expect: any = expect
         local function getCommittedText()
           local children = ReactNoop.getChildren()
           if children == nil then
@@ -1281,8 +1247,8 @@ return function()
               Scheduler.unstable_yieldValue('Sync effect')
             end
           )
-          expect(Scheduler).toFlushAndYieldThrough({0, 'Sync effect'})
-          expect(ReactNoop.getChildren()).toEqual({span(0)})
+          jestExpect(Scheduler).toFlushAndYieldThrough({0, 'Sync effect'})
+          jestExpect(ReactNoop.getChildren()).toEqual({span(0)})
           -- Before the effects have a chance to flush, schedule another update
           ReactNoop.render(
             React.createElement(Counter, {count = 1}),
@@ -1290,23 +1256,21 @@ return function()
               Scheduler.unstable_yieldValue('Sync effect')
             end
           )
-          expect(Scheduler).toFlushAndYieldThrough({
+          jestExpect(Scheduler).toFlushAndYieldThrough({
             -- The previous effect flushes before the reconciliation
             'Committed state when effect was fired: 0',
             1,
             'Sync effect',
           })
-          expect(ReactNoop.getChildren()).toEqual({span(1)})
+          jestExpect(ReactNoop.getChildren()).toEqual({span(1)})
         end)
 
-        expect(Scheduler).toHaveYielded({
+        jestExpect(Scheduler).toHaveYielded({
           'Committed state when effect was fired: 1',
         })
       end)
 
     it('defers passive effect destroy functions during unmount', function()
-      -- FIXME: type of expect
-      local expect: any = expect
       local function Child(props)
         local bar = props.bar
         local foo = props.foo
@@ -1345,14 +1309,14 @@ return function()
             Scheduler.unstable_yieldValue('Sync effect')
           end
         )
-        expect(Scheduler).toFlushAndYieldThrough({
+        jestExpect(Scheduler).toFlushAndYieldThrough({
           'render',
           'layout bar create',
           'layout foo create',
           'Sync effect',
         })
         -- Effects are deferred until after the commit
-        expect(Scheduler).toFlushAndYield({
+        jestExpect(Scheduler).toFlushAndYield({
           'passive bar create',
           'passive foo create',
         })
@@ -1367,14 +1331,14 @@ return function()
             Scheduler.unstable_yieldValue('Sync effect')
           end
         )
-        expect(Scheduler).toFlushAndYieldThrough({
+        jestExpect(Scheduler).toFlushAndYieldThrough({
           'render',
           'layout foo destroy',
           'layout foo create',
           'Sync effect',
         })
         -- Effects are deferred until after the commit
-        expect(Scheduler).toFlushAndYield({
+        jestExpect(Scheduler).toFlushAndYield({
           'passive foo destroy',
           'passive foo create',
         })
@@ -1385,13 +1349,13 @@ return function()
         ReactNoop.render(nil, function()
           Scheduler.unstable_yieldValue('Sync effect')
         end)
-        expect(Scheduler).toFlushAndYieldThrough({
+        jestExpect(Scheduler).toFlushAndYieldThrough({
           'layout bar destroy',
           'layout foo destroy',
           'Sync effect',
         })
         -- Effects are deferred until after the commit
-        expect(Scheduler).toFlushAndYield({
+        jestExpect(Scheduler).toFlushAndYield({
           'passive bar destroy',
           'passive foo destroy',
         })
@@ -1399,8 +1363,6 @@ return function()
     end)
 
     it('does not warn about state updates for unmounted components with pending passive unmounts', function()
-      -- FIXME: type of expect
-      local expect: any = expect
       local completePendingRequest = nil
       local function Component()
         Scheduler.unstable_yieldValue('Component')
@@ -1432,29 +1394,28 @@ return function()
             Scheduler.unstable_yieldValue('Sync effect')
           end
         )
-        expect(Scheduler).toFlushAndYieldThrough({
+        jestExpect(Scheduler).toFlushAndYieldThrough({
           'Component',
           'layout create',
           'Sync effect',
         })
         ReactNoop.flushPassiveEffects()
-        expect(Scheduler).toHaveYielded({'passive create'})
+        jestExpect(Scheduler).toHaveYielded({'passive create'})
 
         -- Unmount but don't process pending passive destroy function
         ReactNoop.unmountRootWithID('root')
-        expect(Scheduler).toFlushAndYieldThrough({'layout destroy'})
+        jestExpect(Scheduler).toFlushAndYieldThrough({'layout destroy'})
 
         -- Simulate an XHR completing, which will cause a state update-
         -- but should not log a warning.
         completePendingRequest()
 
         ReactNoop.flushPassiveEffects()
-        expect(Scheduler).toHaveYielded({'passive destroy'})
+        jestExpect(Scheduler).toHaveYielded({'passive destroy'})
       end)
     end)
 
     it('does not warn about state updates for unmounted components with pending passive unmounts for alternates', function()
-      local expect: any = expect
       local setParentState = nil
       local setChildStates = {}
 
@@ -1486,7 +1447,7 @@ return function()
         end)
         if state then
           return React.createElement(
-            React.Fragment, 
+            React.Fragment,
             nil,
             React.createElement(Child, {label = "one"}),
             React.createElement(Child, {label = "two"})
@@ -1502,7 +1463,7 @@ return function()
       -- State update on child
       act(function()
         ReactNoop.render(React.createElement(Parent))
-        expect(Scheduler).toFlushAndYieldThrough({
+        jestExpect(Scheduler).toFlushAndYieldThrough({
           'Parent true render',
           'Child one render',
           'Child two render',
@@ -1522,7 +1483,7 @@ return function()
           end
         )
 
-        expect(Scheduler).toFlushAndYieldThrough({
+        jestExpect(Scheduler).toFlushAndYieldThrough({
           'Child one render',
           'Child two render',
           'Child one commit',
@@ -1539,7 +1500,7 @@ return function()
           end
         )
 
-        expect(Scheduler).toFlushAndYieldThrough({'Child one render'})
+        jestExpect(Scheduler).toFlushAndYieldThrough({'Child one render'})
 
         -- Schedule unmount for the parent that unmounts children with pending update.
         Scheduler.unstable_runWithPriority(
@@ -1547,7 +1508,7 @@ return function()
           function()
             return setParentState(false)
           end)
-        expect(Scheduler).toFlushAndYieldThrough({
+        jestExpect(Scheduler).toFlushAndYieldThrough({
           'Parent false render',
           'Parent false commit',
         })
@@ -1561,7 +1522,7 @@ return function()
           end
         )
 
-        expect(Scheduler).toFlushAndYield({
+        jestExpect(Scheduler).toFlushAndYield({
           'Child one passive destroy',
           'Child two passive destroy',
         })
@@ -1569,7 +1530,6 @@ return function()
     end)
 
     it('warns about state updates for unmounted components with no pending passive unmounts', function()
-      local expect: any = expect
       local completePendingRequest = nil
       local function Component()
         Scheduler.unstable_yieldValue('Component')
@@ -1595,7 +1555,7 @@ return function()
             Scheduler.unstable_yieldValue('Sync effect')
           end
         )
-        expect(Scheduler).toFlushAndYieldThrough({
+        jestExpect(Scheduler).toFlushAndYieldThrough({
           'Component',
           'layout create',
           'Sync effect',
@@ -1603,17 +1563,16 @@ return function()
 
         -- Unmount but don't process pending passive destroy function
         ReactNoop.unmountRootWithID('root')
-        expect(Scheduler).toFlushAndYieldThrough({'layout destroy'})
+        jestExpect(Scheduler).toFlushAndYieldThrough({'layout destroy'})
 
         -- Simulate an XHR completing.
-        expect(completePendingRequest).toErrorDev(
+        jestExpect(completePendingRequest).toErrorDev(
           "Warning: Can't perform a React state update on an unmounted component."
         )
       end)
     end)
 
     it('still warns if there are pending passive unmount effects but not for the current fiber', function()
-      local expect: any = expect
       local completePendingRequest = nil
       local function ComponentWithXHR()
         Scheduler.unstable_yieldValue('Component')
@@ -1627,7 +1586,7 @@ return function()
         React.useEffect(function()
           Scheduler.unstable_yieldValue('a:passive create')
           -- Mimic an XHR request with a complete handler that updates state.
-          completePendingRequest = function() 
+          completePendingRequest = function()
                 setDidLoad(true)
             end
         end, {})
@@ -1652,27 +1611,27 @@ return function()
             React.createElement(ComponentWithXHR),
             React.createElement(ComponentWithPendingPassiveUnmount)),
           'root',
-          function() 
+          function()
             return Scheduler.unstable_yieldValue('Sync effect')
           end
         )
-        expect(Scheduler).toFlushAndYieldThrough({
+        jestExpect(Scheduler).toFlushAndYieldThrough({
           'Component',
           'a:layout create',
           'Sync effect',
         })
         ReactNoop.flushPassiveEffects()
-        expect(Scheduler).toHaveYielded({
+        jestExpect(Scheduler).toHaveYielded({
           'a:passive create',
           'b:passive create',
         })
 
         -- Unmount but don't process pending passive destroy function
         ReactNoop.unmountRootWithID('root')
-        expect(Scheduler).toFlushAndYieldThrough({'a:layout destroy'})
+        jestExpect(Scheduler).toFlushAndYieldThrough({'a:layout destroy'})
 
         -- Simulate an XHR completing in the component without a pending passive effect..
-        expect(completePendingRequest).toErrorDev(
+        jestExpect(completePendingRequest).toErrorDev(
           "Warning: Can't perform a React state update on an unmounted component."
         )
       end)
@@ -1680,8 +1639,6 @@ return function()
 
     -- ROBLOX TODO: toErrorDev, needs LUAFDN-196
     xit('warns if there are updates after pending passive unmount effects have been flushed', function()
-      -- FIXME: type of expect
-      local expect: any = expect
       local updaterFunction
 
       local function Component()
@@ -1706,17 +1663,17 @@ return function()
           end
         )
       end)
-      expect(Scheduler).toHaveYielded({
+      jestExpect(Scheduler).toHaveYielded({
         'Component',
         'Sync effect',
         'passive create'
       })
 
       ReactNoop.unmountRootWithID('root')
-      expect(Scheduler).toFlushAndYield({'passive destroy'})
+      jestExpect(Scheduler).toFlushAndYield({'passive destroy'})
 
       act(function()
-        expect(function()
+        jestExpect(function()
           updaterFunction(true)
         end).toErrorDev(
           "Warning: Can't perform a React state update on an unmounted component. " ..
@@ -1728,8 +1685,6 @@ return function()
     end)
 
     it('does not show a warning when a component updates its own state from within passive unmount function', function()
-      -- FIXME: type of expect
-      local expect: any = expect
       local function Component()
         Scheduler.unstable_yieldValue('Component')
         local didLoad, setDidLoad = React.useState(false)
@@ -1751,7 +1706,7 @@ return function()
             Scheduler.unstable_yieldValue('Sync effect')
           end
         )
-        expect(Scheduler).toFlushAndYieldThrough({
+        jestExpect(Scheduler).toFlushAndYieldThrough({
           'Component',
           'Sync effect',
           'passive create',
@@ -1759,13 +1714,11 @@ return function()
 
         -- Unmount but don't process pending passive destroy function
         ReactNoop.unmountRootWithID('root')
-        expect(Scheduler).toFlushAndYield({'passive destroy'})
+        jestExpect(Scheduler).toFlushAndYield({'passive destroy'})
       end)
     end)
 
     it('does not show a warning when a component updates a childs state from within passive unmount function', function()
-      -- ROBLOX FIXME: Luau type narrowing
-      local expect: any = expect
       local Child
       local function Parent()
         Scheduler.unstable_yieldValue('Parent')
@@ -1793,7 +1746,7 @@ return function()
 
       act(function()
         ReactNoop.renderToRootWithID(React.createElement(Parent), 'root')
-        expect(Scheduler).toFlushAndYieldThrough({
+        jestExpect(Scheduler).toFlushAndYieldThrough({
           'Parent',
           'Child',
           'Child passive create',
@@ -1802,13 +1755,11 @@ return function()
 
         -- Unmount but don't process pending passive destroy function
         ReactNoop.unmountRootWithID('root')
-        expect(Scheduler).toFlushAndYield({'Parent passive destroy'})
+        jestExpect(Scheduler).toFlushAndYield({'Parent passive destroy'})
       end)
     end)
 
     it('does not show a warning when a component updates a parents state from within passive unmount function', function()
-      -- FIXME: type of expect
-      local expect: any = expect
       local Child
       local function Parent()
         local state, setState = React.useState(false)
@@ -1832,7 +1783,7 @@ return function()
 
       act(function()
         ReactNoop.renderToRootWithID(React.createElement(Parent), 'root')
-        expect(Scheduler).toFlushAndYieldThrough({
+        jestExpect(Scheduler).toFlushAndYieldThrough({
           'Parent',
           'Child',
           'Child passive create',
@@ -1840,13 +1791,11 @@ return function()
 
         -- Unmount but don't process pending passive destroy function
         ReactNoop.unmountRootWithID('root')
-        expect(Scheduler).toFlushAndYield({'Child passive destroy'})
+        jestExpect(Scheduler).toFlushAndYield({'Child passive destroy'})
       end)
     end)
 
     it('updates have async priority', function()
-      -- FIXME: type of expect
-      local expect: any = expect
       local function Counter(props)
         local count, updateCount = useState('(empty)')
         useEffect(function()
@@ -1864,14 +1813,14 @@ return function()
             Scheduler.unstable_yieldValue('Sync effect')
           end
         )
-        expect(Scheduler).toFlushAndYieldThrough({
+        jestExpect(Scheduler).toFlushAndYieldThrough({
           'Count: (empty)',
           'Sync effect',
         })
-        expect(ReactNoop.getChildren()).toEqual({span('Count: (empty)')})
+        jestExpect(ReactNoop.getChildren()).toEqual({span('Count: (empty)')})
         ReactNoop.flushPassiveEffects()
-        expect(Scheduler).toHaveYielded({'Schedule update {0}'})
-        expect(Scheduler).toFlushAndYield({'Count: 0'})
+        jestExpect(Scheduler).toHaveYielded({'Schedule update {0}'})
+        jestExpect(Scheduler).toFlushAndYield({'Count: 0'})
       end)
 
       act(function()
@@ -1881,17 +1830,15 @@ return function()
             Scheduler.unstable_yieldValue('Sync effect')
           end
         )
-        expect(Scheduler).toFlushAndYieldThrough({'Count: 0', 'Sync effect'})
-        expect(ReactNoop.getChildren()).toEqual({span('Count: 0')})
+        jestExpect(Scheduler).toFlushAndYieldThrough({'Count: 0', 'Sync effect'})
+        jestExpect(ReactNoop.getChildren()).toEqual({span('Count: 0')})
         ReactNoop.flushPassiveEffects()
-        expect(Scheduler).toHaveYielded({'Schedule update {1}'})
-        expect(Scheduler).toFlushAndYield({'Count: 1'})
+        jestExpect(Scheduler).toHaveYielded({'Schedule update {1}'})
+        jestExpect(Scheduler).toFlushAndYield({'Count: 1'})
       end)
     end)
 
     it('updates have async priority even if effects are flushed early', function()
-      -- FIXME: type of expect
-      local expect: any = expect
       local function Counter(props)
         local count, updateCount = useState('(empty)')
         useEffect(function()
@@ -1909,11 +1856,11 @@ return function()
             Scheduler.unstable_yieldValue('Sync effect')
           end
         )
-        expect(Scheduler).toFlushAndYieldThrough({
+        jestExpect(Scheduler).toFlushAndYieldThrough({
           'Count: (empty)',
           'Sync effect',
         })
-        expect(ReactNoop.getChildren()).toEqual({span('Count: (empty)')})
+        jestExpect(ReactNoop.getChildren()).toEqual({span('Count: (empty)')})
 
         -- Rendering again should flush the previous commit's effects
         ReactNoop.render(
@@ -1922,24 +1869,22 @@ return function()
             Scheduler.unstable_yieldValue('Sync effect')
           end
         )
-        expect(Scheduler).toFlushAndYieldThrough({
+        jestExpect(Scheduler).toFlushAndYieldThrough({
           'Schedule update {0}',
           'Count: 0',
         })
-        expect(ReactNoop.getChildren()).toEqual({span('Count: (empty)')})
+        jestExpect(ReactNoop.getChildren()).toEqual({span('Count: (empty)')})
 
-        expect(Scheduler).toFlushAndYieldThrough({'Sync effect'})
-        expect(ReactNoop.getChildren()).toEqual({span('Count: 0')})
+        jestExpect(Scheduler).toFlushAndYieldThrough({'Sync effect'})
+        jestExpect(ReactNoop.getChildren()).toEqual({span('Count: 0')})
         ReactNoop.flushPassiveEffects()
-        expect(Scheduler).toHaveYielded({'Schedule update {1}'})
-        expect(Scheduler).toFlushAndYield({'Count: 1'})
-        expect(ReactNoop.getChildren()).toEqual({span('Count: 1')})
+        jestExpect(Scheduler).toHaveYielded({'Schedule update {1}'})
+        jestExpect(Scheduler).toFlushAndYield({'Count: 1'})
+        jestExpect(ReactNoop.getChildren()).toEqual({span('Count: 1')})
       end)
     end)
 
     it('does not flush non-discrete passive effects when flushing sync', function()
-      -- FIXME: type of expect
-      local expect: any = expect
       local _updateCount
       local function Counter(props)
         local count, updateCount = useState(0)
@@ -1953,15 +1898,15 @@ return function()
 
       -- we explicitly wait for missing act() warnings here since
       -- it's a lot harder to simulate this condition inside an act scope
-      -- expect(function()
+      -- jestExpect(function()
         ReactNoop.render(
           React.createElement(Counter, {count=0}),
           function()
             Scheduler.unstable_yieldValue('Sync effect')
           end
         )
-        expect(Scheduler).toFlushAndYieldThrough({'Count: 0', 'Sync effect'})
-        expect(ReactNoop.getChildren()).toEqual({span('Count: 0')})
+        jestExpect(Scheduler).toFlushAndYieldThrough({'Count: 0', 'Sync effect'})
+        jestExpect(ReactNoop.getChildren()).toEqual({span('Count: 0')})
       -- end).toErrorDev({'An update to Counter ran an effect'})
 
       -- A flush sync doesn't cause the passive effects to fire.
@@ -1975,13 +1920,13 @@ return function()
       -- As a result we, somewhat surprisingly, commit them in the opposite order.
       -- This should be fine because any non-discrete set of work doesn't guarantee order
       -- and easily could've happened slightly later too.
-      expect(Scheduler).toHaveYielded({
+      jestExpect(Scheduler).toHaveYielded({
         'Will set count to 1',
         'Count: 2',
         'Count: 1',
       })
 
-      expect(ReactNoop.getChildren()).toEqual({span('Count: 1')})
+      jestExpect(ReactNoop.getChildren()).toEqual({span('Count: 1')})
     end)
 
     -- ROBLOX TODO: schedulerTracing
@@ -2007,7 +1952,7 @@ return function()
 --         _updateCount = updateCount
 
 --         useEffect(function()
---             expect(SchedulerTracing.unstable_getCurrent()).toMatchInteractions({tracingEvent})
+--             jestExpect(SchedulerTracing.unstable_getCurrent()).toMatchInteractions({tracingEvent})
 --             Scheduler.unstable_yieldValue('Will set count to 1')
 --             updateCount(1)
 --         end, {})
@@ -2023,42 +1968,41 @@ return function()
 --         timestamp = 0,
 --     }
 
---     expect(function()
+--     jestExpect(function()
 --         SchedulerTracing.unstable_trace(tracingEvent.name, tracingEvent.timestamp, function()
 --             ReactNoop.render(React.createElement(Counter, {count = 0}), function()
 --                 return Scheduler.unstable_yieldValue('Sync effect')
 --             end)
 --         end)
---         expect(Scheduler).toFlushAndYieldThrough({
+--         jestExpect(Scheduler).toFlushAndYieldThrough({
 --             'Count: 0',
 --             'Sync effect',
 --         })
---         expect(ReactNoop.getChildren()).toEqual({
+--         jestExpect(ReactNoop.getChildren()).toEqual({
 --             span('Count: 0'),
 --         })
 --     end).toErrorDev({
 --         'An update to Counter ran an effect',
 --     })
---     expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(0)
+--     jestExpect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(0)
 --     act(function()
 --         ReactNoop.flushSync(function()
 --             _updateCount(2)
 --         end)
 --     end)
---     expect(Scheduler).toHaveYielded({
+--     jestExpect(Scheduler).toHaveYielded({
 --         'Will set count to 1',
 --         'Count: 2',
 --         'Count: 1',
 --     })
---     expect(ReactNoop.getChildren()).toEqual({
+--     jestExpect(ReactNoop.getChildren()).toEqual({
 --         span('Count: 1'),
 --     })
---     expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1)
---     expect(onWorkCanceled).toHaveBeenCalledTimes(0)
+--     jestExpect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1)
+--     jestExpect(onWorkCanceled).toHaveBeenCalledTimes(0)
 -- end)
 
     it('in legacy mode, useEffect is deferred and updates finish synchronously ' .. '(in a single batch)', function()
-      local expect: any = expect
       local function Counter(props)
           local count, updateCount = useState('(empty)')
 
@@ -2083,26 +2027,25 @@ return function()
       act(function()
           ReactNoop.renderLegacySyncRoot(React.createElement(Counter, {count = 0}))
           -- Even in legacy mode, effects are deferred until after paint
-          expect(Scheduler).toFlushAndYieldThrough({
+          jestExpect(Scheduler).toFlushAndYieldThrough({
               'Count: (empty)',
           })
-          expect(ReactNoop.getChildren()).toEqual({
+          jestExpect(ReactNoop.getChildren()).toEqual({
               span('Count: (empty)'),
           })
       end)
       -- effects get forced on exiting act()
       -- There were multiple updates, but there should only be a
       -- single render
-      expect(Scheduler).toHaveYielded({
+      jestExpect(Scheduler).toHaveYielded({
           'Count: 0',
       })
-      expect(ReactNoop.getChildren()).toEqual({
+      jestExpect(ReactNoop.getChildren()).toEqual({
           span('Count: 0'),
       })
     end)
 
     it('flushSync is not allowed', function()
-      local expect: any = expect
       local function Counter(props)
           local count, updateCount = useState('(empty)')
 
@@ -2111,7 +2054,7 @@ return function()
               ReactNoop.flushSync(function()
                   updateCount(props.count)
               end)
-              expect(ReactNoop.getChildren()).never.toEqual({
+              jestExpect(ReactNoop.getChildren()).never.toEqual({
                   span('Count: ' .. props.count),
               })
           end, {
@@ -2123,28 +2066,26 @@ return function()
           })
       end
 
-      expect(function()
+      jestExpect(function()
           return act(function()
               ReactNoop.render(React.createElement(Counter, {count = 0}), function()
                   return Scheduler.unstable_yieldValue('Sync effect')
               end)
-              expect(Scheduler).toFlushAndYieldThrough({
+              jestExpect(Scheduler).toFlushAndYieldThrough({
                   'Count: (empty)',
                   'Sync effect',
               })
-              expect(ReactNoop.getChildren()).toEqual({
+              jestExpect(ReactNoop.getChildren()).toEqual({
                   span('Count: (empty)'),
               })
           end)
       end).toErrorDev('flushSync was called from inside a lifecycle method')
-      expect(ReactNoop.getChildren()).toEqual({
+      jestExpect(ReactNoop.getChildren()).toEqual({
           span('Count: 0'),
       })
     end)
 
     it('unmounts previous effect', function()
-      -- FIXME: type of expect
-      local expect: any = expect
       local function Counter(props)
         useEffect(function()
           Scheduler.unstable_yieldValue("Did create [" .. tostring(props.count) .. "]")
@@ -2161,11 +2102,11 @@ return function()
             Scheduler.unstable_yieldValue('Sync effect')
           end
         )
-        expect(Scheduler).toFlushAndYieldThrough({'Count: 0', 'Sync effect'})
-        expect(ReactNoop.getChildren()).toEqual({span('Count: 0')})
+        jestExpect(Scheduler).toFlushAndYieldThrough({'Count: 0', 'Sync effect'})
+        jestExpect(ReactNoop.getChildren()).toEqual({span('Count: 0')})
       end)
 
-      expect(Scheduler).toHaveYielded({'Did create [0]'})
+      jestExpect(Scheduler).toHaveYielded({'Did create [0]'})
 
       act(function()
         ReactNoop.render(
@@ -2174,16 +2115,14 @@ return function()
             Scheduler.unstable_yieldValue('Sync effect')
           end
         )
-        expect(Scheduler).toFlushAndYieldThrough({'Count: 1', 'Sync effect'})
-        expect(ReactNoop.getChildren()).toEqual({span('Count: 1')})
+        jestExpect(Scheduler).toFlushAndYieldThrough({'Count: 1', 'Sync effect'})
+        jestExpect(ReactNoop.getChildren()).toEqual({span('Count: 1')})
       end)
 
-      expect(Scheduler).toHaveYielded({'Did destroy [0]', 'Did create [1]'})
+      jestExpect(Scheduler).toHaveYielded({'Did destroy [0]', 'Did create [1]'})
     end)
 
     it('unmounts on deletion', function()
-      -- FIXME: type of expect
-      local expect: any = expect
       local function Counter(props)
         useEffect(function()
           Scheduler.unstable_yieldValue("Did create [" .. tostring(props.count)  .. "]")
@@ -2200,20 +2139,18 @@ return function()
             Scheduler.unstable_yieldValue('Sync effect')
           end
         )
-        expect(Scheduler).toFlushAndYieldThrough({'Count: 0', 'Sync effect'})
-        expect(ReactNoop.getChildren()).toEqual({span('Count: 0')})
+        jestExpect(Scheduler).toFlushAndYieldThrough({'Count: 0', 'Sync effect'})
+        jestExpect(ReactNoop.getChildren()).toEqual({span('Count: 0')})
       end)
 
-      expect(Scheduler).toHaveYielded({'Did create [0]'})
+      jestExpect(Scheduler).toHaveYielded({'Did create [0]'})
 
       ReactNoop.render(nil)
-      expect(Scheduler).toFlushAndYield({'Did destroy [0]'})
-      expect(ReactNoop.getChildren()).toEqual({})
+      jestExpect(Scheduler).toFlushAndYield({'Did destroy [0]'})
+      jestExpect(ReactNoop.getChildren()).toEqual({})
     end)
 
     it('unmounts on deletion after skipped effect', function()
-      -- FIXME: type of expect
-      local expect: any = expect
       local function Counter(props)
         useEffect(function()
           Scheduler.unstable_yieldValue(
@@ -2234,11 +2171,11 @@ return function()
             Scheduler.unstable_yieldValue('Sync effect')
           end
         )
-        expect(Scheduler).toFlushAndYieldThrough({'Count: 0', 'Sync effect'})
-        expect(ReactNoop.getChildren()).toEqual({span('Count: 0')})
+        jestExpect(Scheduler).toFlushAndYieldThrough({'Count: 0', 'Sync effect'})
+        jestExpect(ReactNoop.getChildren()).toEqual({span('Count: 0')})
       end)
 
-      expect(Scheduler).toHaveYielded({'Did create [0]'})
+      jestExpect(Scheduler).toHaveYielded({'Did create [0]'})
 
       act(function()
         ReactNoop.render(
@@ -2247,19 +2184,18 @@ return function()
             Scheduler.unstable_yieldValue('Sync effect')
           end
         )
-        expect(Scheduler).toFlushAndYieldThrough({'Count: 1', 'Sync effect'})
-        expect(ReactNoop.getChildren()).toEqual({span('Count: 1')})
+        jestExpect(Scheduler).toFlushAndYieldThrough({'Count: 1', 'Sync effect'})
+        jestExpect(ReactNoop.getChildren()).toEqual({span('Count: 1')})
       end)
 
-      expect(Scheduler).toHaveYielded({})
+      jestExpect(Scheduler).toHaveYielded({})
 
       ReactNoop.render(nil)
-      expect(Scheduler).toFlushAndYield({'Did destroy [0]'})
-      expect(ReactNoop.getChildren()).toEqual({})
+      jestExpect(Scheduler).toFlushAndYield({'Did destroy [0]'})
+      jestExpect(ReactNoop.getChildren()).toEqual({})
     end)
 
     it('always fires effects if no dependencies are provided', function()
-      local expect: any = expect
       local function effect()
         Scheduler.unstable_yieldValue('Did create')
         return function()
@@ -2274,31 +2210,28 @@ return function()
         ReactNoop.render(React.createElement(Counter, {count = 0}), function()
           return Scheduler.unstable_yieldValue('Sync effect')
         end)
-        expect(Scheduler).toFlushAndYieldThrough({'Count: 0', 'Sync effect'})
-        expect(ReactNoop.getChildren()).toEqual({span('Count: 0')})
+        jestExpect(Scheduler).toFlushAndYieldThrough({'Count: 0', 'Sync effect'})
+        jestExpect(ReactNoop.getChildren()).toEqual({span('Count: 0')})
       end)
 
-      expect(Scheduler).toHaveYielded({'Did create'})
+      jestExpect(Scheduler).toHaveYielded({'Did create'})
 
       act(function()
         ReactNoop.render(React.createElement(Counter, {count = 1}), function()
           return Scheduler.unstable_yieldValue('Sync effect')
         end)
-        expect(Scheduler).toFlushAndYieldThrough({'Count: 1', 'Sync effect'})
-        expect(ReactNoop.getChildren()).toEqual({span('Count: 1')})
+        jestExpect(Scheduler).toFlushAndYieldThrough({'Count: 1', 'Sync effect'})
+        jestExpect(ReactNoop.getChildren()).toEqual({span('Count: 1')})
       end)
 
-      expect(Scheduler).toHaveYielded({'Did destroy', 'Did create'})
+      jestExpect(Scheduler).toHaveYielded({'Did destroy', 'Did create'})
 
       ReactNoop.render(nil)
-      expect(Scheduler).toFlushAndYield({'Did destroy'})
-      expect(ReactNoop.getChildren()).toEqual({})
+      jestExpect(Scheduler).toFlushAndYield({'Did destroy'})
+      jestExpect(ReactNoop.getChildren()).toEqual({})
     end)
 
     it('skips effect if inputs have not changed', function()
-      -- FIXME: type of expect
-      local expect: any = expect
-
       local function Counter(props)
         local text = tostring(props.label) .. ": " .. tostring(props.count)
         useEffect(function()
@@ -2316,11 +2249,11 @@ return function()
             Scheduler.unstable_yieldValue('Sync effect')
           end
         )
-        expect(Scheduler).toFlushAndYieldThrough({'Count: 0', 'Sync effect'})
+        jestExpect(Scheduler).toFlushAndYieldThrough({'Count: 0', 'Sync effect'})
       end)
 
-      expect(Scheduler).toHaveYielded({'Did create [Count: 0]'})
-      expect(ReactNoop.getChildren()).toEqual({span('Count: 0')})
+      jestExpect(Scheduler).toHaveYielded({'Did create [Count: 0]'})
+      jestExpect(ReactNoop.getChildren()).toEqual({span('Count: 0')})
 
       act(function()
         ReactNoop.render(
@@ -2330,11 +2263,11 @@ return function()
           end
         )
         -- Count changed
-        expect(Scheduler).toFlushAndYieldThrough({'Count: 1', 'Sync effect'})
-        expect(ReactNoop.getChildren()).toEqual({span('Count: 1')})
+        jestExpect(Scheduler).toFlushAndYieldThrough({'Count: 1', 'Sync effect'})
+        jestExpect(ReactNoop.getChildren()).toEqual({span('Count: 1')})
       end)
 
-      expect(Scheduler).toHaveYielded({
+      jestExpect(Scheduler).toHaveYielded({
         'Did destroy [Count: 0]',
         'Did create [Count: 1]',
       })
@@ -2348,12 +2281,11 @@ return function()
           end
         )
         -- Nothing changed, so no effect should have fired
-        expect(Scheduler).toFlushAndYieldThrough({'Count: 1', 'Sync effect'})
+        jestExpect(Scheduler).toFlushAndYieldThrough({'Count: 1', 'Sync effect'})
       end)
 
-      -- ROBLOX FIXME: Scheduler yields a table with two entries instead of empty
-      expect(Scheduler).toHaveYielded({})
-      expect(ReactNoop.getChildren()).toEqual({span('Count: 1')})
+      jestExpect(Scheduler).toHaveYielded({})
+      jestExpect(ReactNoop.getChildren()).toEqual({span('Count: 1')})
 
       act(function()
         ReactNoop.render(
@@ -2363,19 +2295,17 @@ return function()
           end
         )
         -- Label changed
-        expect(Scheduler).toFlushAndYieldThrough({'Total: 1', 'Sync effect'})
-        expect(ReactNoop.getChildren()).toEqual({span('Total: 1')})
+        jestExpect(Scheduler).toFlushAndYieldThrough({'Total: 1', 'Sync effect'})
+        jestExpect(ReactNoop.getChildren()).toEqual({span('Total: 1')})
       end)
 
-      expect(Scheduler).toHaveYielded({
+      jestExpect(Scheduler).toHaveYielded({
         'Did destroy [Count: 1]',
         'Did create [Total: 1]',
       })
     end)
 
     it('multiple effects', function()
-      -- FIXME: type of expect
-      local expect: any = expect
       local function Counter(props)
         useEffect(function()
           Scheduler.unstable_yieldValue("Did commit 1 [" .. tostring(props.count) .. "]")
@@ -2392,11 +2322,11 @@ return function()
             Scheduler.unstable_yieldValue('Sync effect')
           end
         )
-        expect(Scheduler).toFlushAndYieldThrough({'Count: 0', 'Sync effect'})
-        expect(ReactNoop.getChildren()).toEqual({span('Count: 0')})
+        jestExpect(Scheduler).toFlushAndYieldThrough({'Count: 0', 'Sync effect'})
+        jestExpect(ReactNoop.getChildren()).toEqual({span('Count: 0')})
       end)
 
-      expect(Scheduler).toHaveYielded({'Did commit 1 [0]', 'Did commit 2 [0]'})
+      jestExpect(Scheduler).toHaveYielded({'Did commit 1 [0]', 'Did commit 2 [0]'})
 
       act(function()
         ReactNoop.render(
@@ -2405,14 +2335,13 @@ return function()
             Scheduler.unstable_yieldValue('Sync effect')
           end
         )
-        expect(Scheduler).toFlushAndYieldThrough({'Count: 1', 'Sync effect'})
-        expect(ReactNoop.getChildren()).toEqual({span('Count: 1')})
+        jestExpect(Scheduler).toFlushAndYieldThrough({'Count: 1', 'Sync effect'})
+        jestExpect(ReactNoop.getChildren()).toEqual({span('Count: 1')})
       end)
-      expect(Scheduler).toHaveYielded({'Did commit 1 [1]', 'Did commit 2 [1]'})
+      jestExpect(Scheduler).toHaveYielded({'Did commit 1 [1]', 'Did commit 2 [1]'})
     end)
 
     it('unmounts all previous effects before creating any new ones', function()
-      local expect: any = expect
       local function Counter(props)
         useEffect(function()
           Scheduler.unstable_yieldValue('Mount A ['.. props.count .. ']')
@@ -2432,20 +2361,20 @@ return function()
         ReactNoop.render(React.createElement(Counter, {count = 0}), function()
           Scheduler.unstable_yieldValue('Sync effect')
         end)
-        expect(Scheduler).toFlushAndYieldThrough({'Count: 0', 'Sync effect'})
-        expect(ReactNoop.getChildren()).toEqual({span('Count: 0')})
+        jestExpect(Scheduler).toFlushAndYieldThrough({'Count: 0', 'Sync effect'})
+        jestExpect(ReactNoop.getChildren()).toEqual({span('Count: 0')})
       end)
 
-      expect(Scheduler).toHaveYielded({'Mount A [0]', 'Mount B [0]'})
+      jestExpect(Scheduler).toHaveYielded({'Mount A [0]', 'Mount B [0]'})
 
       act(function()
         ReactNoop.render(React.createElement(Counter, {count = 1}), function()
           Scheduler.unstable_yieldValue('Sync effect')
         end)
-        expect(Scheduler).toFlushAndYieldThrough({'Count: 1', 'Sync effect'})
-        expect(ReactNoop.getChildren()).toEqual({span('Count: 1')})
+        jestExpect(Scheduler).toFlushAndYieldThrough({'Count: 1', 'Sync effect'})
+        jestExpect(ReactNoop.getChildren()).toEqual({span('Count: 1')})
       end)
-      expect(Scheduler).toHaveYielded({
+      jestExpect(Scheduler).toHaveYielded({
         'Unmount A [0]',
         'Unmount B [0]',
         'Mount A [1]',
@@ -2454,7 +2383,6 @@ return function()
     end)
 
     it('unmounts all previous effects between siblings before creating any new ones', function()
-      local expect: any = expect
       local function Counter(props)
           local count, label = props.count, props.label
 
@@ -2481,17 +2409,17 @@ return function()
           })), function()
               return Scheduler.unstable_yieldValue('Sync effect')
           end)
-          expect(Scheduler).toFlushAndYieldThrough({
+          jestExpect(Scheduler).toFlushAndYieldThrough({
               'A 0',
               'B 0',
               'Sync effect',
           })
-          expect(ReactNoop.getChildren()).toEqual({
+          jestExpect(ReactNoop.getChildren()).toEqual({
               span('A 0'),
               span('B 0'),
           })
       end)
-      expect(Scheduler).toHaveYielded({
+      jestExpect(Scheduler).toHaveYielded({
           'Mount A [0]',
           'Mount B [0]',
       })
@@ -2505,17 +2433,17 @@ return function()
           })), function()
               return Scheduler.unstable_yieldValue('Sync effect')
           end)
-          expect(Scheduler).toFlushAndYieldThrough({
+          jestExpect(Scheduler).toFlushAndYieldThrough({
               'A 1',
               'B 1',
               'Sync effect',
           })
-          expect(ReactNoop.getChildren()).toEqual({
+          jestExpect(ReactNoop.getChildren()).toEqual({
               span('A 1'),
               span('B 1'),
           })
       end)
-      expect(Scheduler).toHaveYielded({
+      jestExpect(Scheduler).toHaveYielded({
           'Unmount A [0]',
           'Unmount B [0]',
           'Mount A [1]',
@@ -2531,17 +2459,17 @@ return function()
           })), function()
               return Scheduler.unstable_yieldValue('Sync effect')
           end)
-          expect(Scheduler).toFlushAndYieldThrough({
+          jestExpect(Scheduler).toFlushAndYieldThrough({
               'B 2',
               'C 0',
               'Sync effect',
           })
-          expect(ReactNoop.getChildren()).toEqual({
+          jestExpect(ReactNoop.getChildren()).toEqual({
               span('B 2'),
               span('C 0'),
           })
       end)
-      expect(Scheduler).toHaveYielded({
+      jestExpect(Scheduler).toHaveYielded({
           'Unmount A [1]',
           'Unmount B [1]',
           'Mount B [2]',
@@ -2549,8 +2477,7 @@ return function()
       })
     end)
     it('handles errors in create on mount', function()
-        local expect: any = expect
-        local function Counter(props)
+          local function Counter(props)
             useEffect(function()
                 Scheduler.unstable_yieldValue(('Mount A [%s]'):format(props.count))
 
@@ -2567,7 +2494,7 @@ return function()
                 --     Scheduler.unstable_yieldValue(('Unmount B [%s]'):format(props.count))
                 -- end
             end)
-    
+
             return React.createElement(Text, {
                 text = 'Count: ' .. props.count,
             })
@@ -2577,27 +2504,26 @@ return function()
             ReactNoop.render(React.createElement(Counter, {count = 0}), function()
                 return Scheduler.unstable_yieldValue('Sync effect')
             end)
-            expect(Scheduler).toFlushAndYieldThrough({
+            jestExpect(Scheduler).toFlushAndYieldThrough({
                 'Count: 0',
                 'Sync effect',
             })
-            expect(ReactNoop.getChildren()).toEqual({
+            jestExpect(ReactNoop.getChildren()).toEqual({
                 span('Count: 0'),
             })
-            expect(function()
+            jestExpect(function()
                 return ReactNoop.flushPassiveEffects()
             end).toThrow('Oops')
         end)
-        expect(Scheduler).toHaveYielded({
+        jestExpect(Scheduler).toHaveYielded({
             'Mount A [0]',
             'Oops!',
             'Unmount A [0]',
         })
-        expect(ReactNoop.getChildren()).toEqual({})
+        jestExpect(ReactNoop.getChildren()).toEqual({})
     end)
     it('handles errors in create on update', function()
-        local expect: any = expect
-        local function Counter(props)
+          local function Counter(props)
             useEffect(function()
                 Scheduler.unstable_yieldValue(('Mount A [%s]'):format(props.count))
 
@@ -2627,15 +2553,15 @@ return function()
             ReactNoop.render(React.createElement(Counter, {count = 0}), function()
                 return Scheduler.unstable_yieldValue('Sync effect')
             end)
-            expect(Scheduler).toFlushAndYieldThrough({
+            jestExpect(Scheduler).toFlushAndYieldThrough({
                 'Count: 0',
                 'Sync effect',
             })
-            expect(ReactNoop.getChildren()).toEqual({
+            jestExpect(ReactNoop.getChildren()).toEqual({
                 span('Count: 0'),
             })
             ReactNoop.flushPassiveEffects()
-            expect(Scheduler).toHaveYielded({
+            jestExpect(Scheduler).toHaveYielded({
                 'Mount A [0]',
                 'Mount B [0]',
             })
@@ -2644,32 +2570,31 @@ return function()
             ReactNoop.render(React.createElement(Counter, {count = 1}), function()
                 return Scheduler.unstable_yieldValue('Sync effect')
             end)
-            expect(Scheduler).toFlushAndYieldThrough({
+            jestExpect(Scheduler).toFlushAndYieldThrough({
                 'Count: 1',
                 'Sync effect',
             })
-            expect(ReactNoop.getChildren()).toEqual({
+            jestExpect(ReactNoop.getChildren()).toEqual({
                 span('Count: 1'),
             })
-            expect(function()
+            jestExpect(function()
               return ReactNoop.flushPassiveEffects()
             end).toThrow('Oops')
 
-            expect(Scheduler).toHaveYielded({
+            jestExpect(Scheduler).toHaveYielded({
                 'Unmount A [0]',
                 'Unmount B [0]',
                 'Mount A [1]',
                 'Oops!',
             })
-            expect(ReactNoop.getChildren()).toEqual({})
+            jestExpect(ReactNoop.getChildren()).toEqual({})
         end)
-        expect(Scheduler).toHaveYielded({
+        jestExpect(Scheduler).toHaveYielded({
             'Unmount A [1]',
         })
     end)
     it('handles errors in destroy on update', function()
-        local expect: any = expect
-        local function Counter(props)
+          local function Counter(props)
             useEffect(function()
                 Scheduler.unstable_yieldValue(('Mount A [%s]'):format(props.count))
 
@@ -2698,15 +2623,15 @@ return function()
             ReactNoop.render(React.createElement(Counter, {count = 0}), function()
                 return Scheduler.unstable_yieldValue('Sync effect')
             end)
-            expect(Scheduler).toFlushAndYieldThrough({
+            jestExpect(Scheduler).toFlushAndYieldThrough({
                 'Count: 0',
                 'Sync effect',
             })
-            expect(ReactNoop.getChildren()).toEqual({
+            jestExpect(ReactNoop.getChildren()).toEqual({
                 span('Count: 0'),
             })
             ReactNoop.flushPassiveEffects()
-            expect(Scheduler).toHaveYielded({
+            jestExpect(Scheduler).toHaveYielded({
                 'Mount A [0]',
                 'Mount B [0]',
             })
@@ -2715,33 +2640,32 @@ return function()
             ReactNoop.render(React.createElement(Counter, {count = 1}), function()
                 return Scheduler.unstable_yieldValue('Sync effect')
             end)
-            expect(Scheduler).toFlushAndYieldThrough({
+            jestExpect(Scheduler).toFlushAndYieldThrough({
                 'Count: 1',
                 'Sync effect',
             })
-            expect(ReactNoop.getChildren()).toEqual({
+            jestExpect(ReactNoop.getChildren()).toEqual({
                 span('Count: 1'),
             })
-            expect(function()
+            jestExpect(function()
                 return ReactNoop.flushPassiveEffects()
             end).toThrow('Oops')
-            expect(Scheduler).toHaveYielded({
+            jestExpect(Scheduler).toHaveYielded({
                 'Oops!',
                 'Unmount B [0]',
                 'Mount A [1]',
                 'Mount B [1]',
             })
         end)
-        expect(Scheduler).toHaveYielded({
+        jestExpect(Scheduler).toHaveYielded({
             'Oops!',
             'Unmount B [1]',
         })
-        expect(ReactNoop.getChildren()).toEqual({})
+        jestExpect(ReactNoop.getChildren()).toEqual({})
     end)
 
     -- ROBLOX TODO: MemoComponent is unimplemented
     xit('works with memo', function()
-        local expect:any = expect
         local function Counter(props)
             local count = props.count
 
@@ -2763,33 +2687,34 @@ return function()
         ReactNoop.render(React.createElement(Counter, {count = 0}), function()
             return Scheduler.unstable_yieldValue('Sync effect')
         end)
-        expect(Scheduler).toFlushAndYieldThrough({
+        jestExpect(Scheduler).toFlushAndYieldThrough({
             'Count: 0',
             'Mount: 0',
             'Sync effect',
         })
-        expect(ReactNoop.getChildren()).toEqual({
+        jestExpect(ReactNoop.getChildren()).toEqual({
             span('Count: 0'),
         })
         ReactNoop.render(React.createElement(Counter, {count = 1}), function()
             return Scheduler.unstable_yieldValue('Sync effect')
         end)
-        expect(Scheduler).toFlushAndYieldThrough({
+        jestExpect(Scheduler).toFlushAndYieldThrough({
             'Count: 1',
             'Unmount: 0',
             'Mount: 1',
             'Sync effect',
         })
-        expect(ReactNoop.getChildren()).toEqual({
+        jestExpect(ReactNoop.getChildren()).toEqual({
             span('Count: 1'),
         })
         ReactNoop.render(nil)
-        expect(Scheduler).toFlushAndYieldThrough({
+        jestExpect(Scheduler).toFlushAndYieldThrough({
             'Unmount: 1',
         })
-        expect(ReactNoop.getChildren()).toEqual({})
+        jestExpect(ReactNoop.getChildren()).toEqual({})
     end)
 
+    -- ROBLOX FIXME: Error Boundaries are implemented now, most of these should now pass
   --   describe('errors thrown in passive destroy function within unmounted trees', function()
   --     local BrokenUseEffectCleanup
   --     local ErrorBoundary
@@ -2889,7 +2814,7 @@ return function()
   --         )
   --       })
 
-  --       expect(Scheduler).toHaveYielded([
+  --       jestExpect(Scheduler).toHaveYielded([
   --         'ErrorBoundary render success',
   --         'LogOnlyErrorBoundary render',
   --         'BrokenUseEffectCleanup useEffect',
@@ -2901,12 +2826,12 @@ return function()
   --             <Conditional showChildren={false} />
   --           </ErrorBoundary>,
   --         )
-  --         expect(Scheduler).toFlushAndYieldThrough([
+  --         jestExpect(Scheduler).toFlushAndYieldThrough([
   --           'ErrorBoundary render success',
   --         ])
   --       })
 
-  --       expect(Scheduler).toHaveYielded([
+  --       jestExpect(Scheduler).toHaveYielded([
   --         'BrokenUseEffectCleanup useEffect destroy',
   --         'LogOnlyErrorBoundary componentDidCatch',
   --       ])
@@ -2934,7 +2859,7 @@ return function()
   --         )
   --       })
 
-  --       expect(Scheduler).toHaveYielded([
+  --       jestExpect(Scheduler).toHaveYielded([
   --         'ErrorBoundary render success',
   --         'ErrorBoundary render success',
   --         'BrokenUseEffectCleanup useEffect',
@@ -2946,12 +2871,12 @@ return function()
   --             <Conditional showChildren={false} />
   --           </ErrorBoundary>,
   --         )
-  --         expect(Scheduler).toFlushAndYieldThrough([
+  --         jestExpect(Scheduler).toFlushAndYieldThrough([
   --           'ErrorBoundary render success',
   --         ])
   --       })
 
-  --       expect(Scheduler).toHaveYielded([
+  --       jestExpect(Scheduler).toHaveYielded([
   --         'BrokenUseEffectCleanup useEffect destroy',
   --         'ErrorBoundary componentDidCatch',
   --       ])
@@ -2975,7 +2900,7 @@ return function()
   --         ReactNoop.render(<Conditional showChildren={true} />)
   --       })
 
-  --       expect(Scheduler).toHaveYielded([
+  --       jestExpect(Scheduler).toHaveYielded([
   --         'ErrorBoundary render success',
   --         'BrokenUseEffectCleanup useEffect',
   --       ])
@@ -2984,7 +2909,7 @@ return function()
   --         ReactNoop.render(<Conditional showChildren={false} />)
   --       })
 
-  --       expect(Scheduler).toHaveYielded([
+  --       jestExpect(Scheduler).toHaveYielded([
   --         'BrokenUseEffectCleanup useEffect destroy',
   --         'ErrorBoundary componentDidCatch',
   --       ])
@@ -3008,7 +2933,7 @@ return function()
   --         ReactNoop.render(<Conditional showChildren={true} />)
   --       })
 
-  --       expect(Scheduler).toHaveYielded([
+  --       jestExpect(Scheduler).toHaveYielded([
   --         'DerivedStateOnlyErrorBoundary render success',
   --         'BrokenUseEffectCleanup useEffect',
   --       ])
@@ -3017,7 +2942,7 @@ return function()
   --         ReactNoop.render(<Conditional showChildren={false} />)
   --       })
 
-  --       expect(Scheduler).toHaveYielded([
+  --       jestExpect(Scheduler).toHaveYielded([
   --         'BrokenUseEffectCleanup useEffect destroy',
   --       ])
   --     })
@@ -3032,7 +2957,7 @@ return function()
   --         )
   --       })
 
-  --       expect(Scheduler).toHaveYielded([
+  --       jestExpect(Scheduler).toHaveYielded([
   --         'LogOnlyErrorBoundary render',
   --         'BrokenUseEffectCleanup useEffect',
   --       ])
@@ -3041,7 +2966,7 @@ return function()
   --         ReactNoop.render(<LogOnlyErrorBoundary />)
   --       })
 
-  --       expect(Scheduler).toHaveYielded([
+  --       jestExpect(Scheduler).toHaveYielded([
   --         'LogOnlyErrorBoundary render',
   --         'BrokenUseEffectCleanup useEffect destroy',
   --         'LogOnlyErrorBoundary componentDidCatch',
@@ -3070,7 +2995,7 @@ return function()
   --         )
   --       })
 
-  --       expect(Scheduler).toHaveYielded([
+  --       jestExpect(Scheduler).toHaveYielded([
   --         'LogOnlyErrorBoundary render',
   --         'ErrorBoundary render success',
   --         'BrokenUseEffectCleanup useEffect',
@@ -3084,7 +3009,7 @@ return function()
   --         )
   --       })
 
-  --       expect(Scheduler).toHaveYielded([
+  --       jestExpect(Scheduler).toHaveYielded([
   --         'LogOnlyErrorBoundary render',
   --         'BrokenUseEffectCleanup useEffect destroy',
   --         'LogOnlyErrorBoundary componentDidCatch',
@@ -3109,7 +3034,7 @@ return function()
   --         )
   --       })
 
-  --       expect(Scheduler).toHaveYielded([
+  --       jestExpect(Scheduler).toHaveYielded([
   --         'ErrorBoundary render success',
   --         'BrokenUseEffectCleanup useEffect',
   --       ])
@@ -3122,7 +3047,7 @@ return function()
   --         )
   --       })
 
-  --       expect(Scheduler).toHaveYielded([
+  --       jestExpect(Scheduler).toHaveYielded([
   --         'ErrorBoundary render success',
   --         'BrokenUseEffectCleanup useEffect destroy',
   --         'ErrorBoundary static getDerivedStateFromError',
@@ -3130,7 +3055,7 @@ return function()
   --         'ErrorBoundary componentDidCatch',
   --       ])
 
-  --       expect(ReactNoop.getChildren()).toEqual([
+  --       jestExpect(ReactNoop.getChildren()).toEqual([
   --         span('ErrorBoundary fallback'),
   --       ])
   --     })
@@ -3153,22 +3078,22 @@ return function()
   --         ReactNoop.render(<Conditional showChildren={true} />)
   --       })
 
-  --       expect(Scheduler).toHaveYielded([
+  --       jestExpect(Scheduler).toHaveYielded([
   --         'ErrorBoundary render success',
   --         'BrokenUseEffectCleanup useEffect',
   --       ])
 
-  --       expect(function()
+  --       jestExpect(function()
   --         act(function()
   --           ReactNoop.render(<Conditional showChildren={false} />)
   --         })
   --       }).toThrow('Expected error')
 
-  --       expect(Scheduler).toHaveYielded([
+  --       jestExpect(Scheduler).toHaveYielded([
   --         'BrokenUseEffectCleanup useEffect destroy',
   --       ])
 
-  --       expect(ReactNoop.getChildren()).toEqual([])
+  --       jestExpect(ReactNoop.getChildren()).toEqual([])
   --     })
   --   })
 
@@ -3202,7 +3127,7 @@ return function()
   --         </Wrapper>,
   --       )
   --     })
-  --     expect(Scheduler).toHaveYielded([
+  --     jestExpect(Scheduler).toHaveYielded([
   --       'render',
   --       'layout create',
   --       'passive create',
@@ -3216,7 +3141,7 @@ return function()
   --         </Wrapper>,
   --       )
   --     })
-  --     expect(Scheduler).toHaveYielded([])
+  --     jestExpect(Scheduler).toHaveYielded([])
 
   --     act(function()
   --       ReactNoop.render(
@@ -3225,7 +3150,7 @@ return function()
   --         </Wrapper>,
   --       )
   --     })
-  --     expect(Scheduler).toHaveYielded([
+  --     jestExpect(Scheduler).toHaveYielded([
   --       'render',
   --       'layout destroy',
   --       'layout create',
@@ -3236,7 +3161,7 @@ return function()
   --     act(function()
   --       ReactNoop.render(null)
   --     })
-  --     expect(Scheduler).toHaveYielded(['layout destroy', 'passive destroy'])
+  --     jestExpect(Scheduler).toHaveYielded(['layout destroy', 'passive destroy'])
   --   })
 
   --   it('calls passive effect destroy functions for descendants of memoized components', function()
@@ -3273,7 +3198,7 @@ return function()
   --         </Wrapper>,
   --       )
   --     })
-  --     expect(Scheduler).toHaveYielded([
+  --     jestExpect(Scheduler).toHaveYielded([
   --       'render',
   --       'layout create',
   --       'passive create',
@@ -3287,7 +3212,7 @@ return function()
   --         </Wrapper>,
   --       )
   --     })
-  --     expect(Scheduler).toHaveYielded([])
+  --     jestExpect(Scheduler).toHaveYielded([])
 
   --     act(function()
   --       ReactNoop.render(
@@ -3296,7 +3221,7 @@ return function()
   --         </Wrapper>,
   --       )
   --     })
-  --     expect(Scheduler).toHaveYielded([
+  --     jestExpect(Scheduler).toHaveYielded([
   --       'render',
   --       'layout destroy',
   --       'layout create',
@@ -3307,13 +3232,12 @@ return function()
   --     act(function()
   --       ReactNoop.render(null)
   --     })
-  --     expect(Scheduler).toHaveYielded(['layout destroy', 'passive destroy'])
+  --     jestExpect(Scheduler).toHaveYielded(['layout destroy', 'passive destroy'])
   --   })
   end)
 
   describe('useLayoutEffect', function()
     it('fires layout effects after the host has been mutated', function()
-      local expect: any = expect
       local function getCommittedText()
         local yields = Scheduler.unstable_clearYields()
         local children = ReactNoop.getChildren()
@@ -3334,26 +3258,25 @@ return function()
       ReactNoop.render(React.createElement(Counter, {count=0}), function()
         Scheduler.unstable_yieldValue('Sync effect') end
       )
-      expect(Scheduler).toFlushAndYieldThrough({
+      jestExpect(Scheduler).toFlushAndYieldThrough({
         {0},
         'Current: 0',
         'Sync effect',
       })
-      expect(ReactNoop.getChildren()).toEqual({span(0)})
+      jestExpect(ReactNoop.getChildren()).toEqual({span(0)})
 
       ReactNoop.render(React.createElement(Counter, {count=1}), function()
         Scheduler.unstable_yieldValue('Sync effect') end
       )
-      expect(Scheduler).toFlushAndYieldThrough({
+      jestExpect(Scheduler).toFlushAndYieldThrough({
         {1},
         'Current: 1',
         'Sync effect',
       })
-      expect(ReactNoop.getChildren()).toEqual({span(1)})
+      jestExpect(ReactNoop.getChildren()).toEqual({span(1)})
     end)
 
     it('force flushes passive effects before firing new layout effects', function()
-      local expect: any = expect
       local committedText = '(empty)'
 
       local function Counter(props)
@@ -3388,33 +3311,32 @@ return function()
         ReactNoop.render(React.createElement(Counter, {count=0}), function()
           return Scheduler.unstable_yieldValue('Sync effect') end
         )
-        expect(Scheduler).toFlushAndYieldThrough({
+        jestExpect(Scheduler).toFlushAndYieldThrough({
           'Mount layout [current: 0]',
           'Sync effect',
         })
-        expect(committedText).toEqual('0')
+        jestExpect(committedText).toEqual('0')
         ReactNoop.render(React.createElement(Counter, {count=1}), function()
           return Scheduler.unstable_yieldValue('Sync effect') end
         )
-        expect(Scheduler).toFlushAndYieldThrough({
+        jestExpect(Scheduler).toFlushAndYieldThrough({
           'Mount normal [current: 0]',
           'Unmount layout [current: 0]',
           'Mount layout [current: 1]',
           'Sync effect'
         })
-        expect(committedText).toEqual('1')
+        jestExpect(committedText).toEqual('1')
       end)
 
-      expect(Scheduler).toHaveYielded({
+      jestExpect(Scheduler).toHaveYielded({
         'Unmount normal [current: 1]',
         'Mount normal [current: 1]',
       })
     end)
 
-    -- ROBLOX TODO: FIXME (roblox): forceUnmountCurrentAndReconcile is unimplemented
+    -- ROBLOX TODO: this failing, but is it a bug? or this gate not enabled in our config?
     -- @gate skipUnmountedBoundaries
     xit('catches errors thrown in useLayoutEffect', function()
-      local expect: any = expect
       local ErrorBoundary = React.Component:extend("ErrorBoundary")
       function ErrorBoundary:init()
         self.state = {error=nil}
@@ -3472,13 +3394,13 @@ return function()
         }
       ))
 
-      expect(Scheduler).toFlushAndYield({
+      jestExpect(Scheduler).toFlushAndYield({
         'OuterBoundary render success',
         'Component render sibling',
         'InnerBoundary render success',
         'BrokenLayoutEffectDestroy render',
       })
-      expect(ReactNoop.getChildren()).toEqual({
+      jestExpect(ReactNoop.getChildren()).toEqual({
         React.createElement(span, {id="sibling"}),
         React.createElement(span, {id="broken"})
       })
@@ -3489,7 +3411,7 @@ return function()
       )
 
       -- React should skip over the unmounting boundary and find the nearest still-mounted boundary.
-      expect(Scheduler).toFlushAndYield({
+      jestExpect(Scheduler).toFlushAndYield({
         'OuterBoundary render success',
         'Component render sibling',
         'BrokenLayoutEffectDestroy useLayoutEffect destroy',
@@ -3497,15 +3419,13 @@ return function()
         'OuterBoundary render error',
         'Component render OuterFallback'
       })
-      expect(ReactNoop.getChildren()).toEqual({span('OuterFallback')})
+      jestExpect(ReactNoop.getChildren()).toEqual({span('OuterFallback')})
     end)
 end)
 
   describe('useCallback', function()
-    -- ROBLOX FIXME: currently fails only in DEV mode with "Too few hooks rendered". needs single-step debugging.
+    -- ROBLOX FIXME: Rendered fewer hooks than expected
     xit('memoizes callback by comparing inputs', function()
-      -- ROBLOX deviation: expect
-      local expect: any = expect
       -- ROBLOX deviation: hoist local
       local button = React.createRef(nil)
       local IncrementButton = React.PureComponent:extend("IncrementButton")
@@ -3539,8 +3459,8 @@ end)
       end
 
       ReactNoop.render(React.createElement(Counter, {incrementBy=1}))
-      expect(Scheduler).toFlushAndYield({'Increment', 'Count: 0'})
-      expect(ReactNoop.getChildren()).toEqual({
+      jestExpect(Scheduler).toFlushAndYield({'Increment', 'Count: 0'})
+      jestExpect(ReactNoop.getChildren()).toEqual({
         span('Increment'),
         span('Count: 0'),
       })
@@ -3549,24 +3469,24 @@ end)
       act(function()
         button.current.increment(incrementButtonInstance)
       end)
-      expect(Scheduler).toHaveYielded({
+      jestExpect(Scheduler).toHaveYielded({
         -- Button should not re-render, because its props haven't changed
         -- 'Increment',
         'Count: 1',
       })
-      expect(ReactNoop.getChildren()).toEqual({
+      jestExpect(ReactNoop.getChildren()).toEqual({
         span('Increment'),
         span('Count: 1'),
       })
 
       -- Increase the increment amount
       ReactNoop.render(React.createElement(Counter, {incrementBy=10}))
-      expect(Scheduler).toFlushAndYield({
+      jestExpect(Scheduler).toFlushAndYield({
         -- Inputs did change this time
         'Increment',
         'Count: 1',
       })
-      expect(ReactNoop.getChildren()).toEqual({
+      jestExpect(ReactNoop.getChildren()).toEqual({
         span('Increment'),
         span('Count: 1'),
       })
@@ -3576,8 +3496,8 @@ end)
       act(function()
         button.current.increment(incrementButtonInstance)
       end)
-      expect(Scheduler).toHaveYielded({'Count: 11'})
-      expect(ReactNoop.getChildren()).toEqual({
+      jestExpect(Scheduler).toHaveYielded({'Count: 11'})
+      jestExpect(ReactNoop.getChildren()).toEqual({
         span('Increment'),
         span('Count: 11'),
       })
@@ -3586,7 +3506,6 @@ end)
 
   describe('useMemo', function()
     it('memoizes value by comparing to previous inputs', function()
-      local expect: any = expect
       local function CapitalizedText(props)
         local text = props.text
         local capitalizedText = useMemo(function()
@@ -3597,24 +3516,23 @@ end)
       end
 
       ReactNoop.render(React.createElement(CapitalizedText, {text = "hello"}))
-      expect(Scheduler).toFlushAndYield({"Capitalize 'hello'", 'HELLO'})
-      expect(ReactNoop.getChildren()).toEqual({span('HELLO')})
+      jestExpect(Scheduler).toFlushAndYield({"Capitalize 'hello'", 'HELLO'})
+      jestExpect(ReactNoop.getChildren()).toEqual({span('HELLO')})
 
       ReactNoop.render(React.createElement(CapitalizedText, {text = "hi"}))
-      expect(Scheduler).toFlushAndYield({"Capitalize 'hi'", 'HI'})
-      expect(ReactNoop.getChildren()).toEqual({span('HI')})
+      jestExpect(Scheduler).toFlushAndYield({"Capitalize 'hi'", 'HI'})
+      jestExpect(ReactNoop.getChildren()).toEqual({span('HI')})
 
       ReactNoop.render(React.createElement(CapitalizedText, {text = "hi"}))
-      expect(Scheduler).toFlushAndYield({'HI'})
-      expect(ReactNoop.getChildren()).toEqual({span('HI')})
+      jestExpect(Scheduler).toFlushAndYield({'HI'})
+      jestExpect(ReactNoop.getChildren()).toEqual({span('HI')})
 
       ReactNoop.render(React.createElement(CapitalizedText, {text = "goodbye"}))
-      expect(Scheduler).toFlushAndYield({"Capitalize 'goodbye'", 'GOODBYE'})
-      expect(ReactNoop.getChildren()).toEqual({span('GOODBYE')})
+      jestExpect(Scheduler).toFlushAndYield({"Capitalize 'goodbye'", 'GOODBYE'})
+      jestExpect(ReactNoop.getChildren()).toEqual({span('GOODBYE')})
     end)
 
     it('always re-computes if no inputs are provided', function()
-      local expect: any = expect
       local function LazyCompute(props)
         local computed = useMemo(props.compute)
         return React.createElement(Text, {text = computed})
@@ -3631,22 +3549,21 @@ end)
       end
 
       ReactNoop.render(React.createElement(LazyCompute, {compute = computeA}))
-      expect(Scheduler).toFlushAndYield({'compute A', 'A'})
+      jestExpect(Scheduler).toFlushAndYield({'compute A', 'A'})
 
       ReactNoop.render(React.createElement(LazyCompute, {compute = computeA}))
-      expect(Scheduler).toFlushAndYield({'compute A', 'A'})
+      jestExpect(Scheduler).toFlushAndYield({'compute A', 'A'})
 
       ReactNoop.render(React.createElement(LazyCompute, {compute = computeA}))
-      expect(Scheduler).toFlushAndYield({'compute A', 'A'})
+      jestExpect(Scheduler).toFlushAndYield({'compute A', 'A'})
 
       ReactNoop.render(React.createElement(LazyCompute, {compute = computeB}))
-      expect(Scheduler).toFlushAndYield({'compute B', 'B'})
+      jestExpect(Scheduler).toFlushAndYield({'compute B', 'B'})
     end)
 
     it('should not invoke memoized function during re-renders unless inputs change', function()
-      local expect: any = expect
       local function LazyCompute(props)
-        local computed = useMemo(function() 
+        local computed = useMemo(function()
             return props.compute(props.input)
           end,
           {props.input}
@@ -3664,20 +3581,19 @@ end)
       end
 
       ReactNoop.render(React.createElement(LazyCompute, {compute = compute, input = "A"}))
-      expect(Scheduler).toFlushAndYield({'compute A', 'A'})
+      jestExpect(Scheduler).toFlushAndYield({'compute A', 'A'})
 
       ReactNoop.render(React.createElement(LazyCompute, {compute = compute, input = "A"}))
-      expect(Scheduler).toFlushAndYield({'A'})
+      jestExpect(Scheduler).toFlushAndYield({'A'})
 
       ReactNoop.render(React.createElement(LazyCompute, {compute = compute, input = "B"}))
-      expect(Scheduler).toFlushAndYield({'compute B', 'B'})
+      jestExpect(Scheduler).toFlushAndYield({'compute B', 'B'})
     end)
   end)
 
   describe('useRef', function()
     -- ROBLOX TODO: missing jest advanceTimersByTime
     xit('creates a ref object initialized with the provided value', function()
-      local expect: any = expect
       local jest = RobloxJest
       jest.useFakeTimers()
 
@@ -3713,17 +3629,17 @@ end)
       act(function()
         ReactNoop.render(React.createElement(App))
       end)
-      expect(Scheduler).toHaveYielded({})
+      jestExpect(Scheduler).toHaveYielded({})
 
       ping(1)
       ping(2)
       ping(3)
 
-      expect(Scheduler).toHaveYielded({})
+      jestExpect(Scheduler).toHaveYielded({})
 
       jest.advanceTimersByTime(100)
 
-      expect(Scheduler).toHaveYielded({'ping: 3'})
+      jestExpect(Scheduler).toHaveYielded({'ping: 3'})
 
       ping(4)
       jest.advanceTimersByTime(20)
@@ -3731,14 +3647,13 @@ end)
       ping(6)
       jest.advanceTimersByTime(80)
 
-      expect(Scheduler).toHaveYielded({})
+      jestExpect(Scheduler).toHaveYielded({})
 
       jest.advanceTimersByTime(20)
-      expect(Scheduler).toHaveYielded({'ping: 6'})
+      jestExpect(Scheduler).toHaveYielded({'ping: 6'})
     end)
 
     it('should return the same ref during re-renders', function()
-      local expect: any = expect
       local function Counter()
         local ref = useRef('val')
         local count, setCount = useState(0)
@@ -3756,16 +3671,15 @@ end)
       end
 
       ReactNoop.render(React.createElement(Counter))
-      expect(Scheduler).toFlushAndYield({'val'})
+      jestExpect(Scheduler).toFlushAndYield({'val'})
 
       ReactNoop.render(React.createElement(Counter))
-      expect(Scheduler).toFlushAndYield({'val'})
+      jestExpect(Scheduler).toFlushAndYield({'val'})
     end)
   end)
 
   describe('useImperativeHandle', function()
     it('does not update when deps are the same', function()
-      local expect: any = expect
       local INCREMENT = 'INCREMENT'
 
       local function reducer_(state, action)
@@ -3789,22 +3703,21 @@ end)
       ReactNoop.render(React.createElement(Counter, {
         ref = counter
       }))
-      expect(Scheduler).toFlushAndYield({'Count: 0'})
-      expect(ReactNoop.getChildren()).toEqual({span('Count: 0')})
-      expect(counter.current.count).toEqual(0)
+      jestExpect(Scheduler).toFlushAndYield({'Count: 0'})
+      jestExpect(ReactNoop.getChildren()).toEqual({span('Count: 0')})
+      jestExpect(counter.current.count).toEqual(0)
 
       act(function()
         counter.current.dispatch(INCREMENT)
       end)
-      expect(Scheduler).toHaveYielded({'Count: 1'})
-      expect(ReactNoop.getChildren()).toEqual({span('Count: 1')})
+      jestExpect(Scheduler).toHaveYielded({'Count: 1'})
+      jestExpect(ReactNoop.getChildren()).toEqual({span('Count: 1')})
       -- Intentionally not updated because of [] deps:
-      expect(counter.current.count).toEqual(0)
+      jestExpect(counter.current.count).toEqual(0)
     end)
 
     -- Regression test for https://github.com/facebook/react/issues/14782
     it('automatically updates when deps are not specified', function()
-      local expect: any = expect
       local INCREMENT = 'INCREMENT'
 
       local function reducer_(state, action)
@@ -3828,20 +3741,19 @@ end)
       ReactNoop.render(React.createElement(Counter, {
         ref = counter
       }))
-      expect(Scheduler).toFlushAndYield({'Count: 0'})
-      expect(ReactNoop.getChildren()).toEqual({span('Count: 0')})
-      expect(counter.current.count).toEqual(0)
+      jestExpect(Scheduler).toFlushAndYield({'Count: 0'})
+      jestExpect(ReactNoop.getChildren()).toEqual({span('Count: 0')})
+      jestExpect(counter.current.count).toEqual(0)
 
       act(function()
         counter.current.dispatch(INCREMENT)
       end)
-      expect(Scheduler).toHaveYielded({'Count: 1'})
-      expect(ReactNoop.getChildren()).toEqual({span('Count: 1')})
-      expect(counter.current.count).toEqual(1)
+      jestExpect(Scheduler).toHaveYielded({'Count: 1'})
+      jestExpect(ReactNoop.getChildren()).toEqual({span('Count: 1')})
+      jestExpect(counter.current.count).toEqual(1)
     end)
 
     it('updates when deps are different', function()
-      local expect: any = expect
       local INCREMENT = 'INCREMENT'
 
       local function reducer_(state, action)
@@ -3871,27 +3783,27 @@ end)
       ReactNoop.render(React.createElement(Counter, {
         ref = counter
       }))
-      expect(Scheduler).toFlushAndYield({'Count: 0'})
-      expect(ReactNoop.getChildren()).toEqual({span('Count: 0')})
-      expect(counter.current.count).toEqual(0)
-      expect(totalRefUpdates).toEqual(1)
+      jestExpect(Scheduler).toFlushAndYield({'Count: 0'})
+      jestExpect(ReactNoop.getChildren()).toEqual({span('Count: 0')})
+      jestExpect(counter.current.count).toEqual(0)
+      jestExpect(totalRefUpdates).toEqual(1)
 
       act(function()
         counter.current.dispatch(INCREMENT)
       end)
-      expect(Scheduler).toHaveYielded({'Count: 1'})
-      expect(ReactNoop.getChildren()).toEqual({span('Count: 1')})
-      expect(counter.current.count).toEqual(1)
-      expect(totalRefUpdates).toEqual(2)
+      jestExpect(Scheduler).toHaveYielded({'Count: 1'})
+      jestExpect(ReactNoop.getChildren()).toEqual({span('Count: 1')})
+      jestExpect(counter.current.count).toEqual(1)
+      jestExpect(totalRefUpdates).toEqual(2)
 
       -- Update that doesn't change the ref dependencies
       ReactNoop.render(React.createElement(Counter, {
         ref = counter
       }))
-      expect(Scheduler).toFlushAndYield({'Count: 1'})
-      expect(ReactNoop.getChildren()).toEqual({span('Count: 1')})
-      expect(counter.current.count).toEqual(1)
-      expect(totalRefUpdates).toEqual(2); -- Should not increase since last time
+      jestExpect(Scheduler).toFlushAndYield({'Count: 1'})
+      jestExpect(ReactNoop.getChildren()).toEqual({span('Count: 1')})
+      jestExpect(counter.current.count).toEqual(1)
+      jestExpect(totalRefUpdates).toEqual(2); -- Should not increase since last time
     end)
   end)
   -- describe('useTransition', function()
@@ -3920,8 +3832,8 @@ end)
   --       )
   --     end
   --     ReactNoop.render(<App />)
-  --     expect(Scheduler).toFlushAndYield(['Before... Pending: false'])
-  --     expect(ReactNoop.getChildren()).toEqual([
+  --     jestExpect(Scheduler).toFlushAndYield(['Before... Pending: false'])
+  --     jestExpect(ReactNoop.getChildren()).toEqual([
   --       span('Before... Pending: false'),
   --     ])
 
@@ -3931,12 +3843,12 @@ end)
   --         transition,
   --       )
 
-  --       expect(Scheduler).toFlushAndYield([
+  --       jestExpect(Scheduler).toFlushAndYield([
   --         'Before... Pending: true',
   --         'Suspend! [After... Pending: false]',
   --         'Loading... Pending: false',
   --       ])
-  --       expect(ReactNoop.getChildren()).toEqual([
+  --       jestExpect(ReactNoop.getChildren()).toEqual([
   --         span('Before... Pending: true'),
   --       ])
   --       Scheduler.unstable_advanceTime(500)
@@ -3945,16 +3857,16 @@ end)
   --       -- Even after a long amount of time, we still don't show a placeholder.
   --       Scheduler.unstable_advanceTime(100000)
   --       await advanceTimers(100000)
-  --       expect(ReactNoop.getChildren()).toEqual([
+  --       jestExpect(ReactNoop.getChildren()).toEqual([
   --         span('Before... Pending: true'),
   --       ])
 
   --       await resolveText('After... Pending: false')
-  --       expect(Scheduler).toHaveYielded([
+  --       jestExpect(Scheduler).toHaveYielded([
   --         'Promise resolved [After... Pending: false]',
   --       ])
-  --       expect(Scheduler).toFlushAndYield(['After... Pending: false'])
-  --       expect(ReactNoop.getChildren()).toEqual([
+  --       jestExpect(Scheduler).toFlushAndYield(['After... Pending: false'])
+  --       jestExpect(ReactNoop.getChildren()).toEqual([
   --         span('After... Pending: false'),
   --       ])
   --     })
@@ -3989,218 +3901,226 @@ end)
   --       ReactNoop.render(<App />)
   --     })
 
-  --     expect(Scheduler).toHaveYielded(['A', 'Suspend! [A]', 'Loading'])
-  --     expect(ReactNoop.getChildren()).toEqual([span('A'), span('Loading')])
+  --     jestExpect(Scheduler).toHaveYielded(['A', 'Suspend! [A]', 'Loading'])
+  --     jestExpect(ReactNoop.getChildren()).toEqual([span('A'), span('Loading')])
 
   --     await resolveText('A')
-  --     expect(Scheduler).toHaveYielded(['Promise resolved [A]'])
-  --     expect(Scheduler).toFlushAndYield(['A'])
-  --     expect(ReactNoop.getChildren()).toEqual([span('A'), span('A')])
+  --     jestExpect(Scheduler).toHaveYielded(['Promise resolved [A]'])
+  --     jestExpect(Scheduler).toFlushAndYield(['A'])
+  --     jestExpect(ReactNoop.getChildren()).toEqual([span('A'), span('A')])
 
   --     await act(async function()
   --       _setText('B')
-  --       expect(Scheduler).toFlushAndYield([
+  --       jestExpect(Scheduler).toFlushAndYield([
   --         'B',
   --         'A',
   --         'B',
   --         'Suspend! [B]',
   --         'Loading',
   --       ])
-  --       expect(Scheduler).toFlushAndYield([])
-  --       expect(ReactNoop.getChildren()).toEqual([span('B'), span('A')])
+  --       jestExpect(Scheduler).toFlushAndYield([])
+  --       jestExpect(ReactNoop.getChildren()).toEqual([span('B'), span('A')])
   --     })
 
   --     await act(async function()
   --       Scheduler.unstable_advanceTime(250)
   --       await advanceTimers(250)
   --     })
-  --     expect(Scheduler).toHaveYielded([])
-  --     expect(ReactNoop.getChildren()).toEqual([span('B'), span('A')])
+  --     jestExpect(Scheduler).toHaveYielded([])
+  --     jestExpect(ReactNoop.getChildren()).toEqual([span('B'), span('A')])
 
   --     -- Even after a long amount of time, we don't show a fallback
   --     Scheduler.unstable_advanceTime(100000)
   --     await advanceTimers(100000)
-  --     expect(Scheduler).toFlushAndYield([])
-  --     expect(ReactNoop.getChildren()).toEqual([span('B'), span('A')])
+  --     jestExpect(Scheduler).toFlushAndYield([])
+  --     jestExpect(ReactNoop.getChildren()).toEqual([span('B'), span('A')])
 
   --     await act(async function()
   --       await resolveText('B')
   --     })
-  --     expect(Scheduler).toHaveYielded(['Promise resolved [B]', 'B', 'B'])
-  --     expect(ReactNoop.getChildren()).toEqual([span('B'), span('B')])
+  --     jestExpect(Scheduler).toHaveYielded(['Promise resolved [B]', 'B', 'B'])
+  --     jestExpect(ReactNoop.getChildren()).toEqual([span('B'), span('B')])
   --   })
   -- })
 
   describe('progressive enhancement (not supported)', function()
-  --   it('mount additional state', function()
-  --     local updateA
-  --     local updateB
-  --     -- local updateC
+    -- ROBLOX FIXME: has the top error message cut off the stack
+    xit('mount additional state', function()
+      local updateA
+      local updateB
+      -- local updateC
 
-  --     function App(props)
-  --       local [A, _updateA] = useState(0)
-  --       local [B, _updateB] = useState(0)
-  --       updateA = _updateA
-  --       updateB = _updateB
+      local function App(props)
+        local A, _updateA = useState(0)
+        local B, _updateB = useState(0)
+        updateA = _updateA
+        updateB = _updateB
 
-  --       local C
-  --       if props.loadC)
-  --         useState(0)
-  --       } else {
-  --         C = '[not loaded]'
-  --       end
+        local C
+        if props.loadC then
+          useState(0)
+        else
+          C = '[not loaded]'
+        end
 
-  --       return <Text text={`A: ${A}, B: ${B}, C: ${C}`} />
-  --     end
+        return React.createElement(Text, {
+          text=("A: %s, B: %s, C: %s"):format(A, B, C)
+        })
+      end
 
-  --     ReactNoop.render(<App loadC={false} />)
-  --     expect(Scheduler).toFlushAndYield(['A: 0, B: 0, C: [not loaded]'])
-  --     expect(ReactNoop.getChildren()).toEqual([
-  --       span('A: 0, B: 0, C: [not loaded]'),
-  --     ])
+      ReactNoop.render(React.createElement(App, {loadC=false}))
+      jestExpect(Scheduler).toFlushAndYield({'A: 0, B: 0, C: [not loaded]'})
+      jestExpect(ReactNoop.getChildren()).toEqual({
+        span('A: 0, B: 0, C: [not loaded]'),
+      })
 
-  --     act(function()
-  --       updateA(2)
-  --       updateB(3)
-  --     })
+      act(function()
+        updateA(2)
+        updateB(3)
+      end)
 
-  --     expect(Scheduler).toHaveYielded(['A: 2, B: 3, C: [not loaded]'])
-  --     expect(ReactNoop.getChildren()).toEqual([
-  --       span('A: 2, B: 3, C: [not loaded]'),
-  --     ])
+      jestExpect(Scheduler).toHaveYielded({'A: 2, B: 3, C: [not loaded]'})
+      jestExpect(ReactNoop.getChildren()).toEqual({
+        span('A: 2, B: 3, C: [not loaded]'),
+      })
 
-  --     ReactNoop.render(<App loadC={true} />)
-  --     expect(function()
-  --       expect(function()
-  --         expect(Scheduler).toFlushAndYield(['A: 2, B: 3, C: 0'])
-  --       }).toThrow('Rendered more hooks than during the previous render')
-  --     }).toErrorDev([
-  --       'Warning: React has detected a change in the order of Hooks called by App. ' ..
-  --         'This will lead to bugs and errors if not fixed. For more information, ' ..
-  --         'read the Rules of Hooks: https://reactjs.org/link/rules-of-hooks\n\n' ..
-  --         '   Previous render            Next render\n' ..
-  --         '   ------------------------------------------------------\n' ..
-  --         '1. useState                   useState\n' ..
-  --         '2. useState                   useState\n' ..
-  --         '3. undefined                  useState\n' ..
-  --         '   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n',
-  --     ])
+      ReactNoop.render(React.createElement(App, {loadC=true}))
+      jestExpect(function()
+        jestExpect(function()
+          jestExpect(Scheduler).toFlushAndYield({'A: 2, B: 3, C: 0'})
+        end).toThrow('Rendered more hooks than during the previous render')
+      end).toErrorDev({
+        'Warning: React has detected a change in the order of Hooks called by App. ' ..
+          'This will lead to bugs and errors if not fixed. For more information, ' ..
+          'read the Rules of Hooks: https://reactjs.org/link/rules-of-hooks\n\n' ..
+          '   Previous render            Next render\n' ..
+          '   ------------------------------------------------------\n' ..
+          '1. useState                   useState\n' ..
+          '2. useState                   useState\n' ..
+          '3. undefined                  useState\n' ..
+          '   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n',
+      })
 
-  --     -- Uncomment if/when we support this again
-  --     -- expect(ReactNoop.getChildren()).toEqual([span('A: 2, B: 3, C: 0')])
+      -- Uncomment if/when we support this again
+      -- jestExpect(ReactNoop.getChildren()).toEqual([span('A: 2, B: 3, C: 0')])
 
-  --     -- updateC(4)
-  --     -- expect(Scheduler).toFlushAndYield(['A: 2, B: 3, C: 4'])
-  --     -- expect(ReactNoop.getChildren()).toEqual([span('A: 2, B: 3, C: 4')])
-  --   })
+      -- updateC(4)
+      -- jestExpect(Scheduler).toFlushAndYield(['A: 2, B: 3, C: 4'])
+      -- jestExpect(ReactNoop.getChildren()).toEqual([span('A: 2, B: 3, C: 4')])
+    end)
 
-  --   it('unmount state', function()
-  --     local updateA
-  --     local updateB
-  --     local updateC
+    it('unmount state', function()
+      local updateA
+      local updateB
+      local updateC
 
-  --     function App(props)
-  --       local [A, _updateA] = useState(0)
-  --       local [B, _updateB] = useState(0)
-  --       updateA = _updateA
-  --       updateB = _updateB
+      local function App(props)
+        local A, _updateA = useState(0)
+        local B, _updateB = useState(0)
+        updateA = _updateA
+        updateB = _updateB
 
-  --       local C
-  --       if props.loadC)
-  --         local [_C, _updateC] = useState(0)
-  --         C = _C
-  --         updateC = _updateC
-  --       } else {
-  --         C = '[not loaded]'
-  --       end
+        local C
+        if props.loadC then
+          local _C, _updateC = useState(0)
+          C = _C
+          updateC = _updateC
+        else
+          C = '[not loaded]'
+        end
 
-  --       return <Text text={`A: ${A}, B: ${B}, C: ${C}`} />
-  --     end
+        return React.createElement(Text, {
+          text=("A: %s, B: %s, C: %s"):format(A, B, C)
+        })
+      end
 
-  --     ReactNoop.render(<App loadC={true} />)
-  --     expect(Scheduler).toFlushAndYield(['A: 0, B: 0, C: 0'])
-  --     expect(ReactNoop.getChildren()).toEqual([span('A: 0, B: 0, C: 0')])
-  --     act(function()
-  --       updateA(2)
-  --       updateB(3)
-  --       updateC(4)
-  --     })
-  --     expect(Scheduler).toHaveYielded(['A: 2, B: 3, C: 4'])
-  --     expect(ReactNoop.getChildren()).toEqual([span('A: 2, B: 3, C: 4')])
-  --     ReactNoop.render(<App loadC={false} />)
-  --     expect(Scheduler).toFlushAndThrow(
-  --       'Rendered fewer hooks than expected. This may be caused by an ' ..
-  --         'accidental early return statement.',
-  --     )
-  --   })
+      ReactNoop.render(React.createElement(App, {loadC=true}))
+      jestExpect(Scheduler).toFlushAndYield({'A: 0, B: 0, C: 0'})
+      jestExpect(ReactNoop.getChildren()).toEqual({span('A: 0, B: 0, C: 0')})
+      act(function()
+        updateA(2)
+        updateB(3)
+        updateC(4)
+      end)
+      jestExpect(Scheduler).toHaveYielded({'A: 2, B: 3, C: 4'})
+      jestExpect(ReactNoop.getChildren()).toEqual({span('A: 2, B: 3, C: 4')})
+      ReactNoop.render(React.createElement(App, {loadC=false}))
+      jestExpect(Scheduler).toFlushAndThrow(
+        'Rendered fewer hooks than expected. This may be caused by an ' ..
+          'accidental early return statement.'
+      )
+    end)
 
-  --   it('unmount effects', function()
-  --     function App(props)
-  --       useEffect(function()
-  --         Scheduler.unstable_yieldValue('Mount A')
-  --         return function()
-  --           Scheduler.unstable_yieldValue('Unmount A')
-  --         end
-  --       }, [])
+    -- ROBLOX FIXME: missing the top line of the error message
+    xit('unmount effects', function()
+      local function App(props)
+        useEffect(function()
+          Scheduler.unstable_yieldValue('Mount A')
+          return function()
+            Scheduler.unstable_yieldValue('Unmount A')
+          end
+        end, {})
 
-  --       if props.showMore)
-  --         useEffect(function()
-  --           Scheduler.unstable_yieldValue('Mount B')
-  --           return function()
-  --             Scheduler.unstable_yieldValue('Unmount B')
-  --           end
-  --         }, [])
-  --       end
+        if props.showMore then
+          useEffect(function()
+            Scheduler.unstable_yieldValue('Mount B')
+            return function()
+              Scheduler.unstable_yieldValue('Unmount B')
+            end
+          end, {})
+        end
 
-  --       return nil
-  --     end
+        return nil
+      end
 
-  --     act(function()
-  --       ReactNoop.render(<App showMore={false} />, function()
-  --         Scheduler.unstable_yieldValue('Sync effect'),
-  --       )
-  --       expect(Scheduler).toFlushAndYieldThrough(['Sync effect'])
-  --     })
+      act(function()
+        ReactNoop.render(
+          React.createElement(App, {showMore=false}),
+          function()
+            Scheduler.unstable_yieldValue('Sync effect')
+          end
+        )
+        jestExpect(Scheduler).toFlushAndYieldThrough({'Sync effect'})
+      end)
 
-  --     expect(Scheduler).toHaveYielded(['Mount A'])
+      jestExpect(Scheduler).toHaveYielded({'Mount A'})
 
-  --     act(function()
-  --       ReactNoop.render(<App showMore={true} />)
-  --       expect(function()
-  --         expect(function()
-  --           expect(Scheduler).toFlushAndYield([])
-  --         }).toThrow('Rendered more hooks than during the previous render')
-  --       }).toErrorDev([
-  --         'Warning: React has detected a change in the order of Hooks called by App. ' ..
-  --           'This will lead to bugs and errors if not fixed. For more information, ' ..
-  --           'read the Rules of Hooks: https://reactjs.org/link/rules-of-hooks\n\n' ..
-  --           '   Previous render            Next render\n' ..
-  --           '   ------------------------------------------------------\n' ..
-  --           '1. useEffect                  useEffect\n' ..
-  --           '2. undefined                  useEffect\n' ..
-  --           '   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n',
-  --       ])
-  --     })
+      act(function()
+        ReactNoop.render(React.createElement(App, {showMore=true}))
+        jestExpect(function()
+          jestExpect(function()
+            jestExpect(Scheduler).toFlushAndYield({})
+          end).toThrow('Rendered more hooks than during the previous render')
+        end).toErrorDev({
+          'Warning: React has detected a change in the order of Hooks called by App. ' ..
+            'This will lead to bugs and errors if not fixed. For more information, ' ..
+            'read the Rules of Hooks: https://reactjs.org/link/rules-of-hooks\n\n' ..
+            '   Previous render            Next render\n' ..
+            '   ------------------------------------------------------\n' ..
+            '1. useEffect                  useEffect\n' ..
+            '2. undefined                  useEffect\n' ..
+            '   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n',
+        })
+      end)
 
-  --     -- Uncomment if/when we support this again
-  --     -- ReactNoop.flushPassiveEffects()
-  --     -- expect(Scheduler).toHaveYielded(['Mount B'])
+      -- Uncomment if/when we support this again
+      -- ReactNoop.flushPassiveEffects()
+      -- jestExpect(Scheduler).toHaveYielded(['Mount B'])
 
-  --     -- ReactNoop.render(<App showMore={false} />)
-  --     -- expect(Scheduler).toFlushAndThrow(
-  --     --   'Rendered fewer hooks than expected. This may be caused by an ' ..
-  --     --     'accidental early return statement.',
-  --     -- )
-  --   })
-  -- })
+      -- ReactNoop.render(<App showMore={false} />)
+      -- jestExpect(Scheduler).toFlushAndThrow(
+      --   'Rendered fewer hooks than expected. This may be caused by an ' ..
+      --     'accidental early return statement.',
+      -- )
+    end)
+  end)
 
   it('eager bailout optimization should always compare to latest rendered reducer', function()
-    local expect: any = expect
     -- Edge case based on a bug report
     local counter, setCounter
 
     local function Component(props)
-      -- deviation: can't destructure list in Lua function arguments
+      -- ROBLOX deviation: can't destructure list in Lua function arguments
       local count = props.count
       local state, dispatch = useReducer(function()
         -- This reducer closes over a value from props. If the reducer is not
@@ -4224,7 +4144,7 @@ end)
 
     act(function()
       ReactNoop.render(React.createElement(App))
-      expect(Scheduler).toFlushAndYield({
+      jestExpect(Scheduler).toFlushAndYield({
         'Render: -1',
         'Effect: 1',
         'Reducer: 1',
@@ -4232,16 +4152,16 @@ end)
         'Render: 1',
       })
       -- ROBLOX TODO: replace the below expects with toMatchRenderedOutput
-      -- expect(ReactNoop).toMatchRenderedOutput('1')
+      -- jestExpect(ReactNoop).toMatchRenderedOutput('1')
       local renderedOutput = ReactNoop.getChildren()
-      expect(#renderedOutput).toEqual(1)
-      expect(renderedOutput[1].text).toEqual('1')
+      jestExpect(#renderedOutput).toEqual(1)
+      jestExpect(renderedOutput[1].text).toEqual('1')
     end)
 
     act(function()
       setCounter(2)
     end)
-    expect(Scheduler).toHaveYielded({
+    jestExpect(Scheduler).toHaveYielded({
       'Render: 1',
       'Effect: 2',
       'Reducer: 2',
@@ -4249,12 +4169,13 @@ end)
       'Render: 2',
     })
     -- ROBLOX TODO: replace the below expects with toMatchRenderedOutput
-    -- expect(ReactNoop).toMatchRenderedOutput('2')
+    -- jestExpect(ReactNoop).toMatchRenderedOutput('2')
     local renderedOutput = ReactNoop.getChildren()
-    expect(#renderedOutput).toEqual(1)
-    expect(renderedOutput[1].text).toEqual('2')
+    jestExpect(#renderedOutput).toEqual(1)
+    jestExpect(renderedOutput[1].text).toEqual('2')
   end)
 
+  -- ROBLOX FIXME: this test needs to be enabled
   -- -- Regression test. Covers a case where an internal state variable
   -- -- (`didReceiveUpdate`) is not reset properly.
   -- it('state bail out edge case (#16359)', async function()
@@ -4290,7 +4211,7 @@ end)
   --       </>,
   --     )
   --   })
-  --   expect(Scheduler).toHaveYielded([
+  --   jestExpect(Scheduler).toHaveYielded([
   --     'Render A: 0',
   --     'Render B: 0',
   --     'Commit A: 0',
@@ -4306,7 +4227,7 @@ end)
   --     setCounterB(1)
   --     setCounterB(0)
   --   })
-  --   expect(Scheduler).toHaveYielded([
+  --   jestExpect(Scheduler).toHaveYielded([
   --     'Render A: 1',
   --     'Render B: 0',
   --     'Commit A: 1',
@@ -4316,7 +4237,6 @@ end)
   -- })
 
   it('should update latest rendered reducer when a preceding state receives a render phase update', function()
-    local expect: any = expect
     -- Similar to previous test, except using a preceding render phase update
     -- instead of new props.
     local shadow, dispatch
@@ -4335,7 +4255,7 @@ end)
     end
 
     ReactNoop.render(React.createElement(App))
-    expect(Scheduler).toFlushAndYield({
+    jestExpect(Scheduler).toFlushAndYield({
       'Step: 0, Shadow: 0',
       'Step: 1, Shadow: 0',
       'Step: 2, Shadow: 0',
@@ -4345,53 +4265,68 @@ end)
     })
 
     -- ROBLOX TODO: replace the below expects with toMatchRenderedOutput
-    -- expect(ReactNoop).toMatchRenderedOutput('0')
+    -- jestExpect(ReactNoop).toMatchRenderedOutput('0')
     local renderedOutput = ReactNoop.getChildren()
-    expect(#renderedOutput).toEqual(1)
-    expect(renderedOutput[1].text).toEqual('0')
+    jestExpect(#renderedOutput).toEqual(1)
+    jestExpect(renderedOutput[1].text).toEqual('0')
 
-    act(function() 
+    act(function()
       return dispatch()
     end)
-    expect(Scheduler).toHaveYielded({'Step: 5, Shadow: 5'})
+    jestExpect(Scheduler).toHaveYielded({'Step: 5, Shadow: 5'})
     -- ROBLOX TODO: replace the below expects with toMatchRenderedOutput
-    -- expect(ReactNoop).toMatchRenderedOutput('5')
+    -- jestExpect(ReactNoop).toMatchRenderedOutput('5')
     renderedOutput = ReactNoop.getChildren()
-    expect(#renderedOutput).toEqual(1)
-    expect(renderedOutput[1].text).toEqual('5')
+    jestExpect(#renderedOutput).toEqual(1)
+    jestExpect(renderedOutput[1].text).toEqual('5')
   end)
 
-  -- it('should process the rest pending updates after a render phase update', function()
-  --   -- Similar to previous test, except using a preceding render phase update
-  --   -- instead of new props.
-  --   local updateA
-  --   local updateC
-  --   function App()
-  --     local [a, setA] = useState(false)
-  --     local [b, setB] = useState(false)
-  --     if a ~= b)
-  --       setB(a)
-  --     end
-  --     -- Even though we called setB above,
-  --     -- we should still apply the changes to C,
-  --     -- during this render pass.
-  --     local [c, setC] = useState(false)
-  --     updateA = setA
-  --     updateC = setC
-  --     return `${a ? 'A' : 'a'}${b ? 'B' : 'b'}${c ? 'C' : 'c'}`
-  --   end
+  it('should process the rest pending updates after a render phase update', function()
+    -- Similar to previous test, except using a preceding render phase update
+    -- instead of new props.
+    local updateA
+    local updateC
+    local function App()
+      local a, setA = useState(false)
+      local b, setB = useState(false)
+      if a ~= b then
+        setB(a)
+      end
+      -- Even though we called setB above,
+      -- we should still apply the changes to C,
+      -- during this render pass.
+      local c, setC = useState(false)
+      updateA = setA
+      updateC = setC
+      return ("%s%s%s"):format(
+        a and 'A' or 'a',
+        b and 'B' or 'b',
+        c and 'C' or 'c'
+      )
+    end
 
-  --   act(function() ReactNoop.render(<App />))
-  --   expect(ReactNoop).toMatchRenderedOutput('abc')
+    act(function()
+      ReactNoop.render(React.createElement(App))
+    end)
+    -- ROBLOX TODO: replace the below expects with toMatchRenderedOutput
+    -- jestExpect(ReactNoop).toMatchRenderedOutput('abc')
+    local renderedOutput = ReactNoop.getChildren()
+    jestExpect(#renderedOutput).toEqual(1)
+    jestExpect(renderedOutput[1].text).toEqual('abc')
 
-  --   act(function()
-  --     updateA(true)
-  --     -- This update should not get dropped.
-  --     updateC(true)
-  --   })
-  --   expect(ReactNoop).toMatchRenderedOutput('ABC')
-  -- })
+    act(function()
+      updateA(true)
+      -- This update should not get dropped.
+      updateC(true)
+    end)
+    -- ROBLOX TODO: replace the below expects with toMatchRenderedOutput
+    -- jestExpect(ReactNoop).toMatchRenderedOutput('ABC')
+    renderedOutput = ReactNoop.getChildren()
+    jestExpect(#renderedOutput).toEqual(1)
+    jestExpect(renderedOutput[1].text).toEqual('ABC')
+  end)
 
+  -- ROBLOX TODO: enable this test
   -- it("regression test: don't unmount effects on siblings of deleted nodes", async function()
   --   local root = ReactNoop.createRoot()
 
@@ -4419,7 +4354,7 @@ end)
   --       </>,
   --     )
   --   })
-  --   expect(Scheduler).toHaveYielded([
+  --   jestExpect(Scheduler).toHaveYielded([
   --     'Mount layout A',
   --     'Mount layout B',
   --     'Mount passive A',
@@ -4435,12 +4370,12 @@ end)
   --       </>,
   --     )
   --   })
-  --   expect(Scheduler).toHaveYielded(['Unmount layout A', 'Unmount passive A'])
+  --   jestExpect(Scheduler).toHaveYielded(['Unmount layout A', 'Unmount passive A'])
 
   --   -- Now delete and unmount B.
   --   await act(async function()
   --     root.render(null)
   --   })
-  --   expect(Scheduler).toHaveYielded(['Unmount layout B', 'Unmount passive B'])
-  end)
+  --   jestExpect(Scheduler).toHaveYielded(['Unmount layout B', 'Unmount passive B'])
+  -- end)
 end

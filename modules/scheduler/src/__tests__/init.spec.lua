@@ -1,17 +1,11 @@
--- FIXME: roblox-cli has special, hard-coded types for TestEZ that break when we
---use custom matchers added via `expect.extend`
---!nocheck
 return function()
 	local Workspace = script.Parent.Parent.Parent
-	local RobloxJest = require(Workspace.RobloxJest)
+	local Packages = Workspace.Parent
+	local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
+
 	local getJestMatchers = require(script.Parent.Parent["getJestMatchers.roblox"])
 
 	beforeAll(function()
-		expect.extend(getJestMatchers(expect))
-
-		expect.extend({
-			toEqual = RobloxJest.Matchers.toEqual,
-			toThrow = RobloxJest.Matchers.toThrow,
-		})
+		jestExpect.extend(getJestMatchers(jestExpect))
 	end)
 end

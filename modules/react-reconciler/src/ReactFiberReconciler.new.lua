@@ -428,7 +428,7 @@ end
 -- Increases the priority of thennables when they resolve within this boundary.
 markRetryLaneIfNotHydrated = function(fiber: Fiber, retryLane: Lane)
 	markRetryLaneImpl(fiber, retryLane)
-	-- deviation: grab local for this since Luau can't deal with nested type narrowing
+	-- ROBLOX TODO: grab local for this since Luau can't deal with nested type narrowing
 	local alternate = fiber.alternate
 	if alternate then
 		markRetryLaneImpl(alternate, retryLane)
@@ -731,7 +731,7 @@ if _G.__DEV__ then
 	-- Support DevTools props for function components, forwardRef, memo, host components, etc.
 	overrideProps = function(fiber: Fiber, path: Array<string | number>, value: any)
 		fiber.pendingProps = copyWithSet(fiber.memoizedProps, path, value)
-		-- deviation: grab local for this since Luau can't deal with nested type narrowing
+		-- ROBLOX TODO: grab local for this since Luau can't deal with nested type narrowing
 		local alternate = fiber.alternate
 		if alternate then
 			alternate.pendingProps = fiber.pendingProps
@@ -740,7 +740,7 @@ if _G.__DEV__ then
 	end
 	overridePropsDeletePath = function(fiber: Fiber, path: Array<string | number>)
 		fiber.pendingProps = copyWithDelete(fiber.memoizedProps, path)
-		-- deviation: grab local for this since Luau can't deal with nested type narrowing
+		-- ROBLOX TODO: grab local for this since Luau can't deal with nested type narrowing
 		local alternate = fiber.alternate
 		if alternate then
 			alternate.pendingProps = fiber.pendingProps
@@ -753,7 +753,7 @@ if _G.__DEV__ then
 		newPath: Array<string | number>
 	)
 		fiber.pendingProps = copyWithRename(fiber.memoizedProps, oldPath, newPath)
-		-- deviation: grab local for this since Luau can't deal with nested type narrowing
+		-- ROBLOX TODO: grab local for this since Luau can't deal with nested type narrowing
 		local alternate = fiber.alternate
 		if alternate then
 			alternate.pendingProps = fiber.pendingProps

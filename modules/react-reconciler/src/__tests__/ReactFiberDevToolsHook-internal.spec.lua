@@ -12,6 +12,8 @@
 return function()
 	local Workspace = script.Parent.Parent.Parent
 	local RobloxJest = require(Workspace.RobloxJest)
+	local Packages = Workspace.Parent
+	local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
 
 	local ReactFiberDevToolsHook
 
@@ -34,6 +36,7 @@ return function()
 			_G.__REACT_DEVTOOLS_GLOBAL_HOOK__ = originalDevtoolsState
 		end)
 
+		-- ROBLOX TODO: devtools
 		if _G.__DEV__ then
 			itSKIP("should log an error when fibers aren't supported", function()
 				_G.__REACT_DEVTOOLS_GLOBAL_HOOK__ = {
@@ -42,7 +45,7 @@ return function()
 				}
 				local result = ReactFiberDevToolsHook.injectInternals({})
 				-- expect logs to include error
-				expect(result).to.equal(true)
+				jestExpect(result).toBe(true)
 			end)
 		end
 	end)

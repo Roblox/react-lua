@@ -19,6 +19,9 @@ local RobloxJest = require(Workspace.RobloxJest)
 -- ROBLOX TODO: split non-DOM test into separate file, make upstream PR for this division
 
 return function()
+    local Packages = Workspace.Parent
+    local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
+
     describe('ReactStrictMode', function()
         beforeEach(function()
             RobloxJest.resetModules()
@@ -42,34 +45,31 @@ return function()
         end)
         -- ROBLOX TODO: Untranslated ReactDOMInvalidARIAHook file throws the error this test checks
         -- xit('should appear in the client component stack', function()
-        --     local expect: any = expect
         --     local function Foo()
         --         return React.createElement('div', {
         --             ariaTypo = '',
         --         })
         --     end
 
-        --     expect(function()
+        --     jestExpect(function()
         --         -- ROBLOX deviation: use ReactNoop to render instead of ReactDOM
         --         ReactNoop.render(React.createElement(React.StrictMode, nil, React.createElement(Foo)))
         --     end).toErrorDev('Invalid ARIA attribute `ariaTypo`. ' .. 'ARIA attributes follow the pattern aria-* and must be lowercase.\n' .. '    in div (at **)\n' .. '    in Foo (at **)')
         -- end)
         -- ROBLOX TODO: Untranslated ReactDOMInvalidARIAHook file throws the error this test checks
         -- xit('should appear in the SSR component stack', function()
-        --     local expect: any = expect
         --     local function Foo()
         --         return React.createElement('div', {
         --             ariaTypo = '',
         --         })
         --     end
 
-        --     expect(function()
+        --     jestExpect(function()
         --         -- ROBLOX deviation: use ReactNoop.render to render instead of ReactDOMServer.renderToString
         --         ReactNoop.render(React.createElement(React.StrictMode, nil, React.createElement(Foo)))
         --     end).toErrorDev('Invalid ARIA attribute `ariaTypo`. ' .. 'ARIA attributes follow the pattern aria-* and must be lowercase.\n' .. '    in div (at **)\n' .. '    in Foo (at **)')
         -- end)
         it('should invoke precommit lifecycle methods twice', function()
-            local expect: any = expect
             local log = {}
             local shouldComponentUpdate = false
             local ClassComponent = React.Component:extend("ClassComponent")
@@ -111,7 +111,7 @@ return function()
             end)
 
             if _G.__DEV__ then
-                expect(log).toEqual({
+                jestExpect(log).toEqual({
                     'constructor',
                     'constructor',
                     'getDerivedStateFromProps',
@@ -121,7 +121,7 @@ return function()
                     'componentDidMount',
                 })
             else
-                expect(log).toEqual({
+                jestExpect(log).toEqual({
                     'constructor',
                     'getDerivedStateFromProps',
                     'render',
@@ -138,7 +138,7 @@ return function()
             end)
 
             if _G.__DEV__ then
-                expect(log).toEqual({
+                jestExpect(log).toEqual({
                     'getDerivedStateFromProps',
                     'getDerivedStateFromProps',
                     'shouldComponentUpdate',
@@ -148,7 +148,7 @@ return function()
                     'componentDidUpdate',
                 })
             else
-                expect(log).toEqual({
+                jestExpect(log).toEqual({
                     'getDerivedStateFromProps',
                     'shouldComponentUpdate',
                     'render',
@@ -165,24 +165,23 @@ return function()
             end)
 
             if _G.__DEV__ then
-                expect(log).toEqual({
+                jestExpect(log).toEqual({
                     'getDerivedStateFromProps',
                     'getDerivedStateFromProps',
                     'shouldComponentUpdate',
                     'shouldComponentUpdate',
                 })
             else
-                expect(log).toEqual({
+                jestExpect(log).toEqual({
                     'getDerivedStateFromProps',
                     'shouldComponentUpdate',
                 })
             end
         end)
         it('should invoke setState callbacks twice', function()
-            local expect: any = expect
             local instance
             local ClassComponent = React.Component:extend("ClassComponent")
-            
+
             function ClassComponent:init()
                 self.state = {count = 1}
             end
@@ -190,18 +189,18 @@ return function()
                 instance = self
                 return nil
             end
-            
+
             local setStateCount = 0
-            
+
             -- ROBLOX deviation: use ReactNoop.render to render instead of ReactDOM.render
             ReactNoop.act(function()
                 ReactNoop.render(React.createElement(React.StrictMode, nil, React.createElement(ClassComponent)))
             end)
-            
+
             -- ROBLOX deviation: using ReactNoop in place of ReactDOM, needs flushSync
             ReactNoop.flushSync(function()
                 instance:setState(function(self, state: {count: number})
-                    
+
                     setStateCount = setStateCount + 1
                     return {
                         count = state.count + 1,
@@ -209,7 +208,7 @@ return function()
                 end)
             end)
             -- Callback should be invoked twice in DEV
-            expect(setStateCount).toEqual((function()
+            jestExpect(setStateCount).toEqual((function()
                 if _G.__DEV__ then
                     return 2
                 end
@@ -217,17 +216,16 @@ return function()
                 return 1
             end)())
             -- But each time `state` should be the previous value
-            expect(instance.state.count).toEqual(2)
+            jestExpect(instance.state.count).toEqual(2)
         end)
         it('should invoke precommit lifecycle methods twice in DEV', function()
-            local expect: any = expect
             local StrictMode = React.StrictMode
             local log = {}
             local shouldComponentUpdate = false
 
-            
+
             local ClassComponent = React.Component:extend("ClassComponent")
-            
+
             function ClassComponent:init(props)
                 -- ROBLOX deviation: silence analyze with explicit state
                 self.state = {}
@@ -248,15 +246,15 @@ return function()
             end
             function ClassComponent:shouldComponentUpdate()
                 table.insert(log, 'shouldComponentUpdate')
-                
+
                 return shouldComponentUpdate
             end
             function ClassComponent:render()
                 table.insert(log, 'render')
-                
+
                 return nil
             end
-            
+
             local function Root()
                 return React.createElement(StrictMode, nil, React.createElement(ClassComponent))
             end
@@ -267,7 +265,7 @@ return function()
             end)
 
             if _G.__DEV__ then
-                expect(log).toEqual({
+                jestExpect(log).toEqual({
                     'constructor',
                     'constructor',
                     'getDerivedStateFromProps',
@@ -277,7 +275,7 @@ return function()
                     'componentDidMount',
                 })
             else
-                expect(log).toEqual({
+                jestExpect(log).toEqual({
                     'constructor',
                     'getDerivedStateFromProps',
                     'render',
@@ -294,7 +292,7 @@ return function()
             end)
 
             if _G.__DEV__ then
-                expect(log).toEqual({
+                jestExpect(log).toEqual({
                     'getDerivedStateFromProps',
                     'getDerivedStateFromProps',
                     'shouldComponentUpdate',
@@ -304,7 +302,7 @@ return function()
                     'componentDidUpdate',
                 })
             else
-                expect(log).toEqual({
+                jestExpect(log).toEqual({
                     'getDerivedStateFromProps',
                     'shouldComponentUpdate',
                     'render',
@@ -321,21 +319,20 @@ return function()
             end)
 
             if _G.__DEV__ then
-                expect(log).toEqual({
+                jestExpect(log).toEqual({
                     'getDerivedStateFromProps',
                     'getDerivedStateFromProps',
                     'shouldComponentUpdate',
                     'shouldComponentUpdate',
                 })
             else
-                expect(log).toEqual({
+                jestExpect(log).toEqual({
                     'getDerivedStateFromProps',
                     'shouldComponentUpdate',
                 })
             end
         end)
         it('should invoke setState callbacks twice in DEV', function()
-            local expect: any = expect
             local StrictMode = React.StrictMode
             local instance
             local ClassComponent = React.Component:extend("ClassComponent")
@@ -360,17 +357,17 @@ return function()
             end)
 
             -- ROBLOX deviation: using ReactNoop in place of ReactDOM
-            ReactNoop.flushSync(function() 
+            ReactNoop.flushSync(function()
                 instance:setState(function(self, state: {count: number})
                     setStateCount = setStateCount + 1
-    
+
                     return {
                         count = state.count + 1,
                     }
                 end)
             end)
             -- Callback should be invoked twice (in DEV)
-            expect(setStateCount).toEqual((function()
+            jestExpect(setStateCount).toEqual((function()
                 if _G.__DEV__ then
                     return 2
                 end
@@ -378,7 +375,7 @@ return function()
                 return 1
             end)())
             -- But each time `state` should be the previous value
-            expect(instance.state.count).toEqual(2)
+            jestExpect(instance.state.count).toEqual(2)
         end)
     end)
     describe('Concurrent Mode', function()
@@ -398,30 +395,28 @@ return function()
             Scheduler = require(Workspace.Scheduler)
         end)
         it('should warn about unsafe legacy lifecycle methods anywhere in the tree', function()
-            local expect: any = expect
-
             local function Wrapper(props)
                 local children = props.children
 
                 return React.createElement('div', nil, children)
             end
 
-            
-            
+
+
             local Foo = React.Component:extend("Foo")
-            
+
             function Foo:UNSAFE_componentWillReceiveProps() end
             function Foo:render()
                 return nil
             end
-            
+
             local Bar = React.Component:extend("Bar")
-            
+
             function Bar:UNSAFE_componentWillReceiveProps() end
             function Bar:render()
                 return nil
             end
-            
+
             local AsyncRoot = React.Component:extend("AsyncRoot")
 
             function AsyncRoot:UNSAFE_componentWillMount() end
@@ -434,23 +429,23 @@ return function()
             local root = ReactNoop.createRoot()
 
             root.render(React.createElement(AsyncRoot))
-            expect(function()
+            jestExpect(function()
                 return Scheduler.unstable_flushAll()
             end).toErrorDev({
-                
+
     [[Warning: Using UNSAFE_componentWillMount in strict mode is not recommended and may indicate bugs in your code. See https://reactjs.org/link/unsafe-component-lifecycles for details.
 
 * Move code with side effects to componentDidMount, and set initial state in the constructor.
 
 Please update the following components: AsyncRoot]],
-                
+
     [[Warning: Using UNSAFE_componentWillReceiveProps in strict mode is not recommended and may indicate bugs in your code. See https://reactjs.org/link/unsafe-component-lifecycles for details.
 
 * Move data fetching code or side effects to componentDidUpdate.
 * If you're updating state whenever props change, refactor your code to use memoization techniques or move it to static getDerivedStateFromProps. Learn more at: https://reactjs.org/link/derived-state
 
 Please update the following components: Bar, Foo]],
-                
+
     [[Warning: Using UNSAFE_componentWillUpdate in strict mode is not recommended and may indicate bugs in your code. See https://reactjs.org/link/unsafe-component-lifecycles for details.
 
 * Move data fetching code or side effects to componentDidUpdate.
@@ -461,8 +456,6 @@ Please update the following components: AsyncRoot]],
             Scheduler.unstable_flushAll()
         end)
         it('should coalesce warnings by lifecycle name', function()
-            local expect: any = expect
-            
             local Child = React.Component:extend("Child")
             function Child:UNSAFE_componentWillReceiveProps() end
             function Child:render()
@@ -488,25 +481,25 @@ Please update the following components: AsyncRoot]],
             local root = ReactNoop.createRoot()
 
             root.render(React.createElement(AsyncRoot))
-            expect(function()
-                expect(function()
+            jestExpect(function()
+                jestExpect(function()
                     return Scheduler.unstable_flushAll()
                 end).toErrorDev({
 -- ROBLOX deviation: below warnings all remove "To rename all deprecated lifecycles..." line which are unique instructions for Node.js
-              
+
     [[Warning: Using UNSAFE_componentWillMount in strict mode is not recommended and may indicate bugs in your code. See https://reactjs.org/link/unsafe-component-lifecycles for details.
 
 * Move code with side effects to componentDidMount, and set initial state in the constructor.
 
 Please update the following components: AsyncRoot]],
-           
+
     [[Warning: Using UNSAFE_componentWillReceiveProps in strict mode is not recommended and may indicate bugs in your code. See https://reactjs.org/link/unsafe-component-lifecycles for details.
 
 * Move data fetching code or side effects to componentDidUpdate.
 * If you're updating state whenever props change, refactor your code to use memoization techniques or move it to static getDerivedStateFromProps. Learn more at: https://reactjs.org/link/derived-state
 
 Please update the following components: Child]],
-        
+
     [[Warning: Using UNSAFE_componentWillUpdate in strict mode is not recommended and may indicate bugs in your code. See https://reactjs.org/link/unsafe-component-lifecycles for details.
 
 * Move data fetching code or side effects to componentDidUpdate.
@@ -514,14 +507,14 @@ Please update the following components: Child]],
 Please update the following components: AsyncRoot]],
                 }, {withoutStack = true})
             end).toWarnDev({
-    
+
     [[Warning: componentWillMount has been renamed, and is not recommended for use. See https://reactjs.org/link/unsafe-component-lifecycles for details.
 
 * Move code with side effects to componentDidMount, and set initial state in the constructor.
 * Rename componentWillMount to UNSAFE_componentWillMount to suppress this warning in non-strict mode. In React 18.x, only the UNSAFE_ name will work.
 
 Please update the following components: Parent]],
-                
+
     [[Warning: componentWillReceiveProps has been renamed, and is not recommended for use. See https://reactjs.org/link/unsafe-component-lifecycles for details.
 
 * Move data fetching code or side effects to componentDidUpdate.
@@ -529,7 +522,7 @@ Please update the following components: Parent]],
 * Rename componentWillReceiveProps to UNSAFE_componentWillReceiveProps to suppress this warning in non-strict mode. In React 18.x, only the UNSAFE_ name will work.
 
 Please update the following components: Parent]],
-                
+
     [[Warning: componentWillUpdate has been renamed, and is not recommended for use. See https://reactjs.org/link/unsafe-component-lifecycles for details.
 
 * Move data fetching code or side effects to componentDidUpdate.
@@ -541,7 +534,6 @@ Please update the following components: Parent]],
             Scheduler.unstable_flushAll()
         end)
         it('should warn about components not present during the initial render', function()
-            local expect: any = expect
             local Foo = React.Component:extend("Foo")
 
             function Foo:UNSAFE_componentWillMount() end
@@ -572,12 +564,12 @@ Please update the following components: Parent]],
             local root = ReactNoop.createRoot()
 
             root.render(React.createElement(AsyncRoot, {foo = true}))
-            expect(function()
+            jestExpect(function()
                 return Scheduler.unstable_flushAll()
             end).toErrorDev('Using UNSAFE_componentWillMount in strict mode is not recommended', {withoutStack = true})
 
             root.render(React.createElement(AsyncRoot, {foo = false}))
-            expect(function()
+            jestExpect(function()
                 return Scheduler.unstable_flushAll()
             end).toErrorDev('Using UNSAFE_componentWillMount in strict mode is not recommended', {withoutStack = true})
 
@@ -588,21 +580,20 @@ Please update the following components: Parent]],
             Scheduler.unstable_flushAll()
         end)
         it('should also warn inside of "strict" mode trees', function()
-            local expect: any = expect
             local StrictMode = React.StrictMode
-            
+
             local Foo = React.Component:extend("Foo")
             function Foo:UNSAFE_componentWillReceiveProps() end
             function Foo:render()
                 return nil
             end
-            
+
             local Bar = React.Component:extend("Bar")
             function Bar:UNSAFE_componentWillReceiveProps() end
             function Bar:render()
                 return nil
             end
-            
+
             local function Wrapper(props)
                 return React.createElement('div', nil, React.createElement(Bar), React.createElement(Foo))
             end
@@ -618,7 +609,7 @@ Please update the following components: Parent]],
             -- ROBLOX deviation: using ReactNoop in place of ReactDOM
             local root = ReactNoop.createLegacyRoot()
 
-            expect(function()
+            jestExpect(function()
                 return root.render(React.createElement(SyncRoot))
             end).toErrorDev('Using UNSAFE_componentWillReceiveProps in strict mode is not recommended', {withoutStack = true})
 
@@ -643,7 +634,6 @@ Please update the following components: Parent]],
             Scheduler = require(Workspace.Scheduler)
         end)
         it('should switch from StrictMode to a Fragment and reset state', function()
-            local expect:any = expect
             local Fragment, StrictMode = React.Fragment, React.StrictMode
 
             local ChildComponent = React.Component:extend("ChildComponent")
@@ -679,16 +669,15 @@ Please update the following components: Parent]],
             ReactNoop.act(function()
                 ReactNoop.render(React.createElement(ParentComponent, {useFragment = false}))
             end)
-            expect(ReactNoop.getChildren()[1].text).toEqual('count:1')
+            jestExpect(ReactNoop.getChildren()[1].text).toEqual('count:1')
 
             -- ROBLOX deviation: use ReactNoop.render to render instead of ReactDOM.render
             ReactNoop.act(function()
                 ReactNoop.render(React.createElement(ParentComponent, {useFragment = true}))
             end)
-            expect(ReactNoop.getChildren()[1].text).toEqual('count:1')
+            jestExpect(ReactNoop.getChildren()[1].text).toEqual('count:1')
         end)
         it('should switch from a Fragment to StrictMode and reset state', function()
-            local expect: any = expect
             local Fragment, StrictMode = React.Fragment, React.StrictMode
 
             local ChildComponent = React.Component:extend("ChildComponent")
@@ -723,16 +712,15 @@ Please update the following components: Parent]],
             ReactNoop.act(function()
                 ReactNoop.render(React.createElement(ParentComponent, {useFragment = false}))
             end)
-            expect(ReactNoop.getChildren()[1].text).toEqual('count:1')
+            jestExpect(ReactNoop.getChildren()[1].text).toEqual('count:1')
 
             -- ROBLOX deviation: use ReactNoop.render to render instead of ReactDOM.render
             ReactNoop.act(function()
                 ReactNoop.render(React.createElement(ParentComponent, {useFragment = true}))
             end)
-            expect(ReactNoop.getChildren()[1].text).toEqual('count:1')
+            jestExpect(ReactNoop.getChildren()[1].text).toEqual('count:1')
         end)
         it('should update with StrictMode without losing state', function()
-            local expect: any = expect
             local StrictMode = React.StrictMode
 
             local ChildComponent = React.Component:extend("ChildComponent")
@@ -759,13 +747,13 @@ Please update the following components: Parent]],
             ReactNoop.act(function()
                 ReactNoop.render(React.createElement(ParentComponent))
             end)
-            expect(ReactNoop.getChildren()[1].text).toEqual('count:1')
+            jestExpect(ReactNoop.getChildren()[1].text).toEqual('count:1')
 
             -- ROBLOX deviation: use ReactNoop.render to render instead of ReactDOM.render
             ReactNoop.act(function()
                 ReactNoop.render(React.createElement(ParentComponent))
             end)
-            expect(ReactNoop.getChildren()[1].text).toEqual('count:2')
+            jestExpect(ReactNoop.getChildren()[1].text).toEqual('count:2')
         end)
     end)
     describe('string refs', function()
@@ -786,7 +774,6 @@ Please update the following components: Parent]],
         end)
 
         it('should warn within a strict tree', function()
-            local expect: any = expect
             local StrictMode = React.StrictMode
             local OuterComponent = React.Component:extend("OuterComponent")
 
@@ -802,7 +789,7 @@ Please update the following components: Parent]],
                 }))
             end
 
-            expect(function()
+            jestExpect(function()
                 -- ROBLOX deviation: using ReactNoop in place of ReactDOM
                 ReactNoop.act(function()
                     ReactNoop.render(React.createElement(OuterComponent))
@@ -825,7 +812,6 @@ Please update the following components: Parent]],
 
         -- ROBLOX deviation: upstream uses test name twice
         it('should warn within a strict tree 2', function()
-            local expect: any = expect
             local StrictMode = React.StrictMode
 
             local MiddleComponent = React.Component:extend("MiddleComponent")
@@ -848,7 +834,7 @@ Please update the following components: Parent]],
                 return React.createElement(StrictMode, nil, React.createElement(InnerComponent))
             end
 
-            expect(function()
+            jestExpect(function()
                 -- ROBLOX deviation: using ReactNoop in place of ReactDOM
                 ReactNoop.act(function()
                     ReactNoop.render(React.createElement(OuterComponent))
@@ -930,7 +916,7 @@ Please update the following components: Parent]],
         --         return React.createElement('div', nil, React.createElement(StrictMode, nil, React.createElement(LegacyContextProvider)))
         --     end
 
-        --     expect(function()
+        --     jestExpect(function()
         --         ReactNoop.render(React.createElement(Root))
         --     end).toErrorDev('Warning: Legacy context API has been detected within a strict-mode tree.' .. '\n\nThe old API will be supported in all 16.x releases, but applications ' .. 'using it should migrate to the new version.' .. '\n\nPlease update the following components: ' .. 'FunctionalLegacyContextConsumer, LegacyContextConsumer, LegacyContextProvider' .. '\n\nLearn more about this warning here: ' .. 'https://reactjs.org/link/legacy-context' .. '\n    in LegacyContextProvider (at **)' .. '\n    in div (at **)' .. '\n    in Root (at **)')
         --     ReactNoop.render(React.createElement(Root))

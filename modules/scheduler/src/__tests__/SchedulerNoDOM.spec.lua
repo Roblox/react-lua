@@ -7,12 +7,11 @@
 *
 * @emails react-core
 ]]
--- FIXME: roblox-cli has special, hard-coded types for TestEZ that break when we
--- use custom matchers added via `expect.extend`
---!nocheck
 
 return function()
 	local Workspace = script.Parent.Parent.Parent
+	local Packages = Workspace.Parent.Parent.Packages
+    local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
 	local RobloxJest = require(Workspace.RobloxJest)
 
 	local scheduleCallback
@@ -43,11 +42,11 @@ return function()
 			table.insert(log, 'C')
 		end)
 
-		expect(log).toEqual({})
+		jestExpect(log).toEqual({})
 
 		RobloxJest.runAllTimers()
 
-		expect(log).toEqual({'A', 'B', 'C'})
+		jestExpect(log).toEqual({'A', 'B', 'C'})
 	end)
 
 	it('executes callbacks in order of priority', function()
@@ -66,9 +65,9 @@ return function()
 			table.insert(log, 'D')
 		end)
 
-		expect(log).toEqual({})
+		jestExpect(log).toEqual({})
 		RobloxJest.runAllTimers()
-		expect(log).toEqual({'C', 'D', 'A', 'B'})
+		jestExpect(log).toEqual({'C', 'D', 'A', 'B'})
 	end)
 
 	it('handles errors', function()
@@ -86,16 +85,16 @@ return function()
 			error('Oops C')
 		end)
 
-		expect(RobloxJest.runAllTimers).toThrow('Oops A')
-		expect(log).toEqual({'A'})
+		jestExpect(RobloxJest.runAllTimers).toThrow('Oops A')
+		jestExpect(log).toEqual({'A'})
 
 		log = {}
 
 		-- B and C flush in a subsequent event. That way, the second error is not
 		-- swallowed.
-		expect(function()
+		jestExpect(function()
 			RobloxJest.runAllTimers()
 		end).toThrow('Oops C')
-		expect(log).toEqual({'B', 'C'})
+		jestExpect(log).toEqual({'B', 'C'})
 	end)
 end

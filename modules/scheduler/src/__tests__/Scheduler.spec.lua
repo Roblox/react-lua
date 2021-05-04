@@ -7,12 +7,11 @@
 *
 * @emails react-core
 ]]
--- FIXME: roblox-cli has special, hard-coded types for TestEZ that break when we
---use custom matchers added via `expect.extend`
---!nocheck
 
 return function()
 	local Workspace = script.Parent.Parent.Parent
+	local Packages = Workspace.Parent.Parent.Packages
+    local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
 	local RobloxJest = require(Workspace.RobloxJest)
 
 	local Scheduler
@@ -81,9 +80,9 @@ return function()
 			Scheduler.unstable_yieldValue('D')
 		end)
 
-		expect(Scheduler).toFlushAndYieldThrough({'A', 'B'})
-		expect(Scheduler).toFlushAndYieldThrough({'C'})
-		expect(Scheduler).toFlushAndYield({'D'})
+		jestExpect(Scheduler).toFlushAndYieldThrough({'A', 'B'})
+		jestExpect(Scheduler).toFlushAndYieldThrough({'C'})
+		jestExpect(Scheduler).toFlushAndYield({'D'})
 	end)
 
 	it("cancels work", function()
@@ -99,7 +98,7 @@ return function()
 
 		cancelCallback(callbackHandleB)
 
-		expect(Scheduler).toFlushAndYield({
+		jestExpect(Scheduler).toFlushAndYield({
 			'A',
 			-- B should have been cancelled
 			'C',
@@ -115,7 +114,7 @@ return function()
 		end)
 
 		-- Yield before B is flushed
-		expect(Scheduler).toFlushAndYieldThrough({'A'})
+		jestExpect(Scheduler).toFlushAndYieldThrough({'A'})
 
 		scheduleCallback(UserBlockingPriority, function()
 			Scheduler.unstable_yieldValue('C')
@@ -125,7 +124,7 @@ return function()
 		end)
 
 		-- C and D should come first, because they are higher priority
-		expect(Scheduler).toFlushAndYield({'C', 'D', 'B'})
+		jestExpect(Scheduler).toFlushAndYield({'C', 'D', 'B'})
 	end)
 
 	it("expires work", function()
@@ -144,7 +143,7 @@ return function()
 
 		-- Advance time, but not by enough to expire any work
 		Scheduler.unstable_advanceTime(249)
-		expect(Scheduler).toHaveYielded({})
+		jestExpect(Scheduler).toHaveYielded({})
 
 		-- Schedule a few more callbacks
 		scheduleCallback(NormalPriority, function(didTimeout)
@@ -158,17 +157,17 @@ return function()
 
 		-- Advance by just a bit more to expire the user blocking callbacks
 		Scheduler.unstable_advanceTime(1)
-		expect(Scheduler).toFlushExpired({
+		jestExpect(Scheduler).toFlushExpired({
 			'B (did timeout: true)',
 			'C (did timeout: true)',
 		})
 
 		-- Expire A
 		Scheduler.unstable_advanceTime(4600)
-		expect(Scheduler).toFlushExpired({'A (did timeout: true)'})
+		jestExpect(Scheduler).toFlushExpired({'A (did timeout: true)'})
 
 		-- Flush the rest without expiring
-		expect(Scheduler).toFlushAndYield({
+		jestExpect(Scheduler).toFlushAndYield({
 			'D (did timeout: false)',
 			'E (did timeout: true)',
 		})
@@ -180,10 +179,10 @@ return function()
 		end)
 
 		Scheduler.unstable_advanceTime(4999)
-		expect(Scheduler).toHaveYielded({})
+		jestExpect(Scheduler).toHaveYielded({})
 
 		Scheduler.unstable_advanceTime(1)
-		expect(Scheduler).toFlushExpired({'A'})
+		jestExpect(Scheduler).toFlushExpired({'A'})
 	end)
 
 	it("continues working on same task after yielding", function()
@@ -228,12 +227,12 @@ return function()
 		end)
 
 		-- Flush, then yield while in the middle of C.
-		expect(didYield).to.equal(false)
-		expect(Scheduler).toFlushAndYieldThrough({'A', 'B', 'C1'})
-		expect(didYield).to.equal(true)
+		jestExpect(didYield).toBe(false)
+		jestExpect(Scheduler).toFlushAndYieldThrough({'A', 'B', 'C1'})
+		jestExpect(didYield).toBe(true)
 
 		-- When we resume, we should continue working on C.
-		expect(Scheduler).toFlushAndYield({'C2', 'C3', 'D', 'E'})
+		jestExpect(Scheduler).toFlushAndYield({'C2', 'C3', 'D', 'E'})
 	end)
 
 	it("continuation callbacks inherit the expiration of the previous callback", function()
@@ -260,11 +259,11 @@ return function()
 		scheduleCallback(UserBlockingPriority, work)
 
 		-- Flush until just before the expiration time
-		expect(Scheduler).toFlushAndYieldThrough({'A', 'B'})
+		jestExpect(Scheduler).toFlushAndYieldThrough({'A', 'B'})
 
 		-- Advance time by just a bit more. This should expire all the remaining work.
 		Scheduler.unstable_advanceTime(1)
-		expect(Scheduler).toFlushExpired({'C', 'D'})
+		jestExpect(Scheduler).toFlushExpired({'C', 'D'})
 	end)
 
 	it("continuations are interrupted by higher priority work", function()
@@ -287,14 +286,14 @@ return function()
 			return nil
 		end
 		scheduleCallback(NormalPriority, work)
-		expect(Scheduler).toFlushAndYieldThrough({'A'})
+		jestExpect(Scheduler).toFlushAndYieldThrough({'A'})
 
 		scheduleCallback(UserBlockingPriority, function()
 			Scheduler.unstable_advanceTime(100)
 			Scheduler.unstable_yieldValue('High pri')
 		end)
 
-		expect(Scheduler).toFlushAndYield({'High pri', 'B', 'C', 'D'})
+		jestExpect(Scheduler).toFlushAndYield({'High pri', 'B', 'C', 'D'})
 	end)
 
 	it('continuations do not block higher priority work scheduled ' ..
@@ -329,7 +328,7 @@ return function()
 				return nil
 			end
 			scheduleCallback(NormalPriority, work)
-			expect(Scheduler).toFlushAndYield({
+			jestExpect(Scheduler).toFlushAndYield({
 				'A',
 				'B',
 				'Schedule high pri',
@@ -351,9 +350,9 @@ return function()
 			end
 		end)
 
-		expect(Scheduler).toFlushAndYieldThrough({'Yield'})
+		jestExpect(Scheduler).toFlushAndYieldThrough({'Yield'})
 		cancelCallback(task)
-		expect(Scheduler).toFlushWithoutYielding()
+		jestExpect(Scheduler).toFlushWithoutYielding()
 	end)
 
 	it('top-level immediate callbacks fire in a subsequent task', function()
@@ -370,9 +369,9 @@ return function()
 			Scheduler.unstable_yieldValue('D')
 		end)
 		-- Immediate callback hasn't fired, yet.
-		expect(Scheduler).toHaveYielded({})
+		jestExpect(Scheduler).toHaveYielded({})
 		-- They all flush immediately within the subsequent task.
-		expect(Scheduler).toFlushExpired({'A', 'B', 'C', 'D'})
+		jestExpect(Scheduler).toFlushExpired({'A', 'B', 'C', 'D'})
 	end)
 
 	it("nested immediate callbacks are added to the queue of immediate callbacks", function()
@@ -389,9 +388,9 @@ return function()
 		scheduleCallback(ImmediatePriority, function()
 			Scheduler.unstable_yieldValue('D')
 		end)
-		expect(Scheduler).toHaveYielded({})
+		jestExpect(Scheduler).toHaveYielded({})
 		-- C should flush at the end
-		expect(Scheduler).toFlushExpired({'A', 'B', 'D', 'C'})
+		jestExpect(Scheduler).toFlushExpired({'A', 'B', 'D', 'C'})
 	end)
 
 	it("wrapped callbacks have same signature as original callback", function()
@@ -401,8 +400,8 @@ return function()
 			}
 		end)
 		local result = wrappedCallback('a', 'b')
-		expect(#result.args).to.equal(2)
-		expect(result.args).toEqual({'a', 'b'})
+		jestExpect(#result.args).toBe(2)
+		jestExpect(result.args).toEqual({'a', 'b'})
 	end)
 
 	it("wrapped callbacks inherit the current priority", function()
@@ -422,10 +421,10 @@ return function()
 		)
 
 		wrappedCallback()
-		expect(Scheduler).toHaveYielded({NormalPriority})
+		jestExpect(Scheduler).toHaveYielded({NormalPriority})
 
 		wrappedUserBlockingCallback()
-		expect(Scheduler).toHaveYielded({UserBlockingPriority})
+		jestExpect(Scheduler).toHaveYielded({UserBlockingPriority})
 	end)
 
 	it("wrapped callbacks inherit the current priority even when nested", function()
@@ -444,10 +443,10 @@ return function()
 		end)
 
 		wrappedCallback()
-		expect(Scheduler).toHaveYielded({NormalPriority})
+		jestExpect(Scheduler).toHaveYielded({NormalPriority})
 
 		wrappedUserBlockingCallback()
-		expect(Scheduler).toHaveYielded({UserBlockingPriority})
+		jestExpect(Scheduler).toHaveYielded({UserBlockingPriority})
 	end)
 
 	it("immediate callbacks fire even if there's an error", function()
@@ -463,17 +462,17 @@ return function()
 			error('Oops C')
 		end)
 
-		expect(function()
-			expect(Scheduler).toFlushExpired()
+		jestExpect(function()
+			jestExpect(Scheduler).toFlushExpired()
 		end).toThrow('Oops A')
-		expect(Scheduler).toHaveYielded({'A'})
+		jestExpect(Scheduler).toHaveYielded({'A'})
 
 		-- B and C flush in a subsequent event. That way, the second error is not
 		-- swallowed.
-		expect(function()
-			expect(Scheduler).toFlushExpired()
+		jestExpect(function()
+			jestExpect(Scheduler).toFlushExpired()
 		end).toThrow('Oops C')
-		expect(Scheduler).toHaveYielded({'B', 'C'})
+		jestExpect(Scheduler).toHaveYielded({'B', 'C'})
 	end)
 
 	it("multiple immediate callbacks can throw and there will be an error for each one", function()
@@ -483,11 +482,11 @@ return function()
 		scheduleCallback(ImmediatePriority, function()
 			error('Second error')
 		end)
-		expect(function()
+		jestExpect(function()
 			Scheduler.unstable_flushAll()
 		end).toThrow('First error')
 		-- The next error is thrown in the subsequent event
-		expect(function()
+		jestExpect(function()
 			Scheduler.unstable_flushAll()
 		end).toThrow('Second error')
 	end)
@@ -505,7 +504,7 @@ return function()
 			Scheduler.unstable_yieldValue(getCurrentPriorityLevel())
 		end)
 
-		expect(Scheduler).toHaveYielded({
+		jestExpect(Scheduler).toHaveYielded({
 			NormalPriority,
 			ImmediatePriority,
 			NormalPriority,
@@ -515,7 +514,7 @@ return function()
 	end)
 
 	-- if _G.__DEV__ then
-		-- TODO(align): Re-enable this test if it's useful
+		-- ROBLOX TODO(align): Re-enable this test if it's useful
 		--
 		-- Function names are minified in prod, though you could still infer the
 		-- priority if you have sourcemaps.
@@ -575,7 +574,7 @@ return function()
 		-- 		Scheduler.unstable_yieldValue('Idle: ' + inferPriorityFromCallstack()),
 		-- 	)
 
-		-- 	expect(Scheduler).toFlushAndYield({
+		-- 	jestExpect(Scheduler).toFlushAndYield({
 		-- 		'Immediate: ' + ImmediatePriority,
 		-- 		'UserBlocking: ' + UserBlockingPriority,
 		-- 		'Normal: ' + NormalPriority,
@@ -598,18 +597,18 @@ return function()
 			)
 
 			-- Should flush nothing, because delay hasn't elapsed
-			expect(Scheduler).toFlushAndYield({})
+			jestExpect(Scheduler).toFlushAndYield({})
 
 			-- Advance time until right before the threshold
 			Scheduler.unstable_advanceTime(999)
 			-- Still nothing
-			expect(Scheduler).toFlushAndYield({})
+			jestExpect(Scheduler).toFlushAndYield({})
 
 			-- Advance time past the threshold
 			Scheduler.unstable_advanceTime(1)
 
 			-- Now it should flush like normal
-			expect(Scheduler).toFlushAndYield({'A'})
+			jestExpect(Scheduler).toFlushAndYield({'A'})
 		end)
 
 		it("schedules multiple delayed tasks", function()
@@ -654,17 +653,17 @@ return function()
 			)
 
 			-- Should flush nothing, because delay hasn't elapsed
-			expect(Scheduler).toFlushAndYield({})
+			jestExpect(Scheduler).toFlushAndYield({})
 
 			-- Advance some time.
 			Scheduler.unstable_advanceTime(200)
 			-- Both A and B are no longer delayed. They can now flush incrementally.
-			expect(Scheduler).toFlushAndYieldThrough({'A'})
-			expect(Scheduler).toFlushAndYield({'B'})
+			jestExpect(Scheduler).toFlushAndYieldThrough({'A'})
+			jestExpect(Scheduler).toFlushAndYield({'B'})
 
 			-- Advance the rest
 			Scheduler.unstable_advanceTime(200)
-			expect(Scheduler).toFlushAndYield({'C', 'D'})
+			jestExpect(Scheduler).toFlushAndYield({'C', 'D'})
 		end)
 
 		it("interleaves normal tasks and delayed tasks", function()
@@ -709,7 +708,7 @@ return function()
 
 			-- Flush all the work. The timers should be interleaved with the
 			-- other tasks.
-			expect(Scheduler).toFlushAndYield({
+			jestExpect(Scheduler).toFlushAndYield({
 				'A',
 				'Timer 1',
 				'B',
@@ -765,7 +764,7 @@ return function()
 
 			-- Flush all the work. The timers should be interleaved with the
 			-- other tasks.
-			expect(Scheduler).toFlushAndYield({
+			jestExpect(Scheduler).toFlushAndYield({
 				'A',
 				'Timer 1',
 				'B',
@@ -804,7 +803,7 @@ return function()
 			)
 
 			-- Cancel B before its delay has elapsed
-			expect(Scheduler).toFlushAndYield({})
+			jestExpect(Scheduler).toFlushAndYield({})
 			cancelCallback(taskB)
 
 			-- Cancel C after its delay has elapsed
@@ -812,18 +811,18 @@ return function()
 			cancelCallback(taskC)
 
 			-- Only A should flush
-			expect(Scheduler).toFlushAndYield({'A'})
+			jestExpect(Scheduler).toFlushAndYield({'A'})
 		end)
 
 		it("gracefully handles scheduled tasks that are not a function", function()
 			scheduleCallback(ImmediatePriority, nil)
-			expect(Scheduler).toFlushWithoutYielding()
+			jestExpect(Scheduler).toFlushWithoutYielding()
 
 			scheduleCallback(ImmediatePriority, {})
-			expect(Scheduler).toFlushWithoutYielding()
+			jestExpect(Scheduler).toFlushWithoutYielding()
 
 			scheduleCallback(ImmediatePriority, 42)
-			expect(Scheduler).toFlushWithoutYielding()
+			jestExpect(Scheduler).toFlushWithoutYielding()
 		end)
 	end)
 end

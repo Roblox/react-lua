@@ -7,16 +7,13 @@
  * @flow
 *]]
 
--- deviation: stripped flow types
-
--- local Workspace = script.Parent.Parent
--- local Packages = Workspace.Parent
--- local LuauPolyfill = require(Packages.LuauPolyfill)
--- local Object = LuauPolyfill.Object
+local Workspace = script.Parent.Parent
+local ReactTypes = require(Workspace.Shared.ReactTypes)
+type RefObject = ReactTypes.RefObject
 
 local exports = {}
 -- an immutable object with a single mutable value
-exports.createRef = function()
+exports.createRef = function(): RefObject
   local refObject = {
     current = nil,
   }

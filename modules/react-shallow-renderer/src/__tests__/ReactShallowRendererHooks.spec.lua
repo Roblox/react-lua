@@ -9,6 +9,8 @@
 ]]
 return function()
 	local Workspace = script.Parent.Parent.Parent
+	local Packages = Workspace.Parent
+	local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
 	local React = require(Workspace.React)
 	local ReactShallowRenderer = require(script.Parent.Parent)
 
@@ -23,8 +25,8 @@ return function()
 
 	describe('ReactShallowRenderer with hooks', function()
 		it('should work with useState', function()
-			-- FIXME: Appease roblox-cli
-			local expect: any = expect
+
+
 			local function SomeComponent(props)
 				local name = React.useState(props.defaultName)
 
@@ -40,7 +42,7 @@ return function()
 				})
 			)
 
-			expect(result).toEqual(
+			jestExpect(result).toEqual(
 				React.createElement("TextLabel", {
 					Text = "Your name is: Dominic",
 				})
@@ -52,7 +54,7 @@ return function()
 				})
 			)
 
-			expect(result).toEqual(
+			jestExpect(result).toEqual(
 				React.createElement("TextLabel", {
 					Text = "Your name is: Dominic",
 				})
@@ -60,8 +62,6 @@ return function()
 		end)
 
 		it('should work with updating a value from useState', function()
-			-- FIXME: Appease roblox-cli
-			local expect: any = expect
 			local function SomeComponent(props)
 				local name, updateName = React.useState(props.defaultName)
 
@@ -82,7 +82,7 @@ return function()
 				React.createElement(SomeComponent, {defaultName='Dominic'})
 			)
 
-			expect(result).toEqual(
+			jestExpect(result).toEqual(
 				React.createElement("Frame", nil, {
 					React.createElement("TextLabel", {
 						Text = "Your name is: " .. "Dan"
@@ -92,8 +92,6 @@ return function()
 		end)
 
 		it('should work with updating a derived value from useState', function()
-			-- FIXME: Appease roblox-cli
-			local expect: any = expect
 			local _updateName
 
 			local function SomeComponent(props)
@@ -121,7 +119,7 @@ return function()
 				React.createElement(SomeComponent, {defaultName='Sophie'})
 			)
 
-			expect(result).toEqual(
+			jestExpect(result).toEqual(
 				React.createElement("Frame", nil, {
 					React.createElement("TextLabel", {
 						Text = "Your name is: " .. "Sophie (S)"
@@ -132,7 +130,7 @@ return function()
 			result = shallowRenderer:render(
 				React.createElement(SomeComponent, {defaultName='Dan'})
 			)
-			expect(result).toEqual(
+			jestExpect(result).toEqual(
 				React.createElement("Frame", nil, {
 					React.createElement("TextLabel", {
 						Text = "Your name is: " .. "Sophie (S)"
@@ -141,7 +139,7 @@ return function()
 			)
 
 			_updateName('Dan')
-			expect(shallowRenderer:getRenderOutput()).toEqual(
+			jestExpect(shallowRenderer:getRenderOutput()).toEqual(
 				React.createElement("Frame", nil, {
 					React.createElement("TextLabel", {
 						Text = "Your name is: " .. "Dan (D)"
@@ -151,8 +149,6 @@ return function()
 		end)
 
 		it('should work with useReducer', function()
-			-- FIXME: Appease roblox-cli
-			local expect: any = expect
 			local function reducer(state, action)
 				if action.type == 'increment' then
 					return {count = state.count + 1}
@@ -184,7 +180,7 @@ return function()
 			local result = shallowRenderer:render(
 				React.createElement(SomeComponent, {initialCount=0})
 			)
-			expect(result).toEqual(
+			jestExpect(result).toEqual(
 				React.createElement("Frame", nil, {
 					React.createElement("TextLabel", {
 						"The counter is at: 0"
@@ -196,7 +192,7 @@ return function()
 				React.createElement(SomeComponent, {initialCount=10})
 			)
 
-			expect(result).toEqual(
+			jestExpect(result).toEqual(
 				React.createElement("Frame", nil, {
 					React.createElement("TextLabel", {
 						"The counter is at: 0"
@@ -206,8 +202,6 @@ return function()
 		end)
 
 		it('should work with a dispatched state change for a useReducer', function()
-			-- FIXME: Appease roblox-cli
-			local expect: any = expect
 			local function reducer(state, action)
 				if action.type == 'increment' then
 					return {count = state.count + 1}
@@ -243,7 +237,7 @@ return function()
 				React.createElement(SomeComponent, {initialCount=0})
 			)
 
-			expect(result).toEqual(
+			jestExpect(result).toEqual(
 				React.createElement("Frame", nil, {
 					React.createElement("TextLabel", {
 						"The counter is at: 1"
@@ -253,8 +247,6 @@ return function()
 		end)
 
 		it('should not trigger effects', function()
-			-- FIXME: Appease roblox-cli
-			local expect: any = expect
 			local effectsCalled = {}
 
 			local function SomeComponent(props)
@@ -272,12 +264,10 @@ return function()
 			local shallowRenderer = createRenderer()
 			shallowRenderer:render(React.createElement(SomeComponent))
 
-			expect(effectsCalled).toEqual({})
+			jestExpect(effectsCalled).toEqual({})
 		end)
 
 		it('should work with useRef', function()
-			-- FIXME: Appease roblox-cli
-			local expect: any = expect
 			local function SomeComponent()
 				local randomNumberRef = React.useRef({number = math.random()})
 
@@ -293,12 +283,10 @@ return function()
 			local firstResult = shallowRenderer:render(React.createElement(SomeComponent))
 			local secondResult = shallowRenderer:render(React.createElement(SomeComponent))
 
-			expect(firstResult).toEqual(secondResult)
+			jestExpect(firstResult).toEqual(secondResult)
 		end)
 
 		it('should work with useMemo', function()
-			-- FIXME: Appease roblox-cli
-			local expect: any = expect
 			local function SomeComponent()
 				local randomNumber = React.useMemo(
 					function()
@@ -319,13 +307,12 @@ return function()
 			local firstResult = shallowRenderer:render(React.createElement(SomeComponent))
 			local secondResult = shallowRenderer:render(React.createElement(SomeComponent))
 
-			expect(firstResult).toEqual(secondResult)
+			jestExpect(firstResult).toEqual(secondResult)
 		end)
 
-		-- ROBLOX TODO: implement createContext and then re-enable
 		it('should work with useContext', function()
-			-- FIXME: Appease roblox-cli
-			local expect: any = expect
+
+
 			local SomeContext = React.createContext('default')
 
 			local function SomeComponent()
@@ -342,7 +329,7 @@ return function()
 			local shallowRenderer = createRenderer()
 			local result = shallowRenderer:render(React.createElement(SomeComponent))
 
-			expect(result).toEqual(
+			jestExpect(result).toEqual(
 				React.createElement("Frame", nil,
 					React.createElement("TextLabel",
 						{Text = "default"}
@@ -352,8 +339,8 @@ return function()
 		end)
 
 		it('should not leak state when component type changes', function()
-			-- FIXME: Appease roblox-cli
-			local expect: any = expect
+
+
 			local function SomeComponent(props)
 				local name = React.useState(props.defaultName)
 
@@ -374,7 +361,7 @@ return function()
 			local result = shallowRenderer:render(
 				React.createElement(SomeComponent, {defaultName='Dominic'})
 			)
-			expect(result).toEqual(
+			jestExpect(result).toEqual(
 				React.createElement("TextLabel", {
 					Text = "Your name is: " .. "Dominic",
 				})
@@ -384,7 +371,7 @@ return function()
 				React.createElement(SomeOtherComponent, {defaultName='Dan'})
 			)
 
-			expect(result).toEqual(
+			jestExpect(result).toEqual(
 				React.createElement("TextLabel", {
 					Text = "Your name is: " .. "Dan",
 				})
@@ -392,8 +379,8 @@ return function()
 		end)
 
 		it('should work with with forwardRef + any hook', function()
-			-- FIXME: Appease roblox-cli
-			local expect: any = expect
+
+
 			local SomeComponent = React.forwardRef(function(props, ref)
 				local randomNumberRef = React.useRef({number = math.random()})
 
@@ -409,12 +396,12 @@ return function()
 			local firstResult = shallowRenderer:render(React.createElement(SomeComponent))
 			local secondResult = shallowRenderer:render(React.createElement(SomeComponent))
 
-			expect(firstResult).toEqual(secondResult)
+			jestExpect(firstResult).toEqual(secondResult)
 		end)
 
 		it('should update a value from useState outside the render', function()
-			-- FIXME: Appease roblox-cli
-			local expect: any = expect
+
+
 			local _dispatch
 
 			local function SomeComponent(props)
@@ -441,7 +428,7 @@ return function()
 			local shallowRenderer = createRenderer()
 			local element = React.createElement(SomeComponent, {defaultName='Dominic'})
 			local result = shallowRenderer:render(element)
-			expect(result.props.children).toEqual(
+			jestExpect(result.props.children).toEqual(
 				validateElement(
 					React.createElement("TextLabel", {
 						Text = "Your name is: Dominic (0)"
@@ -451,7 +438,7 @@ return function()
 
 			result.props.onClick()
 			local updated = shallowRenderer:render(element)
-			expect(updated.props.children).toEqual(
+			jestExpect(updated.props.children).toEqual(
 				validateElement(
 					React.createElement("TextLabel", {
 						Text = "Your name is: Dan (0)"
@@ -461,7 +448,7 @@ return function()
 
 			_dispatch('foo')
 			updated = shallowRenderer:render(element)
-			expect(updated.props.children).toEqual(
+			jestExpect(updated.props.children).toEqual(
 				validateElement(
 					React.createElement("TextLabel", {
 						Text = "Your name is: Dan (1)"
@@ -471,7 +458,7 @@ return function()
 
 			_dispatch('inc')
 			updated = shallowRenderer:render(element)
-			expect(updated.props.children).toEqual(
+			jestExpect(updated.props.children).toEqual(
 				validateElement(
 					React.createElement("TextLabel", {
 						Text = "Your name is: Dan (2)"
@@ -481,8 +468,8 @@ return function()
 		end)
 
 		it('should ignore a foreign update outside the render', function()
-			-- FIXME: Appease roblox-cli
-			local expect: any = expect
+
+
 			local _updateCountForFirstRender
 
 			local function SomeComponent()
@@ -496,22 +483,22 @@ return function()
 			local shallowRenderer = createRenderer()
 			local element = React.createElement(SomeComponent)
 			local result = shallowRenderer:render(element)
-			expect(result).toEqual(0)
+			jestExpect(result).toEqual(0)
 			_updateCountForFirstRender(1)
 			result = shallowRenderer:render(element)
-			expect(result).toEqual(1)
+			jestExpect(result).toEqual(1)
 
 			shallowRenderer:unmount()
 			result = shallowRenderer:render(element)
-			expect(result).toEqual(0)
+			jestExpect(result).toEqual(0)
 			_updateCountForFirstRender(1) -- Should be ignored.
 			result = shallowRenderer:render(element)
-			expect(result).toEqual(0)
+			jestExpect(result).toEqual(0)
 		end)
 
 		it('should not forget render phase updates', function()
-			-- FIXME: Appease roblox-cli
-			local expect: any = expect
+
+
 			local _updateCount
 
 			local function SomeComponent()
@@ -526,19 +513,19 @@ return function()
 			local shallowRenderer = createRenderer()
 			local element = React.createElement(SomeComponent)
 			local result = shallowRenderer:render(element)
-			expect(result).toEqual(5)
+			jestExpect(result).toEqual(5)
 
 			_updateCount(10)
 			result = shallowRenderer:render(element)
-			expect(result).toEqual(10)
+			jestExpect(result).toEqual(10)
 
 			_updateCount(function(x) return  x + 1 end)
 			result = shallowRenderer:render(element)
-			expect(result).toEqual(11)
+			jestExpect(result).toEqual(11)
 
 			_updateCount(function(x) return  x - 10 end)
 			result = shallowRenderer:render(element)
-			expect(result).toEqual(5)
+			jestExpect(result).toEqual(5)
 		end)
 	end)
 end

@@ -47,7 +47,6 @@ local ReactSharedInternals = require(Workspace.Shared.ReactSharedInternals)
 local enqueueTask = require(Workspace.Shared["enqueueTask.roblox"])
 local IsSomeRendererActing = ReactSharedInternals.IsSomeRendererActing
 
--- deviation: Strip types (throughout file)
 type Object = { [string]: any };
 type Array<T> = { [number]: T };
 
@@ -104,7 +103,7 @@ local function createReactNoop(reconciler, useMutation: boolean)
 	local function appendChildToContainerOrInstance(
 		parentInstance: Container | Instance,
 		child: Instance | TextInstance
-	)
+	): ()
 		local index = Array.indexOf(parentInstance.children, child)
 		if index ~= -1 then
 			Array.splice(parentInstance.children, index, 1)
@@ -115,7 +114,7 @@ local function createReactNoop(reconciler, useMutation: boolean)
 	local function appendChildToContainer(
 		parentInstance: Container,
 		child: Instance | TextInstance
-	)
+	): ()
 		if typeof(parentInstance.rootID) ~= "string" then
 			-- Some calls to this aren't typesafe.
 			-- This helps surface mistakes in tests.
@@ -129,7 +128,7 @@ local function createReactNoop(reconciler, useMutation: boolean)
 	local function appendChild(
 		parentInstance: Instance,
 		child: Instance | TextInstance
-	)
+	): ()
 		local parentInstance: any = parentInstance
 		if typeof(parentInstance.rootID) == "string" then
 			-- Some calls to this aren't typesafe.
@@ -143,7 +142,7 @@ local function createReactNoop(reconciler, useMutation: boolean)
 		parentInstance: Container | Instance,
 		child: Instance | TextInstance,
 		beforeChild: Instance | TextInstance
-	)
+	): ()
 		local index = Array.indexOf(parentInstance.children, child)
 		if index ~= -1 then
 			Array.splice(parentInstance.children, index, 1)

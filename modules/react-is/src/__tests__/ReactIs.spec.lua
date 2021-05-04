@@ -1,32 +1,32 @@
 -- upstream: https://github.com/facebook/react/blob/c57fe4a2c1402acdbf31ac48cfc6a6bf336c4067/react-is/src/__tests__/ReactIs-test.js
--- FIXME: roblox-cli has special, hard-coded types for TestEZ that break when we
---use custom matchers added via `expect.extend`
---!nocheck
 
 return function()
 	local Workspace = script.Parent.Parent.Parent
+	local Packages = Workspace.Parent
+	local jestModule = require(Packages.Dev.JestRoblox)
+	local jestExpect = jestModule.Globals.expect
+	local jest = jestModule.Globals.jest
 	local ReactIs = require(Workspace.ReactIs)
 	local React = require(Workspace.React.React)
-	local ReactBaseClasses = require(Workspace.React.ReactBaseClasses)
-	local Component = ReactBaseClasses.Component
-	local PureComponent = ReactBaseClasses.PureComponent
 
 	describe('ReactIs', function()
 		it('should return nil for unknown/invalid types', function()
-			expect(ReactIs.typeOf('abc')).toEqual(nil)
-			expect(ReactIs.typeOf(true)).toEqual(nil)
-			expect(ReactIs.typeOf(123)).toEqual(nil)
-			expect(ReactIs.typeOf({})).toEqual(nil)
-			expect(ReactIs.typeOf(nil)).toEqual(nil)
+			jestExpect(ReactIs.typeOf('abc')).toBe(nil)
+			jestExpect(ReactIs.typeOf(true)).toBe(nil)
+			jestExpect(ReactIs.typeOf(123)).toBe(nil)
+			jestExpect(ReactIs.typeOf({})).toBe(nil)
+			jestExpect(ReactIs.typeOf(nil)).toBe(nil)
+			-- ROBLOX deviation: no undefined in Lua, we only support nil
+			-- expect(ReactIs.typeOf(undefined)).toBe(undefined)
 		end)
 
 		it('identifies valid element types', function()
-			local MyComponent = Component:extend("MyComponent")
+			local Component = React.Component:extend("MyComponent")
 			Component.render = function()
 				return React.createElement('TextLabel')
 			end
 
-			local MyPureComponent = PureComponent:extend("MyPureComponent")
+			local PureComponent = React.PureComponent:extend("MyPureComponent")
 			PureComponent.render = function()
 				return React.createElement('TextLabel')
 			end
@@ -34,49 +34,157 @@ return function()
 			local FunctionComponent = function()
 				return React.createElement('TextLabel')
 			end
-			--const ForwardRefComponent = React.forwardRef((props, ref) =>
-			--React.createElement(Component, {forwardedRef: ref, ...props}),
-			--);
-			--const LazyComponent = React.lazy(() => Component);
-			--const MemoComponent = React.memo(Component);
-			--const Context = React.createContext(false);
 
-			expect(ReactIs.isValidElementType('TextLabel')).toEqual(true)
-			expect(ReactIs.isValidElementType(MyComponent)).toEqual(true)
-			expect(ReactIs.isValidElementType(MyPureComponent)).toEqual(true);
-			expect(ReactIs.isValidElementType(FunctionComponent)).toEqual(true)
-			--            expect(ReactIs.isValidElementType(ForwardRefComponent)).toEqual(true);
-			--            expect(ReactIs.isValidElementType(LazyComponent)).toEqual(true);
-			--            expect(ReactIs.isValidElementType(MemoComponent)).toEqual(true);
-			--            expect(ReactIs.isValidElementType(Context.Provider)).toEqual(true);
-			--            expect(ReactIs.isValidElementType(Context.Consumer)).toEqual(true);
+			local ForwardRefComponent = React.forwardRef(function(_props, ref)
+				React.createElement(Component, {forwardedRef = ref})
+			end)
+
+			-- ROBLOX TODO: enable this when we implement Lazy
+			--local LazyComponent = React.lazy(() => Component)
+			local MemoComponent = React.memo(Component)
+			local Context = React.createContext(false)
+
+			jestExpect(ReactIs.isValidElementType('div')).toEqual(true)
+			jestExpect(ReactIs.isValidElementType(Component)).toEqual(true)
+			jestExpect(ReactIs.isValidElementType(PureComponent)).toEqual(true)
+			jestExpect(ReactIs.isValidElementType(FunctionComponent)).toEqual(true)
+			jestExpect(ReactIs.isValidElementType(ForwardRefComponent)).toEqual(true)
+			--            jestExpect(ReactIs.isValidElementType(LazyComponent)).toEqual(true)
+			jestExpect(ReactIs.isValidElementType(MemoComponent)).toEqual(true)
+			jestExpect(ReactIs.isValidElementType(Context.Provider)).toEqual(true)
+			jestExpect(ReactIs.isValidElementType(Context.Consumer)).toEqual(true)
+			-- ROBLOX deviation: we don't support things that are already deprecated
 			--if (!__EXPERIMENTAL__) {
-			--let factory;
-			--expect(() => {
-			--factory = React.createFactory('TextLabel');
+			--let factory
+			--jestExpect(() => {
+			--factory = React.createFactory('TextLabel')
 			--}).toWarnDev(
 			--'Warning: React.createFactory() is deprecated and will be removed in a ' +
 			--'future major release. Consider using JSX or use React.createElement() ' +
 			--'directly instead.',
 			--{withoutStack: true},
-			--);
-			--expect(ReactIs.isValidElementType(factory)).toEqual(true);
+			--)
+			--jestExpect(ReactIs.isValidElementType(factory)).toEqual(true)
 			--}
-			--expect(ReactIs.isValidElementType(React.Fragment)).toEqual(true);
-			--expect(ReactIs.isValidElementType(React.StrictMode)).toEqual(true);
-			--expect(ReactIs.isValidElementType(React.Suspense)).toEqual(true);
+			jestExpect(ReactIs.isValidElementType(React.Fragment)).toEqual(true)
+			jestExpect(ReactIs.isValidElementType(React.StrictMode)).toEqual(true)
+			-- ROBLOX TODO: uncomment once Suspense is implemented
+			--jestExpect(ReactIs.isValidElementType(React.Suspense)).toEqual(true)
+			jestExpect(ReactIs.isValidElementType(true)).toEqual(false)
+			jestExpect(ReactIs.isValidElementType(123)).toEqual(false)
+			jestExpect(ReactIs.isValidElementType({})).toEqual(false)
+			jestExpect(ReactIs.isValidElementType(nil)).toEqual(false)
+			-- ROBLOX deviation: no difference between nil and undefined in Lua
+			-- jestExpect(ReactIs.isValidElementType(undefined)).toEqual(false)
+			jestExpect(ReactIs.isValidElementType({ type = 'TextLabel', props = {}})).toEqual(false)
+		end)
 
-			expect(ReactIs.isValidElementType(true)).toEqual(false)
-			expect(ReactIs.isValidElementType(123)).toEqual(false)
-			expect(ReactIs.isValidElementType({})).toEqual(false)
-			expect(ReactIs.isValidElementType(nil)).toEqual(false)
-			--            expect(ReactIs.isValidElementType(undefined)).toEqual(false);
-			expect(
-				ReactIs.isValidElementType({
-					type = 'TextLabel',
-					props = {},
-				})
-			).toEqual(false)
+		it('should identify context providers', function()
+			local Context = React.createContext(false)
+			jestExpect(ReactIs.isValidElementType(Context.Provider)).toBe(true)
+			jestExpect(ReactIs.typeOf(React.createElement(Context.Provider))).toBe(ReactIs.ContextProvider)
+			jestExpect(ReactIs.isContextProvider(React.createElement(Context.Provider))).toBe(true)
+			jestExpect(ReactIs.isContextProvider(React.createElement(Context.Consumer))).toBe(false)
+			jestExpect(ReactIs.isContextProvider(React.createElement('div'))).toBe(false)
+		end)
+
+		it('should identify elements', function()
+			jestExpect(ReactIs.typeOf(React.createElement('div'))).toBe(ReactIs.Element)
+			jestExpect(ReactIs.isElement(React.createElement('div'))).toBe(true)
+			jestExpect(ReactIs.isElement('div')).toBe(false)
+			jestExpect(ReactIs.isElement(true)).toBe(false)
+			jestExpect(ReactIs.isElement(123)).toBe(false)
+			jestExpect(ReactIs.isElement(nil)).toBe(false)
+			-- ROBLOX deviation: no difference between nil and undefined in Lua
+			-- expect(ReactIs.isElement(undefined)).toBe(false)
+			jestExpect(ReactIs.isElement({})).toBe(false)
+
+			-- It should also identify more specific types as elements
+			local Context = React.createContext(false)
+			jestExpect(ReactIs.isElement(React.createElement(Context.Provider))).toBe(true)
+			jestExpect(ReactIs.isElement(React.createElement(Context.Consumer))).toBe(true)
+			jestExpect(ReactIs.isElement(React.createElement(React.Fragment))).toBe(true)
+			jestExpect(ReactIs.isElement(React.createElement(React.StrictMode))).toBe(true)
+			jestExpect(ReactIs.isElement(React.createElement(React.Suspense))).toBe(true)
+		end)
+
+		it('should identify ref forwarding component', function()
+			local RefForwardingComponent = React.forwardRef(function(props, ref) return nil end)
+			jestExpect(ReactIs.isValidElementType(RefForwardingComponent)).toBe(true)
+			jestExpect(ReactIs.typeOf(React.createElement(RefForwardingComponent))).toBe(ReactIs.ForwardRef)
+			jestExpect(ReactIs.isForwardRef(React.createElement(RefForwardingComponent))).toBe(true)
+			jestExpect(ReactIs.isForwardRef({type = ReactIs.StrictMode})).toBe(false)
+			jestExpect(ReactIs.isForwardRef(React.createElement('div'))).toBe(false)
+		end)
+
+		it('should identify fragments', function()
+			jestExpect(ReactIs.isValidElementType(React.Fragment)).toBe(true)
+			jestExpect(ReactIs.typeOf(React.createElement(React.Fragment))).toBe(ReactIs.Fragment)
+			jestExpect(ReactIs.isFragment(React.createElement(React.Fragment))).toBe(true)
+			jestExpect(ReactIs.isFragment({type = ReactIs.Fragment})).toBe(false)
+			jestExpect(ReactIs.isFragment('React.Fragment')).toBe(false)
+			jestExpect(ReactIs.isFragment(React.createElement('div'))).toBe(false)
+			jestExpect(ReactIs.isFragment({})).toBe(false)
+		end)
+
+		  -- ROBLOX TODO: make this pass when we implement Portals
+		itSKIP('should identify portals', function()
+			-- local div = React.createElement('div')
+			-- local portal = ReactDOM.createPortal(React.createElement('div'), div)
+			-- expect(ReactIs.isValidElementType(portal)).toBe(false)
+			-- expect(ReactIs.typeOf(portal)).toBe(ReactIs.Portal)
+			-- expect(ReactIs.isPortal(portal)).toBe(true)
+			-- expect(ReactIs.isPortal('div')).toBe(false)
+		end)
+
+		it('should identify memo', function()
+			local Component = function() return React.createElement('div') end
+			local Memoized = React.memo(Component)
+			jestExpect(ReactIs.isValidElementType(Memoized)).toBe(true)
+			jestExpect(ReactIs.typeOf(React.createElement(Memoized))).toBe(ReactIs.Memo)
+			jestExpect(ReactIs.isMemo(React.createElement(Memoized))).toBe(true)
+			jestExpect(ReactIs.isMemo(React.createElement(Component))).toBe(false)
+		end)
+
+		-- ROBLOX TODO: make this pass once Lazy is implemented
+		itSKIP('should identify lazy', function()
+			local Component = function() return React.createElement('div') end
+			-- local LazyComponent = React.lazy(function() return Component end)
+			-- jestExpect(ReactIs.isValidElementType(LazyComponent)).toBe(true)
+			-- jestExpect(ReactIs.typeOf(React.createElement(LazyComponent))).toBe(ReactIs.Lazy)
+			-- jestExpect(ReactIs.isLazy(React.createElement(LazyComponent))).toBe(true)
+			jestExpect(ReactIs.isLazy(React.createElement(Component))).toBe(false)
+		end)
+
+		it('should identify strict mode', function()
+			jestExpect(ReactIs.isValidElementType(React.StrictMode)).toBe(true)
+			jestExpect(ReactIs.typeOf(React.createElement(React.StrictMode))).toBe(ReactIs.StrictMode)
+			jestExpect(ReactIs.isStrictMode(React.createElement(React.StrictMode))).toBe(true)
+			jestExpect(ReactIs.isStrictMode({type = ReactIs.StrictMode})).toBe(false)
+			jestExpect(ReactIs.isStrictMode(React.createElement('div'))).toBe(false)
+		end)
+
+		-- ROBLOX TODO: make this pass once Suspense is implemented
+		itSKIP('should identify suspense', function()
+			jestExpect(ReactIs.isValidElementType(React.Suspense)).toBe(true)
+			jestExpect(ReactIs.typeOf(React.createElement(React.Suspense))).toBe(ReactIs.Suspense)
+			jestExpect(ReactIs.isSuspense(React.createElement(React.Suspense))).toBe(true)
+			jestExpect(ReactIs.isSuspense({type = ReactIs.Suspense})).toBe(false)
+			jestExpect(ReactIs.isSuspense('React.Suspense')).toBe(false)
+			jestExpect(ReactIs.isSuspense(React.createElement('div'))).toBe(false)
+		end)
+
+		-- ROBLOX TODO: make this pass once Profiler is implemented
+		itSKIP('should identify profile root', function()
+			jestExpect(ReactIs.isValidElementType(React.Profiler)).toBe(true)
+			jestExpect(
+				ReactIs.typeOf(React.createElement(React.Profiler, {id="foo", onRender=jest:fn()}))
+			).toBe(ReactIs.Profiler)
+			jestExpect(
+				ReactIs.isProfiler(React.createElement(React.Profiler, {id="foo", onRender=jest:fn()}))
+			).toBe(true)
+			jestExpect(ReactIs.isProfiler({type = ReactIs.Profiler})).toBe(false)
+			jestExpect(ReactIs.isProfiler(React.createElement('div'))).toBe(false)
 		end)
 	end)
 end
