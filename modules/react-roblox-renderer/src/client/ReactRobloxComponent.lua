@@ -40,7 +40,9 @@ exports.diffProperties = function(
   --   validatePropertiesInDevelopment(tag, nextRawProps)
   -- end
 
-  local updatePayload: nil | Array<any> = nil
+  -- ROBLOX FIXME: Type refinement
+  -- local updatePayload: nil | Array<any> = nil
+  local updatePayload = nil
 
   local lastProps = lastRawProps
   local nextProps = nextRawProps
@@ -118,13 +120,9 @@ exports.diffProperties = function(
     -- } else {
       -- For all other deleted properties we add it to the queue. We use
       -- the allowed property list in the commit phase instead.
-      -- ROBLOX FIXME: type refinement
-      -- updatePayload = updatePayload or {}
-      -- table.insert(updatePayload, propKey)
-      -- table.insert(updatePayload, Object.None)
-      local finalPayload = updatePayload or {}
-      table.insert(finalPayload, propKey)
-      table.insert(finalPayload, Object.None)
+      updatePayload = updatePayload or {}
+      table.insert(updatePayload, propKey)
+      table.insert(updatePayload, Object.None)
     -- }
   end
   for propKey, nextProp in pairs(nextProps) do
@@ -225,13 +223,9 @@ exports.diffProperties = function(
     -- } else {
       -- For any other property we always add it to the queue and then we
       -- filter it out using the allowed property list during the commit.
-      -- ROBLOX FIXME: type refinement
-      -- updatePayload = updatePayload or {}
-      -- table.insert(updatePayload, propKey)
-      -- table.insert(updatePayload, nextProp)
-      local finalPayload = updatePayload or {}
-      table.insert(finalPayload, propKey)
-      table.insert(finalPayload, nextProp)
+      updatePayload = updatePayload or {}
+      table.insert(updatePayload, propKey)
+      table.insert(updatePayload, nextProp)
     -- }
   end
   -- if (styleUpdates) {
