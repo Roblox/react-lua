@@ -16,7 +16,7 @@ Lifecycle methods that will not conflict:
 
 The conflicting lifecycle names are (Roact / React):
 * `didMount` / `componentDidMount`
-* `shouldUpdate` / `componentShouldUpdate`
+* `shouldUpdate` / `shouldComponentUpdate`
 * `willUpdate` / `componentWillUpdate`
 * `didUpdate` / `componentDidUpdate`
 * `willUnmount` / `componentWillUnmount`

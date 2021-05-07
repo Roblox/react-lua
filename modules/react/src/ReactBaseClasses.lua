@@ -29,12 +29,54 @@ end
 local componentClassPrototype = {}
 componentClassPrototype.isReactComponent = true
 
-local componentClassMetatable = {
-  __index = componentClassPrototype,
-  __tostring = function(self)
-    return self.__componentName
-  end,
+-- ROBLOX deviation: logic to support old Roact lifecycle method names
+-- ROBLOX FIXME: remove below table and function once we've formally stopped
+-- supporting old Roact lifecycle method names.
+
+local function warnAboutExistingLifecycle(componentName, newName, existingName)
+  console.warn(
+    "%s already defined '%s', but it also defining the deprecated Roact method '%s'. %s should only implement one of these methods, preferably using the non-deprecated name.",
+    componentName, existingName, newName, componentName)
+end
+
+local function warnAboutDeprecatedLifecycleName(newName, existingName)
+  console.warn("The method name '%s' is no longer supported and should be updated to '%s'", newName, existingName)
+end
+
+local lifecycleNames = {
+  didMount = 'componentDidMount',
+  shouldUpdate = 'shouldComponentUpdate',
+  willUpdate = 'UNSAFE_componentWillUpdate',
+  didUpdate = 'componentDidUpdate',
+  willUnmount = 'componentWillUnmount'
 }
+
+local function handleNewLifecycle(self, key, value)
+  -- if we're defining a new lifecycle method using old naming convention
+  if lifecycleNames[key] ~= nil then
+    -- if the method we're defining was already defined under a different name
+    if self[lifecycleNames[key]] ~= nil then
+      warnAboutExistingLifecycle(self.__componentName, key, lifecycleNames[key])
+    -- special case for willUpdate which can be defined properly with 2 different names
+    elseif key == 'willUpdate' and self["componentWillUpdate"] then
+      warnAboutExistingLifecycle(self.__componentName, key, "UNSAFE_componentWillUpdate")
+    -- otherwise if not previously defined, just warn about deprecated name
+    else
+      warnAboutDeprecatedLifecycleName(key, lifecycleNames[key])
+    end
+    -- update key to proper name
+    key = lifecycleNames[key]
+  end
+  rawset(self, key, value)
+end
+
+local componentClassMetatable = {
+    __newindex = handleNewLifecycle,
+    __index = componentClassPrototype,
+    __tostring = function(self)
+      return self.__componentName
+    end,
+  }
 
 local Component = {}
 setmetatable(Component, componentClassMetatable)
@@ -90,6 +132,7 @@ function Component:extend(name)
 
     return instance
   end
+
 
   setmetatable(class, getmetatable(self))
 
