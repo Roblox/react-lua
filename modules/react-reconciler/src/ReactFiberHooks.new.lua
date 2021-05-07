@@ -74,7 +74,7 @@ local MountPassiveDevEffect = ReactFiberFlags.MountPassiveDev
 local HookHasEffect = ReactHookEffectTags.HasEffect
 local HookLayout = ReactHookEffectTags.Layout
 local HookPassive = ReactHookEffectTags.Passive
-local ReactFiberWorkLoop = require(script.Parent['ReactFiberWorkLoop.new'])
+local ReactFiberWorkLoop = require(script.Parent['ReactFiberWorkLoop.new']) :: any
 local warnIfNotCurrentlyActingUpdatesInDev = ReactFiberWorkLoop.warnIfNotCurrentlyActingUpdatesInDev
 local scheduleUpdateOnFiber = ReactFiberWorkLoop.scheduleUpdateOnFiber
 local warnIfNotScopedWithMatchingAct = ReactFiberWorkLoop.warnIfNotScopedWithMatchingAct
@@ -92,7 +92,7 @@ local getWorkInProgressRoot = ReactFiberWorkLoop.getWorkInProgressRoot
 local invariant = require(Workspace.Shared.invariant)
 local getComponentName = require(Workspace.Shared.getComponentName)
 local is = require(Workspace.Shared.objectIs)
-local markWorkInProgressReceivedUpdate = require(script.Parent['ReactFiberBeginWork.new']).markWorkInProgressReceivedUpdate
+local markWorkInProgressReceivedUpdate = require(script.Parent['ReactFiberBeginWork.new']).markWorkInProgressReceivedUpdate :: any
 -- local {
 --   UserBlockingPriority,
 --   NormalPriority,
@@ -598,7 +598,7 @@ function mountReducer(
   -- deviation: set currentlyRenderingFiber to a local varible so it doesn't change
   -- by call time
   local cRF = currentlyRenderingFiber
-  queue.dispatch = function(...) 
+  queue.dispatch = function(...)
       return dispatchAction(cRF, queue, ...)
     end
   local dispatch: Dispatch<any> = queue.dispatch
@@ -909,7 +909,7 @@ function readFromUnsubcribedMutableSource(
   end
 end
 
--- ROBLOX TODO: 
+-- ROBLOX TODO: needs Luau function generics
 -- function useMutableSource<Source, Snapshot>(
 --   hook: Hook,
 --   source: MutableSource<Source>,
@@ -941,7 +941,7 @@ function useMutableSource(
 
   -- Grab a handle to the state hook as well.
   -- We use it to clear the pending update queue if we have a new source.
-  
+
   -- ROBLOX TODO: recast local stateHook = ((workInProgressHook: any): Hook)
   local stateHook = workInProgressHook
 
@@ -1006,10 +1006,10 @@ function useMutableSource(
 
       local ok, result = pcall(function()
         latestSetSnapshot(latestGetSnapshot(source._source))
-  
+
         -- Record a pending mutable source update with the same expiration time.
         local lane = requestUpdateLane(fiber)
-  
+
         markRootMutableRead(root, lane)
       end)
 
@@ -1456,7 +1456,7 @@ function updateImperativeHandle(
         errorArg = typeof(create)
       end
       console.error(
-        'Expected useImperativeHandle() second argument to be a function ' +
+        'Expected useImperativeHandle() second argument to be a function ' ..
           'that creates a handle. Instead received: %s.',
           errorArg
       )
@@ -1464,7 +1464,7 @@ function updateImperativeHandle(
   end
 
   -- TODO: If deps are provided, should we skip comparing the ref itself?
-  -- deviation: ternary turned to explicit if/else
+  -- ROBLOX deviation: ternary turned to explicit if/else
   local effectDeps
   if deps ~= nil then
     effectDeps = Cryo.List.join(deps, {ref})
@@ -2080,7 +2080,7 @@ if _G.__DEV__ then
       checkDepsAreArrayDev(deps)
       return mountLayoutEffect(create, deps)
   end,
-  -- ROBLOX TODO: function generics  
+  -- ROBLOX TODO: function generics
   -- useMemo<T>(create: () => T, deps: Array<any> | nil): T {
     useMemo = function(create: () -> any, deps: Array<any> | nil): any
       currentHookNameInDev = 'useMemo'
@@ -2254,7 +2254,7 @@ if _G.__DEV__ then
       updateHookTypesDev()
       return mountLayoutEffect(create, deps)
   end,
-    -- ROBLOX TODO: function generics  
+    -- ROBLOX TODO: function generics
     -- useMemo<T>(create: () => T, deps: Array<any> | nil): T {
     useMemo = function(create: () -> any, deps: Array<any> | nil): any
       currentHookNameInDev = 'useMemo'
@@ -3147,7 +3147,7 @@ if _G.__DEV__ then
       return updateLayoutEffect(create, deps)
     end,
     -- ROBLOX FIXME: function generics
-    -- useMemo<T>(create: () => T, deps: Array<any> | nil): T 
+    -- useMemo<T>(create: () => T, deps: Array<any> | nil): T
     useMemo = function(create: () -> any, deps: Array<any> | nil): any
       currentHookNameInDev = 'useMemo'
       warnInvalidHookAccess()

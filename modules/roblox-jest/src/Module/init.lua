@@ -2,7 +2,7 @@
 local FakeTimers = require(script.Parent.FakeTimers)
 
 local requiredModules: { [ModuleScript]: any } = {}
-local mocks: { [ModuleScript]: () -> any } = {}
+local mocks: { [ModuleScript]: (() -> any)? } = {}
 
 if _G.__NO_LOADMODULE__ then
 	warn("debug.loadmodule not enabled. Test plans relying on resetModules " ..
@@ -52,8 +52,9 @@ local function requireOverride(scriptInstance: ModuleScript): any
 
 	local moduleResult
 	-- First, check the mock cache and see if this is being mocked
-	if mocks[scriptInstance] ~= nil then
-		moduleResult = mocks[scriptInstance]()
+	if typeof (mocks[scriptInstance]) == "function" then
+		-- ROBLOX FIXME: Luau flow analysis bug workaround
+		moduleResult = (mocks[scriptInstance]:: () -> any)()
 
 		if moduleResult == nil then
 			error(string.format(

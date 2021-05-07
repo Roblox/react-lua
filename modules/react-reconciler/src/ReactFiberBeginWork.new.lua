@@ -101,7 +101,7 @@ local setIsRendering = ReactCurrentFiber.setIsRendering
 --   resolveClassForHotReloading,
 -- } = require(script.Parent.ReactFiberHotReloading.new)
 
-local ReactChildFiber = require(script.Parent["ReactChildFiber.new"])
+local ReactChildFiber = require(script.Parent["ReactChildFiber.new"]) :: any
 local mountChildFibers = ReactChildFiber.mountChildFibers
 local reconcileChildFibers = ReactChildFiber.reconcileChildFibers
 local cloneChildFibers = ReactChildFiber.cloneChildFibers
@@ -202,7 +202,7 @@ local enterHydrationState = ReactFiberHydrationContext.enterHydrationState
 -- local reenterHydrationStateFromDehydratedSuspenseInstance = ReactFiberHydrationContext.reenterHydrationStateFromDehydratedSuspenseInstance
 local tryToClaimNextHydratableInstance = ReactFiberHydrationContext.tryToClaimNextHydratableInstance
 -- local warnIfHydrating = ReactFiberHydrationContext.warnIfHydrating
-local ReactFiberClassComponent = require(script.Parent["ReactFiberClassComponent.new"])
+local ReactFiberClassComponent = require(script.Parent["ReactFiberClassComponent.new"]) :: any
 local adoptClassInstance = ReactFiberClassComponent.adoptClassInstance
 local applyDerivedStateFromProps = ReactFiberClassComponent.applyDerivedStateFromProps
 local constructClassInstance = ReactFiberClassComponent.constructClassInstance
@@ -1679,7 +1679,7 @@ function validateFunctionComponentInDev(workInProgress: Fiber, Component: any)
       local warningKey = ownerName or workInProgress._debugID or ''
       local debugSource = workInProgress._debugSource
       if debugSource then
-        warningKey = debugSource.fileName + ':' + debugSource.lineNumber
+        warningKey = debugSource.fileName .. ':' .. debugSource.lineNumber
       end
       if not didWarnAboutFunctionRefs[warningKey] then
         didWarnAboutFunctionRefs[warningKey] = true

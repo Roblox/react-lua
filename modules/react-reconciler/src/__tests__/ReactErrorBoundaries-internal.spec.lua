@@ -2168,7 +2168,7 @@ return function()
 
             end)
             if not ok then
-                if not result:sub(-#'parent sad') == 'parent sad' and not result:sub(-#'child sad') == 'child sad' then
+                if not (result:sub(-#'parent sad') == 'parent sad') and not (result:sub(-#'child sad') == 'child sad') then
                     error(result)
                 end
                 caughtError = result
@@ -2228,7 +2228,7 @@ return function()
                 root.render(React.createElement(Parent, {value = 2}))
             end)
             if not ok then
-                if not result:sub(-#'parent sad') == 'parent sad' and not result:sub(-#'child sad') == 'child sad' then
+                if not (result:sub(-#'parent sad') == 'parent sad') and not (result:sub(-#'child sad') == 'child sad') then
                     error(result)
                 end
                 caughtError = result

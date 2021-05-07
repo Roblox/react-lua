@@ -33,6 +33,7 @@ end
 
 local index = 0
 
+-- ROBLOX TODO: needs Luau function generics.
 -- local function createCursor<T>(defaultValue: T): StackCursor<T>
 local function createCursor(defaultValue): StackCursor<any>
 	return {
@@ -44,8 +45,9 @@ local function isEmpty(): boolean
 	return index == 0
 end
 
+-- ROBLOX TODO: needs Luau function generics.
 -- local function pop<T>(cursor: StackCursor<T>, fiber: Fiber)
-local function pop(cursor: StackCursor<any>, fiber: Fiber)
+local function pop(cursor: StackCursor<any>, fiber: Fiber): ()
 	if index < 1 then
 		if _G.__DEV__ then
 			console.error('Unexpected pop.')
@@ -54,7 +56,8 @@ local function pop(cursor: StackCursor<any>, fiber: Fiber)
 	end
 
 	if _G.__DEV__ then
-		if fiber ~= fiberStack[index] then
+		-- ROBLOX TODO: workaround for Luau analysis bug
+		if fiber ~= fiberStack[index] :: Fiber then
 			console.error('Unexpected Fiber popped.')
 		end
 	end
@@ -75,8 +78,9 @@ local function pop(cursor: StackCursor<any>, fiber: Fiber)
 	index -= 1
 end
 
+-- ROBLOX TODO: needs Luau function generics
 -- local function push<T>(cursor: StackCursor<T>, value: T, fiber: Fiber)
-local function push(cursor: StackCursor<any>, value: any, fiber: Fiber)
+local function push(cursor: StackCursor<any>, value: any, fiber: Fiber): ()
 	index += 1
 
 	local stackValue = cursor.current
@@ -87,11 +91,7 @@ local function push(cursor: StackCursor<any>, value: any, fiber: Fiber)
 	end
 
 	if _G.__DEV__ then
-		if fiber == nil then
-			fiberStack[index] = NULL
-		else
-			fiberStack[index] = fiber
-		end
+		fiberStack[index] = fiber
 	end
 
 	cursor.current = value

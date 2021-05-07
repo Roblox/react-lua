@@ -1,3 +1,6 @@
+[![CI](https://github.com/Roblox/roact-alignment/workflows/CI/badge.svg?branch=master)](https://github.com/Roblox/roact-alignment/actions?query=workflow%3ACI+branch%3Amaster)
+[![Coverage Status](https://coveralls.io/repos/github/Roblox/roact-alignment/badge.svg?t=jurRWp)](https://coveralls.io/github/Roblox/roact-alignment)
+
 # Roact Alignment
 A temporary ground-up Roact repository that will track our preliminary alignment with React, starting with leaf nodes like the scheduler.
 

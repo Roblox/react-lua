@@ -77,7 +77,7 @@ if _G.__DEV__ then
 	componentFrameCache = setmetatable({}, { __mode = "k" })
 end
 
-local function describeNativeComponentFrame(fn: (any) -> any, construct: boolean): string
+local function describeNativeComponentFrame(fn: ((any) -> any)?, construct: boolean): string
 	-- // If something asked for a stack inside a fake render, it should get ignored.
 	if not fn or reentry then
 		return ""
@@ -124,8 +124,9 @@ local function describeNativeComponentFrame(fn: (any) -> any, construct: boolean
 					stack = debug.traceback(),
 				})
 			end)
-			control = x
-			fn()
+			control = x;
+			-- ROBLOX FIXME: Luau flow analysis bug workaround
+			(fn :: (any) -> any)()
 		end
 	end, function(message)
 		return {
@@ -227,8 +228,9 @@ local function describeNativeComponentFrame(fn: (any) -> any, construct: boolean
 	if typeof(fn) == "function" then
 		-- ROBLOX FIXME: selene currently flags debug.info for not having field info
 		-- selene: allow(incorrect_standard_library_use)
-		name = debug.info(fn, "n")
-	
+			-- ROBLOX FIXME: Luau flow analysis bug workaround
+			name = debug.info((fn :: (any) -> any), "n")
+
 	-- ROBLOX deviation: since fn can be a class, we can get the class name here
 	elseif typeof(fn) == "table" then
 		name = tostring(fn)
@@ -298,7 +300,8 @@ local function describeClassComponentFrame(
 end
 
 function describeFunctionComponentFrame(
-	fn: (any) -> any,
+	-- ROBLOX deviation: this annotation is incorrect upstream, we fix it here
+	fn: nil | ((any) -> any),
 	source: nil | Source,
 	ownerFn: nil | (any) -> any
 ): string

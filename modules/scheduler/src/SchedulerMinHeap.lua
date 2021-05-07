@@ -9,17 +9,17 @@
 * @flow
 ]]
 
-type Heap = { [number]: Node }
+type Heap = { [number]: Node? }
 type Node = {
 	id: number,
 	sortIndex: number,
 }
 
 local exports = {}
--- deviation: Preemptively declare local functions to keep lua happy
+-- ROBLOX deviation: This file contains several workarounds for Luau analysis issues by using the `::` operator
 local compare, siftUp, siftDown
 
-exports.push = function(heap: Heap, node: Node)
+exports.push = function(heap: Heap, node: Node): ()
 	local index = #heap + 1
 	heap[index] = node
 
@@ -36,9 +36,9 @@ exports.pop = function(heap: Heap): Node?
 		local last = heap[#heap]
 		heap[#heap] = nil
 
-		if last ~= first then
+		if last :: Node ~= first :: Node then
 			heap[1] = last
-			siftDown(heap, last, 1)
+			siftDown(heap, last :: Node, 1)
 		end
 		return first
 	else
@@ -46,11 +46,11 @@ exports.pop = function(heap: Heap): Node?
 	end
 end
 
-siftUp = function(heap: Heap, node, index: number)
+siftUp = function(heap: Heap, node: Node, index: number): ()
 	while true do
 		local parentIndex = math.floor(index / 2)
 		local parent = heap[parentIndex];
-		if parent ~= nil and compare(parent, node) > 0 then
+		if parent ~= nil and compare(parent :: Node, node :: Node) > 0 then
 			-- The parent is larger. Swap positions.
 			heap[parentIndex] = node
 			heap[index] = parent
@@ -62,7 +62,7 @@ siftUp = function(heap: Heap, node, index: number)
 	end
 end
 
-siftDown = function(heap: Heap, node, index)
+siftDown = function(heap: Heap, node: Node, index: number): ()
 	local length = #heap
 	while index < length do
 		local leftIndex = index * 2
@@ -71,8 +71,8 @@ siftDown = function(heap: Heap, node, index)
 		local right = heap[rightIndex]
 
 		-- If the left or right node is smaller, swap with the smaller of those.
-		if left ~= nil and compare(left, node) < 0 then
-			if right ~= nil and compare(right, left) < 0 then
+		if left ~= nil and compare(left :: Node, node) < 0 then
+			if right ~= nil and compare(right :: Node, left :: Node) < 0 then
 				heap[index] = right
 				heap[rightIndex] = node
 				index = rightIndex
@@ -81,7 +81,7 @@ siftDown = function(heap: Heap, node, index)
 				heap[leftIndex] = node
 				index = leftIndex
 			end
-		elseif right ~= nil and compare(right, node) < 0 then
+		elseif right ~= nil and compare(right :: Node, node :: Node) < 0 then
 			heap[index] = right
 			heap[rightIndex] = node
 			index = rightIndex
@@ -92,7 +92,7 @@ siftDown = function(heap: Heap, node, index)
 	end
 end
 
-compare = function(a: Node, b: Node)
+compare = function(a: Node, b: Node): number
 	-- Compare sort index first, then task id.
 	local diff = a.sortIndex - b.sortIndex
 

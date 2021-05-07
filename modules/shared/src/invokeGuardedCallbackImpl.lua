@@ -77,7 +77,7 @@ if _G.__DEV__ then
 		invokeGuardedCallbackImpl = function invokeGuardedCallbackDev(name, func, context, a, b, c, d, e, f) {
 			-- If document doesn't exist we know for sure we will crash in this method
 			-- when we call document.createEvent(). However this can cause confusing
-			-- errors: https:--github.com/facebookincubator/create-react-app/issues/3482
+			-- errors: https://github.com/facebookincubator/create-react-app/issues/3482
 			-- So we preemptively throw with a better message instead.
 			invariant(typeof document ~= 'undefined', 'The `document` global was defined when React was initialized, but is not ' + 'defined anymore. This can happen in a test environment if a component ' + 'schedules an update from an asynchronous callback, but the test has already ' + 'finished running. To solve this, you can either unmount the component at ' + 'the end of your test (and ensure that any asynchronous operations get ' + 'canceled in `componentWillUnmount`), or you can change the test itself ' + 'to be asynchronous.')
 			local evt = document.createEvent('Event')
@@ -93,7 +93,7 @@ if _G.__DEV__ then
 			-- browsers that support it.
 
 			local windowEvent = window.event; -- Keeps track of the descriptor of window.event to restore it after event
-			-- dispatching: https:--github.com/facebook/react/issues/13688
+			-- dispatching: https://github.com/facebook/react/issues/13688
 
 			local windowEventDescriptor = Object.getOwnPropertyDescriptor(window, 'event')
 
@@ -186,7 +186,7 @@ if _G.__DEV__ then
 					-- The callback errored, but the error event never fired.
 					error = new Error('An error was thrown inside one of your components, but React ' + "doesn't know what it was. This is likely due to browser " + 'flakiness. React does its best to preserve the "Pause on ' + 'exceptions" behavior of the DevTools, which requires some ' + "DEV-mode only tricks. It's possible that these don't work in " + 'your browser. Try triggering the error in production mode, ' + 'or switching to a modern browser. If you suspect that this is ' + 'actually an issue with React, please file an issue.')
 				} else if isCrossOriginError then
-					error = new Error("A cross-origin error was thrown. React doesn't have access to " + 'the actual error object in development. ' + 'See https:--reactjs.org/link/crossorigin-error for more information.')
+					error = new Error("A cross-origin error was thrown. React doesn't have access to " + 'the actual error object in development. ' + 'See https://reactjs.org/link/crossorigin-error for more information.')
 				}
 
 				this.onError(error)
@@ -197,8 +197,8 @@ if _G.__DEV__ then
 
 			if !didCall then
 				-- Something went really wrong, and our event was not dispatched.
-				-- https:--github.com/facebook/react/issues/16734
-				-- https:--github.com/facebook/react/issues/16585
+				-- https://github.com/facebook/react/issues/16734
+				-- https://github.com/facebook/react/issues/16585
 				-- Fall back to the production implementation.
 				restoreAfterDispatch()
 				return invokeGuardedCallbackProd.apply(this, arguments)

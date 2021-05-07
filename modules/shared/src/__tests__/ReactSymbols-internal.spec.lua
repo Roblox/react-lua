@@ -17,9 +17,11 @@ return function()
 		local map = {}
 		for key, value in pairs(keyValuePairs) do
 			if map[value] ~= nil then
-				error(string.format("%s value %s is the same as %s", key, tostring(value), map[value]))
+				-- ROBLOX TODO: workaround for Luau false positive nil-ability
+				error(string.format("%s value %s is the same as %s", key, tostring(value), map[value] :: any))
 			end
-			map[value] = key
+				-- ROBLOX TODO: workaround for Luau false positive nil-ability
+				map[value] = key :: any
 		end
 	end
 
