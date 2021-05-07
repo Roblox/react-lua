@@ -5,7 +5,7 @@ Upstream naming and logic has some deviations and incompatibilities with existin
 ## Naming
 
 ### Component Lifecycle
-**Status:** ❔ Alignment Strategy TBD
+**Status:** ✔️ Resolved
 
 A portion of the component lifecycle methods exclude the `component` part of their name in Roact.
 
@@ -31,6 +31,9 @@ There are a few clear options:
 1. Refactor all Roact consuming code: find/replace instances of the old names with the upstream-aligned ones. This will create a _lot_ of changes, and poses difficulties if those changes are being flagged in tandem with an upgrade as flagging them all may be unreasonably messy.
 2. Add deviations in the upstream code to support both sets of names. This may require some fairly surgical changes and could have some degree of performance cost.
 3. Deviate wholly on these function names in the alignment effort, using Roact's established names. This creates a gap with React user expectations that we'll have to bridge carefully with documentation and possibly warnings (though, one could argue, option 1 causes the same problem with existing Roact users).
+
+#### Implemented Alignment
+An implementation of tactic #2 above was merged in [#88](https://github.com/Roblox/roact-alignment/pull/88). A `__newIndex` metamethod was added to the `React.component` table which catches method declarations using the older naming convention, warns about them and recommends updating the name (in DEV mode), then creates a method in the actual class table under the new API's equivalent name.
 
 ### Reserved Prop Keys: "ref"
 **Status:** ❔ Alignment Strategy TBD
