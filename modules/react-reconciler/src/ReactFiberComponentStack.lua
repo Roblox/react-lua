@@ -11,7 +11,7 @@
 local Workspace = script.Parent.Parent
 
 local ReactInternalTypes = require(script.Parent.ReactInternalTypes)
-type Fiber = ReactInternalTypes.Fiber;
+type Fiber = ReactInternalTypes.Fiber
 
 local ReactWorkTags = require(script.Parent.ReactWorkTags)
 local HostComponent = ReactWorkTags.HostComponent
@@ -40,17 +40,17 @@ local function describeFiber(fiber: Fiber): string
 		end
 	end
 	local source = nil
-	if _G.__DEV__ then 
+	if _G.__DEV__ then
 		source = fiber._debugSource
 	end
 	if fiber.tag == HostComponent then
 		return describeBuiltInComponentFrame(fiber.type, source, owner)
 	elseif fiber.tag == LazyComponent then
-		return describeBuiltInComponentFrame('Lazy', source, owner)
+		return describeBuiltInComponentFrame("Lazy", source, owner)
 	elseif fiber.tag == SuspenseComponent then
-		return describeBuiltInComponentFrame('Suspense', source, owner)
+		return describeBuiltInComponentFrame("Suspense", source, owner)
 	elseif fiber.tag == SuspenseListComponent then
-		return describeBuiltInComponentFrame('SuspenseList', source, owner)
+		return describeBuiltInComponentFrame("SuspenseList", source, owner)
 	elseif
 		fiber.tag == FunctionComponent
 		or fiber.tag == IndeterminateComponent
@@ -83,5 +83,5 @@ return {
 			return "\nError generating stack: " .. result.message .. "\n" .. result.stack
 		end
 		return result
-	end
+	end,
 }

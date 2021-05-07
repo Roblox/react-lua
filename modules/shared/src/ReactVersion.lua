@@ -8,4 +8,4 @@
  ]]
 
 -- TODO: this is special because it gets imported during build.
-return '17.0.0-alpha.0'
+return "17.0.1"

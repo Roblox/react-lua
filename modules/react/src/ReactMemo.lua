@@ -16,37 +16,37 @@ local isValidElementType = require(Workspace.Shared.isValidElementType)
 local exports = {}
 
 exports.memo = function(_type, compare)
-  if _G.__DEV__  then
-    if not isValidElementType(type) then
-      console.error('memo: The first argument must be a component. Instead ' .. 'received: ', tostring(type))
-    end
-  end
+	if _G.__DEV__ then
+		if not isValidElementType(type) then
+			console.error("memo: The first argument must be a component. Instead " .. "received: ", tostring(type))
+		end
+	end
 
-  local elementType = {
-    ["$$typeof"] = REACT_MEMO_TYPE,
-    type = _type,
-    compare = compare or nil
-  }
+	local elementType = {
+		["$$typeof"] = REACT_MEMO_TYPE,
+		type = _type,
+		compare = compare or nil,
+	}
 
-  if _G.__DEV__ then
-    local ownName = nil
-    elementType.displayName = function(...)
-      if #{...} == 0 then
-        return ownName
-      end
+	if _G.__DEV__ then
+		local ownName = nil
+		elementType.displayName = function(...)
+			if #{ ... } == 0 then
+				return ownName
+			end
 
-      local name = ({...})[1]
-      ownName = name
+			local name = ({ ... })[1]
+			ownName = name
 
-      if _type.displayName == nil then
-        _type.displayName = name
-      end
+			if _type.displayName == nil then
+				_type.displayName = name
+			end
 
-      return nil
-    end
-  end
+			return nil
+		end
+	end
 
-  return elementType
+	return elementType
 end
 
 return exports

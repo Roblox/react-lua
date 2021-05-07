@@ -13,13 +13,13 @@ local Workspace = script.Parent.Parent
 local console = require(Workspace.Shared.console)
 
 local ReactInternalTypes = require(script.Parent.ReactInternalTypes)
-type Fiber = ReactInternalTypes.Fiber;
+type Fiber = ReactInternalTypes.Fiber
 local ReactFiberHostConfig = require(script.Parent.ReactFiberHostConfig)
-type Container = ReactFiberHostConfig.Container;
-type SuspenseInstance = ReactFiberHostConfig.SuspenseInstance;
+type Container = ReactFiberHostConfig.Container
+type SuspenseInstance = ReactFiberHostConfig.SuspenseInstance
 -- local ReactFiberSuspenseComponent = require(script.Parent["ReactFiberSuspenseComponent.new"])
 -- type SuspenseState = ReactFiberSuspenseComponent.SuspenseState;
-type SuspenseState = any;
+type SuspenseState = any
 
 local invariant = require(Workspace.Shared.invariant)
 
@@ -77,9 +77,7 @@ local function getNearestMountedFiber(fiber: Fiber): Fiber?
 end
 exports.getNearestMountedFiber = getNearestMountedFiber
 
-exports.getSuspenseInstanceFromFiber = function(
-	fiber: Fiber
-): SuspenseInstance?
+exports.getSuspenseInstanceFromFiber = function(fiber: Fiber): SuspenseInstance?
 	if fiber.tag == SuspenseComponent then
 		local suspenseState: SuspenseState? = fiber.memoizedState
 		if suspenseState == nil then
@@ -96,9 +94,7 @@ exports.getSuspenseInstanceFromFiber = function(
 end
 
 exports.getContainerFromFiber = function(fiber: Fiber): Container?
-	return fiber.tag == HostRoot
-		and fiber.stateNode.containerInfo
-		or nil
+	return fiber.tag == HostRoot and fiber.stateNode.containerInfo or nil
 end
 
 exports.isFiberMounted = function(fiber: Fiber): boolean
@@ -115,11 +111,11 @@ exports.isMounted = function(component): boolean
 			local instance = ownerFiber.stateNode
 			if not instance._warnedAboutRefsInRender then
 				console.error(
-					"%s is accessing isMounted inside its render() function. " ..
-						"render() should be a pure function of props and state. It should " ..
-						"never access something that requires stale data from the previous " ..
-						"render, such as refs. Move this logic to componentDidMount and " ..
-						"componentDidUpdate instead.",
+					"%s is accessing isMounted inside its render() function. "
+						.. "render() should be a pure function of props and state. It should "
+						.. "never access something that requires stale data from the previous "
+						.. "render, such as refs. Move this logic to componentDidMount and "
+						.. "componentDidUpdate instead.",
 					getComponentName(ownerFiber.type) or "A component"
 				)
 			end
@@ -136,10 +132,7 @@ exports.isMounted = function(component): boolean
 end
 
 local function assertIsMounted(fiber)
-	invariant(
-		getNearestMountedFiber(fiber) == fiber,
-		"Unable to find node on an unmounted component."
-	)
+	invariant(getNearestMountedFiber(fiber) == fiber, "Unable to find node on an unmounted component.")
 end
 
 local function findCurrentFiberUsingSlowPath(fiber: Fiber): Fiber?
@@ -147,10 +140,7 @@ local function findCurrentFiberUsingSlowPath(fiber: Fiber): Fiber?
 	if not alternate then
 		-- If there is no alternate, then we only need to check if it is mounted.
 		local nearestMounted = getNearestMountedFiber(fiber)
-		invariant(
-			nearestMounted ~= nil,
-			"Unable to find node on an unmounted component."
-		)
+		invariant(nearestMounted ~= nil, "Unable to find node on an unmounted component.")
 		if nearestMounted ~= fiber then
 			return nil
 		end
@@ -256,24 +246,21 @@ local function findCurrentFiberUsingSlowPath(fiber: Fiber): Fiber?
 				end
 				invariant(
 					didFindChild,
-					"Child was not found in either parent set. This indicates a bug " ..
-						"in React related to the return pointer. Please file an issue."
+					"Child was not found in either parent set. This indicates a bug "
+						.. "in React related to the return pointer. Please file an issue."
 				)
 			end
 		end
 
 		invariant(
 			a.alternate == b,
-			"Return fibers should always be each others' alternates. " ..
-				"This error is likely caused by a bug in React. Please file an issue."
+			"Return fibers should always be each others' alternates. "
+				.. "This error is likely caused by a bug in React. Please file an issue."
 		)
 	end
 	-- If the root is not a host container, we're in a disconnected tree. I.e.
 	-- unmounted.
-	invariant(
-		a.tag == HostRoot,
-		"Unable to find node on an unmounted component."
-	)
+	invariant(a.tag == HostRoot, "Unable to find node on an unmounted component.")
 	if a.stateNode.current == a then
 		-- We've determined that A is the current branch.
 		return fiber
@@ -332,9 +319,9 @@ exports.findCurrentHostFiberWithNoPortals = function(parent: Fiber): Fiber?
 	while true do
 		local child = node.child
 		if
-			node.tag == HostComponent or
-			node.tag == HostText or
-			(enableFundamentalAPI and node.tag == FundamentalComponent)
+			node.tag == HostComponent
+			or node.tag == HostText
+			or (enableFundamentalAPI and node.tag == FundamentalComponent)
 		then
 			return node
 		elseif child and node.tag ~= HostPortal then
@@ -363,16 +350,10 @@ end
 
 exports.isFiberSuspenseAndTimedOut = function(fiber: Fiber): boolean
 	local memoizedState = fiber.memoizedState
-	return
-		fiber.tag == SuspenseComponent and
-		memoizedState ~= nil and
-		memoizedState.dehydrated == nil
+	return fiber.tag == SuspenseComponent and memoizedState ~= nil and memoizedState.dehydrated == nil
 end
 
-exports.doesFiberContain = function(
-	parentFiber: Fiber,
-	childFiber: Fiber
-): boolean
+exports.doesFiberContain = function(parentFiber: Fiber, childFiber: Fiber): boolean
 	local node = childFiber
 	local parentFiberAlternate = parentFiber.alternate
 	while node ~= nil do

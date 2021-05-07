@@ -2,7 +2,7 @@
 return function()
 	local Workspace = script.Parent.Parent.Parent
 	local Packages = Workspace.Parent.Parent.Packages
-    local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
+	local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
 	local Heap = require(script.Parent.Parent.SchedulerMinHeap)
 
 	local function verifyOrder(heap)

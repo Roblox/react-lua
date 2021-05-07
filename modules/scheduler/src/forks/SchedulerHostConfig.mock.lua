@@ -44,8 +44,8 @@ exports.shouldYieldToHost = function(): boolean
 	-- https://jira.rbx.com/browse/CLI-35978
 	local values: any = yieldedValues
 	if
-		(expectedNumberOfYields ~= -1 and values ~= nil and #values >= expectedNumberOfYields) or
-		(shouldYieldForPaint and needsPaint)
+		(expectedNumberOfYields ~= -1 and values ~= nil and #values >= expectedNumberOfYields)
+		or (shouldYieldForPaint and needsPaint)
 	then
 		-- We yielded at least as many values as expected. Stop flushing.
 		didStop = true
@@ -65,7 +65,7 @@ end
 
 exports.reset = function()
 	if isFlushing then
-		error('Cannot reset while already flushing work.')
+		error("Cannot reset while already flushing work.")
 	end
 
 	currentTime = 0
@@ -82,7 +82,7 @@ end
 -- Should only be used via an assertion helper that inspects the yielded values.
 exports.unstable_flushNumberOfYields = function(count: number)
 	if isFlushing then
-		error('Already flushing work.')
+		error("Already flushing work.")
 	end
 
 	if scheduledCallback ~= nil then
@@ -113,7 +113,7 @@ end
 
 exports.unstable_flushUntilNextPaint = function()
 	if isFlushing then
-		error('Already flushing work.')
+		error("Already flushing work.")
 	end
 
 	if scheduledCallback ~= nil then
@@ -144,7 +144,7 @@ end
 
 exports.unstable_flushExpired = function()
 	if isFlushing then
-		error('Already flushing work.')
+		error("Already flushing work.")
 	end
 	if scheduledCallback ~= nil then
 		isFlushing = true
@@ -169,7 +169,7 @@ end
 exports.unstable_flushAllWithoutAsserting = function(): boolean
 	-- Returns false if no work was flushed.
 	if isFlushing then
-		error('Already flushing work.')
+		error("Already flushing work.")
 	end
 	if scheduledCallback ~= nil then
 		local cb = scheduledCallback
@@ -208,15 +208,14 @@ end
 
 exports.unstable_flushAll = function()
 	if yieldedValues ~= nil then
-		error('Log is not empty. Assert on the log of yielded values before ' ..
-			'flushing additional work.'
-		)
+		error("Log is not empty. Assert on the log of yielded values before " .. "flushing additional work.")
 	end
 	exports.unstable_flushAllWithoutAsserting()
 	if yieldedValues ~= nil then
-		error('While flushing work, something yielded a value. Use an ' ..
-			'assertion helper to assert on the log of yielded values, e.g. ' ..
-			'expect(Scheduler).toFlushAndYield([...])'
+		error(
+			"While flushing work, something yielded a value. Use an "
+				.. "assertion helper to assert on the log of yielded values, e.g. "
+				.. "expect(Scheduler).toFlushAndYield([...])"
 		)
 	end
 end
@@ -229,7 +228,7 @@ exports.unstable_yieldValue = function(value: any)
 	-- 	return
 	-- end
 	if yieldedValues == nil then
-		yieldedValues = {value}
+		yieldedValues = { value }
 	else
 		-- deviation: widening type to workaround Luau shortcomings
 		-- https://jira.rbx.com/browse/CLI-35978

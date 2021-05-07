@@ -17,9 +17,9 @@ local invariant = require(Workspace.Shared.invariant)
 function shim(...)
 	invariant(
 		false,
-		'The current renderer does not support hydration. ' ..
-			'This error is likely caused by a bug in React. ' ..
-			'Please file an issue.'
+		"The current renderer does not support hydration. "
+			.. "This error is likely caused by a bug in React. "
+			.. "Please file an issue."
 	)
 end
 

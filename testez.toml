@@ -56,10 +56,22 @@ type = "string"
 [[itFOCUS.args]]
 type = "function"
 
+[[fit.args]]
+type = "string"
+
+[[fit.args]]
+type = "function"
+
 [[itSKIP.args]]
 type = "string"
 
 [[itSKIP.args]]
+type = "function"
+
+[[xit.args]]
+type = "string"
+
+[[xit.args]]
 type = "function"
 
 [SKIP]
