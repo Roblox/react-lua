@@ -123,7 +123,7 @@ exports.isMounted = function(component): boolean
 		end
 	end
 
-	local fiber: Fiber = getInstance(component)
+	local fiber: Fiber? = getInstance(component)
 	if not fiber then
 		return false
 	else
