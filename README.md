@@ -37,7 +37,7 @@ The [react repo](https://github.com/facebook/react) is a monorepo with a number 
 | 📌`react-reconciler` | Reconciler implementation used with various renderers | ✔️ Ported |  | Bulk of React's complicated logic lives here |
 | `react-refresh` | Wiring for Fast Refresh | ❌ Not ported | ❔ Not yet assessed, depend on applicability | Officially supported successor to "hot reloading" |
 | `react-server` | Experimental package for creating React streaming server renderers | ❌ Not ported | ❔ Not yet assessed | |
-| `react-test-renderer` | Test renderer with dom snapshotting | ❌ Not ported | ➕ Likely to be ported | Used for testing much of React's internals |
+| `react-test-renderer` | Test renderer with dom snapshotting | ✔️ Ported | | Used for testing much of React's internals |
 | `react-transport-dom-delay` | Internal package, likely for testing | ❌ Not ported | ➖ Unlikely to be ported | No readme in package |
 | `react-transport-dom-webpack` | Related to above | ❌ Not ported | ➖ Unlikely to be ported | Appears to be webpack-specific |
 | 📌`scheduler` | Cooperative scheduling implementation | ✔️ Ported | | Tracing feature is excluded, will be needed at some point for devtools |

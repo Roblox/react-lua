@@ -177,7 +177,7 @@ We'll likely have to modernize all existing uses of `_context` to instead use th
 This is likely the biggest refactor effort that the Lua Apps adoption is contingent on. It also incurs some knock-on efforts on projects that the App depends upon, like [roact-rodux](https://github.com/roblox/roact-rodux/issues/26), which has some work completed, [but with unaddressed backwards compatibility problems](https://github.com/Roblox/roact-rodux/pull/38#issuecomment-644902307).
 
 ### Fragments
-**Status:** ❔ Alignment Strategy TBD
+**Status:** ✔️ Resolved
 
 React allows a component to return multiple top-level elements as a special kind of component referred to as a "fragment", which will be siblings within the parent they're rendered into (more in the [React documentation](https://reactjs.org/docs/fragments.html)).
 
@@ -223,6 +223,9 @@ function createFragment(elements)
 end
 ```
 This would be a simple compatibility layer that should require very little maintenance.
+
+#### Implemented Alignment
+The `createFragment` function described above was added to React.lua in [#92](https://github.com/Roblox/roact-alignment/pull/92/files).
 
 ### Ref Forwarding
 **Status:** ❔ Alignment Strategy TBD
