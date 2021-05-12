@@ -13,9 +13,9 @@
 -- When adding new symbols to this file,
 -- Please consider also adding to 'react-devtools-shared/src/backend/ReactSymbols'
 
-local Packages = script.Parent.Parent.Parent
-local LuauPolyfill = require(Packages.LuauPolyfill)
-local Symbol = LuauPolyfill.Symbol
+-- local Packages = script.Parent.Parent.Parent
+-- local LuauPolyfill = require(Packages.LuauPolyfill)
+-- local Symbol = LuauPolyfill.Symbol
 
 local exports: { [string]: any } = {}
 
@@ -42,30 +42,31 @@ exports.REACT_DEBUG_TRACING_MODE_TYPE = 0xeae1
 exports.REACT_OFFSCREEN_TYPE = 0xeae2
 exports.REACT_LEGACY_HIDDEN_TYPE = 0xeae3
 
+-- ROBLOX TODO: Use Symbol again once jest-mock knows to exclude the LuauPolyfill module from being reset
 -- deviation: In Lua, Symbol will be a callable table, not a function
-if typeof(Symbol) == "table" and Symbol.for_ ~= nil then
-  local symbolFor = Symbol.for_
-  exports.REACT_ELEMENT_TYPE = symbolFor('react.element')
-  exports.REACT_PORTAL_TYPE = symbolFor('react.portal')
-  exports.REACT_FRAGMENT_TYPE = symbolFor('react.fragment')
-  exports.REACT_STRICT_MODE_TYPE = symbolFor('react.strict_mode')
-  exports.REACT_PROFILER_TYPE = symbolFor('react.profiler')
-  exports.REACT_PROVIDER_TYPE = symbolFor('react.provider')
-  exports.REACT_CONTEXT_TYPE = symbolFor('react.context')
-  exports.REACT_FORWARD_REF_TYPE = symbolFor('react.forward_ref')
-  exports.REACT_SUSPENSE_TYPE = symbolFor('react.suspense')
-  exports.REACT_SUSPENSE_LIST_TYPE = symbolFor('react.suspense_list')
-  exports.REACT_MEMO_TYPE = symbolFor('react.memo')
-  exports.REACT_LAZY_TYPE = symbolFor('react.lazy')
-  exports.REACT_BLOCK_TYPE = symbolFor('react.block')
-  exports.REACT_SERVER_BLOCK_TYPE = symbolFor('react.server.block')
-  exports.REACT_FUNDAMENTAL_TYPE = symbolFor('react.fundamental')
-  exports.REACT_SCOPE_TYPE = symbolFor('react.scope')
-  exports.REACT_OPAQUE_ID_TYPE = symbolFor('react.opaque.id')
-  exports.REACT_DEBUG_TRACING_MODE_TYPE = symbolFor('react.debug_trace_mode')
-  exports.REACT_OFFSCREEN_TYPE = symbolFor('react.offscreen')
-  exports.REACT_LEGACY_HIDDEN_TYPE = symbolFor('react.legacy_hidden')
-end
+-- if typeof(Symbol) == "table" and Symbol.for_ ~= nil then
+--   local symbolFor = Symbol.for_
+--   exports.REACT_ELEMENT_TYPE = symbolFor('react.element')
+--   exports.REACT_PORTAL_TYPE = symbolFor('react.portal')
+--   exports.REACT_FRAGMENT_TYPE = symbolFor('react.fragment')
+--   exports.REACT_STRICT_MODE_TYPE = symbolFor('react.strict_mode')
+--   exports.REACT_PROFILER_TYPE = symbolFor('react.profiler')
+--   exports.REACT_PROVIDER_TYPE = symbolFor('react.provider')
+--   exports.REACT_CONTEXT_TYPE = symbolFor('react.context')
+--   exports.REACT_FORWARD_REF_TYPE = symbolFor('react.forward_ref')
+--   exports.REACT_SUSPENSE_TYPE = symbolFor('react.suspense')
+--   exports.REACT_SUSPENSE_LIST_TYPE = symbolFor('react.suspense_list')
+--   exports.REACT_MEMO_TYPE = symbolFor('react.memo')
+--   exports.REACT_LAZY_TYPE = symbolFor('react.lazy')
+--   exports.REACT_BLOCK_TYPE = symbolFor('react.block')
+--   exports.REACT_SERVER_BLOCK_TYPE = symbolFor('react.server.block')
+--   exports.REACT_FUNDAMENTAL_TYPE = symbolFor('react.fundamental')
+--   exports.REACT_SCOPE_TYPE = symbolFor('react.scope')
+--   exports.REACT_OPAQUE_ID_TYPE = symbolFor('react.opaque.id')
+--   exports.REACT_DEBUG_TRACING_MODE_TYPE = symbolFor('react.debug_trace_mode')
+--   exports.REACT_OFFSCREEN_TYPE = symbolFor('react.offscreen')
+--   exports.REACT_LEGACY_HIDDEN_TYPE = symbolFor('react.legacy_hidden')
+-- end
 
 -- deviation: short circuit for now
 --local MAYBE_ITERATOR_SYMBOL = false -- deviation: typeof(Symbol) == 'function' and Symbol.iterator

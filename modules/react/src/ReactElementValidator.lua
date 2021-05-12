@@ -138,7 +138,7 @@ end
 --  */
 local function validateExplicitKey(element, parentType, tableKey)
 	-- ROBLOX deviation: move key check to after we mark it validated, since we
-	-- may not 
+	-- may not have an explicit key (and will use tableKey to validate)
 	if element._store == nil or element._store.validated then
 		return
 	end
@@ -165,7 +165,7 @@ local function validateExplicitKey(element, parentType, tableKey)
 	then
 		-- // Give the component that originally created this child.
 		childOwner = (" It was passed a child from %s."):format(
-			getComponentName(element._owner.type)
+			tostring(getComponentName(element._owner.type))
 		)
 	end
 

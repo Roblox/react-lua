@@ -1,7 +1,7 @@
 local LazyModule = require(script.Parent.Parent.Parent)
 
 return LazyModule(function(exports)
-	local Foo = require(script.Parent.Foo)
+	local Foo = require(script.Parent.Foo) :: any
 	local addOne = Foo.addOne
 
 	local function multiplyByTwo(value)

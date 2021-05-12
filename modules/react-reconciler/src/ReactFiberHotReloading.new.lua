@@ -111,7 +111,7 @@ local function resolveForwardRefForHotReloading(type: any): any
 		local family = resolveFamily(type)
 		if family == nil then
 			-- Check if we're dealing with a real forwardRef. Don't want to crash early.
-			if 
+			if
 				type ~= nil and
 				typeof(type.render) == 'function'
 			then
@@ -323,7 +323,7 @@ end
 -- 			end
 -- 		end
 -- 		if failedBoundaries ~= nil)
--- 			if 
+-- 			if
 -- 				failedBoundaries.has(fiber) or
 -- 				(alternate ~= nil and failedBoundaries.has(alternate))
 -- 			)

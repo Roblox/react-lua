@@ -6,10 +6,28 @@ return function()
 	local jestModule = require(Packages.Dev.JestRoblox)
 	local jestExpect = jestModule.Globals.expect
 	local jest = jestModule.Globals.jest
-	local ReactIs = require(Workspace.ReactIs)
-	local React = require(Workspace.React.React)
+	local RobloxJest = require(Workspace.RobloxJest)
+	local React
+	local ReactIs
+	local ReactFeatureFlags
 
 	describe("ReactIs", function()
+		beforeEach(function()
+			RobloxJest.resetModules()
+			ReactFeatureFlags = require(Workspace.Shared.ReactFeatureFlags)
+			ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
+
+			-- deviation: In react, jest _always_ mocks Scheduler -> unstable_mock;
+			-- in our case, we need to do it anywhere we want to use the scheduler,
+			-- until we have some form of bundling logic
+			RobloxJest.mock(Workspace.Scheduler, function()
+				return require(Workspace.Scheduler.unstable_mock)
+			end)
+
+			React = require(Workspace.React)
+			ReactIs = require(Workspace.ReactIs)
+		end)
+
 		it("should return nil for unknown/invalid types", function()
 			jestExpect(ReactIs.typeOf("abc")).toBe(nil)
 			jestExpect(ReactIs.typeOf(true)).toBe(nil)
@@ -39,8 +57,9 @@ return function()
 				React.createElement(Component, { forwardedRef = ref })
 			end)
 
-			-- ROBLOX TODO: enable this when we implement Lazy
-			--local LazyComponent = React.lazy(() => Component)
+			local LazyComponent = React.lazy(function()
+				return Component
+			end)
 			local MemoComponent = React.memo(Component)
 			local Context = React.createContext(false)
 
@@ -49,7 +68,7 @@ return function()
 			jestExpect(ReactIs.isValidElementType(PureComponent)).toEqual(true)
 			jestExpect(ReactIs.isValidElementType(FunctionComponent)).toEqual(true)
 			jestExpect(ReactIs.isValidElementType(ForwardRefComponent)).toEqual(true)
-			--            jestExpect(ReactIs.isValidElementType(LazyComponent)).toEqual(true)
+			jestExpect(ReactIs.isValidElementType(LazyComponent)).toEqual(true)
 			jestExpect(ReactIs.isValidElementType(MemoComponent)).toEqual(true)
 			jestExpect(ReactIs.isValidElementType(Context.Provider)).toEqual(true)
 			jestExpect(ReactIs.isValidElementType(Context.Consumer)).toEqual(true)
@@ -77,6 +96,15 @@ return function()
 			-- ROBLOX deviation: no difference between nil and undefined in Lua
 			-- jestExpect(ReactIs.isValidElementType(undefined)).toEqual(false)
 			jestExpect(ReactIs.isValidElementType({ type = "TextLabel", props = {} })).toEqual(false)
+		end)
+
+		it("should identify context consumers", function()
+			local Context = React.createContext(false)
+			jestExpect(ReactIs.isValidElementType(Context.Consumer)).toBe(true)
+			jestExpect(ReactIs.typeOf(React.createElement(Context.Consumer))).toBe(ReactIs.ContextConsumer)
+			jestExpect(ReactIs.isContextConsumer(React.createElement(Context.Consumer))).toBe(true)
+			jestExpect(ReactIs.isContextConsumer(React.createElement(Context.Provider))).toBe(false)
+			jestExpect(ReactIs.isContextConsumer(React.createElement("div"))).toBe(false)
 		end)
 
 		it("should identify context providers", function()
@@ -150,15 +178,16 @@ return function()
 			jestExpect(ReactIs.isMemo(React.createElement(Component))).toBe(false)
 		end)
 
-		-- ROBLOX TODO: make this pass once Lazy is implemented
-		itSKIP("should identify lazy", function()
+		it("should identify lazy", function()
 			local Component = function()
 				return React.createElement("div")
 			end
-			-- local LazyComponent = React.lazy(function() return Component end)
-			-- jestExpect(ReactIs.isValidElementType(LazyComponent)).toBe(true)
-			-- jestExpect(ReactIs.typeOf(React.createElement(LazyComponent))).toBe(ReactIs.Lazy)
-			-- jestExpect(ReactIs.isLazy(React.createElement(LazyComponent))).toBe(true)
+			local LazyComponent = React.lazy(function()
+				return Component
+			end)
+			jestExpect(ReactIs.isValidElementType(LazyComponent)).toBe(true)
+			jestExpect(ReactIs.typeOf(React.createElement(LazyComponent))).toBe(ReactIs.Lazy)
+			jestExpect(ReactIs.isLazy(React.createElement(LazyComponent))).toBe(true)
 			jestExpect(ReactIs.isLazy(React.createElement(Component))).toBe(false)
 		end)
 
@@ -187,6 +216,17 @@ return function()
 			jestExpect(ReactIs.isProfiler(React.createElement(React.Profiler, { id = "foo", onRender = jest:fn() }))).toBe(true)
 			jestExpect(ReactIs.isProfiler({ type = ReactIs.Profiler })).toBe(false)
 			jestExpect(ReactIs.isProfiler(React.createElement("div"))).toBe(false)
+		end)
+
+		-- ROBLOX deviation: added this test to cover deprecation warning
+		it("should warn for deprecated functions", function()
+			jestExpect(function()
+				ReactIs.isConcurrentMode(nil)
+			end).toWarnDev('deprecated', {withoutStack = true})
+
+			jestExpect(function()
+				ReactIs.isAsyncMode(nil)
+			end).toWarnDev('deprecated', {withoutStack = true})
 		end)
 	end)
 end

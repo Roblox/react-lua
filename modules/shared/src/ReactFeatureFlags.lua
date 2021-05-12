@@ -69,7 +69,7 @@ exports.enableScopeAPI = false
 -- Experimental Create Event Handle API.
 exports.enableCreateEventHandleAPI = false
 
--- New API for JSX transforms to target - https:--github.com/reactjs/rfcs/pull/107
+-- New API for JSX transforms to target - https://github.com/reactjs/rfcs/pull/107
 
 -- We will enforce mocking scheduler with scheduler/unstable_mock at some point. (v18?)
 -- Till then, we warn about the missing mock, but still fallback to a legacy mode compatible version
@@ -84,7 +84,7 @@ exports.enableSuspenseCallback = false
 
 -- Part of the simplification of React.createElement so we can eventually move
 -- from React.createElement to React.jsx
--- https:--github.com/reactjs/rfcs/blob/createlement-rfc/text/0000-create-element-changes.md
+-- https://github.com/reactjs/rfcs/blob/createlement-rfc/text/0000-create-element-changes.md
 exports.warnAboutDefaultPropsOnFunctionComponents = false
 
 exports.disableSchedulerTimeoutBasedOnReactExpirationTime = false
@@ -140,7 +140,7 @@ exports.decoupleUpdatePriorityFromScheduler = true
 
 exports.enableDiscreteEventFlushingChange = false
 
--- https:--github.com/facebook/react/pull/19654
+-- https://github.com/facebook/react/pull/19654
 exports.enablePassiveEventIntervention = true
 
 exports.enableEagerRootListeners = false
@@ -148,5 +148,4 @@ exports.enableEagerRootListeners = false
 exports.disableSchedulerTimeoutInWorkLoop = false
 
 exports.enableDoubleInvokingEffects = false
-
 return exports

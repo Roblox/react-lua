@@ -267,7 +267,7 @@ end
 
 -- deviation: FIXME: `Component: Function` - lock down component type def
 local function resolveLazyComponentTag(Component: any): WorkTag
-	-- FIXME (roblox): Need to actually differentiate correctly
+	-- ROBLOX FIXME: Need to actually differentiate correctly
 	if typeof(Component) == "function" then
 		return shouldConstruct(Component) and ClassComponent or FunctionComponent
 	elseif Component ~= nil then

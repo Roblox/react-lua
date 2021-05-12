@@ -11,6 +11,7 @@ local ReactForwardRef = require(React.ReactForwardRef)
 local ReactHooks = require(React.ReactHooks)
 local ReactMemo = require(React.ReactMemo)
 local ReactContext = require(React.ReactContext)
+local ReactLazy = require(React.ReactLazy)
 local ReactSymbols = require(Workspace.Shared.ReactSymbols)
 local console = require(Workspace.Shared.console)
 
@@ -34,6 +35,7 @@ return {
 	isValidElement = ReactElement.isValidElement,
 	createRef = ReactCreateRef.createRef,
 	forwardRef = ReactForwardRef.forwardRef,
+	lazy = ReactLazy.lazy,
 	createFragment = function(elements)
 		if _G.__DEV__ and not warnedAbout["createFragment"] then
 			console.warn("The legacy Roact createFragment API is deprecated, and will be removed in a future version.\n"..

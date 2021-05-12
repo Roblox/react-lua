@@ -597,12 +597,11 @@ return function()
 			)
 		end)
 
-		-- ROBLOX TODO: enable this when Lazy is implemented
-		itSKIP("does not call lazy initializers eagerly", function()
+		it("does not call lazy initializers eagerly", function()
 			local didCall = false
 			local Lazy = React.lazy(function()
 				didCall = true
-				return { ["then"] = function() end }
+				return { then_ = function() end }
 			end)
 			React.createElement(Lazy)
 			jestExpect(didCall).toBe(false)

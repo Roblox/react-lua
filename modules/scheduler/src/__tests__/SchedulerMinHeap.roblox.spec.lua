@@ -8,7 +8,7 @@ return function()
 	local function verifyOrder(heap)
 		for pos = 2, #heap do
 			local parent = math.floor(pos / 2)
-			assert(heap[pos].sortIndex >= heap[parent].sortIndex)
+			jestExpect(heap[pos].sortIndex).toBeGreaterThan(heap[parent].sortIndex)
 		end
 	end
 

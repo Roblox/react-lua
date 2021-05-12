@@ -38,7 +38,7 @@ local function getContextName(type)
 	return type.displayName or 'Context'
 end
 
-local function getComponentName(type)
+local function getComponentName(type): string?
 	if type == nil then
 		-- Host root, text node or just invalid type.
 		return nil

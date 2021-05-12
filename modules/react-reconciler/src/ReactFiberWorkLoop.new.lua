@@ -130,7 +130,7 @@ local ReactWorkTags = require(script.Parent.ReactWorkTags)
 -- local SimpleMemoComponent = ReactWorkTags.SimpleMemoComponent
 local LegacyRoot = require(script.Parent.ReactRootTags).LegacyRoot
 local ReactFiberFlags = require(script.Parent.ReactFiberFlags)
--- deviation: Use properties directly instead of localizing to avoid 200 limit
+-- ROBLOX deviation: Use properties directly instead of localizing to avoid 200 limit
 -- local NoFlags = ReactFiberFlags.NoFlags
 -- local Placement = ReactFiberFlags.Placement
 -- local PassiveStatic = ReactFiberFlags.PassiveStatic

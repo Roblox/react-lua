@@ -27,8 +27,8 @@ local ReactElementType = require(Workspace.Shared.ReactElementType)
 type ReactElement = ReactElementType.ReactElement;
 local ReactTypes = require(Workspace.Shared.ReactTypes)
 type ReactPortal = ReactTypes.ReactPortal
--- local ReactLazy = require(script.Parent.ReactLazy)
--- type LazyComponent = ReactLazy.LazyComponent
+local ReactLazyModule = require(Workspace.React.ReactLazy)
+type LazyComponent<T, P> = ReactLazyModule.LazyComponent<T, P>
 local ReactInternalTypes = require(script.Parent.ReactInternalTypes)
 type Fiber = ReactInternalTypes.Fiber;
 type RoactStableKey = ReactInternalTypes.RoactStableKey;
@@ -296,22 +296,22 @@ end
 -- function resolveLazyType<T, P>(
 --   lazyComponent: LazyComponent<T, P>
 -- ): LazyComponent<T, P> | T
--- ROBLOX TODO: re-add types when ReactLazy exports LazyComponent
+-- ROBLOX TODO: needs Luau function generics
 function resolveLazyType(
-  lazyComponent
-)
-  local ok, _x = pcall(function()
+  lazyComponent: LazyComponent<any, any>
+): LazyComponent<any, any> | any
+  local ok, result = pcall(function()
     -- If we can, let's peek at the resulting type.
-    local payload = lazyComponent._payload;
-    local init = lazyComponent._init;
-    return init(payload);
+    local payload = lazyComponent._payload
+    local init = lazyComponent._init
+    return init(payload)
   end)
   if not ok then
     -- Leave it in place and let it throw again in the begin phase.
-    return lazyComponent;
+    return lazyComponent
   end
 
-  return _x
+  return result
 end
 
 -- This wrapper function exists because I expect to clone the code in each path

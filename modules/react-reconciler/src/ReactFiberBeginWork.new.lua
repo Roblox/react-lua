@@ -18,9 +18,10 @@ local Workspace = script.Parent.Parent
 local console = require(Workspace.Shared.console)
 
 local ReactTypes = require(Workspace.Shared.ReactTypes)
-type ReactProviderType<T> = ReactTypes.ReactProviderType<T>;
-type ReactContext<T> = ReactTypes.ReactContext<T>;
--- local type {LazyComponent as LazyComponentType} = require(Workspace.react/src/ReactLazy'
+type ReactProviderType<T> = ReactTypes.ReactProviderType<T>
+type ReactContext<T> = ReactTypes.ReactContext<T>
+local ReactLazyModule = require(Workspace.React.ReactLazy)
+type LazyComponentType<T, P> = ReactLazyModule.LazyComponent<T, P>
 local ReactInternalTypes = require(script.Parent.ReactInternalTypes)
 type Fiber = ReactInternalTypes.Fiber;
 type FiberRoot = ReactInternalTypes.FiberRoot;
@@ -91,15 +92,16 @@ local invariant = require(Workspace.Shared.invariant)
 -- local shallowEqual = require(Workspace.Shared.shallowEqual)
 local getComponentName = require(Workspace.Shared.getComponentName)
 local ReactStrictModeWarnings = require(script.Parent["ReactStrictModeWarnings.new"])
--- local {REACT_LAZY_TYPE, getIteratorFn} = require(Workspace.Shared.ReactSymbols)
+local ReactSymbolsModule = require(Workspace.Shared.ReactSymbols)
+local REACT_LAZY_TYPE = ReactSymbolsModule.REACT_LAZY_TYPE
+local _getIteratorFn = ReactSymbolsModule.getIteratorFn
 local ReactCurrentFiber = require(script.Parent.ReactCurrentFiber)
 local getCurrentFiberOwnerNameInDevOrNull = ReactCurrentFiber.getCurrentFiberOwnerNameInDevOrNull
 local setIsRendering = ReactCurrentFiber.setIsRendering
--- local {
---   resolveFunctionForHotReloading,
---   resolveForwardRefForHotReloading,
---   resolveClassForHotReloading,
--- } = require(script.Parent.ReactFiberHotReloading.new)
+local ReactFiberHotReloadingModule = require(script.Parent["ReactFiberHotReloading.new"])
+local resolveFunctionForHotReloading = ReactFiberHotReloadingModule.resolveFunctionForHotReloading
+local resolveForwardRefForHotReloading = ReactFiberHotReloadingModule.resolveForwardRefForHotReloading
+local resolveClassForHotReloading = ReactFiberHotReloadingModule.resolveClassForHotReloading
 
 local ReactChildFiber = require(script.Parent["ReactChildFiber.new"]) :: any
 local mountChildFibers = ReactChildFiber.mountChildFibers
@@ -212,12 +214,12 @@ local updateClassInstance = ReactFiberClassComponent.updateClassInstance
 
 local resolveDefaultProps = require(script.Parent["ReactFiberLazyComponent.new"]).resolveDefaultProps
 -- local {
---   resolveLazyComponentTag,
 --   createFiberFromFragment,
 --   createFiberFromOffscreen,
 --   createWorkInProgress,
 --   isSimpleFunctionComponent,
 local ReactFiber = require(script.Parent["ReactFiber.new"])
+local resolveLazyComponentTag = ReactFiber.resolveLazyComponentTag
 local createFiberFromTypeAndProps = ReactFiber.createFiberFromTypeAndProps
 -- local ReactFiberWorkLoop = require(script.Parent["ReactFiberWorkLoop.new"])
 -- local pushRenderLanes = ReactFiberWorkLoop.pushRenderLanes
@@ -1259,189 +1261,192 @@ function updateHostText(current, workInProgress)
   return nil
 end
 
--- function mountLazyComponent(
---   _current,
---   workInProgress,
---   elementType,
---   updateLanes,
---   renderLanes,
--- )
---   if _current ~= nil)
---     -- A lazy component only mounts if it suspended inside a non-
---     -- concurrent tree, in an inconsistent state. We want to treat it like
---     -- a new mount, even though an empty version of it already committed.
---     -- Disconnect the alternate pointers.
---     _current.alternate = nil
---     workInProgress.alternate = nil
---     -- Since this is conceptually a new fiber, schedule a Placement effect
---     workInProgress.flags |= Placement
---   end
+function mountLazyComponent(
+  _current,
+  workInProgress,
+  elementType,
+  updateLanes,
+  renderLanes
+)
+  if _current ~= nil then
+    -- A lazy component only mounts if it suspended inside a non-
+    -- concurrent tree, in an inconsistent state. We want to treat it like
+    -- a new mount, even though an empty version of it already committed.
+    -- Disconnect the alternate pointers.
+    _current.alternate = nil
+    workInProgress.alternate = nil
+    -- Since this is conceptually a new fiber, schedule a Placement effect
+    workInProgress.flags = bit32.bor(workInProgress.flags, Placement)
+  end
 
---   local props = workInProgress.pendingProps
---   local lazyComponent: LazyComponentType<any, any> = elementType
---   local payload = lazyComponent._payload
---   local init = lazyComponent._init
---   local Component = init(payload)
---   -- Store the unwrapped component in the type.
---   workInProgress.type = Component
---   local resolvedTag = (workInProgress.tag = resolveLazyComponentTag(Component))
---   local resolvedProps = resolveDefaultProps(Component, props)
---   local child
---   switch (resolvedTag)
---     case FunctionComponent: {
---       if  _G.__DEV__ then
---         validateFunctionComponentInDev(workInProgress, Component)
---         workInProgress.type = Component = resolveFunctionForHotReloading(
---           Component,
---         )
---       end
---       child = updateFunctionComponent(
---         nil,
---         workInProgress,
---         Component,
---         resolvedProps,
---         renderLanes,
---       )
---       return child
---     end
---     case ClassComponent: {
---       if  _G.__DEV__ then
---         workInProgress.type = Component = resolveClassForHotReloading(
---           Component,
---         )
---       end
---       child = updateClassComponent(
---         nil,
---         workInProgress,
---         Component,
---         resolvedProps,
---         renderLanes,
---       )
---       return child
---     end
---     case ForwardRef: {
---       if  _G.__DEV__ then
---         workInProgress.type = Component = resolveForwardRefForHotReloading(
---           Component,
---         )
---       end
---       child = updateForwardRef(
---         nil,
---         workInProgress,
---         Component,
---         resolvedProps,
---         renderLanes,
---       )
---       return child
---     end
---     case MemoComponent: {
---       if  _G.__DEV__ then
---         if workInProgress.type ~= workInProgress.elementType)
---           local outerPropTypes = Component.propTypes
---           if outerPropTypes)
---             checkPropTypes(
---               outerPropTypes,
---               resolvedProps, -- Resolved for outer only
---               'prop',
---               getComponentName(Component),
---             )
---           end
---         end
---       end
---       child = updateMemoComponent(
---         nil,
---         workInProgress,
---         Component,
---         resolveDefaultProps(Component.type, resolvedProps), -- The inner type can have defaults too
---         updateLanes,
---         renderLanes,
---       )
---       return child
---     end
---     case Block: {
---       if enableBlocksAPI)
---         -- TODO: Resolve for Hot Reloading.
---         child = updateBlock(
---           nil,
---           workInProgress,
---           Component,
---           props,
---           renderLanes,
---         )
---         return child
---       end
---       break
---     end
---   end
---   local hint = ''
---   if  _G.__DEV__ then
---     if
---       Component ~= nil and
---       typeof Component == 'table’' and
---       Component.$$typeof == REACT_LAZY_TYPE
---     )
---       hint = ' Did you wrap a component in React.lazy() more than once?'
---     end
---   end
---   -- This message intentionally doesn't mention ForwardRef or MemoComponent
---   -- because the fact that it's a separate type of work is an
---   -- implementation detail.
---   invariant(
---     false,
---     'Element type is invalid. Received a promise that resolves to: %s. ' +
---       'Lazy element type must resolve to a class or function.%s',
---     Component,
---     hint,
---   )
--- end
+  local props = workInProgress.pendingProps
+  local lazyComponent: LazyComponentType<any, any> = elementType
+  local payload = lazyComponent._payload
+  local init = lazyComponent._init
+  local Component = init(payload)
+  -- Store the unwrapped component in the type.
+  workInProgress.type = Component
+  workInProgress.tag = resolveLazyComponentTag(Component)
+  local resolvedTag = workInProgress.tag
+  local resolvedProps = resolveDefaultProps(Component, props)
+  local child
+  if resolvedTag == FunctionComponent then
+    if  _G.__DEV__ then
+      validateFunctionComponentInDev(workInProgress, Component)
+      Component = resolveFunctionForHotReloading(
+        Component
+      )
+      workInProgress.type = Component
+    end
+    child = updateFunctionComponent(
+      nil,
+      workInProgress,
+      Component,
+      resolvedProps,
+      renderLanes
+    )
+    return child
+  elseif resolvedTag == ClassComponent then
+    if  _G.__DEV__ then
+      Component = resolveClassForHotReloading(
+        Component
+      )
+      workInProgress.type = Component
+    end
+    child = updateClassComponent(
+      nil,
+      workInProgress,
+      Component,
+      resolvedProps,
+      renderLanes
+    )
+    return child
+  elseif resolvedTag == ForwardRef then
+    if  _G.__DEV__ then
+      Component = resolveForwardRefForHotReloading(
+        Component
+      )
+      workInProgress.type = Component
+    end
+    child = updateForwardRef(
+      nil,
+      workInProgress,
+      Component,
+      resolvedProps,
+      renderLanes
+    )
+    return child
+  elseif resolvedTag == MemoComponent then
+    if  _G.__DEV__ then
+      if workInProgress.type ~= workInProgress.elementType then
+        local outerPropTypes = Component.propTypes
+        if outerPropTypes then
+          checkPropTypes(
+            outerPropTypes,
+            resolvedProps, -- Resolved for outer only
+            'prop',
+            getComponentName(Component)
+          )
+        end
+      end
+    end
+    unimplemented("MemoComponent")
+    -- child = updateMemoComponent(
+    --   nil,
+    --   workInProgress,
+    --   Component,
+    --   resolveDefaultProps(Component.type, resolvedProps), -- The inner type can have defaults too
+    --   updateLanes,
+    --   renderLanes
+    -- )
+    return child
+  -- elseif resolvedTag == Block then
+  --   unimplemented("Blocks API")
+  --   if enableBlocksAPI then
+  --     -- TODO: Resolve for Hot Reloading.
+  --     child = updateBlock(
+  --       nil,
+  --       workInProgress,
+  --       Component,
+  --       props,
+  --       renderLanes,
+  --     )
+  --     return child
+  --   end
+  --   -- ROBLOX deviation: break
+  end
+  local hint = ''
+  if  _G.__DEV__ then
+    if
+      Component ~= nil and
+      -- ROBLOX deviation: invert object check to be ~= function
+      typeof(Component) ~= 'function' and
+      Component["$$typeof"] == REACT_LAZY_TYPE
+    then
+      hint = ' Did you wrap a component in React.lazy() more than once?'
+    end
+  end
+  -- This message intentionally doesn't mention ForwardRef or MemoComponent
+  -- because the fact that it's a separate type of work is an
+  -- implementation detail.
+  invariant(
+    false,
+    'Element type is invalid. Received a promise that resolves to: %s. ' ..
+      'Lazy element type must resolve to a class or function.%s',
+    Component,
+    hint
+  )
+  -- ROBLOX deviation: add nil to satisfy Luau, which doesn't doesn't bubble up the unconditional error() inside invariant
+  return nil
+end
 
--- function mountIncompleteClassComponent(
---   _current,
---   workInProgress,
---   Component,
---   nextProps,
---   renderLanes,
--- )
---   if _current ~= nil)
---     -- An incomplete component only mounts if it suspended inside a non-
---     -- concurrent tree, in an inconsistent state. We want to treat it like
---     -- a new mount, even though an empty version of it already committed.
---     -- Disconnect the alternate pointers.
---     _current.alternate = nil
---     workInProgress.alternate = nil
---     -- Since this is conceptually a new fiber, schedule a Placement effect
---     workInProgress.flags |= Placement
---   end
+function mountIncompleteClassComponent(
+  _current,
+  workInProgress,
+  Component,
+  nextProps,
+  renderLanes
+)
+  if _current ~= nil then
+    -- An incomplete component only mounts if it suspended inside a non-
+    -- concurrent tree, in an inconsistent state. We want to treat it like
+    -- a new mount, even though an empty version of it already committed.
+    -- Disconnect the alternate pointers.
+    _current.alternate = nil
+    workInProgress.alternate = nil
+    -- Since this is conceptually a new fiber, schedule a Placement effect
+    workInProgress.flags = bit32.bor(workInProgress.flags, Placement)
+  end
 
---   -- Promote the fiber to a class and try rendering again.
---   workInProgress.tag = ClassComponent
+  -- Promote the fiber to a class and try rendering again.
+  workInProgress.tag = ClassComponent
 
---   -- The rest of this function is a fork of `updateClassComponent`
+  -- The rest of this function is a fork of `updateClassComponent`
 
---   -- Push context providers early to prevent context stack mismatches.
---   -- During mounting we don't know the child context yet as the instance doesn't exist.
---   -- We will invalidate the child context in finishClassComponent() right after rendering.
---   local hasContext
---   if isLegacyContextProvider(Component))
---     hasContext = true
---     pushLegacyContextProvider(workInProgress)
---   else
---     hasContext = false
---   end
---   prepareToReadContext(workInProgress, renderLanes, exports.markWorkInProgressReceivedUpdate)
+  -- Push context providers early to prevent context stack mismatches.
+  -- During mounting we don't know the child context yet as the instance doesn't exist.
+  -- We will invalidate the child context in finishClassComponent() right after rendering.
+  local hasContext
+  if isLegacyContextProvider(Component) then
+    hasContext = true
+    pushLegacyContextProvider(workInProgress)
+  else
+    hasContext = false
+  end
+  prepareToReadContext(workInProgress, renderLanes, exports.markWorkInProgressReceivedUpdate)
 
---   constructClassInstance(workInProgress, Component, nextProps)
---   mountClassInstance(workInProgress, Component, nextProps, renderLanes)
+  constructClassInstance(workInProgress, Component, nextProps)
+  mountClassInstance(workInProgress, Component, nextProps, renderLanes)
 
---   return finishClassComponent(
---     nil,
---     workInProgress,
---     Component,
---     true,
---     hasContext,
---     renderLanes,
---   )
--- end
+  return finishClassComponent(
+    nil,
+    workInProgress,
+    Component,
+    true,
+    hasContext,
+    renderLanes
+  )
+end
 
 local function mountIndeterminateComponent(
   current,
@@ -3413,15 +3418,14 @@ exports.beginWork = function(
       renderLanes
     )
   elseif workInProgress.tag == LazyComponent then
-    unimplemented("beginWork: LazyComponent")
-    -- local elementType = workInProgress.elementType
-    -- return mountLazyComponent(
-    --   current,
-    --   workInProgress,
-    --   elementType,
-    --   updateLanes,
-    --   renderLanes
-    -- )
+    local elementType = workInProgress.elementType
+    return mountLazyComponent(
+      current,
+      workInProgress,
+      elementType,
+      updateLanes,
+      renderLanes
+    )
   elseif workInProgress.tag == FunctionComponent then
     local Component = workInProgress.type
     local unresolvedProps = workInProgress.pendingProps
@@ -3429,8 +3433,7 @@ exports.beginWork = function(
     if workInProgress.elementType == Component then
       resolvedProps = unresolvedProps
     else
-      unimplemented("Lazy resolve default props")
-      -- resolvedProps = resolveDefaultProps(Component, unresolvedProps)
+      resolvedProps = resolveDefaultProps(Component, unresolvedProps)
     end
     return updateFunctionComponent(
       current,
@@ -3529,20 +3532,19 @@ exports.beginWork = function(
     --   renderLanes
     -- )
   elseif workInProgress.tag == IncompleteClassComponent then
-    unimplemented("beginWork: IncompleteClassComponent")
-    -- local Component = workInProgress.type
-    -- local unresolvedProps = workInProgress.pendingProps
-    -- local resolvedProps =
-    --   workInProgress.elementType == Component
-    --     and unresolvedProps
-    --     or resolveDefaultProps(Component, unresolvedProps)
-    -- return mountIncompleteClassComponent(
-    --   current,
-    --   workInProgress,
-    --   Component,
-    --   resolvedProps,
-    --   renderLanes
-    -- )
+    local Component = workInProgress.type
+    local unresolvedProps = workInProgress.pendingProps
+    local resolvedProps =
+      workInProgress.elementType == Component
+        and unresolvedProps
+        or resolveDefaultProps(Component, unresolvedProps)
+    return mountIncompleteClassComponent(
+      current,
+      workInProgress,
+      Component,
+      resolvedProps,
+      renderLanes
+    )
   elseif workInProgress.tag == SuspenseListComponent then
     unimplemented("beginWork: SuspenseListComponent")
     -- return updateSuspenseListComponent(current, workInProgress, renderLanes)
