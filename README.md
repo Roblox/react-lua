@@ -87,11 +87,13 @@ rbx-aged-cli download roblox-cli --dst ~/bin
 export PATH=$PATH:~/bin
 roblox-cli --help
 ```
+You should see roblox-cli output its help text.
+Before going ahead, you might want to add `export PATH=$PATH:~/bin` to your bash profile file of choice, so you don't have to run it every time you open your terminal.
 
-You should see roblox-cli output its help text. The next step is to clone the repo.
+The next step is to clone the repo. When prompted for it, use the personal access token as your password.
 
 ```
-git clone git@github.com:Roblox/roact-alignment.git
+git clone https://github.com/Roblox/roact-alignment.git
 cd roact-alignment
 roblox-cli analyze default.project.json
 ```
@@ -104,19 +106,19 @@ export PATH=$PATH:$HOME/.cargo/bin
 cargo install foreman
 foreman github-auth <your GitHub API token that you used for npm login above>
 foreman install
-export PATH=$PATH:~/.foreman/bin/
+export PATH=$PATH:~/.foreman/bin/ # you might want to add this to your bash profile file too
 ```
 
 Now you can run the tests, edit code, and contribute! Next we need to install our Lua package dependencies. We do this with a tool called Rotriever, which Foreman just installed for us. The package dependencies are listed in `rotriever.toml`. 
 
 ```
-rotrieve install —git-auth <github username>@<github API TOKEN>
+rotrieve install
 ```
 
 Next we're going to use Rojo (installed by Foreman above) to compile and package our Lua code into a format that Roblox understands.
 
 ```
-rojo build --output model.rbxmx
+rojo build tests.project.json  --output model.rbxmx
 ```
 
 Now we can use `roblox-cli` to run our tests. We specify the Rojo build output file and our test runner file.
