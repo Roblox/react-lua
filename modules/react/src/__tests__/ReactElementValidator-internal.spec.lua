@@ -333,8 +333,7 @@ return function()
 						"instead of a component?",
 					"Warning: React.createElement: type is invalid -- expected a string " ..
 						"(for built-in components) or a class/function (for composite " ..
-						-- "components) but got: <Foo />. Did you accidentally export a JSX literal " ..
-						"components) but got: <Unknown />. Did you accidentally export a JSX literal " ..
+						"components) but got: <Foo />. Did you accidentally export a JSX literal " ..
 						"instead of a component?",
 					"Warning: React.createElement: type is invalid -- expected a string " ..
 						"(for built-in components) or a class/function (for composite " ..

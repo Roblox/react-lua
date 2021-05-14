@@ -128,7 +128,7 @@ exports.isMounted = function(component): boolean
 		return false
 	else
 		-- ROBLOX FIXME: recast to any to silence analyze, but is already checked in if statement above
-		local nonNilFiber : any = fiber
+		local nonNilFiber: any = fiber
 		return getNearestMountedFiber(nonNilFiber) == fiber
 	end
 end

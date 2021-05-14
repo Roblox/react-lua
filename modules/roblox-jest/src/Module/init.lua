@@ -40,7 +40,7 @@ local function requireOverride(scriptInstance: ModuleScript): any
 	--
 	-- TODO: This is a little janky, so we should find a way to do this that's a
 	-- little more robust. We may want to apply it to anything in RobloxJest?
-	if scriptInstance == script or scriptInstance == script.Parent then
+	if scriptInstance == script or scriptInstance == script.Parent or scriptInstance.Name == "jest-roblox" then
 		return require(scriptInstance)
 	end
 

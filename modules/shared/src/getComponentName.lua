@@ -55,8 +55,16 @@ local function getComponentName(type): string?
 	end
 
 	if typeofType == "function" then
-		-- return type.displayName or type.name or nil
-		return nil
+		-- ROBLOX FIXME: selene currently flags debug.info for not having field info
+		-- selene: allow(incorrect_standard_library_use)
+		-- ROBLOX FIXME: Luau flow analysis bug workaround
+		local name = debug.info((type :: (any) -> any), "n")
+		-- when name = (null) we want it to be treated as nil, not as an empty (truthy) string
+		if name and #name > 0 then
+			return name
+		else
+			return nil
+		end
 	end
 
 	if typeofType == "string" then

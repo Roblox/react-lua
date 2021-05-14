@@ -3666,7 +3666,7 @@ local warnIfNotCurrentlyActingUpdatesInDEV = function (fiber: Fiber): ()
       warnsIfNotActing == true and
       executionContext == NoContext and
       IsSomeRendererActing.current == false and
-      exports.isThisRendererActing.current == false then
+      exports.IsThisRendererActing.current == false then
 
       local previousFiber = ReactCurrentFiberCurrent
       local ok, result = pcall(function()
