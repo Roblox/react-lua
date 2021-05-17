@@ -20,6 +20,7 @@ local RobloxJest = {
 	useFakeTimers = FakeTimers.useFakeTimers,
 	useRealTimers = FakeTimers.useRealTimers,
 	runAllTimers = FakeTimers.runAllTimers,
+	advanceTimersByTime = FakeTimers.advanceTimersByTime,
 
 	testEnv = {
 		require = Module.requireOverride,

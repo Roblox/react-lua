@@ -3554,7 +3554,7 @@ return function()
 	end)
 
 	describe("useRef", function()
-		-- ROBLOX TODO: missing jest advanceTimersByTime
+		-- ROBLOX TODO: clearTimeout: attempt to index number with userdata (LUAFDN-293)
 		xit("creates a ref object initialized with the provided value", function()
 			local jest = RobloxJest
 			jest.useFakeTimers()

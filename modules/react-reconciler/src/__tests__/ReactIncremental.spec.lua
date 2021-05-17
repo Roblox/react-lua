@@ -2581,7 +2581,7 @@ return function()
 			end
 			function ContextProvider:render()
 				if self.state.throwError then
-					error()
+					error('')
 				end
 
 				return (function()
