@@ -187,6 +187,12 @@ With module resetting disabled, most tests will only work if they're the _first_
 
 ### How to debug upstream tests
 
+To run the upstream tests, you will need to install yarn and have it download the development dependencies:
+```
+npm install --global yarn
+yarn
+```
+
 First, set a breakpoint in the ReactJS code you want to step through, like at the beginning of a specific test.
 
 Note: You probably don't want to set a breakpoint on the `fit`, `it`, or `itFOCUS` line itself, but the first line of the test after that.
