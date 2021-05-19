@@ -30,6 +30,9 @@
         "RobloxJest": {
           "$path": "modules/roblox-jest/src"
         },
+        "JestReact": {
+          "$path": "modules/jest-react/src"
+        },
         "Scheduler": {
           "$path": "modules/scheduler/src"
         },

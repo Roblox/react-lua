@@ -149,10 +149,7 @@ return function()
                     'Microtask',
                 })    
 
-                -- deviation: toMatchRenderedOutput throws 'attempt to call a nil value'
-                -- jestExpect(root).toMatchRenderedOutput('3')
-                jestExpect(root.toTree().rendered).toEqual('3')
-
+                jestExpect(root).toMatchRenderedOutput('3')
             end))
         end)
     end)

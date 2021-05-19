@@ -15,7 +15,7 @@ The [react repo](https://github.com/facebook/react) is a monorepo with a number 
 | `dom-event-testing-library` | Dom event simulation for tests | ❌ Not ported | ❔ Not yet assessed | May inspire Rhodium improvements |
 | `eslint-plugin-react-hooks` | Linting plugin for hooks rules | ❌ Not ported | ❔ Not yet assessed | Depends on future linting tools |
 | `jest-mock-scheduler` | Reexports scheduler testing utilities | ❌ Not ported | ❔ Not yet assessed | |
-| 📌`jest-react` | Jest matchers and utilities | ❌ Not ported | ➕ Likely to be ported | Haven't yet run into any uses of this in tests we've ported so far |
+| 📌`jest-react` | Jest matchers and utilities | ✔️ Ported | | Haven't yet run into any uses of this in tests we've ported so far |
 | 📌`react` | Base react interface | 🔨 Port in progress |  | Defines basic shape of internals like Components and Elements. We may add things like Bindings here. |
 | `react-art` | For drawing vector graphics | ❌ Not ported | ➖ Unlikely to be ported | |
 | `react-cache` | Basic cache for use with experimental React features | ❌ Not ported | ❔ Not yet assessed | API is flagged as unstable |
