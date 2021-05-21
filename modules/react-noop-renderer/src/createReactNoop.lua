@@ -33,9 +33,9 @@ local clearTimeout = LuauPolyfill.clearTimeout
 local console = require(Workspace.Shared.console)
 local Scheduler = require(Workspace.Scheduler.unstable_mock)
 -- deviation: These are only used for the JSX logic that's currently omitted
--- local ReactSymbols = require(Workspace.Shared.ReactSymbols)
--- local REACT_FRAGMENT_TYPE = ReactSymbols.REACT_FRAGMENT_TYPE
--- local REACT_ELEMENT_TYPE = ReactSymbols.REACT_ELEMENT_TYPE
+local ReactSymbols = require(Workspace.Shared.ReactSymbols)
+local REACT_FRAGMENT_TYPE = ReactSymbols.REACT_FRAGMENT_TYPE
+local REACT_ELEMENT_TYPE = ReactSymbols.REACT_ELEMENT_TYPE
 
 -- TODO (roblox): Figure out what the top-level interface of the reconciler is
 local ReactRootTags = require(Workspace.ReactReconciler.ReactRootTags)
@@ -520,7 +520,7 @@ local function createReactNoop(reconciler, useMutation: boolean)
 				newProps: Props
 			)
 				if oldProps == nil then
-					error(Error('Should have old props'))
+					error(Error("Should have old props"))
 				end
 				hostUpdateCounter += 1
 				instance.prop = newProps.prop
@@ -663,59 +663,69 @@ local function createReactNoop(reconciler, useMutation: boolean)
 	local roots = {}
 	local DEFAULT_ROOT_ID = "<default>"
 
-	-- deviation: disabling JSX-related functionality
-	-- function childToJSX(child, text) {
-	-- 	if (text ~= nil) {
-	-- 		return text
-	-- 	}
-	-- 	if (child == nil) {
-	-- 		return nil
-	-- 	}
-	-- 	if (typeof child == 'string') {
-	-- 		return child
-	-- 	}
-	-- 	if (Array.isArray(child)) {
-	-- 		if (child.length == 0) {
-	-- 			return nil
-	-- 		}
-	-- 		if (child.length == 1) {
-	-- 			return childToJSX(child[0], nil)
-	-- 		}
-	-- 		-- $FlowFixMe
-	-- 		local children = child.map(c => childToJSX(c, nil))
-	-- 		if (children.every(c => typeof c == 'string' or typeof c == 'number')) {
-	-- 			return children.join('')
-	-- 		}
-	-- 		return children
-	-- 	}
-	-- 	if (Array.isArray(child.children)) {
-	-- 		-- This is an instance.
-	-- 		local instance: Instance = (child: any)
-	-- 		local children = childToJSX(instance.children, instance.text)
-	-- 		local props = ({prop: instance.prop}: any)
-	-- 		if (instance.hidden) {
-	-- 			props.hidden = true
-	-- 		}
-	-- 		if (children ~= nil) {
-	-- 			props.children = children
-	-- 		}
-	-- 		return {
-	-- 			$$typeof: REACT_ELEMENT_TYPE,
-	-- 			type: instance.type,
-	-- 			key: nil,
-	-- 			ref: nil,
-	-- 			props: props,
-	-- 			_owner: nil,
-	-- 			_store: _G.__DEV__ ? {} : undefined,
-	-- 		}
-	-- 	}
-	-- 	-- This is a text instance
-	-- 	local textInstance: TextInstance = (child: any)
-	-- 	if (textInstance.hidden) {
-	-- 		return ''
-	-- 	}
-	-- 	return textInstance.text
-	-- }
+	local function childToJSX(child, text)
+		if text ~= nil then
+			return text
+		end
+		if child == nil then
+			return nil
+		end
+		if typeof(child) == "string" then
+			return child
+		end
+		if Array.isArray(child) then
+			if #child == 0 then
+				return nil
+			end
+			if #child == 1 then
+				return childToJSX(child[1], nil)
+			end
+			local children = Array.map(child, function(c)
+				return childToJSX(c, nil)
+			end)
+			if Array.every(children, function (c) 
+				return typeof(c) == "string" or typeof(c) == "number"
+			end) then
+				return Array.join(children, "")
+			end
+			return children
+		end
+		if Array.isArray(child.children) then
+			-- ROBLOX DEVIATION: Luau flow syntax unsupported by Selene 0.11
+			-- local instance: Instance = (child :: any)
+			local instance = child
+			local children = childToJSX(instance.children, instance.text)
+			-- ROBLOX DEVIATION: Luau flow syntax unsupported by Selene 0.11
+			-- local props = ({prop = instance.prop} :: any)
+			local props = {prop = instance.prop}
+			if instance.hidden then
+				props.hidden = true
+			end
+			if children ~= nil then
+				props.children = children
+			end
+			local store = nil
+			if _G.__DEV__ then
+				store = {}
+			end
+			return {
+				["$$typeof"] = REACT_ELEMENT_TYPE,
+				type = instance.type,
+				key = nil,
+				ref = nil,
+				props = props,
+				_owner = nil,
+				_store = store,
+			}
+		end
+		-- ROBLOX deviation: type erasure to workaround Luau narrowing issues
+		-- local textInstance: TextInstance = (child: any)
+		local textInstance = child
+		if textInstance.hidden then
+			return ""
+		end
+		return textInstance.text
+	end
 
 	local function getChildren(root)
 		if root then
@@ -733,28 +743,28 @@ local function createReactNoop(reconciler, useMutation: boolean)
 		end
 	end
 
-	-- deviation: disabling JSX-related functionality
 	local function getChildrenAsJSX(root)
-		error(Error("JSX Unsupported"))
+		local children = childToJSX(getChildren(root), nil)
+		if children == nil then
+			return nil
+		end
+		if Array.isArray(children) then
+			local store = nil
+			if _G.__DEV__ then
+				store = {}
+			end
+			return {
+				["$$typeof"] = REACT_ELEMENT_TYPE,
+				type = REACT_FRAGMENT_TYPE,
+				key = nil,
+				ref = nil,
+				props = {children},
+				_owner = nil,
+				_store = store
+			}
+		end
+		return children
 	end
-	-- function getChildrenAsJSX(root) {
-	-- 	local children = childToJSX(getChildren(root), nil)
-	-- 	if (children == nil) {
-	-- 		return nil
-	-- 	}
-	-- 	if (Array.isArray(children)) {
-	-- 		return {
-	-- 			$$typeof: REACT_ELEMENT_TYPE,
-	-- 			type: REACT_FRAGMENT_TYPE,
-	-- 			key: nil,
-	-- 			ref: nil,
-	-- 			props: {children},
-	-- 			_owner: nil,
-	-- 			_store: _G.__DEV__ ? {} : undefined,
-	-- 		}
-	-- 	}
-	-- 	return children
-	-- }
 
 	-- deviation: disabling JSX-related functionality
 	local function getPendingChildrenAsJSX(root)
@@ -1080,7 +1090,7 @@ local function createReactNoop(reconciler, useMutation: boolean)
 			end
 
 			local function logUpdateQueue(updateQueue, depth)
-				log(string.rep("  ", depth + 1) .. 'QUEUED UPDATES')
+				log(string.rep("  ", depth + 1) .. "QUEUED UPDATES")
 				local first = updateQueue.firstBaseUpdate
 				local update = first
 				if update ~= nil then
@@ -1141,9 +1151,9 @@ local function createReactNoop(reconciler, useMutation: boolean)
 				end
 			end
 
-			log('HOST INSTANCES:')
+			log("HOST INSTANCES:")
 			logContainer(rootContainer, 0)
-			log('FIBERS:')
+			log("FIBERS:")
 			logFiber(root.current, 0)
 
 			-- eslint-disable-next-line react-internal/no-production-logging
@@ -1178,7 +1188,7 @@ local function createReactNoop(reconciler, useMutation: boolean)
 		if typeof(setTimeout) == "table" and setTimeout._isMockFunction ~= true then
 			error(Error(
 				"This version of `act` requires Jest's timer mocks " ..
-					'(i.e. jest.useFakeTimers).'
+					"(i.e. jest.useFakeTimers)."
 			))
 		end
 

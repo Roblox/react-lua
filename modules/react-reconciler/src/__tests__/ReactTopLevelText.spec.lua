@@ -19,44 +19,39 @@ return function()
 	local RobloxJest = require(Workspace.RobloxJest)
 	local Packages = Workspace.Parent
 	local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
+	describe("ReactTopLevelText", function()
+		beforeEach(function()
+			RobloxJest.resetModules()
+			-- ROBLOX deviation: In react, jest _always_ mocks Scheduler -> unstable_mock;
+			-- in our case, we need to do it anywhere we want to use the scheduler,
+			-- directly or indirectly, until we have some form of bundling logic
+			RobloxJest.mock(Workspace.Scheduler, function()
+				return require(Workspace.Scheduler.unstable_mock)
+			end)
 
-	beforeEach(function()
-		RobloxJest.resetModules()
-		-- ROBLOX deviation: In react, jest _always_ mocks Scheduler -> unstable_mock;
-		-- in our case, we need to do it anywhere we want to use the scheduler,
-		-- directly or indirectly, until we have some form of bundling logic
-		RobloxJest.mock(Workspace.Scheduler, function()
-			return require(Workspace.Scheduler.unstable_mock)
+			React = require(Workspace.React)
+			ReactNoop = require(Workspace.ReactNoopRenderer)
+			Scheduler = require(Workspace.Scheduler)
 		end)
 
-		React = require(Workspace.React)
-		ReactNoop = require(Workspace.ReactNoopRenderer)
-		Scheduler = require(Workspace.Scheduler)
-	end)
+		it("should render a component returning strings directly from render", function()
+			local Text = function(props)
+				return props.value
+			end
+			ReactNoop.render(React.createElement(Text, { value = "foo" }))
+			jestExpect(Scheduler).toFlushWithoutYielding()
 
-	it("should render a component returning strings directly from render", function()
-		local Text = function(props)
-			return props.value
-		end
-		ReactNoop.render(React.createElement(Text, { value = "foo" }))
-		jestExpect(Scheduler).toFlushWithoutYielding()
-		-- ROBLOX TODO: replace the below expects with toMatchRenderedOutput
-		-- jestExpect(ReactNoop).toMatchRenderedOutput('foo')
-		local renderedOutput = ReactNoop.getChildren()
-		jestExpect(#renderedOutput).toBe(1)
-		jestExpect(renderedOutput[1].text).toBe("foo")
-	end)
+			jestExpect(ReactNoop).toMatchRenderedOutput("foo")
+		end)
 
-	it("should render a component returning numbers directly from renderß", function()
-		local Text = function(props)
-			return props.value
-		end
-		ReactNoop.render(React.createElement(Text, { value = 10 }))
-		jestExpect(Scheduler).toFlushWithoutYielding()
-		-- ROBLOX TODO: replace the below expects with toMatchRenderedOutput
-		-- jestExpect(ReactNoop).toMatchRenderedOutput('10')
-		local renderedOutput = ReactNoop.getChildren()
-		jestExpect(#renderedOutput).toBe(1)
-		jestExpect(renderedOutput[1].text).toBe("10")
+		it("should render a component returning numbers directly from renderß", function()
+			local Text = function(props)
+				return props.value
+			end
+			ReactNoop.render(React.createElement(Text, { value = 10 }))
+			jestExpect(Scheduler).toFlushWithoutYielding()
+
+			jestExpect(ReactNoop).toMatchRenderedOutput("10")
+		end)
 	end)
 end

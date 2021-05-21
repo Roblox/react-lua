@@ -35,7 +35,7 @@ local exports = {}
 
 local function hasValidRef(config)
 	if _G.__DEV__ then
-		if config and config.ref and typeof(config.ref) == 'table' then
+		if config and config.ref and typeof(config.ref) == "table" then
 			local getter = config.ref.get
 
 			if getter and getter.isReactWarning then
@@ -50,7 +50,7 @@ end
 local function hasValidKey(config)
 	if _G.__DEV__ then
 		-- ROBLOX TODO: sort out proper translation of this clause which involves checking for getter methods
-		if config.key and typeof(config.key) == 'table' then
+		if config.key and typeof(config.key) == "table" then
 			local getter = config.key.get
 
 			if getter and getter.isReactWarning then
@@ -85,7 +85,7 @@ local function defineKeyPropWarningGetter(props, displayName)
 	props.key = nil
 	setmetatable(props, {
 		__index = function(t, k)
-			if k == 'key' then
+			if k == "key" then
 				warnAboutAccessingKey()
 				-- ROBLOX deviation: returns sentinel object that mimics upstream ability to check isReactWarning field
 				return reactWarning
@@ -118,7 +118,7 @@ local function defineRefPropWarningGetter(props, displayName)
 	props.ref = nil
 	setmetatable(props, {
 		__index = function(t, k)
-			if k == 'ref' then
+			if k == "ref" then
 				warnAboutAccessingRef()
 				-- ROBLOX deviation: returns sentinel object that mimics upstream ability to check isReactWarning field
 				return reactWarning
@@ -195,12 +195,15 @@ local function ReactElement(type_, key, ref, self, source, owner, props)
 		-- an external backing store so that we can freeze the whole object.
 		-- This can be replaced with a WeakMap once they are implemented in
 		-- commonly used development environments.
-		element._store = {}
-		-- To make comparing ReactElements easier for testing purposes, we make
-		-- the validation flag non-enumerable (where possible, which should
-		-- include every environment we run tests in), so the test framework
-		-- ignores it.
-		element._store.validated = false
+		element._store = setmetatable({}, {
+			-- To make comparing ReactElements easier for testing purposes, we make
+			-- the validation flag non-enumerable (where possible, which should
+			-- include every environment we run tests in), so the test framework
+			-- ignores it.
+			__index = {
+				validated = false
+			}
+		})
 		-- self and source are DEV only properties.
 		element._self = self
 		-- Two elements created in two different places should be considered
@@ -358,7 +361,7 @@ exports.createElement = function(type_, config, ...)
 		end
 
 		if hasValidKey(config) then
-			key = '' .. config.key
+			key = "" .. config.key
 		end
 
 		if config.__self == nil then

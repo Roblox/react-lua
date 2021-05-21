@@ -46,7 +46,7 @@ end
 return function()
     local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
 
-    describe('useMutableSource', function()
+    describe("useMutableSource", function()
         local defaultGetSnapshot = function(source)
             return source.value
         end
@@ -166,39 +166,39 @@ return function()
         local function Component(props)
             local getSnapshot, label, mutableSource, subscribe = props.getSnapshot, props.label, props.mutableSource, props.subscribe
             local snapshot = useMutableSource(mutableSource, getSnapshot, subscribe)
-            Scheduler.unstable_yieldValue(('%s:%s'):format(label, snapshot))
+            Scheduler.unstable_yieldValue(("%s:%s"):format(label, snapshot))
 
-            return React.createElement('div', nil, ('%s:%s'):format(label, snapshot))
+            return React.createElement("div", nil, ("%s:%s"):format(label, snapshot))
         end
 
         beforeEach(function()
             loadModules()
         end)
         -- @gate experimental
-        it('should subscribe to a source and schedule updates when it changes', function()
-            local source = createSource('one')
+        it("should subscribe to a source and schedule updates when it changes", function()
+            local source = createSource("one")
             local mutableSource = createMutableSource(source, function(param)
                 return param.version
             end)
 
             act(function()
                 ReactNoop.renderToRootWithID(React.createElement(React.Fragment, nil, React.createElement(Component, {
-                    label = 'a',
+                    label = "a",
                     getSnapshot = defaultGetSnapshot,
                     mutableSource = mutableSource,
                     subscribe = defaultSubscribe,
                 }), React.createElement(Component, {
-                    label = 'b',
+                    label = "b",
                     getSnapshot = defaultGetSnapshot,
                     mutableSource = mutableSource,
                     subscribe = defaultSubscribe,
-                })), 'root', function()
-                    return Scheduler.unstable_yieldValue('Sync effect')
+                })), "root", function()
+                    return Scheduler.unstable_yieldValue("Sync effect")
                 end)
                 jestExpect(Scheduler).toFlushAndYieldThrough({
-                    'a:one',
-                    'b:one',
-                    'Sync effect',
+                    "a:one",
+                    "b:one",
+                    "Sync effect",
                 })
                 -- Subscriptions should be passive
                 jestExpect(source.listenerCount).toEqual(0)
@@ -206,186 +206,186 @@ return function()
                 jestExpect(source.listenerCount).toEqual(2)
 
                 -- Changing values should schedule an update with React
-                source.value = 'two'
+                source.value = "two"
 
                 jestExpect(Scheduler).toFlushAndYieldThrough({
-                    'a:two',
-                    'b:two',
+                    "a:two",
+                    "b:two",
                 })
 
                 -- Umounting a component should remove its subscription.
                 ReactNoop.renderToRootWithID(React.createElement(React.Fragment, nil, React.createElement(Component, {
-                    label = 'a',
+                    label = "a",
                     getSnapshot = defaultGetSnapshot,
                     mutableSource = mutableSource,
                     subscribe = defaultSubscribe,
-                })), 'root', function()
-                    return Scheduler.unstable_yieldValue('Sync effect')
+                })), "root", function()
+                    return Scheduler.unstable_yieldValue("Sync effect")
                 end)
                 jestExpect(Scheduler).toFlushAndYield({
-                    'a:two',
-                    'Sync effect',
+                    "a:two",
+                    "Sync effect",
                 })
                 ReactNoop.flushPassiveEffects()
                 jestExpect(source.listenerCount).toEqual(1)
 
                 -- Umounting a root should remove the remaining event listeners
-                ReactNoop.unmountRootWithID('root')
+                ReactNoop.unmountRootWithID("root")
                 jestExpect(Scheduler).toFlushAndYield({})
                 ReactNoop.flushPassiveEffects()
                 jestExpect(source.listenerCount).toEqual(0)
 
                 -- Changes to source should not trigger an updates or warnings.
-                source.value = 'three'
+                source.value = "three"
 
                 jestExpect(Scheduler).toFlushAndYield({})
             end)
         end)
         -- @gate experimental
-        it('should restart work if a new source is mutated during render', function()
-            local source = createSource('one')
+        it("should restart work if a new source is mutated during render", function()
+            local source = createSource("one")
             local mutableSource = createMutableSource(source, function(param)
                 return param.version
             end)
 
             act(function()
                 ReactNoop.render(React.createElement(React.Fragment, nil, React.createElement(Component, {
-                    label = 'a',
+                    label = "a",
                     getSnapshot = defaultGetSnapshot,
                     mutableSource = mutableSource,
                     subscribe = defaultSubscribe,
                 }), React.createElement(Component, {
-                    label = 'b',
+                    label = "b",
                     getSnapshot = defaultGetSnapshot,
                     mutableSource = mutableSource,
                     subscribe = defaultSubscribe,
                 })), function()
-                    return Scheduler.unstable_yieldValue('Sync effect')
+                    return Scheduler.unstable_yieldValue("Sync effect")
                 end)
 
                 -- Do enough work to read from one component
                 jestExpect(Scheduler).toFlushAndYieldThrough({
-                    'a:one',
+                    "a:one",
                 })
                 -- Mutate source before continuing work
-                source.value = 'two'
+                source.value = "two"
 
                 -- Render work should restart and the updated value should be used
                 jestExpect(Scheduler).toFlushAndYield({
-                    'a:two',
-                    'b:two',
-                    'Sync effect',
+                    "a:two",
+                    "b:two",
+                    "Sync effect",
                 })
             end)
         end)
         -- @gate experimental
-        it('should schedule an update if a new source is mutated between render and commit (subscription)', function()
-            local source = createSource('one')
+        it("should schedule an update if a new source is mutated between render and commit (subscription)", function()
+            local source = createSource("one")
             local mutableSource = createMutableSource(source, function(param)
                 return param.version
             end)
 
             act(function()
                 ReactNoop.render(React.createElement(React.Fragment, nil, React.createElement(Component, {
-                    label = 'a',
+                    label = "a",
                     getSnapshot = defaultGetSnapshot,
                     mutableSource = mutableSource,
                     subscribe = defaultSubscribe,
                 }), React.createElement(Component, {
-                    label = 'b',
+                    label = "b",
                     getSnapshot = defaultGetSnapshot,
                     mutableSource = mutableSource,
                     subscribe = defaultSubscribe,
                 })), function()
-                    return Scheduler.unstable_yieldValue('Sync effect')
+                    return Scheduler.unstable_yieldValue("Sync effect")
                 end)
 
                 -- Finish rendering
                 jestExpect(Scheduler).toFlushAndYieldThrough({
-                    'a:one',
-                    'b:one',
-                    'Sync effect',
+                    "a:one",
+                    "b:one",
+                    "Sync effect",
                 })
 
                 -- Mutate source before subscriptions are attached
                 jestExpect(source.listenerCount).toEqual(0)
 
-                source.value = 'two'
+                source.value = "two"
 
                 -- Mutation should be detected, and a new render should be scheduled
                 jestExpect(Scheduler).toFlushAndYield({
-                    'a:two',
-                    'b:two',
+                    "a:two",
+                    "b:two",
                 })
             end)
         end)
         -- @gate experimental
-        it('should unsubscribe and resubscribe if a new source is used', function()
-            local sourceA = createSource('a-one')
+        it("should unsubscribe and resubscribe if a new source is used", function()
+            local sourceA = createSource("a-one")
             local mutableSourceA = createMutableSource(sourceA, function(param)
                 return param.versionA
             end)
-            local sourceB = createSource('b-one')
+            local sourceB = createSource("b-one")
             local mutableSourceB = createMutableSource(sourceB, function(param)
                 return param.versionB
             end)
 
             act(function()
                 ReactNoop.render(React.createElement(Component, {
-                    label = 'only',
+                    label = "only",
                     getSnapshot = defaultGetSnapshot,
                     mutableSource = mutableSourceA,
                     subscribe = defaultSubscribe,
                 }), function()
-                    return Scheduler.unstable_yieldValue('Sync effect')
+                    return Scheduler.unstable_yieldValue("Sync effect")
                 end)
                 jestExpect(Scheduler).toFlushAndYield({
-                    'only:a-one',
-                    'Sync effect',
+                    "only:a-one",
+                    "Sync effect",
                 })
                 ReactNoop.flushPassiveEffects()
                 jestExpect(sourceA.listenerCount).toEqual(1)
 
                 -- Changing values should schedule an update with React
-                sourceA.value = 'a-two'
+                sourceA.value = "a-two"
 
                 jestExpect(Scheduler).toFlushAndYield({
-                    'only:a-two',
+                    "only:a-two",
                 })
 
                 -- If we re-render with a new source, the old one should be unsubscribed.
                 ReactNoop.render(React.createElement(Component, {
-                    label = 'only',
+                    label = "only",
                     getSnapshot = defaultGetSnapshot,
                     mutableSource = mutableSourceB,
                     subscribe = defaultSubscribe,
                 }), function()
-                    return Scheduler.unstable_yieldValue('Sync effect')
+                    return Scheduler.unstable_yieldValue("Sync effect")
                 end)
                 jestExpect(Scheduler).toFlushAndYield({
-                    'only:b-one',
-                    'Sync effect',
+                    "only:b-one",
+                    "Sync effect",
                 })
                 ReactNoop.flushPassiveEffects()
                 jestExpect(sourceA.listenerCount).toEqual(0)
                 jestExpect(sourceB.listenerCount).toEqual(1)
 
                 -- Changing to original source should not schedule updates with React
-                sourceA.value = 'a-three'
+                sourceA.value = "a-three"
 
                 jestExpect(Scheduler).toFlushAndYield({})
 
                 -- Changing new source value should schedule an update with React
-                sourceB.value = 'b-two'
+                sourceB.value = "b-two"
 
                 jestExpect(Scheduler).toFlushAndYield({
-                    'only:b-two',
+                    "only:b-two",
                 })
             end)
         end)
         -- ROBLOX TODO: jest.fn
-        xit('should unsubscribe and resubscribe if a new subscribe function is provided', function()
-            local source = createSource('a-one')
+        xit("should unsubscribe and resubscribe if a new subscribe function is provided", function()
+            local source = createSource("a-one")
             local mutableSource = createMutableSource(source, function(param)
                 return param.version
             end)
@@ -418,277 +418,277 @@ return function()
 
             act(function()
                 ReactNoop.renderToRootWithID(React.createElement(Component, {
-                    label = 'only',
+                    label = "only",
                     getSnapshot = defaultGetSnapshot,
                     mutableSource = mutableSource,
                     subscribe = subscribeA,
-                }), 'root', function()
-                    return Scheduler.unstable_yieldValue('Sync effect')
+                }), "root", function()
+                    return Scheduler.unstable_yieldValue("Sync effect")
                 end)
                 jestExpect(Scheduler).toFlushAndYield({
-                    'only:a-one',
-                    'Sync effect',
+                    "only:a-one",
+                    "Sync effect",
                 })
                 ReactNoop.flushPassiveEffects()
                 jestExpect(source.listenerCount).toEqual(1)
                 jestExpect(subscribeA).toHaveBeenCalledTimes(1)
                 ReactNoop.renderToRootWithID(React.createElement(Component, {
-                    label = 'only',
+                    label = "only",
                     getSnapshot = defaultGetSnapshot,
                     mutableSource = mutableSource,
                     subscribe = subscribeB,
-                }), 'root', function()
-                    return Scheduler.unstable_yieldValue('Sync effect')
+                }), "root", function()
+                    return Scheduler.unstable_yieldValue("Sync effect")
                 end)
                 jestExpect(Scheduler).toFlushAndYield({
-                    'only:a-one',
-                    'Sync effect',
+                    "only:a-one",
+                    "Sync effect",
                 })
                 ReactNoop.flushPassiveEffects()
                 jestExpect(source.listenerCount).toEqual(1)
                 jestExpect(unsubscribeA).toHaveBeenCalledTimes(1)
                 jestExpect(subscribeB).toHaveBeenCalledTimes(1)
-                ReactNoop.unmountRootWithID('root')
+                ReactNoop.unmountRootWithID("root")
                 jestExpect(Scheduler).toFlushAndYield({})
                 ReactNoop.flushPassiveEffects()
                 jestExpect(source.listenerCount).toEqual(0)
                 jestExpect(unsubscribeB).toHaveBeenCalledTimes(1)
             end)
         end)
-        it('should re-use previously read snapshot value when reading is unsafe', function()
-            local source = createSource('one')
+        it("should re-use previously read snapshot value when reading is unsafe", function()
+            local source = createSource("one")
             local mutableSource = createMutableSource(source, function(param)
                 return param.version
             end)
 
             act(function()
                 ReactNoop.render(React.createElement(React.Fragment, nil, React.createElement(Component, {
-                    label = 'a',
+                    label = "a",
                     getSnapshot = defaultGetSnapshot,
                     mutableSource = mutableSource,
                     subscribe = defaultSubscribe,
                 }), React.createElement(Component, {
-                    label = 'b',
+                    label = "b",
                     getSnapshot = defaultGetSnapshot,
                     mutableSource = mutableSource,
                     subscribe = defaultSubscribe,
                 })), function()
-                    return Scheduler.unstable_yieldValue('Sync effect')
+                    return Scheduler.unstable_yieldValue("Sync effect")
                 end)
                 jestExpect(Scheduler).toFlushAndYield({
-                    'a:one',
-                    'b:one',
-                    'Sync effect',
+                    "a:one",
+                    "b:one",
+                    "Sync effect",
                 })
 
                 -- Changing values should schedule an update with React.
                 -- Start working on this update but don't finish it.
-                source.value = 'two'
+                source.value = "two"
 
                 jestExpect(Scheduler).toFlushAndYieldThrough({
-                    'a:two',
+                    "a:two",
                 })
 
                 -- Re-renders that occur before the update is processed
                 -- should reuse snapshot so long as the config has not changed
                 ReactNoop.flushSync(function()
                     ReactNoop.render(React.createElement(React.Fragment, nil, React.createElement(Component, {
-                        label = 'a',
+                        label = "a",
                         getSnapshot = defaultGetSnapshot,
                         mutableSource = mutableSource,
                         subscribe = defaultSubscribe,
                     }), React.createElement(Component, {
-                        label = 'b',
+                        label = "b",
                         getSnapshot = defaultGetSnapshot,
                         mutableSource = mutableSource,
                         subscribe = defaultSubscribe,
                     })), function()
-                        return Scheduler.unstable_yieldValue('Sync effect')
+                        return Scheduler.unstable_yieldValue("Sync effect")
                     end)
                 end)
                 jestExpect(Scheduler).toHaveYielded({
-                    'a:one',
-                    'b:one',
-                    'Sync effect',
+                    "a:one",
+                    "b:one",
+                    "Sync effect",
                 })
                 jestExpect(Scheduler).toFlushAndYield({
-                    'a:two',
-                    'b:two',
+                    "a:two",
+                    "b:two",
                 })
             end)
         end)
         -- @gate experimental
-        it('should read from source on newly mounted subtree if no pending updates are scheduled for source', function()
-            local source = createSource('one')
+        it("should read from source on newly mounted subtree if no pending updates are scheduled for source", function()
+            local source = createSource("one")
             local mutableSource = createMutableSource(source, function(param)
                 return param.version
             end)
 
             act(function()
                 ReactNoop.render(React.createElement(React.Fragment, nil, React.createElement(Component, {
-                    label = 'a',
+                    label = "a",
                     getSnapshot = defaultGetSnapshot,
                     mutableSource = mutableSource,
                     subscribe = defaultSubscribe,
                 })), function()
-                    return Scheduler.unstable_yieldValue('Sync effect')
+                    return Scheduler.unstable_yieldValue("Sync effect")
                 end)
                 jestExpect(Scheduler).toFlushAndYield({
-                    'a:one',
-                    'Sync effect',
+                    "a:one",
+                    "Sync effect",
                 })
                 ReactNoop.render(React.createElement(React.Fragment, nil, React.createElement(Component, {
-                    label = 'a',
+                    label = "a",
                     getSnapshot = defaultGetSnapshot,
                     mutableSource = mutableSource,
                     subscribe = defaultSubscribe,
                 }), React.createElement(Component, {
-                    label = 'b',
+                    label = "b",
                     getSnapshot = defaultGetSnapshot,
                     mutableSource = mutableSource,
                     subscribe = defaultSubscribe,
                 })), function()
-                    return Scheduler.unstable_yieldValue('Sync effect')
+                    return Scheduler.unstable_yieldValue("Sync effect")
                 end)
                 jestExpect(Scheduler).toFlushAndYield({
-                    'a:one',
-                    'b:one',
-                    'Sync effect',
+                    "a:one",
+                    "b:one",
+                    "Sync effect",
                 })
             end)
         end)
         -- @gate experimental
-        it('should throw and restart render if source and snapshot are unavailable during an update', function()
-            local source = createSource('one')
+        it("should throw and restart render if source and snapshot are unavailable during an update", function()
+            local source = createSource("one")
             local mutableSource = createMutableSource(source, function(param)
                 return param.version
             end)
 
             act(function()
                 ReactNoop.render(React.createElement(React.Fragment, nil, React.createElement(Component, {
-                    label = 'a',
+                    label = "a",
                     getSnapshot = defaultGetSnapshot,
                     mutableSource = mutableSource,
                     subscribe = defaultSubscribe,
                 }), React.createElement(Component, {
-                    label = 'b',
+                    label = "b",
                     getSnapshot = defaultGetSnapshot,
                     mutableSource = mutableSource,
                     subscribe = defaultSubscribe,
                 })), function()
-                    return Scheduler.unstable_yieldValue('Sync effect')
+                    return Scheduler.unstable_yieldValue("Sync effect")
                 end)
                 jestExpect(Scheduler).toFlushAndYield({
-                    'a:one',
-                    'b:one',
-                    'Sync effect',
+                    "a:one",
+                    "b:one",
+                    "Sync effect",
                 })
                 ReactNoop.flushPassiveEffects()
                 -- Changing values should schedule an update with React.
                 -- Start working on this update but don't finish it.
                 Scheduler.unstable_runWithPriority(Scheduler.unstable_LowPriority, function()
-                    source.value = 'two'
+                    source.value = "two"
 
                     jestExpect(Scheduler).toFlushAndYieldThrough({
-                        'a:two',
+                        "a:two",
                     })
                 end)
 
                 local newGetSnapshot = function(s)
-                    return'new:' .. defaultGetSnapshot(s)
+                    return"new:" .. defaultGetSnapshot(s)
                 end
 
                 -- Force a higher priority render with a new config.
                 -- This should signal that the snapshot is not safe and trigger a full re-render.
                 Scheduler.unstable_runWithPriority(Scheduler.unstable_UserBlockingPriority, function()
                     ReactNoop.render(React.createElement(React.Fragment, nil, React.createElement(Component, {
-                        label = 'a',
+                        label = "a",
                         getSnapshot = newGetSnapshot,
                         mutableSource = mutableSource,
                         subscribe = defaultSubscribe,
                     }), React.createElement(Component, {
-                        label = 'b',
+                        label = "b",
                         getSnapshot = newGetSnapshot,
                         mutableSource = mutableSource,
                         subscribe = defaultSubscribe,
                     })), function()
-                        return Scheduler.unstable_yieldValue('Sync effect')
+                        return Scheduler.unstable_yieldValue("Sync effect")
                     end)
                 end)
                 jestExpect(Scheduler).toFlushAndYieldThrough({
-                    'a:new:two',
-                    'b:new:two',
-                    'Sync effect',
+                    "a:new:two",
+                    "b:new:two",
+                    "Sync effect",
                 })
             end)
         end)
         -- @gate experimental
-        it('should throw and restart render if source and snapshot are unavailable during a sync update', function()
-            local source = createSource('one')
+        it("should throw and restart render if source and snapshot are unavailable during a sync update", function()
+            local source = createSource("one")
             local mutableSource = createMutableSource(source, function(param)
                 return param.version
             end)
 
             act(function()
                 ReactNoop.render(React.createElement(React.Fragment, nil, React.createElement(Component, {
-                    label = 'a',
+                    label = "a",
                     getSnapshot = defaultGetSnapshot,
                     mutableSource = mutableSource,
                     subscribe = defaultSubscribe,
                 }), React.createElement(Component, {
-                    label = 'b',
+                    label = "b",
                     getSnapshot = defaultGetSnapshot,
                     mutableSource = mutableSource,
                     subscribe = defaultSubscribe,
                 })), function()
-                    return Scheduler.unstable_yieldValue('Sync effect')
+                    return Scheduler.unstable_yieldValue("Sync effect")
                 end)
                 jestExpect(Scheduler).toFlushAndYield({
-                    'a:one',
-                    'b:one',
-                    'Sync effect',
+                    "a:one",
+                    "b:one",
+                    "Sync effect",
                 })
                 ReactNoop.flushPassiveEffects()
                 -- Changing values should schedule an update with React.
                 -- Start working on this update but don't finish it.
                 Scheduler.unstable_runWithPriority(Scheduler.unstable_LowPriority, function()
-                    source.value = 'two'
+                    source.value = "two"
 
                     jestExpect(Scheduler).toFlushAndYieldThrough({
-                        'a:two',
+                        "a:two",
                     })
                 end)
 
                 local newGetSnapshot = function(s)
-                    return'new:' .. defaultGetSnapshot(s)
+                    return"new:" .. defaultGetSnapshot(s)
                 end
                 -- Force a higher priority render with a new config.
                 -- This should signal that the snapshot is not safe and trigger a full re-render.
                 ReactNoop.flushSync(function()
                     ReactNoop.render(React.createElement(React.Fragment, nil, React.createElement(Component, {
-                        label = 'a',
+                        label = "a",
                         getSnapshot = newGetSnapshot,
                         mutableSource = mutableSource,
                         subscribe = defaultSubscribe,
                     }), React.createElement(Component, {
-                        label = 'b',
+                        label = "b",
                         getSnapshot = newGetSnapshot,
                         mutableSource = mutableSource,
                         subscribe = defaultSubscribe,
                     })), function()
-                        return Scheduler.unstable_yieldValue('Sync effect')
+                        return Scheduler.unstable_yieldValue("Sync effect")
                     end)
                 end)
                 jestExpect(Scheduler).toHaveYielded({
-                    'a:new:two',
-                    'b:new:two',
-                    'Sync effect',
+                    "a:new:two",
+                    "b:new:two",
+                    "Sync effect",
                 })
             end)
         end)
         -- @gate experimental
-        it('should only update components whose subscriptions fire', function()
-            local source = createComplexSource('a:one', 'b:one')
+        it("should only update components whose subscriptions fire", function()
+            local source = createComplexSource("a:one", "b:one")
             local mutableSource = createMutableSource(source, function(param)
                 return param.version
             end)
@@ -708,42 +708,42 @@ return function()
 
             act(function()
                 ReactNoop.render(React.createElement(React.Fragment, nil, React.createElement(Component, {
-                    label = 'a',
+                    label = "a",
                     getSnapshot = getSnapshotA,
                     mutableSource = mutableSource,
                     subscribe = subscribeA,
                 }), React.createElement(Component, {
-                    label = 'b',
+                    label = "b",
                     getSnapshot = getSnapshotB,
                     mutableSource = mutableSource,
                     subscribe = subscribeB,
                 })), function()
-                    return Scheduler.unstable_yieldValue('Sync effect')
+                    return Scheduler.unstable_yieldValue("Sync effect")
                 end)
                 jestExpect(Scheduler).toFlushAndYield({
-                    'a:a:one',
-                    'b:b:one',
-                    'Sync effect',
+                    "a:a:one",
+                    "b:b:one",
+                    "Sync effect",
                 })
 
                 -- Changes to part of the store (e.g. A) should not render other parts.
-                source.valueA = 'a:two'
+                source.valueA = "a:two"
 
                 jestExpect(Scheduler).toFlushAndYield({
-                    'a:a:two',
+                    "a:a:two",
                 })
 
-                source.valueB = 'b:two'
+                source.valueB = "b:two"
 
                 jestExpect(Scheduler).toFlushAndYield({
-                    'b:b:two',
+                    "b:b:two",
                 })
             end)
         end)
 
         -- @gate experimental
-        it('should detect tearing in part of the store not yet subscribed to', function()
-            local source = createComplexSource('a:one', 'b:one')
+        it("should detect tearing in part of the store not yet subscribed to", function()
+            local source = createComplexSource("a:one", "b:one")
             local mutableSource = createMutableSource(source, function(param)
                 return param.version
             end)
@@ -766,92 +766,92 @@ return function()
                 -- Because the store has not changed yet, there are no pending updates,
                 -- so it is considered safe to read from when we start this render.
                 ReactNoop.render(React.createElement(React.Fragment, nil, React.createElement(Component, {
-                    label = 'a',
+                    label = "a",
                     getSnapshot = getSnapshotA,
                     mutableSource = mutableSource,
                     subscribe = subscribeA,
                 })), function()
-                    return Scheduler.unstable_yieldValue('Sync effect')
+                    return Scheduler.unstable_yieldValue("Sync effect")
                 end)
                 jestExpect(Scheduler).toFlushAndYield({
-                    'a:a:one',
-                    'Sync effect',
+                    "a:a:one",
+                    "Sync effect",
                 })
                 ReactNoop.render(React.createElement(React.Fragment, nil, React.createElement(Component, {
-                    label = 'a',
+                    label = "a",
                     getSnapshot = getSnapshotA,
                     mutableSource = mutableSource,
                     subscribe = subscribeA,
                 }), React.createElement(Component, {
-                    label = 'b',
+                    label = "b",
                     getSnapshot = getSnapshotB,
                     mutableSource = mutableSource,
                     subscribe = subscribeB,
                 }), React.createElement(Component, {
-                    label = 'c',
+                    label = "c",
                     getSnapshot = getSnapshotB,
                     mutableSource = mutableSource,
                     subscribe = subscribeB,
                 })), function()
-                    return Scheduler.unstable_yieldValue('Sync effect')
+                    return Scheduler.unstable_yieldValue("Sync effect")
                 end)
                 jestExpect(Scheduler).toFlushAndYieldThrough({
-                    'a:a:one',
-                    'b:b:one',
+                    "a:a:one",
+                    "b:b:one",
                 })
 
                 -- Mutating the source should trigger a tear detection on the next read,
                 -- which should throw and re-render the entire tree.
-                source.valueB = 'b:two'
+                source.valueB = "b:two"
 
                 jestExpect(Scheduler).toFlushAndYield({
-                    'a:a:one',
-                    'b:b:two',
-                    'c:b:two',
-                    'Sync effect',
+                    "a:a:one",
+                    "b:b:two",
+                    "c:b:two",
+                    "Sync effect",
                 })
             end)
         end)
         -- ROBLOX TODO: jest.fn
         -- @gate experimental
-        it('does not schedule an update for subscriptions that fire with an unchanged snapshot', function()
+        it("does not schedule an update for subscriptions that fire with an unchanged snapshot", function()
             -- ROBLOX TODO: jest.fn, temporarily uses Component in place of jest.fn(Component)
             local MockComponent = Component
-            local source = createSource('one')
+            local source = createSource("one")
             local mutableSource = createMutableSource(source, function(param)
                 return param.version
             end)
 
             act(function()
                 ReactNoop.render(React.createElement(MockComponent, {
-                    label = 'only',
+                    label = "only",
                     getSnapshot = defaultGetSnapshot,
                     mutableSource = mutableSource,
                     subscribe = defaultSubscribe,
                 }), function()
-                    return Scheduler.unstable_yieldValue('Sync effect')
+                    return Scheduler.unstable_yieldValue("Sync effect")
                 end)
                 jestExpect(Scheduler).toFlushAndYieldThrough({
-                    'only:one',
-                    'Sync effect',
+                    "only:one",
+                    "Sync effect",
                 })
                 ReactNoop.flushPassiveEffects()
                 jestExpect(source.listenerCount).toEqual(1)
 
                 -- Notify subscribe function but don't change the value
-                source.value = 'one'
+                source.value = "one"
 
                 jestExpect(Scheduler).toFlushWithoutYielding()
             end)
         end)
         -- @gate experimental
-        it('should throw and restart if getSnapshot changes between scheduled update and re-render', function()
-            local source = createSource('one')
+        it("should throw and restart if getSnapshot changes between scheduled update and re-render", function()
+            local source = createSource("one")
             local mutableSource = createMutableSource(source, function(param)
                 return param.version
             end)
             local newGetSnapshot = function(s)
-                return 'new:' .. defaultGetSnapshot(s)
+                return "new:" .. defaultGetSnapshot(s)
             end
             local getSnapshot, updateGetSnapshot
 
@@ -862,7 +862,7 @@ return function()
                 end)
 
                 return React.createElement(Component, {
-                    label = 'only',
+                    label = "only",
                     getSnapshot = getSnapshot,
                     mutableSource = mutableSource,
                     subscribe = defaultSubscribe,
@@ -871,16 +871,16 @@ return function()
 
             act(function()
                 ReactNoop.render(React.createElement(WrapperWithState, nil), function()
-                    return Scheduler.unstable_yieldValue('Sync effect')
+                    return Scheduler.unstable_yieldValue("Sync effect")
                 end)
                 jestExpect(Scheduler).toFlushAndYield({
-                    'only:one',
-                    'Sync effect',
+                    "only:one",
+                    "Sync effect",
                 })
                 ReactNoop.flushPassiveEffects()
                 Scheduler.unstable_runWithPriority(Scheduler.unstable_LowPriority, function()
                     -- Change the source (and schedule an update).
-                    source.value = 'two'
+                    source.value = "two"
                 end)
                 -- Schedule a higher priority update that changes getSnapshot.
                 Scheduler.unstable_runWithPriority(Scheduler.unstable_UserBlockingPriority, function()
@@ -889,13 +889,13 @@ return function()
                     end)
                 end)
                 jestExpect(Scheduler).toFlushAndYield({
-                    'only:new:two',
+                    "only:new:two",
                 })
             end)
         end)
         -- @gate experimental
-        it('should recover from a mutation during yield when other work is scheduled', function()
-            local source = createSource('one')
+        it("should recover from a mutation during yield when other work is scheduled", function()
+            local source = createSource("one")
             local mutableSource = createMutableSource(source, function(param)
                 return param.version
             end)
@@ -903,32 +903,32 @@ return function()
             act(function()
                 -- Start a render that uses the mutable source.
                 ReactNoop.render(React.createElement(React.Fragment, nil, React.createElement(Component, {
-                    label = 'a',
+                    label = "a",
                     getSnapshot = defaultGetSnapshot,
                     mutableSource = mutableSource,
                     subscribe = defaultSubscribe,
                 }), React.createElement(Component, {
-                    label = 'b',
+                    label = "b",
                     getSnapshot = defaultGetSnapshot,
                     mutableSource = mutableSource,
                     subscribe = defaultSubscribe,
                 })))
                 jestExpect(Scheduler).toFlushAndYieldThrough({
-                    'a:one',
+                    "a:one",
                 })
 
                 -- Mutate source
-                source.value = 'two'
+                source.value = "two"
 
                 -- Now render something different.
-                ReactNoop.render(React.createElement('div', nil))
+                ReactNoop.render(React.createElement("div", nil))
                 jestExpect(Scheduler).toFlushAndYield({})
             end)
         end)
         -- ROBLOX TODO: unimplemented Profiler, RobloxJest.fn
         -- @gate experimental
-        xit('should not throw if the new getSnapshot returns the same snapshot value', function()
-            local source = createSource('one')
+        xit("should not throw if the new getSnapshot returns the same snapshot value", function()
+            local source = createSource("one")
             local mutableSource = createMutableSource(source, function(param)
                 return param.version
             end)
@@ -945,7 +945,7 @@ return function()
                 end)
 
                 return React.createElement(Component, {
-                    label = 'b',
+                    label = "b",
                     getSnapshot = getSnapshot,
                     mutableSource = mutableSource,
                     subscribe = defaultSubscribe,
@@ -954,23 +954,23 @@ return function()
 
             act(function()
                 ReactNoop.render(React.createElement(React.Fragment, nil, React.createElement(React.Profiler, {
-                    id = 'a',
+                    id = "a",
                     onRender = onRenderA,
                 }, React.createElement(Component, {
-                    label = 'a',
+                    label = "a",
                     getSnapshot = defaultGetSnapshot,
                     mutableSource = mutableSource,
                     subscribe = defaultSubscribe,
                 })), React.createElement(React.Profiler, {
-                    id = 'b',
+                    id = "b",
                     onRender = onRenderB,
                 }, React.createElement(WrapperWithState, nil))), function()
-                    return Scheduler.unstable_yieldValue('Sync effect')
+                    return Scheduler.unstable_yieldValue("Sync effect")
                 end)
                 jestExpect(Scheduler).toFlushAndYield({
-                    'a:one',
-                    'b:one',
-                    'Sync effect',
+                    "a:one",
+                    "b:one",
+                    "Sync effect",
                 })
                 ReactNoop.flushPassiveEffects()
                 jestExpect(onRenderA).toHaveBeenCalledTimes(1)
@@ -984,7 +984,7 @@ return function()
                     end
                 end)
                 jestExpect(Scheduler).toFlushAndYield({
-                    'b:one',
+                    "b:one",
                 })
                 ReactNoop.flushPassiveEffects()
                 jestExpect(onRenderA).toHaveBeenCalledTimes(1)
@@ -993,13 +993,13 @@ return function()
         end)
 
         -- @gate experimental
-        it('should not throw if getSnapshot changes but the source can be safely read from anyway', function()
-            local source = createSource('one')
+        it("should not throw if getSnapshot changes but the source can be safely read from anyway", function()
+            local source = createSource("one")
             local mutableSource = createMutableSource(source, function(param)
                 return param.version
             end)
             local newGetSnapshot = function(s)
-                return'new:' .. defaultGetSnapshot(s)
+                return"new:" .. defaultGetSnapshot(s)
             end
             local getSnapshot, updateGetSnapshot
 
@@ -1010,7 +1010,7 @@ return function()
                 end)
 
                 return React.createElement(Component, {
-                    label = 'only',
+                    label = "only",
                     getSnapshot = getSnapshot,
                     mutableSource = mutableSource,
                     subscribe = defaultSubscribe,
@@ -1019,40 +1019,40 @@ return function()
 
             act(function()
                 ReactNoop.render(React.createElement(WrapperWithState, nil), function()
-                    return Scheduler.unstable_yieldValue('Sync effect')
+                    return Scheduler.unstable_yieldValue("Sync effect")
                 end)
                 jestExpect(Scheduler).toFlushAndYield({
-                    'only:one',
-                    'Sync effect',
+                    "only:one",
+                    "Sync effect",
                 })
                 ReactNoop.flushPassiveEffects()
 
                 -- Change the source (and schedule an update)
                 -- but also change the snapshot function too.
                 ReactNoop.batchedUpdates(function()
-                    source.value = 'two'
+                    source.value = "two"
                     updateGetSnapshot(function()
                         return newGetSnapshot
                     end)
                 end)
                 jestExpect(Scheduler).toFlushAndYield({
-                    'only:new:two',
+                    "only:new:two",
                 })
             end)
         end)
 
         -- ROBLOX TODO: Fails due to LUAFDN-206
         -- @gate experimental
-        xit('should still schedule an update if an eager selector throws after a mutation', function()
+        xit("should still schedule an update if an eager selector throws after a mutation", function()
             local source = createSource({
                 friends = {
                     {
                         id = 1,
-                        name = 'Foo',
+                        name = "Foo",
                     },
                     {
                         id = 2,
-                        name = 'Bar',
+                        name = "Bar",
                     },
                 },
             })
@@ -1072,9 +1072,9 @@ return function()
                 end, {id})
                 local name = useMutableSource(mutableSource, getSnapshot, defaultSubscribe)
 
-                Scheduler.unstable_yieldValue(('%s:%s'):format(id, name))
+                Scheduler.unstable_yieldValue(("%s:%s"):format(id, name))
 
-                return React.createElement('li', nil, name)
+                return React.createElement("li", nil, name)
             end
 
             local function FriendsList()
@@ -1085,7 +1085,7 @@ return function()
                 end, {})
                 local friends = useMutableSource(mutableSource, getSnapshot, defaultSubscribe)
 
-                return React.createElement('ul', nil, Array.map(friends, function(friend)
+                return React.createElement("ul", nil, Array.map(friends, function(friend)
                     return React.createElement(Friend, {
                         key = friend.id,
                         id = friend.id,
@@ -1095,12 +1095,12 @@ return function()
 
             act(function()
                 ReactNoop.render(React.createElement(FriendsList, nil), function()
-                    return Scheduler.unstable_yieldValue('Sync effect')
+                    return Scheduler.unstable_yieldValue("Sync effect")
                 end)
                 jestExpect(Scheduler).toFlushAndYield({
-                    '1:Foo',
-                    '2:Bar',
-                    'Sync effect',
+                    "1:Foo",
+                    "2:Bar",
+                    "Sync effect",
                 })
 
                 -- This mutation will cause the "Bar" component to throw,
@@ -1111,25 +1111,25 @@ return function()
                     friends = {
                         {
                             id = 1,
-                            name = 'Foo',
+                            name = "Foo",
                         },
                         {
                             id = 3,
-                            name = 'Baz',
+                            name = "Baz",
                         },
                     },
                 }
 
                 jestExpect(Scheduler).toFlushAndYield({
-                    '1:Foo',
-                    '3:Baz',
+                    "1:Foo",
+                    "3:Baz",
                 })
             end)
         end)
 
         -- @gate experimental
-        it('should not warn about updates that fire between unmount and passive unsubscribe', function()
-                local source = createSource('one')
+        it("should not warn about updates that fire between unmount and passive unsubscribe", function()
+                local source = createSource("one")
             local mutableSource = createMutableSource(source, function(param)
                 return param.version
             end)
@@ -1137,12 +1137,12 @@ return function()
             local function Wrapper()
                 React.useLayoutEffect(function()
                     return function()
-                        Scheduler.unstable_yieldValue('layout unmount')
+                        Scheduler.unstable_yieldValue("layout unmount")
                     end
                 end)
 
                 return React.createElement(Component, {
-                    label = 'only',
+                    label = "only",
                     getSnapshot = defaultGetSnapshot,
                     mutableSource = mutableSource,
                     subscribe = defaultSubscribe,
@@ -1150,34 +1150,34 @@ return function()
             end
 
             act(function()
-                ReactNoop.renderToRootWithID(React.createElement(Wrapper, nil), 'root', function()
-                    return Scheduler.unstable_yieldValue('Sync effect')
+                ReactNoop.renderToRootWithID(React.createElement(Wrapper, nil), "root", function()
+                    return Scheduler.unstable_yieldValue("Sync effect")
                 end)
                 jestExpect(Scheduler).toFlushAndYield({
-                    'only:one',
-                    'Sync effect',
+                    "only:one",
+                    "Sync effect",
                 })
                 ReactNoop.flushPassiveEffects()
 
                 -- Unmounting a root should remove the remaining event listeners in a passive effect
-                ReactNoop.unmountRootWithID('root')
+                ReactNoop.unmountRootWithID("root")
                 jestExpect(Scheduler).toFlushAndYieldThrough({
-                    'layout unmount',
+                    "layout unmount",
                 })
 
                 -- Changes to source should not cause a warning,
                 -- even though the unsubscribe hasn't run yet (since it's a pending passive effect).
-                source.value = 'two'
+                source.value = "two"
 
                 jestExpect(Scheduler).toFlushAndYield({})
             end)
         end)
 
         -- @gate experimental
-        it('should support inline selectors and updates that are processed after selector change', function()
+        it("should support inline selectors and updates that are processed after selector change", function()
             local source = createSource({
-                a = 'initial',
-                b = 'initial',
+                a = "initial",
+                b = "initial",
             })
             local mutableSource = createMutableSource(source, function(param)
                 return param.version
@@ -1208,39 +1208,27 @@ return function()
                 root.render(React.createElement(App, {getSnapshot = getSnapshotA}))
             end)
 
-            -- ROBLOX TODO: replace the below expects with toMatchRenderedOutput
-            -- jestExpect(root).toMatchRenderedOutput('initial')
-            local renderedOutput = root.getChildren()
-            jestExpect(#renderedOutput).toEqual(1)
-            jestExpect(renderedOutput[1].text).toEqual('initial')
+            jestExpect(root).toMatchRenderedOutput("initial")
 
             act(function()
-                mutateB('Updated B')
+                mutateB("Updated B")
                 root.render(React.createElement(App, {getSnapshot = getSnapshotB}))
             end)
 
-            -- ROBLOX TODO: replace the below expects with toMatchRenderedOutput
-            -- jestExpect(root).toMatchRenderedOutput('Updated B')
-            renderedOutput = root.getChildren()
-            jestExpect(#renderedOutput).toEqual(1)
-            jestExpect(renderedOutput[1].text).toEqual('Updated B')
+            jestExpect(root).toMatchRenderedOutput("Updated B")
 
             act(function()
-                mutateB('Another update')
+                mutateB("Another update")
             end)
 
-            -- ROBLOX TODO: replace the below expects with toMatchRenderedOutput
-            -- jestExpect(root).toMatchRenderedOutput('initial')
-            renderedOutput = root.getChildren()
-            jestExpect(#renderedOutput).toEqual(1)
-            jestExpect(renderedOutput[1].text).toEqual('Another update')
+            jestExpect(root).toMatchRenderedOutput("Another update")
         end)
 
         -- @gate experimental
-        it('should clear the update queue when getSnapshot changes with pending lower priority updates', function()
+        it("should clear the update queue when getSnapshot changes with pending lower priority updates", function()
             local source = createSource({
-                a = 'initial',
-                b = 'initial',
+                a = "initial",
+                b = "initial",
             })
             local mutableSource = createMutableSource(source, function(param)
                 return param.version
@@ -1275,10 +1263,10 @@ return function()
                 end)(), defaultSubscribe)
                 local result = (function()
                     if toggle then
-                        return'B: '
+                        return"B: "
                     end
 
-                    return'A: '
+                    return"A: "
                 end)() .. state
 
                 return result
@@ -1289,17 +1277,13 @@ return function()
                 root.render(React.createElement(App, {toggle = false}))
             end)
 
-            -- ROBLOX TODO: replace the below expects with toMatchRenderedOutput
-            -- jestExpect(root).toMatchRenderedOutput('A: initial')
-            local renderedOutput = root.getChildren()
-            jestExpect(#renderedOutput).toEqual(1)
-            jestExpect(renderedOutput[1].text).toEqual('A: initial')
+            jestExpect(root).toMatchRenderedOutput("A: initial")
 
             act(function()
                 ReactNoop.discreteUpdates(function()
                     -- Update both A and B to the same value
-                    mutateA('Update')
-                    mutateB('Update') -- Toggle to B in the same batch
+                    mutateA("Update")
+                    mutateB("Update") -- Toggle to B in the same batch
 
                     root.render(React.createElement(App, {toggle = true}))
                 end)
@@ -1307,20 +1291,16 @@ return function()
                 -- by the time we get to the lower priority, we've already switched
                 -- to B.
 
-                mutateA('OOPS! This mutation should be ignored')
+                mutateA("OOPS! This mutation should be ignored")
             end)
 
-            -- ROBLOX TODO: replace the below expects with toMatchRenderedOutput
-            -- jestExpect(root).toMatchRenderedOutput('B: Update')
-            renderedOutput = root.getChildren()
-            jestExpect(#renderedOutput).toEqual(1)
-            jestExpect(renderedOutput[1].text).toEqual('B: Update')
+            jestExpect(root).toMatchRenderedOutput("B: Update")
         end)
 
         -- @gate experimental
-        it('should clear the update queue when source changes with pending lower priority updates', function()
-                local sourceA = createSource('initial')
-            local sourceB = createSource('initial')
+        it("should clear the update queue when source changes with pending lower priority updates", function()
+                local sourceA = createSource("initial")
+            local sourceB = createSource("initial")
             local mutableSourceA = createMutableSource(sourceA, function(param)
                 return param.versionA
             end)
@@ -1339,10 +1319,10 @@ return function()
                 end)(), defaultGetSnapshot, defaultSubscribe)
                 local result = (function()
                     if toggle then
-                        return'B: '
+                        return"B: "
                     end
 
-                    return'A: '
+                    return"A: "
                 end)() .. state
 
                 return result
@@ -1353,17 +1333,13 @@ return function()
                 root.render(React.createElement(App, {toggle = false}))
             end)
 
-            -- ROBLOX TODO: replace the below expects with toMatchRenderedOutput
-            -- jestExpect(root).toMatchRenderedOutput('A: initial')
-            local renderedOutput = root.getChildren()
-            jestExpect(#renderedOutput).toEqual(1)
-            jestExpect(renderedOutput[1].text).toEqual('A: initial')
+            jestExpect(root).toMatchRenderedOutput("A: initial")
 
             act(function()
                 ReactNoop.discreteUpdates(function()
                     -- Update both A and B to the same value
-                    sourceA.value = 'Update'
-                    sourceB.value = 'Update'
+                    sourceA.value = "Update"
+                    sourceB.value = "Update"
                     -- Toggle to B in the same batch
                     root.render(React.createElement(App, {toggle = true}))
                 end)
@@ -1371,21 +1347,17 @@ return function()
                 -- by the time we get to the lower priority, we've already switched
                 -- to B.
 
-                sourceA.value = 'OOPS! This mutation should be ignored'
+                sourceA.value = "OOPS! This mutation should be ignored"
             end)
 
-            -- ROBLOX TODO: replace the below expects with toMatchRenderedOutput
-            -- jestExpect(root).toMatchRenderedOutput('B: Update')
-            renderedOutput = root.getChildren()
-            jestExpect(#renderedOutput).toEqual(1)
-            jestExpect(renderedOutput[1].text).toEqual('B: Update')
+            jestExpect(root).toMatchRenderedOutput("B: Update")
         end)
 
         -- @gate experimental
-        it('should always treat reading as potentially unsafe when getSnapshot changes between renders', function()
+        it("should always treat reading as potentially unsafe when getSnapshot changes between renders", function()
                 local source = createSource({
-                a = 'foo',
-                b = 'bar',
+                a = "foo",
+                b = "bar",
             })
             local mutableSource = createMutableSource(source, function(param)
                 return param.version
@@ -1407,13 +1379,13 @@ return function()
                 local getSnapshotFirst, getSnapshotSecond = props.getSnapshotFirst, props.getSnapshotSecond
                 local first = useMutableSource(mutableSource, getSnapshotFirst, defaultSubscribe)
                 local second = useMutableSource(mutableSource, getSnapshotSecond, defaultSubscribe)
-                local result = ('x: %s, y: %s'):format(first, second)
+                local result = ("x: %s, y: %s"):format(first, second)
 
                 if getSnapshotFirst == getSnapshotSecond then
                     -- When both getSnapshot functions are equal,
                     -- the two values must be consistent.
                     if first ~= second then
-                        result = 'Oops, tearing!'
+                        result = "Oops, tearing!"
                     end
                 end
 
@@ -1433,14 +1405,14 @@ return function()
 
             -- x and y start out reading from different parts of the store.
             jestExpect(Scheduler).toHaveYielded({
-                'x: foo, y: bar',
+                "x: foo, y: bar",
             })
 
             act(function()
                 ReactNoop.discreteUpdates(function()
                 -- At high priority, toggle y so that it reads from A instead of B.
                 -- Simultaneously, mutate A.
-                mutateA('baz')
+                mutateA("baz")
                 root.render(React.createElement(App, {
                     getSnapshotFirst = getSnapshotA,
                     getSnapshotSecond = getSnapshotA}))
@@ -1450,7 +1422,7 @@ return function()
 
                 -- At lower priority, mutate A again.
                 -- This happens to match the initial value of B.
-                mutateA('bar');
+                mutateA("bar");
 
                 -- When this update is processed,
                 -- it is expected to yield "bar" and "bar".
@@ -1461,16 +1433,16 @@ return function()
             -- 1. React renders the high-pri update, sees a new getSnapshot, detects the source has been further mutated, and throws
             -- 2. React re-renders with all pending updates, including the second mutation, and renders "bar" and "bar".
             jestExpect(Scheduler).toHaveYielded({
-                'x: bar, y: bar',
+                "x: bar, y: bar",
             })
         end)
 
         -- ROBLOX TODO: unimplemented toFlushUntilNextPaint
         -- @gate experimental
-        xit('getSnapshot changes and then source is mutated in between paint and passive effect phase', function()
+        xit("getSnapshot changes and then source is mutated in between paint and passive effect phase", function()
             local source = createSource({
-                a = 'foo',
-                b = 'bar',
+                a = "foo",
+                b = "bar",
             })
             local mutableSource = createMutableSource(source, function(param)
                 return param.version
@@ -1494,9 +1466,9 @@ return function()
                 local getSnapshot = props.getSnapshot
                 local value = useMutableSource(mutableSource, getSnapshot, defaultSubscribe)
 
-                Scheduler.unstable_yieldValue('Render: ' .. value)
+                Scheduler.unstable_yieldValue("Render: " .. value)
                 React.useEffect(function()
-                    Scheduler.unstable_yieldValue('Commit: ' .. value)
+                    Scheduler.unstable_yieldValue("Commit: " .. value)
                 end, {value})
 
                 return value
@@ -1509,8 +1481,8 @@ return function()
             end)
 
             jestExpect(Scheduler).toHaveYielded({
-                'Render: foo',
-                'Commit: foo',
+                "Render: foo",
+                "Commit: foo",
             })
 
             act(function()
@@ -1519,33 +1491,29 @@ return function()
                     getSnapshot = getSnapshotB}))
                 -- Render and finish the tree, but yield right after paint, before
                 -- the passive effects have fired.
-                jestExpect(Scheduler).toFlushUntilNextPaint({'Render: bar'})
+                jestExpect(Scheduler).toFlushUntilNextPaint({"Render: bar"})
                 -- Then mutate B.
-                mutateB('baz');
+                mutateB("baz");
             end)
 
             jestExpect(Scheduler).toHaveYielded({
-                'Render: bar',
+                "Render: bar",
                 -- Fires the effect from the previous render
-                'Commit: bar',
+                "Commit: bar",
                 -- During that effect, it should detect that the snapshot has changed
                 -- and re-render.
-                'Render: baz',
-                'Commit: baz',
+                "Render: baz",
+                "Commit: baz",
             })
-            -- ROBLOX TODO: replace the below expects with toMatchRenderedOutput
-            -- jestExpect(root).toMatchRenderedOutput('baz')
-            local renderedOutput = root.getChildren()
-            jestExpect(#renderedOutput).toEqual(1)
-            jestExpect(renderedOutput[1].text).toEqual('baz')
+            jestExpect(root).toMatchRenderedOutput("baz")
         end)
 
         -- ROBLOX TODO: unimplemented toFlushUntilNextPaint() and getChildrenAsJSX()
         -- @gate experimental
-        xit('getSnapshot changes and then source is mutated in between paint and passive effect phase, case 2', function()
+        xit("getSnapshot changes and then source is mutated in between paint and passive effect phase, case 2", function()
                 local source = createSource({
-                a = 'a0',
-                b = 'b0',
+                a = "a0",
+                b = "b0",
             })
             local mutableSource = createMutableSource(source, function(param)
                 return param.version
@@ -1568,7 +1536,7 @@ return function()
                 local first = useMutableSource(mutableSource, getSnapshotFirst, defaultSubscribe)
                 local second = useMutableSource(mutableSource, getSnapshotSecond, defaultSubscribe)
 
-                return('first: %s, second: %s'):format(first, second)
+                return("first: %s, second: %s"):format(first, second)
             end
 
             local root = ReactNoop.createRoot()
@@ -1577,7 +1545,7 @@ return function()
                     getSnapshotFirst = getSnapshotA,
                     getSnapshotSecond = getSnapshotB}))
             end)
-            jestExpect(root.getChildrenAsJSX()).toEqual('first: a0, second: b0')
+            jestExpect(root.getChildrenAsJSX()).toEqual("first: a0, second: b0")
 
             act(function()
                 -- Switch the second getSnapshot to also read from A
@@ -1592,23 +1560,23 @@ return function()
                 -- This is at high priority so that it doesn't get batched with default
                 -- priority updates that might fire during the passive effect
                 ReactNoop.discreteUpdates(function()
-                    mutateA('a1')
+                    mutateA("a1")
                 end)
                 jestExpect(Scheduler).toFlushUntilNextPaint({})
 
-                jestExpect(root.getChildrenAsJSX()).toEqual('first: a1, second: a1')
+                jestExpect(root.getChildrenAsJSX()).toEqual("first: a1, second: a1")
             end)
-            jestExpect(root.getChildrenAsJSX()).toEqual('first: a1, second: a1')
+            jestExpect(root.getChildrenAsJSX()).toEqual("first: a1, second: a1")
         end)
 
         -- ROBLOX TODO: unimplemented toFlushUntilNextPaint()
         -- @gate experimental
-        xit('if source is mutated after initial read but before subscription is set ' ..
-         'up, should still entangle all pending mutations even if snapshot of ' .. 'new subscription happens to match', function(
+        xit("if source is mutated after initial read but before subscription is set " ..
+         "up, should still entangle all pending mutations even if snapshot of " .. "new subscription happens to match", function(
         )
             local source = createSource({
-                a = 'a0',
-                b = 'b0',
+                a = "a0",
+                b = "b0",
             })
             local mutableSource = createMutableSource(source, function(param)
                 return param.version
@@ -1655,9 +1623,9 @@ return function()
             end)
 
             jestExpect(Scheduler).toHaveYielded({
-                'a0',
+                "a0",
             })
-            jestExpect(root).toMatchRenderedOutput('a0')
+            jestExpect(root).toMatchRenderedOutput("a0")
             act(function()
                 root.render(React.createElement(React.Fragment, nil,
                     React.createElement(Read, {
@@ -1667,11 +1635,11 @@ return function()
                     React.createElement(Text, {
                         text = "c"})
                     ))
-                jestExpect(Scheduler).toFlushAndYieldThrough({'a0', 'b0'})
+                jestExpect(Scheduler).toFlushAndYieldThrough({"a0", "b0"})
                 -- Mutate in an event. This schedules a subscription update on a, which
                 -- already mounted, but not b, which hasn't subscribed yet.
-                mutateA('a1')
-                mutateB('b1')
+                mutateA("a1")
+                mutateB("b1")
 
                 -- Mutate again at lower priority. This will schedule another subscription
                 -- update on a, but not b. When b mounts and subscriptions, the value it
@@ -1681,26 +1649,26 @@ return function()
                 Scheduler.unstable_runWithPriority(
                     Scheduler.unstable_IdlePriority,
                     function()
-                        mutateA('a0')
-                        mutateB('b0')
+                        mutateA("a0")
+                        mutateB("b0")
                     end
                 )
                 -- Finish the current render
-                jestExpect(Scheduler).toFlushUntilNextPaint({'c'})
+                jestExpect(Scheduler).toFlushUntilNextPaint({"c"})
                 -- a0 will re-render because of the mutation update. But it should show
                 -- the latest value, not the intermediate one, to avoid tearing with b.
-                jestExpect(Scheduler).toFlushUntilNextPaint({'a0'})
-                jestExpect(root).toMatchRenderedOutput('a0b0c')
+                jestExpect(Scheduler).toFlushUntilNextPaint({"a0"})
+                jestExpect(root).toMatchRenderedOutput("a0b0c")
                 -- We should be done.
                 jestExpect(Scheduler).toFlushAndYield({})
-                jestExpect(root).toMatchRenderedOutput('a0b0c')
+                jestExpect(root).toMatchRenderedOutput("a0b0c")
             end)
         end)
 
         -- @gate experimental
-        it('warns about functions being used as snapshot values', function()
+        it("warns about functions being used as snapshot values", function()
                 local source = createSource(function()
-                return'a'
+                return"a"
             end)
             local mutableSource = createMutableSource(source, function(param)
                 return param.version
@@ -1725,23 +1693,19 @@ return function()
                 ))
                 jestExpect(
                     function()
-                        jestExpect(Scheduler).toFlushAndYield({'a'})
+                        jestExpect(Scheduler).toFlushAndYield({"a"})
                     end
-                ).toErrorDev('Mutable source should not return a function as the snapshot value.')
+                ).toErrorDev("Mutable source should not return a function as the snapshot value.")
                 end)
 
-            -- ROBLOX TODO: replace the below expects with toMatchRenderedOutput
-            -- jestExpect(root).toMatchRenderedOutput('a')
-            local renderedOutput = root.getChildren()
-            jestExpect(#renderedOutput).toEqual(1)
-            jestExpect(renderedOutput[1].text).toEqual('a')
+            jestExpect(root).toMatchRenderedOutput("a")
         end)
 
         -- @gate experimental
-        it('getSnapshot changes and then source is mutated during interleaved event', function()
+        it("getSnapshot changes and then source is mutated during interleaved event", function()
             local useEffect = React.useEffect
 
-            local source = createComplexSource('1', '2')
+            local source = createComplexSource("1", "2")
             local mutableSource = createMutableSource(source, function(param)
                 return param.version
             end)
@@ -1767,20 +1731,20 @@ return function()
                 local getSnapshot, subscribe = childConfig[1], childConfig[2]
                 local childValue = useMutableSource(mutableSource, getSnapshot, subscribe)
 
-                Scheduler.unstable_yieldValue('Child: ' .. childValue)
+                Scheduler.unstable_yieldValue("Child: " .. childValue)
 
-                local result = ('%s, %s'):format(parentValue, childValue)
+                local result = ("%s, %s"):format(parentValue, childValue)
 
                 if parentConfig == childConfig then
                     -- When both components read using the same config, the two values
                     -- must be consistent.
                     if parentValue ~= childValue then
-                        result = 'Oops, tearing!'
+                        result = "Oops, tearing!"
                     end
                 end
 
                 useEffect(function()
-                    Scheduler.unstable_yieldValue('Commit: ' .. result)
+                    Scheduler.unstable_yieldValue("Commit: " .. result)
                 end, {result})
 
                 return result
@@ -1790,7 +1754,7 @@ return function()
                 local parentConfig, childConfig = props.parentConfig, props.childConfig
                 local getSnapshot, subscribe = parentConfig[1], parentConfig[2]
                 local parentValue = useMutableSource(mutableSource, getSnapshot, subscribe)
-                Scheduler.unstable_yieldValue('Parent: ' .. parentValue)
+                Scheduler.unstable_yieldValue("Parent: " .. parentValue)
 
                 return React.createElement(Child, {
                     parentConfig = parentConfig,
@@ -1805,16 +1769,16 @@ return function()
             end))
 
             jestExpect(Scheduler).toHaveYielded({
-                'Parent: 1',
-                'Child: 2',
-                'Commit: 1, 2',
+                "Parent: 1",
+                "Child: 2",
+                "Commit: 1, 2",
             })
 
             act(function()
                 -- Switch the parent and the child to read using the same config
                 root.render(React.createElement(App, {parentConfig = configB, childConfig = configB}))
                 -- Start rendering the parent, but yield before rendering the child
-                jestExpect(Scheduler).toFlushAndYieldThrough({'Parent: 2'})
+                jestExpect(Scheduler).toFlushAndYieldThrough({"Parent: 2"})
 
                 -- Mutate the config. This is at lower priority so that 1) to make sure
                 -- it doesn't happen to get batched with the in-progress render, and 2)
@@ -1822,14 +1786,14 @@ return function()
                 Scheduler.unstable_runWithPriority(
                     Scheduler.unstable_IdlePriority,
                     function()
-                    source.valueB = '3'
+                    source.valueB = "3"
                     end
                 )
 
                 jestExpect(Scheduler).toFlushAndYieldThrough({
                     -- The partial render completes
-                    'Child: 2',
-                    'Commit: 2, 2',
+                    "Child: 2",
+                    "Commit: 2, 2",
                 })
 
                 -- Now there are two pending mutations at different priorities. But they
@@ -1837,21 +1801,21 @@ return function()
                 -- them simultaneously.
                 --
                 jestExpect(Scheduler).toFlushAndYieldThrough({
-                    'Parent: 3',
+                    "Parent: 3",
                     -- Demonstrates that we can yield here
                 })
                 jestExpect(Scheduler).toFlushAndYield({
                     -- Now finish the rest of the update
-                    'Child: 3',
-                    'Commit: 3, 3'
+                    "Child: 3",
+                    "Commit: 3, 3"
                 })
             end)
         end)
 
         -- ROBLOX TODO: beginWork: Profiler is unimplemented
         -- @gate experimental
-        xit('should not tear with newly mounted component when updates were scheduled at a lower priority', function()
-                local source = createSource('one')
+        xit("should not tear with newly mounted component when updates were scheduled at a lower priority", function()
+                local source = createSource("one")
             local mutableSource = createMutableSource(source, function(param)
                 return param.version
             end)
@@ -1866,73 +1830,73 @@ return function()
             local function ComponentA()
                 local snapshot = useMutableSource(mutableSource, defaultGetSnapshot, defaultSubscribe)
 
-                Scheduler.unstable_yieldValue(('a:%s'):format(snapshot))
+                Scheduler.unstable_yieldValue(("a:%s"):format(snapshot))
                 React.useEffect(function()
                     committedA = snapshot
                 end, {snapshot})
 
-                return React.createElement('div', nil, ('a:%s'):format(snapshot))
+                return React.createElement("div", nil, ("a:%s"):format(snapshot))
             end
             local function ComponentB()
                 local snapshot = useMutableSource(mutableSource, defaultGetSnapshot, defaultSubscribe)
 
-                Scheduler.unstable_yieldValue(('b:%s'):format(snapshot))
+                Scheduler.unstable_yieldValue(("b:%s"):format(snapshot))
                 React.useEffect(function()
                     committedB = snapshot
                 end, {snapshot})
 
-                return React.createElement('div', nil, ('b:%s'):format(snapshot))
+                return React.createElement("div", nil, ("b:%s"):format(snapshot))
             end
 
             -- Mount ComponentA with data version 1
             act(function()
                 ReactNoop.render(React.createElement(React.Profiler, {
-                    id = 'root',
+                    id = "root",
                     onRender = onRender,
                 }, React.createElement(ComponentA, nil)), function()
-                    return Scheduler.unstable_yieldValue('Sync effect')
+                    return Scheduler.unstable_yieldValue("Sync effect")
                 end)
             end)
             jestExpect(Scheduler).toHaveYielded({
-                'a:one',
-                'Sync effect',
+                "a:one",
+                "Sync effect",
             })
             jestExpect(source.listenerCount).toEqual(1)
 
             -- Mount ComponentB with version 1 (but don't commit it)
             act(function()
                 ReactNoop.render(React.createElement(React.Profiler, {
-                    id = 'root',
+                    id = "root",
                     onRender = onRender,
                 }, React.createElement(ComponentA, nil), React.createElement(ComponentB, nil)), function()
-                    return Scheduler.unstable_yieldValue('Sync effect')
+                    return Scheduler.unstable_yieldValue("Sync effect")
                 end)
                 jestExpect(Scheduler).toFlushAndYieldThrough({
-                    'a:one',
-                    'b:one',
-                    'Sync effect',
+                    "a:one",
+                    "b:one",
+                    "Sync effect",
                 })
                 jestExpect(source.listenerCount).toEqual(1)
 
                 -- Mutate -> schedule update for ComponentA
                 Scheduler.unstable_runWithPriority(Scheduler.unstable_IdlePriority, function()
-                    source.value = 'two'
+                    source.value = "two"
                 end)
 
                 -- Commit ComponentB -> notice the change and schedule an update for ComponentB
                 jestExpect(Scheduler).toFlushAndYield({
-                    'a:two',
-                    'b:two',
+                    "a:two",
+                    "b:two",
                 })
                 jestExpect(source.listenerCount).toEqual(2)
             end)
         end)
 
         if _G.__DEV__ then
-            describe('dev warnings', function()
+            describe("dev warnings", function()
                 -- @gate experimental
-                it('should warn if the subscribe function does not return an unsubscribe function', function()
-                            local source = createSource('one')
+                it("should warn if the subscribe function does not return an unsubscribe function", function()
+                            local source = createSource("one")
                     local mutableSource = createMutableSource(source, function(param)
                         return param.version
                     end)
@@ -1941,13 +1905,13 @@ return function()
                     jestExpect(function()
                         act(function()
                             ReactNoop.render(React.createElement(Component, {
-                                label = 'only',
+                                label = "only",
                                 getSnapshot = defaultGetSnapshot,
                                 mutableSource = mutableSource,
                                 subscribe = brokenSubscribe,
                             }))
                         end)
-                    end).toErrorDev('Mutable source subscribe function must return an unsubscribe function.')
+                    end).toErrorDev("Mutable source subscribe function must return an unsubscribe function.")
                 end)
 
                 -- -- ROBLOX TODO: spyOnDev

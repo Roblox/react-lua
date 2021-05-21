@@ -875,40 +875,44 @@ return function()
 		--     })
 		--   })
 
-		--   it('regression: render phase updates cause lower pri work to be dropped', async function()
-		--     local setRow
-		--     function ScrollView()
-		--       local [row, _setRow] = useState(10)
-		--       setRow = _setRow
+		it("regression: render phase updates cause lower pri work to be dropped", function()
+		  local setRow
+		  local function ScrollView()
+		    local row, _setRow = useState(10)
+		    setRow = _setRow
 
-		--       local [scrollDirection, setScrollDirection] = useState('Up')
-		--       local [prevRow, setPrevRow] = useState(null)
+		    local scrollDirection, setScrollDirection = useState("Up")
+		    local prevRow, setPrevRow = useState(nil)
 
-		--       if prevRow ~= row)
-		--         setScrollDirection(prevRow ~= nil and row > prevRow ? 'Down' : 'Up')
-		--         setPrevRow(row)
-		--       end
+		    if prevRow ~= row then
+				local direction = "Up"
+				if prevRow ~= nil and row > prevRow then
+					direction = "Down"
+				end
+				setScrollDirection(direction)
+				setPrevRow(row)
+		    end
 
-		--       return <Text text={scrollDirection} />
-		--     end
+			return React.createElement(Text, {text = scrollDirection})
+		  end
 
-		--     local root = ReactNoop.createRoot()
+		  local root = ReactNoop.createRoot()
 
-		--     await act(async function()
-		--       root.render(<ScrollView row={10} />)
-		--     })
-		--     jestExpect(Scheduler).toHaveYielded(['Up'])
-		--     jestExpect(root).toMatchRenderedOutput(<span prop="Up" />)
+		  act(function()
+		    	root.render(React.createElement(ScrollView, {row = 10}))
+			end)
+		  jestExpect(Scheduler).toHaveYielded({"Up"})
+		  jestExpect(root).toMatchRenderedOutput(React.createElement("span", {prop="Up"}))
 
-		--     await act(async function()
-		--       ReactNoop.discreteUpdates(function()
-		--         setRow(5)
-		--       })
-		--       setRow(20)
-		--     })
-		--     jestExpect(Scheduler).toHaveYielded(['Up', 'Down'])
-		--     jestExpect(root).toMatchRenderedOutput(<span prop="Down" />)
-		--   })
+		  act(function()
+				ReactNoop.discreteUpdates(function()
+					setRow(5)
+				end)
+				setRow(20)
+			end)
+		  jestExpect(Scheduler).toHaveYielded({"Up", "Down"})
+		  jestExpect(root).toMatchRenderedOutput(React.createElement("span", {prop="Down"}))
+		end)
 
 		--   -- TODO: This should probably warn
 		--   -- @gate experimental
@@ -1981,7 +1985,7 @@ return function()
 		-- end)
 
 		it(
-			"in legacy mode, useEffect is deferred and updates finish synchronously " .. "(in a single batch)",
+			"in legacy mode, useEffect is deferred and updates finish synchronously (in a single batch)",
 			function()
 				local function Counter(props)
 					local count, updateCount = useState("(empty)")
@@ -4090,11 +4094,8 @@ return function()
 				"Reducer: 1",
 				"Render: 1",
 			})
-			-- ROBLOX TODO: replace the below expects with toMatchRenderedOutput
-			-- jestExpect(ReactNoop).toMatchRenderedOutput('1')
-			local renderedOutput = ReactNoop.getChildren()
-			jestExpect(#renderedOutput).toEqual(1)
-			jestExpect(renderedOutput[1].text).toEqual("1")
+
+			jestExpect(ReactNoop).toMatchRenderedOutput("1")
 		end)
 
 		act(function()
@@ -4107,11 +4108,8 @@ return function()
 			"Reducer: 2",
 			"Render: 2",
 		})
-		-- ROBLOX TODO: replace the below expects with toMatchRenderedOutput
-		-- jestExpect(ReactNoop).toMatchRenderedOutput('2')
-		local renderedOutput = ReactNoop.getChildren()
-		jestExpect(#renderedOutput).toEqual(1)
-		jestExpect(renderedOutput[1].text).toEqual("2")
+
+		jestExpect(ReactNoop).toMatchRenderedOutput("2")
 	end)
 
 	-- ROBLOX FIXME: this test needs to be enabled
@@ -4203,21 +4201,13 @@ return function()
 			"Step: 5, Shadow: 0",
 		})
 
-		-- ROBLOX TODO: replace the below expects with toMatchRenderedOutput
-		-- jestExpect(ReactNoop).toMatchRenderedOutput('0')
-		local renderedOutput = ReactNoop.getChildren()
-		jestExpect(#renderedOutput).toEqual(1)
-		jestExpect(renderedOutput[1].text).toEqual("0")
+		jestExpect(ReactNoop).toMatchRenderedOutput("0")
 
 		act(function()
 			return dispatch()
 		end)
 		jestExpect(Scheduler).toHaveYielded({ "Step: 5, Shadow: 5" })
-		-- ROBLOX TODO: replace the below expects with toMatchRenderedOutput
-		-- jestExpect(ReactNoop).toMatchRenderedOutput('5')
-		renderedOutput = ReactNoop.getChildren()
-		jestExpect(#renderedOutput).toEqual(1)
-		jestExpect(renderedOutput[1].text).toEqual("5")
+		jestExpect(ReactNoop).toMatchRenderedOutput("5")
 	end)
 
 	it("should process the rest pending updates after a render phase update", function()
@@ -4243,22 +4233,14 @@ return function()
 		act(function()
 			ReactNoop.render(React.createElement(App))
 		end)
-		-- ROBLOX TODO: replace the below expects with toMatchRenderedOutput
-		-- jestExpect(ReactNoop).toMatchRenderedOutput('abc')
-		local renderedOutput = ReactNoop.getChildren()
-		jestExpect(#renderedOutput).toEqual(1)
-		jestExpect(renderedOutput[1].text).toEqual("abc")
+		jestExpect(ReactNoop).toMatchRenderedOutput("abc")
 
 		act(function()
 			updateA(true)
 			-- This update should not get dropped.
 			updateC(true)
 		end)
-		-- ROBLOX TODO: replace the below expects with toMatchRenderedOutput
-		-- jestExpect(ReactNoop).toMatchRenderedOutput('ABC')
-		renderedOutput = ReactNoop.getChildren()
-		jestExpect(#renderedOutput).toEqual(1)
-		jestExpect(renderedOutput[1].text).toEqual("ABC")
+		jestExpect(ReactNoop).toMatchRenderedOutput("ABC")
 	end)
 
 	-- ROBLOX TODO: enable this test

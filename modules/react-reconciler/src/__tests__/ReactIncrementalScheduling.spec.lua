@@ -13,7 +13,7 @@ local React
 local ReactNoop
 local Scheduler
 return function()
-    describe('ReactIncrementalScheduling', function()
+    describe("ReactIncrementalScheduling", function()
         local Packages = Workspace.Parent
         local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
         local RobloxJest = require(Workspace.RobloxJest)
@@ -33,107 +33,89 @@ return function()
 
         local function span(prop)
             return{
-                type = 'span',
+                type = "span",
                 children = {},
                 prop = prop,
                 hidden = false,
             }
         end
 
-        it('schedules and flushes deferred work', function()
-            ReactNoop.render(React.createElement('span', {
+        it("schedules and flushes deferred work", function()
+            ReactNoop.render(React.createElement("span", {
                 prop = "1"
             }))
             jestExpect(ReactNoop.getChildren()).toEqual({})
             jestExpect(Scheduler).toFlushWithoutYielding()
 
-            -- ROBLOX TODO: replace the below expects with toMatchRenderedOutput
-            -- jestExpect(ReactNoop).toMatchRenderedOutput(<span prop="1" />)
-            local renderedOutput = ReactNoop.getChildren()
-            jestExpect(#renderedOutput).toBe(1)
-            jestExpect(renderedOutput[1].prop).toBe('1')
+
+            jestExpect(ReactNoop).toMatchRenderedOutput(React.createElement("span", {prop="1"}))
         end)
-        it('searches for work on other roots once the current root completes', function()
-            ReactNoop.renderToRootWithID(React.createElement('span', {
-                prop = 'a:1',
-            }), 'a')
-            ReactNoop.renderToRootWithID(React.createElement('span', {
-                prop = 'b:1',
-            }), 'b')
-            ReactNoop.renderToRootWithID(React.createElement('span', {
-                prop = 'c:1',
-            }), 'c')
+        it("searches for work on other roots once the current root completes", function()
+            ReactNoop.renderToRootWithID(React.createElement("span", {
+                prop = "a:1",
+            }), "a")
+            ReactNoop.renderToRootWithID(React.createElement("span", {
+                prop = "b:1",
+            }), "b")
+            ReactNoop.renderToRootWithID(React.createElement("span", {
+                prop = "c:1",
+            }), "c")
             jestExpect(Scheduler).toFlushWithoutYielding()
-            jestExpect(ReactNoop.getChildren('a')).toEqual({
-                span('a:1'),
+            jestExpect(ReactNoop.getChildren("a")).toEqual({
+                span("a:1"),
             })
-            jestExpect(ReactNoop.getChildren('b')).toEqual({
-                span('b:1'),
+            jestExpect(ReactNoop.getChildren("b")).toEqual({
+                span("b:1"),
             })
-            jestExpect(ReactNoop.getChildren('c')).toEqual({
-                span('c:1'),
+            jestExpect(ReactNoop.getChildren("c")).toEqual({
+                span("c:1"),
             })
         end)
-        it('schedules top-level updates in order of priority', function()
-            ReactNoop.render(React.createElement('span', {prop = 1}))
+        it("schedules top-level updates in order of priority", function()
+            ReactNoop.render(React.createElement("span", {prop = 1}))
             jestExpect(Scheduler).toFlushWithoutYielding()
 
-            -- ROBLOX TODO: replace the below expects with toMatchRenderedOutput
-            -- jestExpect(ReactNoop).toMatchRenderedOutput(React.createElement('span', {prop = 1}))
-            local renderedOutput = ReactNoop.getChildren()
-            jestExpect(#renderedOutput).toBe(1)
-            jestExpect(renderedOutput[1].prop).toBe(1)
+
+            jestExpect(ReactNoop).toMatchRenderedOutput(React.createElement("span", {prop = 1}))
 
             ReactNoop.batchedUpdates(function()
-                ReactNoop.render(React.createElement('span', {prop = 5}))
+                ReactNoop.render(React.createElement("span", {prop = 5}))
                 ReactNoop.flushSync(function()
-                    ReactNoop.render(React.createElement('span', {prop = 2}))
-                    ReactNoop.render(React.createElement('span', {prop = 3}))
-                    ReactNoop.render(React.createElement('span', {prop = 4}))
+                    ReactNoop.render(React.createElement("span", {prop = 2}))
+                    ReactNoop.render(React.createElement("span", {prop = 3}))
+                    ReactNoop.render(React.createElement("span", {prop = 4}))
                     end)
             end)
 
             -- The sync updates flush first.
-            -- ROBLOX TODO: replace the below expects with toMatchRenderedOutput
-            -- jestExpect(ReactNoop).toEqual(React.createElement('span', {prop = 4}))
-            renderedOutput = ReactNoop.getChildren()
-            jestExpect(#renderedOutput).toBe(1)
-            jestExpect(renderedOutput[1].prop).toBe(4)
+
+            jestExpect(ReactNoop).toMatchRenderedOutput(React.createElement("span", {prop = 4}))
 
             -- The terminal value should be the last update that was scheduled,
             -- regardless of priority. In this case, that's the last sync update.
             jestExpect(Scheduler).toFlushWithoutYielding()
 
-            -- ROBLOX TODO: replace the below expects with toMatchRenderedOutput
-            -- jestExpect(ReactNoop).toMatchRenderedOutput(React.createElement('span', {prop = 4}))
-            renderedOutput = ReactNoop.getChildren()
-            jestExpect(#renderedOutput).toBe(1)
-            jestExpect(renderedOutput[1].prop).toBe(4)
+
+            jestExpect(ReactNoop).toMatchRenderedOutput(React.createElement("span", {prop = 4}))
         end)
-        it('schedules top-level updates with same priority in order of insertion', function()
+        it("schedules top-level updates with same priority in order of insertion", function()
             -- Initial render.
-            ReactNoop.render(React.createElement('span', {prop = 1}))
+            ReactNoop.render(React.createElement("span", {prop = 1}))
             jestExpect(Scheduler).toFlushWithoutYielding()
 
-            -- ROBLOX TODO: replace the below expects with toMatchRenderedOutput
-            -- jestExpect(ReactNoop).toMatchRenderedOutput(React.createElement('span', {prop = 1}))
-            local renderedOutput = ReactNoop.getChildren()
-            jestExpect(#renderedOutput).toBe(1)
-            jestExpect(renderedOutput[1].prop).toBe(1)
 
-            ReactNoop.render(React.createElement('span', {prop = 2}))
-            ReactNoop.render(React.createElement('span', {prop = 3}))
-            ReactNoop.render(React.createElement('span', {prop = 4}))
-            ReactNoop.render(React.createElement('span', {prop = 5}))
+            jestExpect(ReactNoop).toMatchRenderedOutput(React.createElement("span", {prop = 1}))
+
+            ReactNoop.render(React.createElement("span", {prop = 2}))
+            ReactNoop.render(React.createElement("span", {prop = 3}))
+            ReactNoop.render(React.createElement("span", {prop = 4}))
+            ReactNoop.render(React.createElement("span", {prop = 5}))
             jestExpect(Scheduler).toFlushWithoutYielding()
 
-            -- ROBLOX TODO: replace the below expects with toMatchRenderedOutput
-            -- jestExpect(ReactNoop).toMatchRenderedOutput(React.createElement('span', {prop = 5}))
-            renderedOutput = ReactNoop.getChildren()
-            jestExpect(#renderedOutput).toBe(1)
-            jestExpect(renderedOutput[1].prop).toBe(5)
+
+            jestExpect(ReactNoop).toMatchRenderedOutput(React.createElement("span", {prop = 5}))
         end)
-        it('works on deferred roots in the order they were scheduled', function()
+        it("works on deferred roots in the order they were scheduled", function()
             local useEffect = React.useEffect
 
             local function Text(props)
@@ -148,76 +130,76 @@ return function()
 
             ReactNoop.act(function()
                 ReactNoop.renderToRootWithID(React.createElement(Text, {
-                    text = 'a:1',
-                }), 'a')
+                    text = "a:1",
+                }), "a")
                 ReactNoop.renderToRootWithID(React.createElement(Text, {
-                    text = 'b:1',
-                }), 'b')
+                    text = "b:1",
+                }), "b")
                 ReactNoop.renderToRootWithID(React.createElement(Text, {
-                    text = 'c:1',
-                }), 'c')
+                    text = "c:1",
+                }), "c")
             end)
             jestExpect(Scheduler).toHaveYielded({
-                'a:1',
-                'b:1',
-                'c:1',
+                "a:1",
+                "b:1",
+                "c:1",
             })
 
             -- deviation: getChildrenAsJSX() method which is used in upstream replaced with
             -- equivalent getChildren() evaluations because Roact doesn't support JSX.
 
-            jestExpect(ReactNoop.getChildren('a')[1].text).toEqual('a:1')
-            jestExpect(ReactNoop.getChildren('b')[1].text).toEqual('b:1')
-            jestExpect(ReactNoop.getChildren('c')[1].text).toEqual('c:1')
-            jestExpect(#ReactNoop.getChildren('a')).toEqual(1)
-            jestExpect(#ReactNoop.getChildren('b')).toEqual(1)
-            jestExpect(#ReactNoop.getChildren('c')).toEqual(1)
+            jestExpect(ReactNoop.getChildren("a")[1].text).toEqual("a:1")
+            jestExpect(ReactNoop.getChildren("b")[1].text).toEqual("b:1")
+            jestExpect(ReactNoop.getChildren("c")[1].text).toEqual("c:1")
+            jestExpect(#ReactNoop.getChildren("a")).toEqual(1)
+            jestExpect(#ReactNoop.getChildren("b")).toEqual(1)
+            jestExpect(#ReactNoop.getChildren("c")).toEqual(1)
 
             -- Schedule deferred work in the reverse order
             ReactNoop.act(function()
                 ReactNoop.renderToRootWithID(React.createElement(Text, {
-                    text = 'c:2',
-                }), 'c')
+                    text = "c:2",
+                }), "c")
                 ReactNoop.renderToRootWithID(React.createElement(Text, {
-                    text = 'b:2',
-                }), 'b')
+                    text = "b:2",
+                }), "b")
                 jestExpect(Scheduler).toFlushAndYieldThrough({
-                    'c:2',
+                    "c:2",
                 })
-                jestExpect(ReactNoop.getChildren('a')[1].text).toEqual('a:1')
-                jestExpect(ReactNoop.getChildren('b')[1].text).toEqual('b:1')
-                jestExpect(ReactNoop.getChildren('c')[1].text).toEqual('c:2')
-                jestExpect(#ReactNoop.getChildren('a')).toEqual(1)
-                jestExpect(#ReactNoop.getChildren('b')).toEqual(1)
-                jestExpect(#ReactNoop.getChildren('c')).toEqual(1)
+                jestExpect(ReactNoop.getChildren("a")[1].text).toEqual("a:1")
+                jestExpect(ReactNoop.getChildren("b")[1].text).toEqual("b:1")
+                jestExpect(ReactNoop.getChildren("c")[1].text).toEqual("c:2")
+                jestExpect(#ReactNoop.getChildren("a")).toEqual(1)
+                jestExpect(#ReactNoop.getChildren("b")).toEqual(1)
+                jestExpect(#ReactNoop.getChildren("c")).toEqual(1)
                 -- Schedule last bit of work, it will get processed the last
 
                 ReactNoop.renderToRootWithID(React.createElement(Text, {
-                    text = 'a:2',
-                }), 'a')
+                    text = "a:2",
+                }), "a")
 
                 -- Keep performing work in the order it was scheduled
                 jestExpect(Scheduler).toFlushAndYieldThrough({
-                    'b:2',
+                    "b:2",
                 })
-                jestExpect(ReactNoop.getChildren('a')[1].text).toEqual('a:1')
-                jestExpect(ReactNoop.getChildren('b')[1].text).toEqual('b:2')
-                jestExpect(ReactNoop.getChildren('c')[1].text).toEqual('c:2')
-                jestExpect(#ReactNoop.getChildren('a')).toEqual(1)
-                jestExpect(#ReactNoop.getChildren('b')).toEqual(1)
-                jestExpect(#ReactNoop.getChildren('c')).toEqual(1)
+                jestExpect(ReactNoop.getChildren("a")[1].text).toEqual("a:1")
+                jestExpect(ReactNoop.getChildren("b")[1].text).toEqual("b:2")
+                jestExpect(ReactNoop.getChildren("c")[1].text).toEqual("c:2")
+                jestExpect(#ReactNoop.getChildren("a")).toEqual(1)
+                jestExpect(#ReactNoop.getChildren("b")).toEqual(1)
+                jestExpect(#ReactNoop.getChildren("c")).toEqual(1)
                 jestExpect(Scheduler).toFlushAndYieldThrough({
-                    'a:2',
+                    "a:2",
                 })
-                jestExpect(ReactNoop.getChildren('a')[1].text).toEqual('a:2')
-                jestExpect(ReactNoop.getChildren('b')[1].text).toEqual('b:2')
-                jestExpect(ReactNoop.getChildren('c')[1].text).toEqual('c:2')
-                jestExpect(#ReactNoop.getChildren('a')).toEqual(1)
-                jestExpect(#ReactNoop.getChildren('b')).toEqual(1)
-                jestExpect(#ReactNoop.getChildren('c')).toEqual(1)
+                jestExpect(ReactNoop.getChildren("a")[1].text).toEqual("a:2")
+                jestExpect(ReactNoop.getChildren("b")[1].text).toEqual("b:2")
+                jestExpect(ReactNoop.getChildren("c")[1].text).toEqual("c:2")
+                jestExpect(#ReactNoop.getChildren("a")).toEqual(1)
+                jestExpect(#ReactNoop.getChildren("b")).toEqual(1)
+                jestExpect(#ReactNoop.getChildren("c")).toEqual(1)
             end)
         end)
-        it('schedules sync updates when inside componentDidMount/Update', function()
+        it("schedules sync updates when inside componentDidMount/Update", function()
             local instance
 
             local Foo = React.Component:extend("Foo")
@@ -226,30 +208,30 @@ return function()
             end
 
             function Foo:componentDidMount()
-                Scheduler.unstable_yieldValue('componentDidMount (before setState): ' .. self.state.tick)
+                Scheduler.unstable_yieldValue("componentDidMount (before setState): " .. self.state.tick)
                 self:setState({
                     tick = 1
                 })
                 -- We're in a batch. Update hasn't flushed yet.
 
-                Scheduler.unstable_yieldValue('componentDidMount (after setState): ' .. self.state.tick)
+                Scheduler.unstable_yieldValue("componentDidMount (after setState): " .. self.state.tick)
             end
 
             function Foo:componentDidUpdate()
-                Scheduler.unstable_yieldValue('componentDidUpdate: ' .. self.state.tick);
+                Scheduler.unstable_yieldValue("componentDidUpdate: " .. self.state.tick);
 
                 if self.state.tick == 2 then
-                    Scheduler.unstable_yieldValue('componentDidUpdate (before setState): ' .. self.state.tick);
+                    Scheduler.unstable_yieldValue("componentDidUpdate (before setState): " .. self.state.tick);
                     self:setState({
                         tick= 3
                     });
-                    Scheduler.unstable_yieldValue('componentDidUpdate (after setState): ' .. self.state.tick); -- We're in a batch. Update hasn't flushed yet.
+                    Scheduler.unstable_yieldValue("componentDidUpdate (after setState): " .. self.state.tick); -- We're in a batch. Update hasn't flushed yet.
                     -- We're in a batch. Update hasn't flushed yet.
                 end
             end
 
             function Foo:render()
-                Scheduler.unstable_yieldValue('render: ' .. self.state.tick);
+                Scheduler.unstable_yieldValue("render: " .. self.state.tick);
                 instance = self;
                 return React.createElement("span", {
                     prop= self.state.tick
@@ -260,33 +242,33 @@ return function()
             ReactNoop.render(React.createElement(Foo))
             -- Render without committing
             jestExpect(Scheduler).toFlushAndYieldThrough({
-                'render: 0',
+                "render: 0",
             })
 
             -- Do one more unit of work to commit
             jestExpect(ReactNoop.flushNextYield()).toEqual({
-                'componentDidMount (before setState): 0',
-                'componentDidMount (after setState): 0',
+                "componentDidMount (before setState): 0",
+                "componentDidMount (after setState): 0",
                 -- If the setState inside componentDidMount were deferred, there would be
                 -- no more ops. Because it has Task priority, we get these ops, too:
-                'render: 1',
-                'componentDidUpdate: 1',
+                "render: 1",
+                "componentDidUpdate: 1",
             })
             instance:setState({tick = 2})
             jestExpect(Scheduler).toFlushAndYieldThrough({
-                'render: 2',
+                "render: 2",
             })
             jestExpect(ReactNoop.flushNextYield()).toEqual({
-                'componentDidUpdate: 2',
-                'componentDidUpdate (before setState): 2',
-                'componentDidUpdate (after setState): 2',
+                "componentDidUpdate: 2",
+                "componentDidUpdate (before setState): 2",
+                "componentDidUpdate (after setState): 2",
                 -- If the setState inside componentDidUpdate were deferred, there would be
                 -- no more ops. Because it has Task priority, we get these ops, too:
-                'render: 3',
-                'componentDidUpdate: 3',
+                "render: 3",
+                "componentDidUpdate: 3",
             })
         end)
-        it('can opt-in to async scheduling inside componentDidMount/Update', function()
+        it("can opt-in to async scheduling inside componentDidMount/Update", function()
             local instance
 
             local Foo = React.Component:extend("Foo")
@@ -296,13 +278,13 @@ return function()
             function Foo:componentDidMount()
                 local _this = self
                 ReactNoop.deferredUpdates(function()
-                    Scheduler.unstable_yieldValue('componentDidMount (before setState): ' .. _this.state.tick)
+                    Scheduler.unstable_yieldValue("componentDidMount (before setState): " .. _this.state.tick)
 
                     _this:setState({
                         tick = 1
                     })
 
-                    Scheduler.unstable_yieldValue('componentDidMount (after setState): ' .. _this.state.tick)
+                    Scheduler.unstable_yieldValue("componentDidMount (after setState): " .. _this.state.tick)
                 end
                 )
             end
@@ -311,22 +293,22 @@ return function()
                 local _this2 = self
 
                 ReactNoop.deferredUpdates(function()
-                    Scheduler.unstable_yieldValue('componentDidUpdate: ' .. _this2.state.tick)
+                    Scheduler.unstable_yieldValue("componentDidUpdate: " .. _this2.state.tick)
 
                     if _this2.state.tick == 2 then
-                      Scheduler.unstable_yieldValue('componentDidUpdate (before setState): ' .. _this2.state.tick)
+                      Scheduler.unstable_yieldValue("componentDidUpdate (before setState): " .. _this2.state.tick)
 
                       _this2:setState({
                         tick = 3
                       })
 
-                      Scheduler.unstable_yieldValue('componentDidUpdate (after setState): ' .. _this2.state.tick)
+                      Scheduler.unstable_yieldValue("componentDidUpdate (after setState): " .. _this2.state.tick)
                     end
                 end);
             end
 
             function Foo:render()
-                Scheduler.unstable_yieldValue('render: ' .. self.state.tick)
+                Scheduler.unstable_yieldValue("render: " .. self.state.tick)
                 instance = self
                 return React.createElement("span", {
                   prop = self.state.tick
@@ -337,57 +319,45 @@ return function()
             end)
             -- The cDM update should not have flushed yet because it has async priority.
             jestExpect(Scheduler).toHaveYielded({
-                'render: 0',
-                'componentDidMount (before setState): 0',
-                'componentDidMount (after setState): 0',
+                "render: 0",
+                "componentDidMount (before setState): 0",
+                "componentDidMount (after setState): 0",
             })
 
-            -- ROBLOX TODO: replace the below expects with toMatchRenderedOutput
-            -- jestExpect(ReactNoop).toMatchRenderedOutput(React.createElement('span', {prop = 0}))
-            local renderedOutput = ReactNoop.getChildren()
-            jestExpect(#renderedOutput).toBe(1)
-            jestExpect(renderedOutput[1].prop).toBe(0)
+
+            jestExpect(ReactNoop).toMatchRenderedOutput(React.createElement("span", {prop = 0}))
 
             -- Now flush the cDM update.
             jestExpect(Scheduler).toFlushAndYield({
-                'render: 1',
-                'componentDidUpdate: 1',
+                "render: 1",
+                "componentDidUpdate: 1",
             })
 
-            -- ROBLOX TODO: replace the below expects with toMatchRenderedOutput
-            -- jestExpect(ReactNoop).toMatchRenderedOutput(React.createElement('span', {prop = 1}))
-            renderedOutput = ReactNoop.getChildren()
-            jestExpect(#renderedOutput).toBe(1)
-            jestExpect(renderedOutput[1].prop).toBe(1)
+
+            jestExpect(ReactNoop).toMatchRenderedOutput(React.createElement("span", {prop = 1}))
 
             -- Increment the tick to 2. This will trigger an update inside cDU. Flush
             -- the first update without flushing the second one.
             instance:setState({tick = 2})
             jestExpect(Scheduler).toFlushAndYieldThrough({
-                'render: 2',
-                'componentDidUpdate: 2',
-                'componentDidUpdate (before setState): 2',
-                'componentDidUpdate (after setState): 2',
+                "render: 2",
+                "componentDidUpdate: 2",
+                "componentDidUpdate (before setState): 2",
+                "componentDidUpdate (after setState): 2",
             })
 
-            -- ROBLOX TODO: replace the below expects with toMatchRenderedOutput
-            -- jestExpect(ReactNoop).toMatchRenderedOutput(React.createElement('span', {prop = 2}))
-            renderedOutput = ReactNoop.getChildren()
-            jestExpect(#renderedOutput).toBe(1)
-            jestExpect(renderedOutput[1].prop).toBe(2)
+
+            jestExpect(ReactNoop).toMatchRenderedOutput(React.createElement("span", {prop = 2}))
 
             -- Now flush the cDU update.
             jestExpect(Scheduler).toFlushAndYield({
-                'render: 3',
-                'componentDidUpdate: 3',
+                "render: 3",
+                "componentDidUpdate: 3",
             })
-            -- ROBLOX TODO: replace the below expects with toMatchRenderedOutput
-            -- jestExpect(ReactNoop).toMatchRenderedOutput(React.createElement('span', {prop = 3}))
-            renderedOutput = ReactNoop.getChildren()
-            jestExpect(#renderedOutput).toBe(1)
-            jestExpect(renderedOutput[1].prop).toBe(3)
+
+            jestExpect(ReactNoop).toMatchRenderedOutput(React.createElement("span", {prop = 3}))
         end)
-        it('performs Task work even after time runs out', function()
+        it("performs Task work even after time runs out", function()
             local Foo = React.Component:extend("Foo")
             function Foo:init()
                 self.state = {step = 1}
@@ -413,7 +383,7 @@ return function()
             end
 
             function Foo:render()
-                Scheduler.unstable_yieldValue('Foo')
+                Scheduler.unstable_yieldValue("Foo")
                 return React.createElement("span", {
                     prop = self.state.step
                   })
@@ -422,63 +392,46 @@ return function()
             -- This should be just enough to complete all the work, but not enough to
             -- commit it.
             jestExpect(Scheduler).toFlushAndYieldThrough({
-                'Foo',
+                "Foo",
             })
-            -- ROBLOX TODO: replace the below expects with toMatchRenderedOutput
-            -- jestExpect(ReactNoop).toMatchRenderedOutput(nil)
-            local renderedOutput = ReactNoop.getChildren()
-            jestExpect(#renderedOutput).toEqual(0)
+
+            jestExpect(ReactNoop).toMatchRenderedOutput(nil)
 
             -- Do one more unit of work.
             ReactNoop.flushNextYield()
 
             -- The updates should all be flushed with Task priority
-            -- ROBLOX TODO: replace the below expects with toMatchRenderedOutput
-            -- jestExpect(ReactNoop).toMatchRenderedOutput(React.createElement('span', {prop = 5}))
-            renderedOutput = ReactNoop.getChildren()
-            jestExpect(#renderedOutput).toBe(1)
-            jestExpect(renderedOutput[1].prop).toBe(5)
+            jestExpect(ReactNoop).toMatchRenderedOutput(React.createElement("span", {prop = 5}))
         end)
-        it('can opt-out of batching using unbatchedUpdates', function()
-            local renderedOutput
+        it("can opt-out of batching using unbatchedUpdates", function()
             ReactNoop.flushSync(function()
-                ReactNoop.render(React.createElement('span', {prop = 0}))
+                ReactNoop.render(React.createElement("span", {prop = 0}))
                 jestExpect(ReactNoop.getChildren()).toEqual({})
                 -- Should not have flushed yet because we're still batching
 
                 -- unbatchedUpdates reverses the effect of batchedUpdates, so sync
                 -- updates are not batched
                 ReactNoop.unbatchedUpdates(function()
-                    ReactNoop.render(React.createElement('span', {prop = 1}))
-                    -- ROBLOX TODO: replace the below expects with toMatchRenderedOutput
-                    -- jestExpect(ReactNoop).toMatchRenderedOutput(React.createElement('span', {prop = 1}))
-                    renderedOutput = ReactNoop.getChildren()
-                    jestExpect(#renderedOutput).toBe(1)
-                    jestExpect(renderedOutput[1].prop).toBe(1)
+                    ReactNoop.render(React.createElement("span", {prop = 1}))
 
-                    ReactNoop.render(React.createElement('span', {prop = 2}))
-                    -- ROBLOX TODO: replace the below expects with toMatchRenderedOutput
-                    -- jestExpect(ReactNoop).toMatchRenderedOutput(React.createElement('span', {prop = 2}))
-                    renderedOutput = ReactNoop.getChildren()
-                    jestExpect(#renderedOutput).toBe(1)
-                    jestExpect(renderedOutput[1].prop).toBe(2)
+                    jestExpect(ReactNoop).toMatchRenderedOutput(React.createElement("span", {prop = 1}))
+
+                    ReactNoop.render(React.createElement("span", {prop = 2}))
+
+                    jestExpect(ReactNoop).toMatchRenderedOutput(React.createElement("span", {prop = 2}))
                 end)
-                ReactNoop.render(React.createElement('span', {prop = 3}))
+                ReactNoop.render(React.createElement("span", {prop = 3}))
                 -- Remaining update is now flushed
-                -- ROBLOX TODO: replace the below expects with toMatchRenderedOutput
-                -- jestExpect(ReactNoop).toMatchRenderedOutput(React.createElement('span', {prop = 2}))
-                renderedOutput = ReactNoop.getChildren()
-                jestExpect(#renderedOutput).toBe(1)
-                jestExpect(renderedOutput[1].prop).toBe(2)
+
+                jestExpect(ReactNoop).toMatchRenderedOutput(React.createElement("span", {prop = 2}))
+
             end)
             -- Remaining update is now flushed
-            -- ROBLOX TODO: replace the below expects with toMatchRenderedOutput
-            -- jestExpect(ReactNoop).toMatchRenderedOutput(React.createElement('span', {prop = 3}))
-            renderedOutput = ReactNoop.getChildren()
-            jestExpect(#renderedOutput).toBe(1)
-            jestExpect(renderedOutput[1].prop).toBe(3)
+
+            jestExpect(ReactNoop).toMatchRenderedOutput(React.createElement("span", {prop = 3}))
+
         end)
-        it('nested updates are always deferred, even inside unbatchedUpdates', function()
+        it("nested updates are always deferred, even inside unbatchedUpdates", function()
             local instance
             local Foo = React.Component:extend("Foo")
             function Foo:init()
@@ -488,7 +441,7 @@ return function()
             end
             function Foo:componentDidUpdate()
                 local _this4 = self
-                    Scheduler.unstable_yieldValue('componentDidUpdate: ' .. self.state.step)
+                    Scheduler.unstable_yieldValue("componentDidUpdate: " .. self.state.step)
 
                     if self.state.step == 1 then
                         ReactNoop.unbatchedUpdates(function()
@@ -499,17 +452,14 @@ return function()
                                 step = 2
                             })
                         end)
-                        jestExpect(Scheduler).toHaveYielded({'render: 1', 'componentDidUpdate: 1'})
-                        -- ROBLOX TODO: replace the below expects with toMatchRenderedOutput
-                        -- jestExpect(ReactNoop).toMatchRenderedOutput(React.createElement('span', {prop = 1}))
-                        local renderedOutput = ReactNoop.getChildren()
-                        jestExpect(#renderedOutput).toBe(1)
-                        jestExpect(renderedOutput[1].prop).toBe(1)
+                        jestExpect(Scheduler).toHaveYielded({"render: 1", "componentDidUpdate: 1"})
+    
+                        jestExpect(ReactNoop).toMatchRenderedOutput(React.createElement("span", {prop = 1}))
                     end
             end
 
             function Foo:render()
-                Scheduler.unstable_yieldValue('render: ' .. self.state.step)
+                Scheduler.unstable_yieldValue("render: " .. self.state.step)
                 instance = self
                 return React.createElement("span", {
                     prop = self.state.step
@@ -518,26 +468,22 @@ return function()
 
             ReactNoop.render(React.createElement(Foo, nil))
             jestExpect(Scheduler).toFlushAndYield({
-                'render: 0',
+                "render: 0",
             })
-            -- ROBLOX TODO: replace the below expects with toMatchRenderedOutput
-            -- jestExpect(ReactNoop).toMatchRenderedOutput(React.createElement('span', {prop = 0}))
-            local renderedOutput = ReactNoop.getChildren()
-            jestExpect(#renderedOutput).toBe(1)
-            jestExpect(renderedOutput[1].prop).toBe(0)
+
+            jestExpect(ReactNoop).toMatchRenderedOutput(React.createElement("span", {prop = 0}))
+
             ReactNoop.flushSync(function()
                 instance:setState({step = 1})
             end)
             jestExpect(Scheduler).toHaveYielded({
-                'render: 2',
-                'componentDidUpdate: 2',
+                "render: 2",
+                "componentDidUpdate: 2",
             })
 
-            -- ROBLOX TODO: replace the below expects with toMatchRenderedOutput
-            -- jestExpect(ReactNoop).toMatchRenderedOutput(React.createElement('span', {prop = 2}))
-            renderedOutput = ReactNoop.getChildren()
-            jestExpect(#renderedOutput).toBe(1)
-            jestExpect(renderedOutput[1].prop).toBe(2)
+
+            jestExpect(ReactNoop).toMatchRenderedOutput(React.createElement("span", {prop = 2}))
+
         end)
     end)
 end
