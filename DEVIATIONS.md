@@ -2,10 +2,25 @@
 # Deviations and Conflicts
 Upstream naming and logic has some deviations and incompatibilities with existing Roact. These will need to be addressed before aligned Roact can run existing Roact codebases. I'm expecting to do a combination of refactoring those codebases and introducing compatibility layers.
 
+#### Table of Contents
+* [Naming](#naming)
+  * [Component Lifecycle](#component-lifecycle)
+  * [Reserved Prop Keys: "ref"](#reserved-prop-keys-ref)
+  * [Reserved Prop Keys: "key"](#reserved-prop-keys-key)
+  * [Reserved Prop Keys: "children"](#reserved-prop-keys-children)
+* [Behavior](#behavior)
+  * [Old Context](#old-context-roact-only)
+  * [createFragment](#createfragment)
+  * [Ref Forwarding](#ref-forwarding)
+  * [Stable Keys](#stable-keys)
+  * [Use of setState](#use-of-setstate)
+
 ## Naming
 
 ### Component Lifecycle
 **Status:** ✔️ Resolved
+<details>
+  <summary>Details</summary>
 
 A portion of the component lifecycle methods exclude the `component` part of their name in Roact.
 
@@ -34,6 +49,7 @@ There are a few clear options:
 
 #### Implemented Alignment
 An implementation of tactic #2 above was merged in [#88](https://github.com/Roblox/roact-alignment/pull/88). A `__newIndex` metamethod was added to the `React.component` table which catches method declarations using the older naming convention, warns about them and recommends updating the name (in DEV mode), then creates a method in the actual class table under the new API's equivalent name.
+</details>
 
 ### Reserved Prop Keys: "ref"
 **Status:** ❔ Alignment Strategy TBD
@@ -136,7 +152,7 @@ The most straightforward approach would be to export `Roact.Children` with a val
 
 ## Behavior
 
-### _context (Roact only)
+### Old Context (Roact only)
 **Status:** ❔ Alignment Strategy TBD
 
 In Roact, the "old" context behavior was a `_context` field defined on every class component instance. To provide context, a component would mutate its `_context` field in `init`:
@@ -176,8 +192,10 @@ We'll likely have to modernize all existing uses of `_context` to instead use th
 
 This is likely the biggest refactor effort that the Lua Apps adoption is contingent on. It also incurs some knock-on efforts on projects that the App depends upon, like [roact-rodux](https://github.com/roblox/roact-rodux/issues/26), which has some work completed, [but with unaddressed backwards compatibility problems](https://github.com/Roblox/roact-rodux/pull/38#issuecomment-644902307).
 
-### Fragments
+### createFragment
 **Status:** ✔️ Resolved
+<details>
+  <summary>Details</summary>
 
 React allows a component to return multiple top-level elements as a special kind of component referred to as a "fragment", which will be siblings within the parent they're rendered into (more in the [React documentation](https://reactjs.org/docs/fragments.html)).
 
@@ -226,7 +244,8 @@ This would be a simple compatibility layer that should require very little maint
 
 #### Implemented Alignment
 The `createFragment` function described above was added to React.lua in [#92](https://github.com/Roblox/roact-alignment/pull/92/files).
-
+</details>
+ 
 ### Ref Forwarding
 **Status:** ❔ Alignment Strategy TBD
 
@@ -284,6 +303,8 @@ Alternative 2: Align to `Roact.Ref`, which deviates slightly from upstream but d
 
 ### Stable Keys
 **Status:** ✔️ Resolved (backwards compatible)
+<details>
+  <summary>Details</summary>
 
 In React, the [reserved "key" prop](#reserved-prop-keys-key) is used to provide stable identities to DOM elements. This provides better performance when list-like data is reordered; React knows to move identified elements instead of simply changing the props of each element at each position to line up with the new ordering (more info in the [React documentation](https://reactjs.org/docs/lists-and-keys.html)).
 
@@ -345,6 +366,7 @@ Any time children are provided as a table (including mixed tables or sparse arra
 In the event that both a table key and the `key` prop are provided to the same element, we should through a warning in DEV mode that aligns with similar warnings for un-keyed children.
 
 An implementation of this approach was merged in [#68](https://github.com/Roblox/roact-alignment/pull/68).
+</details>
 
 ### Use of setState
 **Status:** ❔ Alignment Strategy TBD
