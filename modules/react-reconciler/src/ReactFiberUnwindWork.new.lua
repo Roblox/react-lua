@@ -9,6 +9,11 @@
 ]]
 -- FIXME (roblox): remove this when our unimplemented
 local function unimplemented(message)
+  print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+  print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+  print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+  print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+  print("UNIMPLEMENTED ERROR: " .. tostring(message))
   error("FIXME (roblox): " .. message .. " is unimplemented", 2)
 end
 
@@ -42,7 +47,13 @@ local popLegacyContext = ReactFiberContext.popContext
 local popTopLevelLegacyContextObject = ReactFiberContext.popTopLevelContextObject
 local popProvider = require(script.Parent["ReactFiberNewContext.new"]).popProvider
 -- ROBLOX FIXME: this causes a circular require
--- local popRenderLanes = require(script.Parent["ReactFiberWorkLoop.new"]).popRenderLanes
+local popRenderLanesRef
+local popRenderLanes = function(...)
+  if not popRenderLanesRef then
+    popRenderLanesRef = require(script.Parent["ReactFiberWorkLoop.new"]).popRenderLanes
+  end
+  return popRenderLanesRef(...)
+end
 -- local {transferActualDuration} = require(script.Parent.ReactProfilerTimer.new)
 
 local invariant = require(Workspace.Shared.invariant)
@@ -124,8 +135,7 @@ local function unwindWork(workInProgress: Fiber, renderLanes: Lanes)
     return nil
   elseif workInProgress.tag == ReactWorkTags.OffscreenComponent or
     workInProgress.tag == ReactWorkTags.LegacyHiddenComponent then
-      unimplemented("popRenderLanes in UnwindWork")
-    -- popRenderLanes(workInProgress)
+    popRenderLanes(workInProgress)
     return nil
   else
     return nil
@@ -154,8 +164,7 @@ function unwindInterruptedWork(interruptedWork: Fiber)
     popProvider(interruptedWork)
   elseif interruptedWork.tag == ReactWorkTags.OffscreenComponent or
          interruptedWork.tag ==  ReactWorkTags.LegacyHiddenComponent then
-    unimplemented("popRenderLanes")
-    -- popRenderLanes(interruptedWork)
+    popRenderLanes(interruptedWork)
     return
   else -- default
     return

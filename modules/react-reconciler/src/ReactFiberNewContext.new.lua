@@ -7,10 +7,6 @@
  *
  * @flow
 ]]
--- FIXME (roblox): remove this when no more code is unimplemented
--- local function unimplemented(message)
---   error("FIXME (roblox): " .. message .. " is unimplemented", 2)
--- end
 
 local Workspace = script.Parent.Parent
 local Packages = Workspace.Parent

@@ -71,8 +71,7 @@ local createFiberRoot = ReactFiberRoot.createFiberRoot
 local ReactFiberDevToolsHook = require(script.Parent["ReactFiberDevToolsHook.new"])
 local injectInternals = ReactFiberDevToolsHook.injectInternals
 local onScheduleRoot = ReactFiberDevToolsHook.onScheduleRoot
-local ReactFiberWorkLoop
-ReactFiberWorkLoop = require(script.Parent["ReactFiberWorkLoop.new"])
+local ReactFiberWorkLoop = require(script.Parent["ReactFiberWorkLoop.new"]) :: any
 local requestEventTime = ReactFiberWorkLoop.requestEventTime
 local requestUpdateLane = ReactFiberWorkLoop.requestUpdateLane
 local scheduleUpdateOnFiber = ReactFiberWorkLoop.scheduleUpdateOnFiber

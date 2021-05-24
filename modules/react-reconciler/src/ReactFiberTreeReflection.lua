@@ -127,9 +127,9 @@ exports.isMounted = function(component): boolean
 	if not fiber then
 		return false
 	else
-		-- ROBLOX FIXME: recast to any to silence analyze, but is already checked in if statement above
-		local nonNilFiber: any = fiber
-		return getNearestMountedFiber(nonNilFiber) == fiber
+		-- ROBLOX FIXME: remove any cast once Luau understands if-statement nil check
+		local fiberNonNil: any = fiber
+		return getNearestMountedFiber(fiberNonNil) == fiber
 	end
 end
 

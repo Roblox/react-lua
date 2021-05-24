@@ -10,6 +10,11 @@
 --!nolint LocalShadowPedantic
 -- FIXME (roblox): remove this when our unimplemented
 local function unimplemented(message)
+  print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+  print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+  print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+  print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+  print("UNIMPLEMENTED ERROR: " .. tostring(message))
   error("FIXME (roblox): " .. message .. " is unimplemented", 2)
 end
 
@@ -18,7 +23,9 @@ local Workspace = script.Parent.Parent
 local ReactInternalTypes = require(script.Parent.ReactInternalTypes)
 type Fiber = ReactInternalTypes.Fiber;
 local ReactFiberLane = require(script.Parent.ReactFiberLane)
-type Lanes = ReactFiberLane.Lanes;
+type Lanes = ReactFiberLane.Lanes
+type Lane = ReactFiberLane.Lane
+local OffscreenLane = ReactFiberLane.OffscreenLane
 -- local type {
 --   ReactFundamentalComponentInstance,
 --   ReactScopeInstance,
@@ -34,8 +41,8 @@ type ChildSet = ReactFiberHostConfig.ChildSet;
 --   SuspenseState,
 --   SuspenseListRenderState,
 -- } = require(script.Parent.ReactFiberSuspenseComponent.new)
--- local type {SuspenseContext} = require(script.Parent.ReactFiberSuspenseContext.new)
--- local type {OffscreenState} = require(script.Parent.ReactFiberOffscreenComponent)
+local ReactFiberOffscreenComponent = require(script.Parent.ReactFiberOffscreenComponent)
+type OffscreenState = ReactFiberOffscreenComponent.OffscreenState
 
 local ReactMutableSource = require(script.Parent["ReactMutableSource.new"])
 local resetMutableSourceWorkInProgressVersions = ReactMutableSource.resetWorkInProgressVersions
@@ -67,10 +74,14 @@ local ScopeComponent = ReactWorkTags.ScopeComponent
 local Block = ReactWorkTags.Block
 local OffscreenComponent = ReactWorkTags.OffscreenComponent
 local LegacyHiddenComponent = ReactWorkTags.LegacyHiddenComponent
+local ReactFiberSuspenseComponent = require(script.Parent["ReactFiberSuspenseComponent.new"])
+type SuspenseState = ReactFiberSuspenseComponent.SuspenseState
+type SuspenseListRenderState = ReactFiberSuspenseComponent.SuspenseState
 
 local ReactTypeOfMode = require(script.Parent.ReactTypeOfMode)
 local NoMode = ReactTypeOfMode.NoMode
--- local BlockingMode = ReactTypeOfMode.BlockingMode
+local ConcurrentMode = ReactTypeOfMode.ConcurrentMode
+local BlockingMode = ReactTypeOfMode.BlockingMode
 local ProfileMode = ReactTypeOfMode.ProfileMode
 
 local ReactFiberFlags = require(script.Parent.ReactFiberFlags)
@@ -80,7 +91,7 @@ local Update = ReactFiberFlags.Update
 -- local Passive = ReactFiberFlags.Passive
 -- local Deletion = ReactFiberFlags.Deletion
 local NoFlags = ReactFiberFlags.NoFlags
--- local DidCapture = ReactFiberFlags.DidCapture
+local DidCapture = ReactFiberFlags.DidCapture
 local Snapshot = ReactFiberFlags.Snapshot
 local MutationMask = ReactFiberFlags.MutationMask
 -- local LayoutMask = ReactFiberFlags.LayoutMask
@@ -114,51 +125,56 @@ local getRootHostContainer = ReactFiberHostContext.getRootHostContainer
 local popHostContext = ReactFiberHostContext.popHostContext
 local getHostContext = ReactFiberHostContext.getHostContext
 local popHostContainer = ReactFiberHostContext.popHostContainer
--- local {
---   suspenseStackCursor,
---   InvisibleParentSuspenseContext,
---   hasSuspenseContext,
---   popSuspenseContext,
---   pushSuspenseContext,
---   setShallowSuspenseContext,
---   ForceSuspenseFallback,
---   setDefaultShallowSuspenseContext,
--- } = require(script.Parent.ReactFiberSuspenseContext.new)
+
+local ReactFiberSuspenseContext = require(script.Parent["ReactFiberSuspenseContext.new"])
+local popSuspenseContext = ReactFiberSuspenseContext.popSuspenseContext
+local suspenseStackCursor = ReactFiberSuspenseContext.suspenseStackCursor
+local InvisibleParentSuspenseContext = ReactFiberSuspenseContext.InvisibleParentSuspenseContext
+local hasSuspenseContext = ReactFiberSuspenseContext.hasSuspenseContext
+type SuspenseContext = ReactFiberSuspenseContext.SuspenseContext
+-- local pushSuspenseContext = ReactFiberSuspenseContext.pushSuspenseContext
+-- local setShallowSuspenseContext = ReactFiberSuspenseContext.setShallowSuspenseContext
+-- local ForceSuspenseFallback = ReactFiberSuspenseContext.ForceSuspenseFallback
+-- local setDefaultShallowSuspenseContext = ReactFiberSuspenseContext.setDefaultShallowSuspenseContext
+
 -- local {findFirstSuspended} = require(script.Parent.ReactFiberSuspenseComponent.new)
 local ReactFiberContext = require(script.Parent["ReactFiberContext.new"])
 local isLegacyContextProvider = ReactFiberContext.isContextProvider
 local popLegacyContext = ReactFiberContext.popContext
 local popTopLevelLegacyContextObject = ReactFiberContext.popTopLevelContextObject
 local popProvider = require(script.Parent["ReactFiberNewContext.new"]).popProvider
--- local {
---   prepareToHydrateHostSuspenseInstance,
---   resetHydrationState,
---   getIsHydrating,
+
 local ReactFiberHydrationContext = require(script.Parent["ReactFiberHydrationContext.new"])
+local prepareToHydrateHostSuspenseInstance = ReactFiberHydrationContext.prepareToHydrateHostSuspenseInstance
 local popHydrationState = ReactFiberHydrationContext.popHydrationState
+local resetHydrationState = ReactFiberHydrationContext.resetHydrationState
+-- local getIsHydrating = ReactFiberHydrationContext.getIsHydrating
 local prepareToHydrateHostInstance = ReactFiberHydrationContext.prepareToHydrateHostInstance
 local prepareToHydrateHostTextInstance = ReactFiberHydrationContext.prepareToHydrateHostTextInstance
 local ReactFeatureFlags = require(Workspace.Shared.ReactFeatureFlags)
--- local enableSchedulerTracing = ReactFeatureFlags.enableSchedulerTracing
--- local enableSuspenseCallback = ReactFeatureFlags.enableSuspenseCallback
--- local enableSuspenseServerRenderer = ReactFeatureFlags.enableSuspenseServerRenderer
+local enableSchedulerTracing = ReactFeatureFlags.enableSchedulerTracing
+local enableSuspenseCallback = ReactFeatureFlags.enableSuspenseCallback
+local enableSuspenseServerRenderer = ReactFeatureFlags.enableSuspenseServerRenderer
 local enableFundamentalAPI = ReactFeatureFlags.enableFundamentalAPI
 -- local enableScopeAPI = ReactFeatureFlags.enableScopeAPI
 local enableProfilerTimer = ReactFeatureFlags.enableProfilerTimer
--- local {
---   markSpawnedWork,
---   renderDidSuspend,
---   renderDidSuspendDelayIfPossible,
---   renderHasNotSuspendedYet,
---   popRenderLanes,
---   getRenderTargetTime,
--- } = require(script.Parent.ReactFiberWorkLoop.new)
+
+local ReactFiberWorkLoop = require(script.Parent["ReactFiberWorkLoop.new"]) :: any
+
+local popRenderLanes = ReactFiberWorkLoop.popRenderLanes
+local subtreeRenderLanes = ReactFiberWorkLoop.subtreeRenderLanes
+local markSpawnedWork = ReactFiberWorkLoop.markSpawnedWork
+local renderDidSuspend = ReactFiberWorkLoop.renderDidSuspend
+local renderDidSuspendDelayIfPossible = ReactFiberWorkLoop.renderDidSuspendDelayIfPossible
+-- local renderHasNotSuspendedYet = ReactFiberWorkLoop.renderHasNotSuspendedYet
+-- local getRenderTargetTime = ReactFiberWorkLoop.getRenderTargetTime
+
 -- local {createFundamentalStateInstance} = require(script.Parent.ReactFiberFundamental.new)
 
 -- local OffscreenLane = ReactFiberLane.OffscreenLane
 -- local SomeRetryLane = ReactFiberLane.SomeRetryLane
 local NoLanes = ReactFiberLane.NoLanes
--- local includesSomeLane = ReactFiberLane.includesSomeLane
+local includesSomeLane = ReactFiberLane.includesSomeLane
 local mergeLanes = ReactFiberLane.mergeLanes
 -- local {resetChildFibers} = require(script.Parent.ReactChildFiber.new)
 -- local {createScopeInstance} = require(script.Parent.ReactFiberScope.new)
@@ -695,12 +711,10 @@ else
 --   end
 end
 
--- FIXME (roblox): type refinement
--- local function bubbleProperties(completedWork: Fiber)
-local function bubbleProperties(completedWork)
+local function bubbleProperties(completedWork: Fiber)
   local didBailout =
     completedWork.alternate ~= nil and
-    completedWork.alternate.child == completedWork.child
+    (completedWork.alternate :: Fiber).child == completedWork.child
 
   local newChildLanes = NoLanes
   local subtreeFlags = NoFlags
@@ -1044,174 +1058,178 @@ local function completeWork(
 
     -- return nil
   elseif workInProgress.tag == SuspenseComponent then
-    unimplemented("SuspenseComponent")
-    -- popSuspenseContext(workInProgress)
-    -- local nextState: nil | SuspenseState = workInProgress.memoizedState
+    popSuspenseContext(workInProgress)
+    local nextState: nil | SuspenseState = workInProgress.memoizedState
 
-    -- if enableSuspenseServerRenderer)
-    --   if nextState ~= nil and nextState.dehydrated ~= nil)
-    --     if current == nil)
-    --       local wasHydrated = popHydrationState(workInProgress)
-    --       invariant(
-    --         wasHydrated,
-    --         'A dehydrated suspense component was completed without a hydrated node. ' +
-    --           'This is probably a bug in React.',
-    --       )
-    --       prepareToHydrateHostSuspenseInstance(workInProgress)
-    --       if enableSchedulerTracing)
-    --         markSpawnedWork(OffscreenLane)
-    --       end
-    --       bubbleProperties(workInProgress)
-    --       if enableProfilerTimer)
-    --         if (workInProgress.mode & ProfileMode) ~= NoMode)
-    --           local isTimedOutSuspense = nextState ~= nil
-    --           if isTimedOutSuspense)
-    --             -- Don't count time spent in a timed out Suspense subtree as part of the base duration.
-    --             local primaryChildFragment = workInProgress.child
-    --             if primaryChildFragment ~= nil)
-    --               -- $FlowFixMe Flow doens't support type casting in combiation with the -= operator
-    --               workInProgress.treeBaseDuration -= ((primaryChildFragment.treeBaseDuration: any): number)
-    --             end
-    --           end
-    --         end
-    --       end
-    --       return nil
-    --     else
-    --       -- We should never have been in a hydration state if we didn't have a current.
-    --       -- However, in some of those paths, we might have reentered a hydration state
-    --       -- and then we might be inside a hydration state. In that case, we'll need to exit out of it.
-    --       resetHydrationState()
-    --       if (workInProgress.flags & DidCapture) == NoFlags)
-    --         -- This boundary did not suspend so it's now hydrated and unsuspended.
-    --         workInProgress.memoizedState = nil
-    --       end
-    --       -- If nothing suspended, we need to schedule an effect to mark this boundary
-    --       -- as having hydrated so events know that they're free to be invoked.
-    --       -- It's also a signal to replay events and the suspense callback.
-    --       -- If something suspended, schedule an effect to attach retry listeners.
-    --       -- So we might as well always mark this.
-    --       workInProgress.flags |= Update
-    --       bubbleProperties(workInProgress)
-    --       if enableProfilerTimer)
-    --         if (workInProgress.mode & ProfileMode) ~= NoMode)
-    --           local isTimedOutSuspense = nextState ~= nil
-    --           if isTimedOutSuspense)
-    --             -- Don't count time spent in a timed out Suspense subtree as part of the base duration.
-    --             local primaryChildFragment = workInProgress.child
-    --             if primaryChildFragment ~= nil)
-    --               -- $FlowFixMe Flow doens't support type casting in combiation with the -= operator
-    --               workInProgress.treeBaseDuration -= ((primaryChildFragment.treeBaseDuration: any): number)
-    --             end
-    --           end
-    --         end
-    --       end
-    --       return nil
-    --     end
-    --   end
-    -- end
+    if enableSuspenseServerRenderer then
+      -- ROBLOX FIXME: remove :: recast once Luau understands if statement nil check
+      if nextState ~= nil and (nextState :: SuspenseState).dehydrated ~= nil then
+        if current == nil then
+          local wasHydrated = popHydrationState(workInProgress)
+          invariant(
+            wasHydrated,
+            'A dehydrated suspense component was completed without a hydrated node. ' ..
+              'This is probably a bug in React.'
+          )
+          prepareToHydrateHostSuspenseInstance(workInProgress)
+          if enableSchedulerTracing then
+            markSpawnedWork(OffscreenLane)
+          end
+          bubbleProperties(workInProgress)
+          if enableProfilerTimer then
+            if bit32.band(workInProgress.mode, ProfileMode) ~= NoMode then
+              local isTimedOutSuspense = nextState ~= nil
+              if isTimedOutSuspense then
+                -- Don't count time spent in a timed out Suspense subtree as part of the base duration.
+                local primaryChildFragment = workInProgress.child
+                if primaryChildFragment ~= nil then
+                  -- $FlowFixMe Flow doens't support type casting in combiation with the -= operator
+                  workInProgress.treeBaseDuration = ((primaryChildFragment.treeBaseDuration :: any) :: number)
+                end
+              end
+            end
+          end
+          return nil
+        else
+          -- We should never have been in a hydration state if we didn't have a current.
+          -- However, in some of those paths, we might have reentered a hydration state
+          -- and then we might be inside a hydration state. In that case, we'll need to exit out of it.
+          resetHydrationState()
+          if bit32.band(workInProgress.flags, DidCapture) == NoFlags then
+            -- This boundary did not suspend so it's now hydrated and unsuspended.
+            workInProgress.memoizedState = nil
+          end
+          -- If nothing suspended, we need to schedule an effect to mark this boundary
+          -- as having hydrated so events know that they're free to be invoked.
+          -- It's also a signal to replay events and the suspense callback.
+          -- If something suspended, schedule an effect to attach retry listeners.
+          -- So we might as well always mark this.
+          workInProgress.flags = bit32.bor(workInProgress.flags, Update)
+          bubbleProperties(workInProgress)
+          if enableProfilerTimer then
+            if bit32.band(workInProgress.mode, ProfileMode) ~= NoMode then
+              local isTimedOutSuspense = nextState ~= nil
+              if isTimedOutSuspense then
+                -- Don't count time spent in a timed out Suspense subtree as part of the base duration.
+                local primaryChildFragment = workInProgress.child
+                if primaryChildFragment ~= nil then
+                  -- $FlowFixMe Flow doens't support type casting in combiation with the -= operator
+                  -- ROBLOX deviation: remove recast to silence analyze
+                  workInProgress.treeBaseDuration -= primaryChildFragment.treeBaseDuration
+                end
+              end
+            end
+          end
+          return nil
+        end
+      end
+    end
 
-    -- if (workInProgress.flags & DidCapture) ~= NoFlags)
-    --   -- Something suspended. Re-render with the fallback children.
-    --   workInProgress.lanes = renderLanes
-    --   -- Do not reset the effect list.
-    --   if
-    --     enableProfilerTimer and
-    --     (workInProgress.mode & ProfileMode) ~= NoMode
-    --   )
-    --     transferActualDuration(workInProgress)
-    --   end
-    --   -- Don't bubble properties in this case.
-    --   return workInProgress
-    -- end
+    if bit32.band(workInProgress.flags, DidCapture) ~= NoFlags then
+      -- Something suspended. Re-render with the fallback children.
+      workInProgress.lanes = renderLanes
+      -- Do not reset the effect list.
+      if
+        enableProfilerTimer and
+        bit32.band(workInProgress.mode, ProfileMode) ~= NoMode
+      then
+        -- ROBLOX TODO: once
+        unimplemented("profiler timer logic")
+        -- transferActualDuration(workInProgress)
+      end
+      -- Don't bubble properties in this case.
+      return workInProgress
+    end
 
-    -- local nextDidTimeout = nextState ~= nil
-    -- local prevDidTimeout = false
-    -- if current == nil)
-    --   if workInProgress.memoizedProps.fallback ~= undefined)
-    --     popHydrationState(workInProgress)
-    --   end
-    -- else
-    --   local prevState: nil | SuspenseState = current.memoizedState
-    --   prevDidTimeout = prevState ~= nil
-    -- end
+    local nextDidTimeout = nextState ~= nil
+    local prevDidTimeout = false
+    if current == nil then
+      if workInProgress.memoizedProps.fallback ~= nil then
+        popHydrationState(workInProgress)
+      end
+    else
+      local prevState: nil | SuspenseState = current.memoizedState
+      prevDidTimeout = prevState ~= nil
+    end
 
-    -- if nextDidTimeout and !prevDidTimeout)
-    --   -- If this subtreee is running in blocking mode we can suspend,
-    --   -- otherwise we won't suspend.
-    --   -- TODO: This will still suspend a synchronous tree if anything
-    --   -- in the concurrent tree already suspended during this render.
-    --   -- This is a known bug.
-    --   if (workInProgress.mode & BlockingMode) ~= NoMode)
-    --     -- TODO: Move this back to throwException because this is too late
-    --     -- if this is a large tree which is common for initial loads. We
-    --     -- don't know if we should restart a render or not until we get
-    --     -- this marker, and this is too late.
-    --     -- If this render already had a ping or lower pri updates,
-    --     -- and this is the first time we know we're going to suspend we
-    --     -- should be able to immediately restart from within throwException.
-    --     local hasInvisibleChildContext =
-    --       current == nil and
-    --       workInProgress.memoizedProps.unstable_avoidThisFallback ~= true
-    --     if
-    --       hasInvisibleChildContext or
-    --       hasSuspenseContext(
-    --         suspenseStackCursor.current,
-    --         (InvisibleParentSuspenseContext: SuspenseContext),
-    --       )
-    --     )
-    --       -- If this was in an invisible tree or a new render, then showing
-    --       -- this boundary is ok.
-    --       renderDidSuspend()
-    --     else
-    --       -- Otherwise, we're going to have to hide content so we should
-    --       -- suspend for longer if possible.
-    --       renderDidSuspendDelayIfPossible()
-    --     end
-    --   end
-    -- end
+    if nextDidTimeout and not prevDidTimeout then
+      -- If this subtreee is running in blocking mode we can suspend,
+      -- otherwise we won't suspend.
+      -- TODO: This will still suspend a synchronous tree if anything
+      -- in the concurrent tree already suspended during this render.
+      -- This is a known bug.
+      if bit32.band(workInProgress.mode, BlockingMode) ~= NoMode then
+        -- TODO: Move this back to throwException because this is too late
+        -- if this is a large tree which is common for initial loads. We
+        -- don't know if we should restart a render or not until we get
+        -- this marker, and this is too late.
+        -- If this render already had a ping or lower pri updates,
+        -- and this is the first time we know we're going to suspend we
+        -- should be able to immediately restart from within throwException.
+        local hasInvisibleChildContext =
+          current == nil and
+          workInProgress.memoizedProps.unstable_avoidThisFallback ~= true
+        if
+          hasInvisibleChildContext or
+          hasSuspenseContext(
+            suspenseStackCursor.current,
+            (InvisibleParentSuspenseContext :: SuspenseContext)
+          )
+        then
+          -- If this was in an invisible tree or a new render, then showing
+          -- this boundary is ok.
+          renderDidSuspend()
+        else
+          -- Otherwise, we're going to have to hide content so we should
+          -- suspend for longer if possible.
+          renderDidSuspendDelayIfPossible()
+        end
+      end
+    end
 
-    -- if supportsPersistence)
-    --   -- TODO: Only schedule updates if not prevDidTimeout.
-    --   if nextDidTimeout)
-    --     -- If this boundary just timed out, schedule an effect to attach a
-    --     -- retry listener to the promise. This flag is also used to hide the
-    --     -- primary children.
-    --     workInProgress.flags |= Update
-    --   end
-    -- end
-    -- if supportsMutation)
-    --   -- TODO: Only schedule updates if these values are non equal, i.e. it changed.
-    --   if nextDidTimeout or prevDidTimeout)
-    --     -- If this boundary just timed out, schedule an effect to attach a
-    --     -- retry listener to the promise. This flag is also used to hide the
-    --     -- primary children. In mutation mode, we also need the flag to
-    --     -- *unhide* children that were previously hidden, so check if this
-    --     -- is currently timed out, too.
-    --     workInProgress.flags |= Update
-    --   end
-    -- end
-    -- if
-    --   enableSuspenseCallback and
-    --   workInProgress.updateQueue ~= nil and
-    --   workInProgress.memoizedProps.suspenseCallback ~= nil
-    -- )
-    --   -- Always notify the callback
-    --   workInProgress.flags |= Update
-    -- end
-    -- bubbleProperties(workInProgress)
-    -- if enableProfilerTimer)
-    --   if (workInProgress.mode & ProfileMode) ~= NoMode)
-    --     if nextDidTimeout)
-    --       -- Don't count time spent in a timed out Suspense subtree as part of the base duration.
-    --       local primaryChildFragment = workInProgress.child
-    --       if primaryChildFragment ~= nil)
-    --         -- $FlowFixMe Flow doens't support type casting in combiation with the -= operator
-    --         workInProgress.treeBaseDuration -= ((primaryChildFragment.treeBaseDuration: any): number)
-    --       end
-    --     end
-    --   end
-    -- end
-    -- return nil
+    if supportsPersistence then
+      -- TODO: Only schedule updates if not prevDidTimeout.
+      if nextDidTimeout then
+        -- If this boundary just timed out, schedule an effect to attach a
+        -- retry listener to the promise. This flag is also used to hide the
+        -- primary children.
+        workInProgress.flags = bit32.bor(workInProgress.flags, Update)
+      end
+    end
+    if supportsMutation then
+      -- TODO: Only schedule updates if these values are non equal, i.e. it changed.
+      if nextDidTimeout or prevDidTimeout then
+        -- If this boundary just timed out, schedule an effect to attach a
+        -- retry listener to the promise. This flag is also used to hide the
+        -- primary children. In mutation mode, we also need the flag to
+        -- *unhide* children that were previously hidden, so check if this
+        -- is currently timed out, too.
+        workInProgress.flags = bit32.bor(workInProgress.flags, Update)
+      end
+    end
+    if
+      enableSuspenseCallback and
+      workInProgress.updateQueue ~= nil and
+      workInProgress.memoizedProps.suspenseCallback ~= nil
+    then
+      -- Always notify the callback
+      workInProgress.flags = bit32.bor(workInProgress.flags, Update)
+    end
+    bubbleProperties(workInProgress)
+    if enableProfilerTimer then
+      if bit32.band(workInProgress.mode, ProfileMode) ~= NoMode then
+        if nextDidTimeout then
+          -- Don't count time spent in a timed out Suspense subtree as part of the base duration.
+          local primaryChildFragment = workInProgress.child
+          if primaryChildFragment ~= nil then
+            -- $FlowFixMe Flow doens't support type casting in combiation with the -= operator
+            -- ROBLOX deviation: remove recast to silence analyze
+            workInProgress.treeBaseDuration -= primaryChildFragment.treeBaseDuration
+          end
+        end
+      end
+    end
+    return nil
   elseif workInProgress.tag == HostPortal then
     popHostContainer(workInProgress)
     updateHostContainer(current, workInProgress)
@@ -1530,33 +1548,32 @@ local function completeWork(
     workInProgress.tag == OffscreenComponent or
     workInProgress.tag == LegacyHiddenComponent
   then
-    unimplemented("OffscreenComponent/LegacyHiddenComponent")
-    -- popRenderLanes(workInProgress)
-    -- local nextState: OffscreenState | nil = workInProgress.memoizedState
-    -- local nextIsHidden = nextState ~= nil
+    popRenderLanes(workInProgress)
+    local nextState: OffscreenState | nil = workInProgress.memoizedState
+    local nextIsHidden = nextState ~= nil
 
-    -- if current ~= nil)
-    --   local prevState: OffscreenState | nil = current.memoizedState
+    if current ~= nil then
+      local prevState: OffscreenState | nil = current.memoizedState
 
-    --   local prevIsHidden = prevState ~= nil
-    --   if
-    --     prevIsHidden ~= nextIsHidden and
-    --     newProps.mode ~= 'unstable-defer-without-hiding'
-    --   )
-    --     workInProgress.flags |= Update
-    --   end
-    -- end
+      local prevIsHidden = prevState ~= nil
+      if
+        prevIsHidden ~= nextIsHidden and
+        newProps.mode ~= 'unstable-defer-without-hiding'
+      then
+        workInProgress.flags = bit32.bor(workInProgress.flags, Update)
+      end
+    end
 
-    -- -- Don't bubble properties for hidden children.
-    -- if
-    --   !nextIsHidden or
-    --   includesSomeLane(subtreeRenderLanes, (OffscreenLane: Lane)) or
-    --   (workInProgress.mode & ConcurrentMode) == NoMode
-    -- )
-    --   bubbleProperties(workInProgress)
-    -- end
+    -- Don't bubble properties for hidden children.
+    if
+      not nextIsHidden or
+      includesSomeLane(subtreeRenderLanes, (OffscreenLane :: Lane)) or
+      bit32.band(workInProgress.mode, ConcurrentMode) == NoMode
+    then
+      bubbleProperties(workInProgress)
+    end
 
-    -- return nil
+    return nil
   end
   invariant(
     false,

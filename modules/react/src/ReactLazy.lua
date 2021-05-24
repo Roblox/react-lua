@@ -130,53 +130,53 @@ exports.lazy = function(
 		_init = lazyInitializer,
 	}
 
-    -- ROBLOX TODO: implement this when the ReactLazy-test file is ported from upstream
-	--   if _G.__DEV__ then
-	--     -- In production, this would just set it on the object.
-	--     local defaultProps
-	--     local propTypes
-	--     -- $FlowFixMe
-	--     Object.defineProperties(lazyType, {
-	--       defaultProps: {
-	--         configurable: true,
-	--         get() {
-	--           return defaultProps
-	--         },
-	--         set(newDefaultProps) {
-	--           console.error(
-	--             'React.lazy(...): It is not supported to assign `defaultProps` to ' +
-	--               'a lazy component import. Either specify them where the component ' +
-	--               'is defined, or create a wrapping component around it.',
-	--           )
-	--           defaultProps = newDefaultProps
-	--           -- Match production behavior more closely:
-	--           -- $FlowFixMe
-	--           Object.defineProperty(lazyType, 'defaultProps', {
-	--             enumerable: true,
-	--           })
-	--         },
-	--       },
-	--       propTypes: {
-	--         configurable: true,
-	--         get() {
-	--           return propTypes
-	--         },
-	--         set(newPropTypes) {
-	--           console.error(
-	--             'React.lazy(...): It is not supported to assign `propTypes` to ' +
-	--               'a lazy component import. Either specify them where the component ' +
-	--               'is defined, or create a wrapping component around it.',
-	--           )
-	--           propTypes = newPropTypes
-	--           -- Match production behavior more closely:
-	--           -- $FlowFixMe
-	--           Object.defineProperty(lazyType, 'propTypes', {
-	--             enumerable: true,
-	--           })
-	--         },
-	--       },
-	--     })
-	--   }
+	if _G.__DEV__ then
+	    -- In production, this would just set it on the object.
+	    local defaultProps
+	    local propTypes
+	    -- $FlowFixMe
+		setmetatable(lazyType, {
+			__index = function(self, key)
+		        if key == "defaultProps" then
+					return defaultProps
+				end
+		        if key == "propTypes" then
+					return propTypes
+				end
+				return
+			end,
+			__newindex = function(self, key, value)
+		        if key == "defaultProps" then
+					console.error(
+						'React.lazy(...): It is not supported to assign `defaultProps` to ' ..
+						  'a lazy component import. Either specify them where the component ' ..
+						  'is defined, or create a wrapping component around it.'
+					  )
+					  defaultProps = value
+					-- Match production behavior more closely:
+					-- $FlowFixMe
+					setmetatable(self, {
+						__index = function() end,
+						__newindex = function() end
+					})
+				end
+		        if key == "propTypes" then
+					console.error(
+					'React.lazy(...): It is not supported to assign `propTypes` to ' ..
+						'a lazy component import. Either specify them where the component ' ..
+						'is defined, or create a wrapping component around it.'
+					)
+					propTypes = value
+					-- Match production behavior more closely:
+					-- $FlowFixMe
+					setmetatable(self, {
+						__index = function() end,
+						__newindex = function() end
+					})
+				end
+			end
+		})
+	end
 
 	return lazyType
 end

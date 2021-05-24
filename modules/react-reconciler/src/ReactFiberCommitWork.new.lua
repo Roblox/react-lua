@@ -10,6 +10,11 @@
 --!nolint LocalShadowPedantic
 -- FIXME (roblox): remove this when our unimplemented
 local function unimplemented(message)
+  print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+  print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+  print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+  print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+  print("UNIMPLEMENTED ERROR: " .. tostring(message))
   error("FIXME (roblox): " .. message .. " is unimplemented", 2)
 end
 
@@ -29,14 +34,19 @@ type TextInstance = ReactFiberHostConfig.TextInstance
 local ReactInternalTypes = require(script.Parent.ReactInternalTypes)
 type Fiber = ReactInternalTypes.Fiber;
 type FiberRoot = ReactInternalTypes.FiberRoot;
--- local type {SuspenseState} = require(script.Parent.ReactFiberSuspenseComponent.new)
+local ReactFiberSuspenseComponent = require(script.Parent["ReactFiberSuspenseComponent.new"])
+type SuspenseState = ReactFiberSuspenseComponent.SuspenseState
+
 local ReactUpdateQueueModule = require(script.Parent["ReactUpdateQueue.new"])
 type UpdateQueue<T> = ReactUpdateQueueModule.UpdateQueue<T>
 
 -- local type {FunctionComponentUpdateQueue} = require(script.Parent.ReactFiberHooks.new)
--- local type {Wakeable} = require(Workspace.Shared.ReactTypes)
+local ReactTypes = require(Workspace.Shared.ReactTypes)
+type Wakeable = ReactTypes.Wakeable
+
 type ReactPriorityLevel = ReactInternalTypes.ReactPriorityLevel
--- local type {OffscreenState} = require(script.Parent.ReactFiberOffscreenComponent)
+local ReactFiberOffscreenComponent = require(script.Parent.ReactFiberOffscreenComponent)
+type OffscreenState = ReactFiberOffscreenComponent.OffscreenState
 local ReactHookEffectTags = require(script.Parent.ReactHookEffectTags)
 type HookFlags = ReactHookEffectTags.HookFlags;
 
@@ -47,7 +57,7 @@ local enableProfilerTimer = ReactFeatureFlags.enableProfilerTimer
 local enableProfilerCommitHooks = ReactFeatureFlags.enableProfilerCommitHooks
 local enableSuspenseServerRenderer = ReactFeatureFlags.enableSuspenseServerRenderer
 local enableFundamentalAPI = ReactFeatureFlags.enableFundamentalAPI
--- local enableSuspenseCallback = ReactFeatureFlags.enableSuspenseCallback
+local enableSuspenseCallback = ReactFeatureFlags.enableSuspenseCallback
 local enableScopeAPI = ReactFeatureFlags.enableScopeAPI
 local enableDoubleInvokingEffects = ReactFeatureFlags.enableDoubleInvokingEffects
 local ReactWorkTags = require(script.Parent.ReactWorkTags)
@@ -120,26 +130,41 @@ local removeChildFromContainer = ReactFiberHostConfig.removeChildFromContainer
 -- local clearSuspenseBoundaryFromContainer = ReactFiberHostConfig.clearSuspenseBoundaryFromContainer
 -- local replaceContainerChildren = ReactFiberHostConfig.replaceContainerChildren
 -- local createContainerChildSet = ReactFiberHostConfig.createContainerChildSet
--- local hideInstance = ReactFiberHostConfig.hideInstance
--- local hideTextInstance = ReactFiberHostConfig.hideTextInstance
--- local unhideInstance = ReactFiberHostConfig.unhideInstance
--- local unhideTextInstance = ReactFiberHostConfig.unhideTextInstance
+local hideInstance = ReactFiberHostConfig.hideInstance
+local hideTextInstance = ReactFiberHostConfig.hideTextInstance
+local unhideInstance = ReactFiberHostConfig.unhideInstance
+local unhideTextInstance = ReactFiberHostConfig.unhideTextInstance
 -- local unmountFundamentalComponent = ReactFiberHostConfig.unmountFundamentalComponent
 -- local updateFundamentalComponent = ReactFiberHostConfig.updateFundamentalComponent
 -- local commitHydratedContainer = ReactFiberHostConfig.commitHydratedContainer
--- local commitHydratedSuspenseInstance = ReactFiberHostConfig.commitHydratedSuspenseInstance
+local commitHydratedSuspenseInstance = ReactFiberHostConfig.commitHydratedSuspenseInstance
 local clearContainer = ReactFiberHostConfig.clearContainer
 -- local prepareScopeUpdate = ReactFiberHostConfig.prepareScopeUpdate
 
--- ROBLOX FIXME: this causes an import cycle
--- local captureCommitPhaseError = require(script.Parent["ReactFiberWorkLoop.new"]).captureCommitPhaseError
--- local schedulePassiveEffectCallback = require(script.Parent["ReactFiberWorkLoop.new"]).schedulePassiveEffectCallback
--- local {
---   captureCommitPhaseError,
---   resolveRetryWakeable,
---   markCommitTimeOfFallback,
---   schedulePassiveEffectCallback,
--- } = require(script.Parent.ReactFiberWorkLoop.new)
+
+-- ROBLOX deviation: Lazy init to avoid circular dependencies
+local ReactFiberWorkLoop
+
+local resolveRetryWakeable = function(...)
+  if not ReactFiberWorkLoop then
+    ReactFiberWorkLoop = require(Workspace.ReactReconciler["ReactFiberWorkLoop.new"]) :: any
+  end
+  return ReactFiberWorkLoop.resolveRetryWakeable(...)
+end
+
+
+local markCommitTimeOfFallback = function(...)
+  if not ReactFiberWorkLoop then
+    ReactFiberWorkLoop = require(Workspace.ReactReconciler["ReactFiberWorkLoop.new"]) :: any
+  end
+  return ReactFiberWorkLoop.markCommitTimeOfFallback(...)
+end
+
+-- local captureCommitPhaseError = ReactFiberWorkLoop.captureCommitPhaseError
+-- local schedulePassiveEffectCallback = ReactFiberWorkLoop.schedulePassiveEffectCallback
+
+local LuauPolyfill = require(Workspace.Parent.LuauPolyfill)
+local Object = LuauPolyfill.Object
 
 -- deviation: stub to allow dependency injection that breaks circular dependency
 local schedulePassiveEffectCallback
@@ -160,7 +185,14 @@ local HookHasEffect = ReactHookEffectTags.HasEffect
 local HookLayout = ReactHookEffectTags.Layout
 local HookPassive = ReactHookEffectTags.Passive
 
-local didWarnAboutReassigningProps = require(script.Parent["ReactFiberBeginWork.new"]).didWarnAboutReassigningProps
+-- ROBLOX deviation: lazy init to break cyclic dependency
+local didWarnAboutReassigningPropsRef
+local didWarnAboutReassigningProps = function()
+  if not didWarnAboutReassigningPropsRef then
+    didWarnAboutReassigningPropsRef = require(script.Parent["ReactFiberBeginWork.new"]).didWarnAboutReassigningProps
+  end
+  return didWarnAboutReassigningPropsRef
+end
 
 -- deviation: Common types
 type Set<T> = { [T]: boolean };
@@ -718,8 +750,7 @@ local function recursivelyCommitLayoutEffects(
       elseif tag == HostComponent then
         commitLayoutEffectsForHostComponent(finishedWork)
       elseif tag == SuspenseComponent then
-        unimplemented("commitSuspenseHydrationCallbacks")
-        -- commitSuspenseHydrationCallbacks(finishedRoot, finishedWork)
+        commitSuspenseHydrationCallbacks(finishedRoot, finishedWork)
       elseif
         tag == FundamentalComponent or
         tag == HostPortal or
@@ -1016,53 +1047,57 @@ commitLayoutEffectsForHostComponent = function(finishedWork: Fiber)
   end
 end
 
--- function hideOrUnhideAllChildren(finishedWork, isHidden)
---   if supportsMutation)
---     -- We only have the top Fiber that was inserted but we need to recurse down its
---     -- children to find all the terminal nodes.
---     local node: Fiber = finishedWork
---     while (true)
---       if node.tag == HostComponent)
---         local instance = node.stateNode
---         if isHidden)
---           hideInstance(instance)
---         } else {
---           unhideInstance(node.stateNode, node.memoizedProps)
---         end
---       } else if node.tag == HostText)
---         local instance = node.stateNode
---         if isHidden)
---           hideTextInstance(instance)
---         } else {
---           unhideTextInstance(instance, node.memoizedProps)
---         end
---       } else if
---         (node.tag == OffscreenComponent or
---           node.tag == LegacyHiddenComponent) and
---         (node.memoizedState: OffscreenState) ~= nil and
---         node ~= finishedWork
---       )
---         -- Found a nested Offscreen component that is hidden. Don't search
---         -- any deeper. This tree should remain hidden.
---       } else if node.child ~= nil)
---         node.child.return = node
---         node = node.child
---         continue
---       end
---       if node == finishedWork)
---         return
---       end
---       while (node.sibling == nil)
---         if node.return == nil or node.return == finishedWork)
---           return
---         end
---         node = node.return
---       end
---       node.sibling.return = node.return
---       node = node.sibling
---     end
---   end
--- end
+local function hideOrUnhideAllChildren(finishedWork, isHidden)
+  if supportsMutation then
+    -- We only have the top Fiber that was inserted but we need to recurse down its
+    -- children to find all the terminal nodes.
+    local node: Fiber = finishedWork
+    while true do
+      if node.tag == HostComponent then
+        local instance = node.stateNode
+        if isHidden then
+          hideInstance(instance)
+        else
+          unhideInstance(node.stateNode, node.memoizedProps)
+        end
+      elseif node.tag == HostText then
+        local instance = node.stateNode
+        if isHidden then
+          hideTextInstance(instance)
+        else
+          unhideTextInstance(instance, node.memoizedProps)
+        end
+      elseif
+        (node.tag == OffscreenComponent or
+          node.tag == LegacyHiddenComponent) and
+        (node.memoizedState :: OffscreenState) ~= nil and
+        node ~= finishedWork
+      then
+        -- Found a nested Offscreen component that is hidden. Don't search
+        -- any deeper. This tree should remain hidden.
+      elseif node.child ~= nil then
+        -- ROBLOX FIXME: type casts to silence analyze, Luau doesn't understand nil check
+        (node.child :: Fiber).return_ = node
+        node = (node.child :: Fiber)
+        continue
+      end
+      if node == finishedWork then
+        return
+      end
+      while node.sibling == nil do
+        if node.return_ == nil or node.return_ == finishedWork then
+          return
+        end
+        -- ROBLOX FIXME: type cast to silence analyze, Luau doesn't understand nil check
+        node = (node.return_ :: Fiber)
+      end
+      -- ROBLOX FIXME: cast to any to silence analyze
+      (node.sibling :: Fiber).return_ = node.return_
+      -- ROBLOX FIXME: recast to silence analyze while Luau doesn't understand nil check
+      node = (node.sibling :: Fiber)
+    end
+  end
+end
 
 function commitAttachRef(finishedWork: Fiber)
   local ref = finishedWork.ref
@@ -1924,10 +1959,9 @@ end
   elseif finishedWork.tag == Profiler then
     return
   elseif finishedWork.tag == SuspenseComponent then
-    unimplemented("commitWork: SuspenseComponent")
-    -- commitSuspenseComponent(finishedWork)
-    -- attachSuspenseRetryListeners(finishedWork)
-    -- return
+    commitSuspenseComponent(finishedWork)
+    attachSuspenseRetryListeners(finishedWork)
+    return
   elseif finishedWork.tag == SuspenseListComponent then
     unimplemented("commitWork: SuspenseListComponent")
     -- attachSuspenseRetryListeners(finishedWork)
@@ -1967,99 +2001,105 @@ end
   )
 end
 
--- function commitSuspenseComponent(finishedWork: Fiber)
---   local newState: SuspenseState | nil = finishedWork.memoizedState
+function commitSuspenseComponent(finishedWork: Fiber)
+  local newState: SuspenseState | nil = finishedWork.memoizedState
 
---   if newState ~= nil)
---     markCommitTimeOfFallback()
+  if newState ~= nil then
+    markCommitTimeOfFallback()
 
---     if supportsMutation)
---       -- Hide the Offscreen component that contains the primary children. TODO:
---       -- Ideally, this effect would have been scheduled on the Offscreen fiber
---       -- itself. That's how unhiding works: the Offscreen component schedules an
---       -- effect on itself. However, in this case, the component didn't complete,
---       -- so the fiber was never added to the effect list in the normal path. We
---       -- could have appended it to the effect list in the Suspense component's
---       -- second pass, but doing it this way is less complicated. This would be
---       -- simpler if we got rid of the effect list and traversed the tree, like
---       -- we're planning to do.
---       local primaryChildParent: Fiber = (finishedWork.child: any)
---       hideOrUnhideAllChildren(primaryChildParent, true)
---     end
---   end
+    if supportsMutation then
+      -- Hide the Offscreen component that contains the primary children. TODO:
+      -- Ideally, this effect would have been scheduled on the Offscreen fiber
+      -- itself. That's how unhiding works: the Offscreen component schedules an
+      -- effect on itself. However, in this case, the component didn't complete,
+      -- so the fiber was never added to the effect list in the normal path. We
+      -- could have appended it to the effect list in the Suspense component's
+      -- second pass, but doing it this way is less complicated. This would be
+      -- simpler if we got rid of the effect list and traversed the tree, like
+      -- we're planning to do.
+      local primaryChildParent: Fiber = (finishedWork.child :: any)
+      hideOrUnhideAllChildren(primaryChildParent, true)
+    end
+  end
 
---   if enableSuspenseCallback and newState ~= nil)
---     local suspenseCallback = finishedWork.memoizedProps.suspenseCallback
---     if typeof suspenseCallback == 'function')
---       local wakeables: Set<Wakeable> | nil = (finishedWork.updateQueue: any)
---       if wakeables ~= nil)
---         suspenseCallback(new Set(wakeables))
---       end
---     } else if _G.__DEV__ then
---       if suspenseCallback ~= undefined)
---         console.error('Unexpected type for suspenseCallback.')
---       end
---     end
---   end
--- end
+  if enableSuspenseCallback and newState ~= nil then
+    local suspenseCallback = finishedWork.memoizedProps.suspenseCallback
+    if typeof(suspenseCallback) == 'function' then
+      local wakeables: Set<Wakeable> | nil = (finishedWork.updateQueue :: any)
+      if wakeables ~= nil then
+        suspenseCallback(Object.assign({}, wakeables))
+      end
+    elseif _G.__DEV__ then
+      if suspenseCallback ~= nil then
+        console.error('Unexpected type for suspenseCallback.')
+      end
+    end
+  end
+end
 
--- function commitSuspenseHydrationCallbacks(
---   finishedRoot: FiberRoot,
---   finishedWork: Fiber,
--- )
---   if !supportsHydration)
---     return
---   end
---   local newState: SuspenseState | nil = finishedWork.memoizedState
---   if newState == nil)
---     local current = finishedWork.alternate
---     if current ~= nil)
---       local prevState: SuspenseState | nil = current.memoizedState
---       if prevState ~= nil)
---         local suspenseInstance = prevState.dehydrated
---         if suspenseInstance ~= nil)
---           commitHydratedSuspenseInstance(suspenseInstance)
---           if enableSuspenseCallback)
---             local hydrationCallbacks = finishedRoot.hydrationCallbacks
---             if hydrationCallbacks ~= nil)
---               local onHydrated = hydrationCallbacks.onHydrated
---               if onHydrated)
---                 onHydrated(suspenseInstance)
---               end
---             end
---           end
---         end
---       end
---     end
---   end
--- end
+function commitSuspenseHydrationCallbacks(
+  finishedRoot: FiberRoot,
+  finishedWork: Fiber
+)
+  if not supportsHydration then
+    return
+  end
+  local newState: SuspenseState | nil = finishedWork.memoizedState
+  if newState == nil then
+    local current = finishedWork.alternate
+    if current ~= nil then
+      local prevState: SuspenseState | nil = current.memoizedState
+      if prevState ~= nil then
+        -- ROBLOX FIXME: recast to silence analyze
+        local suspenseInstance = (prevState :: SuspenseState).dehydrated
+        if suspenseInstance ~= nil then
+          commitHydratedSuspenseInstance(suspenseInstance)
+          if enableSuspenseCallback then
+            local hydrationCallbacks = finishedRoot.hydrationCallbacks
+            if hydrationCallbacks ~= nil then
+              local onHydrated = hydrationCallbacks.onHydrated
+              if onHydrated then
+                onHydrated(suspenseInstance)
+              end
+            end
+          end
+        end
+      end
+    end
+  end
+end
 
--- function attachSuspenseRetryListeners(finishedWork: Fiber)
---   -- If this boundary just timed out, then it will have a set of wakeables.
---   -- For each wakeable, attach a listener so that when it resolves, React
---   -- attempts to re-render the boundary in the primary (pre-timeout) state.
---   local wakeables: Set<Wakeable> | nil = (finishedWork.updateQueue: any)
---   if wakeables ~= nil)
---     finishedWork.updateQueue = nil
---     local retryCache = finishedWork.stateNode
---     if retryCache == nil)
---       retryCache = finishedWork.stateNode = new PossiblyWeakSet()
---     end
---     wakeables.forEach(wakeable => {
---       -- Memoize using the boundary fiber to prevent redundant listeners.
---       local retry = resolveRetryWakeable.bind(null, finishedWork, wakeable)
---       if !retryCache.has(wakeable))
---         if enableSchedulerTracing)
---           if wakeable.__reactDoNotTraceInteractions ~= true)
---             retry = Schedule_tracing_wrap(retry)
---           end
---         end
---         retryCache.add(wakeable)
---         wakeable.then_(retry, retry)
---       end
---     })
---   end
--- end
+function attachSuspenseRetryListeners(finishedWork: Fiber)
+  -- If this boundary just timed out, then it will have a set of wakeables.
+  -- For each wakeable, attach a listener so that when it resolves, React
+  -- attempts to re-render the boundary in the primary (pre-timeout) state.
+  local wakeables: Set<Wakeable> | nil = (finishedWork.updateQueue :: any)
+  if wakeables ~= nil then
+    finishedWork.updateQueue = nil
+    local retryCache = finishedWork.stateNode
+    if retryCache == nil then
+      finishedWork.stateNode = {}
+      retryCache = finishedWork.stateNode
+    end
+    for wakeable, _ in pairs((wakeables :: Set<Wakeable>)) do
+      -- Memoize using the boundary fiber to prevent redundant listeners.
+      local retry = function()
+        return resolveRetryWakeable(finishedWork, wakeable)
+      end
+      
+      if not retryCache[wakeable] then
+        -- ROBLOX FIXME: scheduler tracing unimplemented
+        -- if enableSchedulerTracing then
+          -- if wakeable.__reactDoNotTraceInteractions ~= true then
+          --   retry = Schedule_tracing_wrap(retry)
+          -- end
+        -- end
+        table.insert(retryCache, wakeable)
+        wakeable.then_(retry, retry)
+      end
+    end
+  end
+end
 
 -- -- This function detects when a Suspense boundary goes from visible to hidden.
 -- -- It returns false if the boundary is already hidden.

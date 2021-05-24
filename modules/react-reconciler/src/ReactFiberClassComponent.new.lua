@@ -12,6 +12,11 @@
 
 -- FIXME (roblox): remove this when our unimplemented
 local function unimplemented(message)
+  print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+  print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+  print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+  print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+  print("UNIMPLEMENTED ERROR: " .. tostring(message))
   error("FIXME (roblox): " .. message .. " is unimplemented", 2)
 end
 

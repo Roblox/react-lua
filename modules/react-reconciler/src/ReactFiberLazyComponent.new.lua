@@ -15,7 +15,8 @@ local Object = LuauPolyfill.Object
 type Object = { [any]: any }
 
 local function resolveDefaultProps(Component: any, baseProps: Object): Object
-	if Component and Component.defaultProps then
+	-- ROBLOX deviation: check if type is function before checking defaultProps to prevent function index
+	if typeof(Component) ~= 'function' and Component and Component.defaultProps then
 		-- Resolve default props. Taken from ReactElement
 		local props = Object.assign({}, baseProps)
 		local defaultProps = Component.defaultProps

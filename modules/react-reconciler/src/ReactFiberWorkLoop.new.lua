@@ -9,6 +9,11 @@
 ]]
 -- FIXME (roblox): remove this when our unimplemented
 local function unimplemented(message)
+  print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+  print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+  print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+  print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+  print("UNIMPLEMENTED ERROR: " .. tostring(message))
   error("FIXME (roblox): " .. message .. " is unimplemented", 2)
 end
 
@@ -26,7 +31,8 @@ local ReactFiberLane = require(script.Parent.ReactFiberLane)
 type Lanes = ReactFiberLane.Lanes;
 type Lane = ReactFiberLane.Lane;
 -- local type {Interaction} = require(Workspace.Scheduler.Tracing)
--- local type {SuspenseState} = require(script.Parent["ReactFiberSuspenseComponent.new"])
+local ReactFiberSuspenseComponent = require(script.Parent["ReactFiberSuspenseComponent.new"])
+type SuspenseState = ReactFiberSuspenseComponent.SuspenseState
 local ReactFiberStack = require(script.Parent["ReactFiberStack.new"])
 type StackCursor<T> = ReactFiberStack.StackCursor<T>;
 -- local type {FunctionComponentUpdateQueue} = require(script.Parent["ReactFiberHooks.new"])
@@ -147,7 +153,7 @@ local SyncBatchedLane = ReactFiberLane.SyncBatchedLane
 local NoTimestamp = ReactFiberLane.NoTimestamp
 local findUpdateLane = ReactFiberLane.findUpdateLane
 local findTransitionLane = ReactFiberLane.findTransitionLane
--- local findRetryLane = ReactFiberLane.findRetryLane
+local findRetryLane = ReactFiberLane.findRetryLane
 local includesSomeLane = ReactFiberLane.includesSomeLane
 local isSubsetOfLanes = ReactFiberLane.isSubsetOfLanes
 local mergeLanes = ReactFiberLane.mergeLanes
@@ -176,9 +182,8 @@ local ReactFiberTransition = require(script.Parent.ReactFiberTransition)
 -- deviation: Use properties directly instead of localizing to avoid 200 limit
 -- local requestCurrentTransition = ReactFiberTransition.requestCurrentTransition
 -- local NoTransition = ReactFiberTransition.NoTransition
-local originalBeginWork = require(script.Parent["ReactFiberBeginWork.new"]).beginWork
-local completeWork = require(script.Parent["ReactFiberCompleteWork.new"]).completeWork
-local ReactFiberUnwindWork = require(script.Parent["ReactFiberUnwindWork.new"])
+
+local ReactFiberUnwindWork = require(script.Parent["ReactFiberUnwindWork.new"]) :: any
 local unwindWork = ReactFiberUnwindWork.unwindWork
 local unwindInterruptedWork = ReactFiberUnwindWork.unwindInterruptedWork
 local ReactFiberThrow = require(script.Parent["ReactFiberThrow.new"]) :: any
@@ -210,42 +215,62 @@ local resetContextDependencies = require(script.Parent["ReactFiberNewContext.new
 -- ROBLOX deviation: Pre-declare function
 local ensureRootIsScheduled
 
--- deviation: lazy init for functions from ReactFiberHooks
-local resetHooksAfterThrowRef
-local ContextOnlyDispatcherRef
-local getIsUpdatingOpaqueValueInRenderPhaseInDEVRef
+-- deviation: lazy init for functions from ReactFiberHooks, put in table b/c local var limit
+local lazyInitRefs = {
+  resetHooksAfterThrowRef = nil,
+  ContextOnlyDispatcherRef = nil,
+  getIsUpdatingOpaqueValueInRenderPhaseInDEVRef = nil,
+  originalBeginWorkRef = nil,
+  completeWorkRef = nil
+}
+
+-- ROBLOX deviation: lazy initialize beginwork to break cyclic dependencies
+local originalBeginWork = function(...)
+  if not lazyInitRefs.originalBeginWorkRef then
+    lazyInitRefs.originalBeginWorkRef = require(script.Parent["ReactFiberBeginWork.new"]).beginWork
+  end
+  return lazyInitRefs.originalBeginWorkRef(...)
+end
+
+local completeWork = function(...)
+  if not lazyInitRefs.completeWorkRef then
+    lazyInitRefs.completeWorkRef = require(script.Parent["ReactFiberCompleteWork.new"]).completeWork
+  end
+  return lazyInitRefs.completeWorkRef(...)
+end
+
 
 local ReactFiberHooks
--- deviation: lazy init for functions from ReactFiberHooks
+-- ROBLOX deviation: lazy init for functions from ReactFiberHooks
 local function initReactFiberHooks()
   ReactFiberHooks = require(script.Parent["ReactFiberHooks.new"])
-  resetHooksAfterThrowRef = ReactFiberHooks.resetHooksAfterThrow
-  ContextOnlyDispatcherRef = ReactFiberHooks.ContextOnlyDispatcher
-  getIsUpdatingOpaqueValueInRenderPhaseInDEVRef = ReactFiberHooks.getIsUpdatingOpaqueValueInRenderPhaseInDEV
+  lazyInitRefs.resetHooksAfterThrowRef = ReactFiberHooks.resetHooksAfterThrow
+  lazyInitRefs.ContextOnlyDispatcherRef = ReactFiberHooks.ContextOnlyDispatcher
+  lazyInitRefs.getIsUpdatingOpaqueValueInRenderPhaseInDEVRef = ReactFiberHooks.getIsUpdatingOpaqueValueInRenderPhaseInDEV
 end
 
--- deviation: lazy init for resetHooksAfterThrow from ReactFiberHooks
+-- ROBLOX deviation: lazy init for resetHooksAfterThrow from ReactFiberHooks
 local resetHooksAfterThrow = function(...)
-  if not resetHooksAfterThrowRef then
+  if not lazyInitRefs.resetHooksAfterThrowRef then
     initReactFiberHooks()
   end
-  return resetHooksAfterThrowRef(...)
+  return lazyInitRefs.resetHooksAfterThrowRef(...)
 end
 
--- deviation: lazy init for ContextOnlyDispatcher from ReactFiberHooks
+-- ROBLOX deviation: lazy init for ContextOnlyDispatcher from ReactFiberHooks
 local ContextOnlyDispatcher = function()
-  if not ContextOnlyDispatcherRef then
+  if not lazyInitRefs.ContextOnlyDispatcherRef then
     initReactFiberHooks()
   end
-  return ContextOnlyDispatcherRef
+  return lazyInitRefs.ContextOnlyDispatcherRef
 end
 
--- deviation: lazy init for getIsUpdatingOpaqueValueInRenderPhaseInDEV from ReactFiberHooks
+-- ROBLOX deviation: lazy init for getIsUpdatingOpaqueValueInRenderPhaseInDEV from ReactFiberHooks
 local getIsUpdatingOpaqueValueInRenderPhaseInDEV = function(...)
-  if not getIsUpdatingOpaqueValueInRenderPhaseInDEVRef then
+  if not lazyInitRefs.getIsUpdatingOpaqueValueInRenderPhaseInDEVRef then
     initReactFiberHooks()
   end
-  return getIsUpdatingOpaqueValueInRenderPhaseInDEVRef(...)
+  return lazyInitRefs.getIsUpdatingOpaqueValueInRenderPhaseInDEVRef(...)
 end
 
 local createCapturedValue = require(script.Parent.ReactCapturedValue).createCapturedValue
@@ -283,7 +308,7 @@ local ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher
 local ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner
 local IsSomeRendererActing = ReactSharedInternals.IsSomeRendererActing
 local  captureCommitPhaseErrorOnRoot, flushPassiveMountEffects
--- deviation: Common types
+-- ROBLOX deviation: Common types
 type Set<T> = { [T]: boolean };
 type Array<T> = { [number]: T };
 
@@ -291,7 +316,7 @@ local exports: any = {}
 
 -- local ceil = math.ceil
 
--- deviation: Pre-declare functions
+-- ROBLOX deviation: Pre-declare functions
 local mod: { [string]: any } = {}
 
 type ExecutionContext = number;
@@ -308,10 +333,10 @@ local RetryAfterError = --[[              ]] 0b1000000
 exports.NoContext = NoContext
 exports.RetryAfterError = RetryAfterError
 
--- deviation: Luau doesn't yet support literal types
+-- ROBLOX deviation: Luau doesn't yet support literal types
 -- type RootExitStatus = 0 | 1 | 2 | 3 | 4 | 5
 type RootExitStatus = number;
--- deviation: Define constants in a table instead of locals to avoid 200 limit
+-- ROBLOX deviation: Define constants in a table instead of locals to avoid 200 limit
 local RootExitStatus: { [string]: RootExitStatus } = {
   Incomplete = 0,
   FatalErrored = 1,
@@ -552,27 +577,30 @@ exports.requestUpdateLane = function(fiber: Fiber): Lane
   return lane
 end
 
--- function requestRetryLane(fiber: Fiber)
---   -- This is a fork of `requestUpdateLane` designed specifically for Suspense
---   -- "retries" — a special update that attempts to flip a Suspense boundary
---   -- from its placeholder state to its primary/resolved state.
+function requestRetryLane(fiber: Fiber)
+  -- This is a fork of `requestUpdateLane` designed specifically for Suspense
+  -- "retries" — a special update that attempts to flip a Suspense boundary
+  -- from its placeholder state to its primary/resolved state.
 
---   -- Special cases
---   local mode = fiber.mode
---   if (mode & ReactTypeOfMode.BlockingMode) == ReactTypeOfMode.NoMode)
---     return (SyncLane: Lane)
---   } else if (mode & ReactTypeOfMode.ConcurrentMode) == ReactTypeOfMode.NoMode)
---     return getCurrentPriorityLevel() == ImmediateSchedulerPriority
---       ? (SyncLane: Lane)
---       : (SyncBatchedLane: Lane)
---   end
+  -- Special cases
+  local mode = fiber.mode
+  if bit32.band(mode, ReactTypeOfMode.BlockingMode) == ReactTypeOfMode.NoMode then
+    return SyncLane
+  elseif bit32.band(mode, ReactTypeOfMode.ConcurrentMode) == ReactTypeOfMode.NoMode then
+    return (function()
+      if getCurrentPriorityLevel() == ImmediateSchedulerPriority then
+       return SyncLane
+      end
+      return SyncBatchedLane
+    end)()
+  end
 
---   -- See `requestUpdateLane` for explanation of `currentEventWipLanes`
---   if currentEventWipLanes == ReactFiberLane.NoLanes)
---     currentEventWipLanes = workInProgressRootIncludedLanes
---   end
---   return findRetryLane(currentEventWipLanes)
--- end
+  -- See `requestUpdateLane` for explanation of `currentEventWipLanes`
+  if currentEventWipLanes == ReactFiberLane.NoLanes then
+    currentEventWipLanes = workInProgressRootIncludedLanes
+  end
+  return findRetryLane(currentEventWipLanes)
+end
 
 exports.scheduleUpdateOnFiber = function(
   fiber: Fiber,
@@ -978,11 +1006,10 @@ mod.finishConcurrentRender = function(root, exitStatus, lanes)
         -- The render is suspended, it hasn't timed out, and there's no
         -- lower priority work to do. Instead of committing the fallback
         -- immediately, wait for more data to arrive.
-        unimplemented("scheduleTimeout")
-        -- root.timeoutHandle = scheduleTimeout(
-        --   mod.commitRoot.bind(null, root),
-        --   msUntilTimeout
-        -- )
+        root.timeoutHandle = ReactFiberHostConfig.scheduleTimeout(
+          function() return mod.commitRoot(root) end,
+          msUntilTimeout
+        )
         return
       end
     end
@@ -1015,11 +1042,10 @@ mod.finishConcurrentRender = function(root, exitStatus, lanes)
       if msUntilTimeout > 10 then
         -- Instead of committing the fallback immediately, wait for more data
         -- to arrive.
-        unimplemented("scheduleTimeout")
-        -- root.timeoutHandle = scheduleTimeout(
-        --   mod.commitRoot.bind(null, root),
-        --   msUntilTimeout
-        -- )
+        root.timeoutHandle = ReactFiberHostConfig.scheduleTimeout(
+          function() return mod.commitRoot(root) end,
+          msUntilTimeout
+        )
         return
       end
     end
@@ -1205,7 +1231,7 @@ mod.flushPendingDiscreteUpdates = function()
     -- immediately flush them.
     local roots = rootsWithPendingDiscreteUpdates
     rootsWithPendingDiscreteUpdates = nil
-    -- deviation: proper for loop instead of forEach;
+    -- ROBLOX deviation: proper for loop instead of forEach;
     -- rootsWithPendingDiscreteUpdates is a Set, so we use the keys
     for root, _ in pairs(roots) do
       markDiscreteUpdatesExpired(root)
@@ -1216,7 +1242,7 @@ mod.flushPendingDiscreteUpdates = function()
   flushSyncCallbackQueue()
 end
 
--- deviation: FIXME establish generics in signature when Luau supports this
+-- ROBLOX deviation: FIXME establish generics in signature when Luau supports this
 -- local function batchedUpdates<A, R>(fn: A => R, a: A): R
 exports.batchedUpdates = function(fn: (any) -> any, a: any): any
   local prevExecutionContext = executionContext
@@ -1248,7 +1274,7 @@ exports.batchedUpdates = function(fn: (any) -> any, a: any): any
   end
 end
 
--- deviation: FIXME establish generics in signature when Luau supports this
+-- ROBLOX deviation: FIXME establish generics in signature when Luau supports this
 -- local function batchedEventUpdates<A, R>(fn: A => R, a: A): R
 exports.batchedEventUpdates = function(fn: (any) -> any, a: any): any
   local prevExecutionContext = executionContext
@@ -1345,7 +1371,7 @@ exports.discreteUpdates = function(fn: (any, any, any, any) -> any, a, b, c, d):
   end
 end
 
--- deviation: FIXME establish generics in signature when Luau supports this
+-- ROBLOX deviation: FIXME establish generics in signature when Luau supports this
 -- local function unbatchedUpdates<A, R>(fn: A => R, a: A): R
 exports.unbatchedUpdates = function(fn: (any) -> any, a: any): any
   local prevExecutionContext = executionContext
@@ -1377,7 +1403,7 @@ exports.unbatchedUpdates = function(fn: (any) -> any, a: any): any
   end
 end
 
--- deviation: FIXME establish generics in signature when Luau supports this
+-- ROBLOX deviation: FIXME establish generics in signature when Luau supports this
 -- <A, R>(fn: A => R, a: A): R
 exports.flushSync = function(fn: (any) -> any, a: any): any
   local prevExecutionContext = executionContext
@@ -1636,14 +1662,14 @@ end
 mod.pushDispatcher = function()
   local prevDispatcher = ReactCurrentDispatcher.current
 
-  -- deviation: lazy init of ContextOnlyDispatcher wrapped in a function
+  -- ROBLOX deviation: lazy init of ContextOnlyDispatcher wrapped in a function
   ReactCurrentDispatcher.current = ContextOnlyDispatcher()
   if prevDispatcher == nil then
     -- The React isomorphic package does not include a default dispatcher.
     -- Instead the first renderer will lazily attach one, in order to give
     -- nicer error messages.
 
-    -- deviation: lazy init of ContextOnlyDispatcher wrapped in a function
+    -- ROBLOX deviation: lazy init of ContextOnlyDispatcher wrapped in a function
     return ContextOnlyDispatcher()
   else
     return prevDispatcher
@@ -1848,7 +1874,7 @@ mod.renderRootConcurrent = function(root: ReactInternalTypes.FiberRoot, lanes: L
     -- ROBLOX deviation: YOLO flag for disabling pcall
     local ok, thrownValue
     if not _G.__YOLO__ then
-      -- deviation: when converting `try` to `pcall`, we can't use break inside it
+      -- ROBLOX deviation: when converting `try` to `pcall`, we can't use break inside it
       ok, thrownValue = pcall(function()
         mod.workLoopConcurrent()
         return "break"
@@ -3078,73 +3104,73 @@ exports.captureCommitPhaseError = function(
 end
 end
 
--- exports.pingSuspendedRoot(
---   root: ReactInternalTypes.FiberRoot,
---   wakeable: Wakeable,
---   pingedLanes: Lanes,
--- )
---   local pingCache = root.pingCache
---   if pingCache ~= nil)
---     -- The wakeable resolved, so we no longer need to memoize, because it will
---     -- never be thrown again.
---     pingCache.delete(wakeable)
---   end
+exports.pingSuspendedRoot = function(
+  root: ReactInternalTypes.FiberRoot,
+  wakeable: Wakeable,
+  pingedLanes: Lanes
+)
+  local pingCache = root.pingCache
+  if pingCache ~= nil then
+    -- The wakeable resolved, so we no longer need to memoize, because it will
+    -- never be thrown again.
+    pingCache[wakeable] = nil
+  end
 
---   local eventTime = requestEventTime()
---   markRootPinged(root, pingedLanes, eventTime)
+  local eventTime = exports.requestEventTime()
+  markRootPinged(root, pingedLanes, eventTime)
 
---   if
---     workInProgressRoot == root and
---     isSubsetOfLanes(workInProgressRootRenderLanes, pingedLanes)
---   )
---     -- Received a ping at the same priority level at which we're currently
---     -- rendering. We might want to restart this render. This should mirror
---     -- the logic of whether or not a root suspends once it completes.
+  if
+    workInProgressRoot == root and
+    isSubsetOfLanes(workInProgressRootRenderLanes, pingedLanes)
+  then
+    -- Received a ping at the same priority level at which we're currently
+    -- rendering. We might want to restart this render. This should mirror
+    -- the logic of whether or not a root suspends once it completes.
 
---     -- TODO: If we're rendering sync either due to Sync, Batched or expired,
---     -- we should probably never restart.
+    -- TODO: If we're rendering sync either due to Sync, Batched or expired,
+    -- we should probably never restart.
 
---     -- If we're suspended with delay, or if it's a retry, we'll always suspend
---     -- so we can always restart.
---     if
---       workInProgressRootExitStatus == RootExitStatus.SuspendedWithDelay or
---       (workInProgressRootExitStatus == RootExitStatus.Suspended and
---         includesOnlyRetries(workInProgressRootRenderLanes) and
---         now() - globalMostRecentFallbackTime < FALLBACK_THROTTLE_MS)
---     )
---       -- Restart from the root.
---       mod.prepareFreshStack(root, ReactFiberLane.NoLanes)
---     } else {
---       -- Even though we can't restart right now, we might get an
---       -- opportunity later. So we mark this render as having a ping.
---       workInProgressRootPingedLanes = mergeLanes(
---         workInProgressRootPingedLanes,
---         pingedLanes,
---       )
---     end
---   end
+    -- If we're suspended with delay, or if it's a retry, we'll always suspend
+    -- so we can always restart.
+    if
+      workInProgressRootExitStatus == RootExitStatus.SuspendedWithDelay or
+      workInProgressRootExitStatus == RootExitStatus.Suspended and
+        includesOnlyRetries(workInProgressRootRenderLanes) and
+        now() - globalMostRecentFallbackTime < FALLBACK_THROTTLE_MS
+    then
+      -- Restart from the root.
+      mod.prepareFreshStack(root, ReactFiberLane.NoLanes)
+    else
+      -- Even though we can't restart right now, we might get an
+      -- opportunity later. So we mark this render as having a ping.
+      workInProgressRootPingedLanes = mergeLanes(
+        workInProgressRootPingedLanes,
+        pingedLanes
+      )
+    end
+  end
 
---   ensureRootIsScheduled(root, eventTime)
---   mod.schedulePendingInteractions(root, pingedLanes)
--- end
+  ensureRootIsScheduled(root, eventTime)
+  mod.schedulePendingInteractions(root, pingedLanes)
+end
 
--- function retryTimedOutBoundary(boundaryFiber: Fiber, retryLane: Lane)
---   -- The boundary fiber (a Suspense component or SuspenseList component)
---   -- previously was rendered in its fallback state. One of the promises that
---   -- suspended it has resolved, which means at least part of the tree was
---   -- likely unblocked. Try rendering again, at a new expiration time.
---   if retryLane == NoLane)
---     retryLane = requestRetryLane(boundaryFiber)
---   end
---   -- TODO: Special case idle priority?
---   local eventTime = requestEventTime()
---   local root = mod.markUpdateLaneFromFiberToRoot(boundaryFiber, retryLane)
---   if root ~= nil)
---     markRootUpdated(root, retryLane, eventTime)
---     ensureRootIsScheduled(root, eventTime)
---     mod.schedulePendingInteractions(root, retryLane)
---   end
--- end
+function retryTimedOutBoundary(boundaryFiber: Fiber, retryLane: Lane)
+  -- The boundary fiber (a Suspense component or SuspenseList component)
+  -- previously was rendered in its fallback state. One of the promises that
+  -- suspended it has resolved, which means at least part of the tree was
+  -- likely unblocked. Try rendering again, at a new expiration time.
+  if retryLane == ReactFiberLane.NoLane then
+    retryLane = requestRetryLane(boundaryFiber)
+  end
+  -- TODO: Special case idle priority?
+  local eventTime = exports.requestEventTime()
+  local root = mod.markUpdateLaneFromFiberToRoot(boundaryFiber, retryLane)
+  if root ~= nil then
+    markRootUpdated(root, retryLane, eventTime)
+    ensureRootIsScheduled(root, eventTime)
+    mod.schedulePendingInteractions(root, retryLane)
+  end
+end
 
 -- exports.retryDehydratedSuspenseBoundary(boundaryFiber: Fiber)
 --   local suspenseState: nil | SuspenseState = boundaryFiber.memoizedState
@@ -3155,40 +3181,38 @@ end
 --   retryTimedOutBoundary(boundaryFiber, retryLane)
 -- end
 
--- exports.resolveRetryWakeable(boundaryFiber: Fiber, wakeable: Wakeable)
---   local retryLane = NoLane; -- Default
---   local retryCache: WeakSet<Wakeable> | Set<Wakeable> | nil
---   if enableSuspenseServerRenderer)
---     switch (boundaryFiber.tag)
---       case SuspenseComponent:
---         retryCache = boundaryFiber.stateNode
---         local suspenseState: nil | SuspenseState = boundaryFiber.memoizedState
---         if suspenseState ~= nil)
---           retryLane = suspenseState.retryLane
---         end
---         break
---       case SuspenseListComponent:
---         retryCache = boundaryFiber.stateNode
---         break
---       default:
---         invariant(
---           false,
---           'Pinged unknown suspense boundary type. ' +
---             'This is probably a bug in React.',
---         )
---     end
---   } else {
---     retryCache = boundaryFiber.stateNode
---   end
+exports.resolveRetryWakeable = function(boundaryFiber: Fiber, wakeable: Wakeable)
+  local retryLane = ReactFiberLane.NoLane -- Default
+  local retryCache -- : WeakSet<Wakeable> | Set<Wakeable> | nil
+  if ReactFeatureFlags.enableSuspenseServerRenderer then
+    if boundaryFiber.tag == ReactWorkTags.SuspenseComponent then
+        retryCache = boundaryFiber.stateNode
+        local suspenseState: nil | SuspenseState = boundaryFiber.memoizedState
+        if suspenseState ~= nil then
+          -- ROBLOX FIXME: remove recast
+          retryLane = (suspenseState :: SuspenseState).retryLane
+        end
+      elseif boundaryFiber.tag == ReactWorkTags.SuspenseListComponent then
+        retryCache = boundaryFiber.stateNode
+      else
+        invariant(
+          false,
+          'Pinged unknown suspense boundary type. ' ..
+            'This is probably a bug in React.'
+        )
+    end
+  else
+    retryCache = boundaryFiber.stateNode
+  end
 
---   if retryCache ~= nil)
---     -- The wakeable resolved, so we no longer need to memoize, because it will
---     -- never be thrown again.
---     retryCache.delete(wakeable)
---   end
+  if retryCache ~= nil then
+    -- The wakeable resolved, so we no longer need to memoize, because it will
+    -- never be thrown again.
+    retryCache[wakeable] = nil
+  end
 
---   retryTimedOutBoundary(boundaryFiber, retryLane)
--- end
+  retryTimedOutBoundary(boundaryFiber, retryLane)
+end
 
 -- Computes the next Just Noticeable Difference (JND) boundary.
 -- The theory is that a person can't tell the difference between small differences in time.

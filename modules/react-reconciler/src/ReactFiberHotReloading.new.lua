@@ -236,8 +236,8 @@ exports.markFailedErrorBoundaryForHotReloading = function(fiber: Fiber)
 		if failedBoundaries == nil then
 			failedBoundaries = {}
 		end
-		local failedBoundariesAsAny: any = failedBoundaries
-		table.insert(failedBoundariesAsAny, fiber)
+        -- ROBLOX FIXME: remove :: once Luau understands nil check
+		table.insert((failedBoundaries :: { [number]: Fiber }), fiber)
 	end
 end
 

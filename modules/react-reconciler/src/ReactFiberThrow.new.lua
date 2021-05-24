@@ -54,7 +54,7 @@ local NoMode = ReactTypeOfMode.NoMode
 local BlockingMode = ReactTypeOfMode.BlockingMode
 local DebugTracingMode = ReactTypeOfMode.DebugTracingMode
 local ReactFeatureFlags = require(Workspace.Shared.ReactFeatureFlags)
--- local {
+
 local enableDebugTracing = ReactFeatureFlags.enableDebugTracing
 local enableSchedulingProfiler = ReactFeatureFlags.enableSchedulingProfiler
 local createCapturedValue = require(script.Parent.ReactCapturedValue).createCapturedValue
@@ -65,16 +65,16 @@ local CaptureUpdate = ReactUpdateQueue.CaptureUpdate
 local ForceUpdate = ReactUpdateQueue.ForceUpdate
 local enqueueUpdate = ReactUpdateQueue.enqueueUpdate
 local markFailedErrorBoundaryForHotReloading = require(script.Parent["ReactFiberHotReloading.new"]).markFailedErrorBoundaryForHotReloading
--- local {
---   suspenseStackCursor,
---   InvisibleParentSuspenseContext,
---   hasSuspenseContext,
--- } = require(Workspace../ReactFiberSuspenseContext.new'
+
+local hasSuspenseContext = ReactFiberSuspenseContext.hasSuspenseContext
+local InvisibleParentSuspenseContext = ReactFiberSuspenseContext.InvisibleParentSuspenseContext
+local suspenseStackCursor = ReactFiberSuspenseContext.suspenseStackCursor
+
 
 -- ROBLOX FIXME: these will incur a dependency cycle
 -- onUncaughtError would be very easy to extract out, or to transplant into this file
 local ReactFiberWorkLoop
-local markLegacyErrorBoundaryAsFailedRef, isAlreadyFailedLegacyErrorBoundaryRef
+local markLegacyErrorBoundaryAsFailedRef, isAlreadyFailedLegacyErrorBoundaryRef, pingSuspendedRootRef
 
 -- ROBLOX deviation: lazy initialize ReactFiberWorkLoop to prevent cyclic module dependency
 local markLegacyErrorBoundaryAsFailed = function(...)
@@ -91,7 +91,13 @@ end
 --   isAlreadyFailedLegacyErrorBoundary,
 --   pingSuspendedRoot,
 -- } = require(Workspace../ReactFiberWorkLoop.new'
-
+local pingSuspendedRoot = function(...)
+  if ReactFiberWorkLoop == nil then
+    ReactFiberWorkLoop = require(script.Parent["ReactFiberWorkLoop.new"])
+  end
+  pingSuspendedRootRef = ReactFiberWorkLoop.pingSuspendedRoot
+  return pingSuspendedRootRef(...)
+end
 local isAlreadyFailedLegacyErrorBoundary = function(...)
   if ReactFiberWorkLoop == nil then
     ReactFiberWorkLoop = require(script.Parent["ReactFiberWorkLoop.new"])
@@ -114,6 +120,11 @@ local pickArbitraryLane = ReactFiberLane.pickArbitraryLane
 
 -- FIXME (roblox): remove this when our unimplemented
 local function unimplemented(message)
+  print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+  print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+  print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+  print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+  print("UNIMPLEMENTED ERROR: " .. tostring(message))
   error("FIXME (roblox): " .. message .. " is unimplemented", 2)
 end
 
@@ -205,31 +216,33 @@ function createClassErrorUpdate(
   return update
 end
 
-function attachPingListener(root: FiberRoot, wakeable: Wakeable, lanes: Lanes)
+local function attachPingListener(root: FiberRoot, wakeable: Wakeable, lanes: Lanes)
   -- Attach a listener to the promise to "ping" the root and retry. But only if
   -- one does not already exist for the lanes we're currently rendering (which
   -- acts like a "thread ID" here).
-  local _pingCache = root.pingCache
-  local _threadIDs
-
-  unimplemented("attachPingListener")
-  -- if pingCache == nil then
-  --   pingCache = root.pingCache = new PossiblyWeakMap()
-  --   threadIDs = new Set()
-  --   pingCache.set(wakeable, threadIDs)
-  -- } else {
-  --   threadIDs = pingCache.get(wakeable)
-  --   if threadIDs == undefined)
-  --     threadIDs = new Set()
-  --     pingCache.set(wakeable, threadIDs)
-  --   }
-  -- }
-  -- if !threadIDs.has(lanes))
-  --   -- Memoize using the thread ID to prevent redundant listeners.
-  --   threadIDs.add(lanes)
-  --   local ping = pingSuspendedRoot.bind(null, root, wakeable, lanes)
-  --   wakeable.then(ping, ping)
-  -- }
+  local pingCache = root.pingCache
+  local threadIDs
+  if pingCache == nil then
+    -- ROBLOX deviation: use table in place of WeakMap
+    root.pingCache = {}
+    pingCache = root.pingCache
+    threadIDs = {}
+    pingCache[wakeable] = threadIDs
+  else
+    threadIDs = pingCache[wakeable]
+    if threadIDs == nil then
+      threadIDs = {}
+      pingCache[wakeable] = threadIDs
+    end
+  end
+  if not threadIDs[lanes] then
+    -- Memoize using the thread ID to prevent redundant listeners.
+    threadIDs[lanes] = true
+    local ping = function()
+      return pingSuspendedRoot(root, wakeable, lanes)
+    end
+    wakeable.then_(ping, ping)
+  end
 end
 
 function throwException(
@@ -281,13 +294,10 @@ function throwException(
       end
     end
 
-    -- ROBLOX FIXME: hasSuspenseContext
-    console.warn("throwException: hasSuspenseContext unimplemented")
-    local hasInvisibleParentBoundary = false
-    -- local hasInvisibleParentBoundary = hasSuspenseContext(
-    --   suspenseStackCursor.current,
-    --   (InvisibleParentSuspenseContext: SuspenseContext),
-    -- )
+    local hasInvisibleParentBoundary = hasSuspenseContext(
+      suspenseStackCursor.current,
+      (InvisibleParentSuspenseContext :: SuspenseContext)
+    )
 
     -- Schedule the nearest Suspense to re-render the timed out view.
     local workInProgress = returnFiber

@@ -7,10 +7,6 @@
  *
  * @flow
 ]]
--- FIXME (roblox): remove this when our unimplemented
--- local function unimplemented(message)
--- 	error("FIXME (roblox): " .. message .. " is unimplemented", 2)
--- end
 
 -- UpdateQueue is a linked list of prioritized updates.
 --

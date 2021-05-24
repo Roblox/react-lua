@@ -9,6 +9,11 @@
 ]]
 -- FIXME (roblox): remove this when our unimplemented
 local function unimplemented(message)
+  print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+  print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+  print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+  print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+  print("UNIMPLEMENTED ERROR: " .. tostring(message))
   error("FIXME (roblox): " .. message .. " is unimplemented")
 end
 
@@ -574,9 +579,8 @@ function mountReducer(
   local hook = mountWorkInProgressHook()
   local initialState
   if init ~= nil then
-    -- deviation: recast to any to silence analyze error
-    local initAsAny: any = init
-    initialState = initAsAny(initialArg)
+    -- ROBLOX FIXME: remove :: once Luau understnads nil check
+    initialState = (init :: (any) -> any)(initialArg)
   else
     -- ROBLOX TODO: recast initialArg to ((initialArg: any): S)
     initialState = initialArg

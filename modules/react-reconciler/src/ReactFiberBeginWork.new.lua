@@ -10,6 +10,11 @@
 --!nolint LocalShadowPedantic
 -- FIXME (roblox): remove this when our unimplemented
 local function unimplemented(message)
+  print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+  print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+  print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+  print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+  print("UNIMPLEMENTED ERROR: " .. tostring(message))
   error("FIXME (roblox): " .. message .. " is unimplemented", 2)
 end
 
@@ -29,16 +34,17 @@ local ReactFiberLane = require(script.Parent.ReactFiberLane)
 type Lanes = ReactFiberLane.Lanes;
 -- type Lane = ReactFiberLane.Lane;
 -- local type {MutableSource} = require(Workspace.Shared.ReactTypes)
--- local type {
---   SuspenseState,
---   SuspenseListRenderState,
---   SuspenseListTailMode,
--- } = require(script.Parent.ReactFiberSuspenseComponent.new)
--- local type {SuspenseContext} = require(script.Parent.ReactFiberSuspenseContext.new)
--- local type {
---   OffscreenProps,
---   OffscreenState,
--- } = require(script.Parent.ReactFiberOffscreenComponent)
+
+local ReactFiberSuspenseComponent = require(script.Parent["ReactFiberSuspenseComponent.new"])
+type SuspenseState = ReactFiberSuspenseComponent.SuspenseState
+type SuspenseListRenderState = ReactFiberSuspenseComponent.SuspenseListRenderState
+type SuspenseListTailMode = ReactFiberSuspenseComponent.SuspenseListTailMode
+local ReactFiberSuspenseContext = require(script.Parent["ReactFiberSuspenseContext.new"])
+type SuspenseContext = ReactFiberSuspenseContext.SuspenseContext
+
+local ReactFiberOffscreenComponent = require(script.Parent.ReactFiberOffscreenComponent)
+type OffscreenProps = ReactFiberOffscreenComponent.OffscreenProps
+type OffscreenState = ReactFiberOffscreenComponent.OffscreenState
 
 local checkPropTypes = require(Workspace.Shared.checkPropTypes)
 
@@ -68,6 +74,7 @@ local OffscreenComponent = ReactWorkTags.OffscreenComponent
 local LegacyHiddenComponent = ReactWorkTags.LegacyHiddenComponent
 local ReactFiberFlags = require(script.Parent.ReactFiberFlags)
 local NoFlags = ReactFiberFlags.NoFlags
+local StaticMask = ReactFiberFlags.StaticMask
 local PerformedWork = ReactFiberFlags.PerformedWork
 local Placement = ReactFiberFlags.Placement
 local Hydrating = ReactFiberFlags.Hydrating
@@ -83,8 +90,8 @@ local debugRenderPhaseSideEffectsForStrictMode = ReactFeatureFlags.debugRenderPh
 local disableLegacyContext = ReactFeatureFlags.disableLegacyContext
 local disableModulePatternComponents = ReactFeatureFlags.disableModulePatternComponents
 local enableProfilerTimer = ReactFeatureFlags.enableProfilerTimer
--- local enableSchedulerTracing = ReactFeatureFlags.enableSchedulerTracing
--- local enableSuspenseServerRenderer = ReactFeatureFlags.enableSuspenseServerRenderer
+local enableSchedulerTracing = ReactFeatureFlags.enableSchedulerTracing
+local enableSuspenseServerRenderer = ReactFeatureFlags.enableSuspenseServerRenderer
 local enableFundamentalAPI = ReactFeatureFlags.enableFundamentalAPI
 local warnAboutDefaultPropsOnFunctionComponents = ReactFeatureFlags.warnAboutDefaultPropsOnFunctionComponents
 local enableScopeAPI = ReactFeatureFlags.enableScopeAPI
@@ -111,45 +118,43 @@ local ReactUpdateQueue = require(script.Parent["ReactUpdateQueue.new"])
 local processUpdateQueue = ReactUpdateQueue.processUpdateQueue
 local cloneUpdateQueue = ReactUpdateQueue.cloneUpdateQueue
 local initializeUpdateQueue = ReactUpdateQueue.initializeUpdateQueue
--- local NoLane = ReactFiberLane.NoLane
+local NoLane = ReactFiberLane.NoLane
 local NoLanes = ReactFiberLane.NoLanes
--- local SyncLane = ReactFiberLane.SyncLane
--- local OffscreenLane = ReactFiberLane.OffscreenLane
--- local DefaultHydrationLane = ReactFiberLane.DefaultHydrationLane
--- local SomeRetryLane = ReactFiberLane.SomeRetryLane
--- local NoTimestamp = ReactFiberLane.NoTimestamp
+local SyncLane = ReactFiberLane.SyncLane
+local OffscreenLane = ReactFiberLane.OffscreenLane
+local DefaultHydrationLane = ReactFiberLane.DefaultHydrationLane
+local SomeRetryLane = ReactFiberLane.SomeRetryLane
+local NoTimestamp = ReactFiberLane.NoTimestamp
 local includesSomeLane = ReactFiberLane.includesSomeLane
--- local laneToLanes = ReactFiberLane.laneToLanes
--- local removeLanes = ReactFiberLane.removeLanes
--- local mergeLanes = ReactFiberLane.mergeLanes
--- local getBumpedLaneForHydration = ReactFiberLane.getBumpedLaneForHydration
+local laneToLanes = ReactFiberLane.laneToLanes
+local removeLanes = ReactFiberLane.removeLanes
+local mergeLanes = ReactFiberLane.mergeLanes
+local getBumpedLaneForHydration = ReactFiberLane.getBumpedLaneForHydration
 local ReactTypeOfMode = require(script.Parent.ReactTypeOfMode)
--- local ConcurrentMode = ReactTypeOfMode.ConcurrentMode
--- local NoMode = ReactTypeOfMode.NoMode
--- local ProfileMode = ReactTypeOfMode.ProfileMode
+local ConcurrentMode = ReactTypeOfMode.ConcurrentMode
+local NoMode = ReactTypeOfMode.NoMode
+local ProfileMode = ReactTypeOfMode.ProfileMode
 local StrictMode = ReactTypeOfMode.StrictMode
--- local BlockingMode = ReactTypeOfMode.BlockingMode
+local BlockingMode = ReactTypeOfMode.BlockingMode
 local ReactFiberHostConfig = require(script.Parent.ReactFiberHostConfig)
 local shouldSetTextContent = ReactFiberHostConfig.shouldSetTextContent
--- local isSuspenseInstancePending = ReactFiberHostConfig.isSuspenseInstancePending
--- local isSuspenseInstanceFallback = ReactFiberHostConfig.isSuspenseInstanceFallback
--- local registerSuspenseInstanceRetry = ReactFiberHostConfig.registerSuspenseInstanceRetry
+local isSuspenseInstancePending = ReactFiberHostConfig.isSuspenseInstancePending
+local isSuspenseInstanceFallback = ReactFiberHostConfig.isSuspenseInstanceFallback
+local registerSuspenseInstanceRetry = ReactFiberHostConfig.registerSuspenseInstanceRetry
 local supportsHydration = ReactFiberHostConfig.supportsHydration
--- local type {SuspenseInstance} = require(script.Parent.ReactFiberHostConfig)
--- local {shouldSuspend} = require(script.Parent.ReactFiberReconciler)
+type SuspenseInstance = ReactFiberHostConfig.SuspenseInstance
+
 local ReactFiberHostContext = require(script.Parent["ReactFiberHostContext.new"])
 local pushHostContext = ReactFiberHostContext.pushHostContext
 local pushHostContainer = ReactFiberHostContext.pushHostContainer
--- local {
---   suspenseStackCursor,
---   pushSuspenseContext,
---   InvisibleParentSuspenseContext,
---   ForceSuspenseFallback,
---   hasSuspenseContext,
---   setDefaultShallowSuspenseContext,
---   addSubtreeSuspenseContext,
---   setShallowSuspenseContext,
--- } = require(script.Parent.ReactFiberSuspenseContext.new)
+local suspenseStackCursor = ReactFiberSuspenseContext.suspenseStackCursor
+local hasSuspenseContext = ReactFiberSuspenseContext.hasSuspenseContext
+local ForceSuspenseFallback = ReactFiberSuspenseContext.ForceSuspenseFallback
+local addSubtreeSuspenseContext = ReactFiberSuspenseContext.addSubtreeSuspenseContext
+local InvisibleParentSuspenseContext = ReactFiberSuspenseContext.InvisibleParentSuspenseContext
+local pushSuspenseContext = ReactFiberSuspenseContext.pushSuspenseContext
+-- local setShallowSuspenseContext = ReactFiberSuspenseContext.setShallowSuspenseContext
+local setDefaultShallowSuspenseContext = ReactFiberSuspenseContext.setDefaultShallowSuspenseContext
 -- local {findFirstSuspended} = require(script.Parent.ReactFiberSuspenseComponent.new)
 -- local {
 --   ,
@@ -161,31 +166,41 @@ local calculateChangedBits = ReactFiberNewContext.calculateChangedBits
 local prepareToReadContext = ReactFiberNewContext.prepareToReadContext
 local pushProvider = ReactFiberNewContext.pushProvider
 
--- deviation: Lazy init all methods from ReactFiberHooks
-local renderWithHooksRef
-local bailoutHooksRef
+-- ROBLOX deviation: Lazy init all methods from ReactFiberHooks
+local lazyRefs = {
+  renderWithHooksRef = nil,
+  bailoutHooksRef = nil,
+  shouldSuspendRef = nil
+}
 
--- deviation: collective lazy init methods from ReactFiberHooks
+local shouldSuspend = function(...)
+  if not lazyRefs.shouldSuspendRef then
+    lazyRefs.shouldSuspendRef = require(script.Parent.ReactFiberReconciler).shouldSuspend
+  end
+  return lazyRefs.shouldSuspendRef(...)
+end
+
+-- ROBLOX deviation: collective lazy init methods from ReactFiberHooks
 local initReactFiberHooks = function()
   local ReactFiberHooks = require(script.Parent["ReactFiberHooks.new"])
-  renderWithHooksRef = ReactFiberHooks.renderWithHooks
-  bailoutHooksRef = ReactFiberHooks.bailoutHooks
+  lazyRefs.renderWithHooksRef = ReactFiberHooks.renderWithHooks
+  lazyRefs.bailoutHooksRef = ReactFiberHooks.bailoutHooks
 end
 
--- deviation: Lazy init renderWithHooks from ReactFiberHooks
+-- ROBLOX deviation: Lazy init renderWithHooks from ReactFiberHooks
 local renderWithHooks = function(...)
-  if not renderWithHooksRef then
+  if not lazyRefs.renderWithHooksRef then
     initReactFiberHooks()
   end
-  return renderWithHooksRef(...)
+  return lazyRefs.renderWithHooksRef(...)
 end
 
--- deviation: Lazy init bailoutHooks from ReactFiberHooks
+-- ROBLOX deviation: Lazy init bailoutHooks from ReactFiberHooks
 local bailoutHooks = function(...)
-  if not bailoutHooksRef then
+  if not lazyRefs.bailoutHooksRef then
     initReactFiberHooks()
   end
-  return bailoutHooksRef(...)
+  return lazyRefs.bailoutHooksRef(...)
 end
 
 -- local {stopProfilerTimerIfRunning} = require(script.Parent.ReactProfilerTimer.new)
@@ -201,9 +216,9 @@ local invalidateContextProvider = ReactFiberContext.invalidateContextProvider
 local ReactFiberHydrationContext = require(script.Parent["ReactFiberHydrationContext.new"])
 local resetHydrationState = ReactFiberHydrationContext.resetHydrationState
 local enterHydrationState = ReactFiberHydrationContext.enterHydrationState
--- local reenterHydrationStateFromDehydratedSuspenseInstance = ReactFiberHydrationContext.reenterHydrationStateFromDehydratedSuspenseInstance
+local reenterHydrationStateFromDehydratedSuspenseInstance = ReactFiberHydrationContext.reenterHydrationStateFromDehydratedSuspenseInstance
 local tryToClaimNextHydratableInstance = ReactFiberHydrationContext.tryToClaimNextHydratableInstance
--- local warnIfHydrating = ReactFiberHydrationContext.warnIfHydrating
+local warnIfHydrating = ReactFiberHydrationContext.warnIfHydrating
 local ReactFiberClassComponent = require(script.Parent["ReactFiberClassComponent.new"]) :: any
 local adoptClassInstance = ReactFiberClassComponent.adoptClassInstance
 local applyDerivedStateFromProps = ReactFiberClassComponent.applyDerivedStateFromProps
@@ -213,27 +228,26 @@ local resumeMountClassInstance = ReactFiberClassComponent.resumeMountClassInstan
 local updateClassInstance = ReactFiberClassComponent.updateClassInstance
 
 local resolveDefaultProps = require(script.Parent["ReactFiberLazyComponent.new"]).resolveDefaultProps
--- local {
---   createFiberFromFragment,
---   createFiberFromOffscreen,
---   createWorkInProgress,
---   isSimpleFunctionComponent,
+
 local ReactFiber = require(script.Parent["ReactFiber.new"])
 local resolveLazyComponentTag = ReactFiber.resolveLazyComponentTag
+local createFiberFromFragment = ReactFiber.createFiberFromFragment
+local createFiberFromOffscreen = ReactFiber.createFiberFromOffscreen
+local createWorkInProgress = ReactFiber.createWorkInProgress
+-- local isSimpleFunctionComponent = ReactFiber.isSimpleFunctionComponent
+
 local createFiberFromTypeAndProps = ReactFiber.createFiberFromTypeAndProps
--- local ReactFiberWorkLoop = require(script.Parent["ReactFiberWorkLoop.new"])
--- local pushRenderLanes = ReactFiberWorkLoop.pushRenderLanes
--- local markSpawnedWork = ReactFiberWorkLoop.markSpawnedWork
--- local {
---   retryDehydratedSuspenseBoundary,
---   scheduleUpdateOnFiber,
---   renderDidSuspendDelayIfPossible,
---   markSkippedUpdateLanes,
---   getWorkInProgressRoot,
---   getExecutionContext,
---   RetryAfterError,
---   NoContext,
--- } = require(script.Parent.ReactFiberWorkLoop.new)
+local ReactFiberWorkLoop = require(script.Parent["ReactFiberWorkLoop.new"]) :: any
+local pushRenderLanes = ReactFiberWorkLoop.pushRenderLanes
+local markSpawnedWork = ReactFiberWorkLoop.markSpawnedWork
+local retryDehydratedSuspenseBoundary = ReactFiberWorkLoop.retryDehydratedSuspenseBoundary
+local scheduleUpdateOnFiber = ReactFiberWorkLoop.scheduleUpdateOnFiber
+local renderDidSuspendDelayIfPossible = ReactFiberWorkLoop.renderDidSuspendDelayIfPossible
+local getWorkInProgressRoot = ReactFiberWorkLoop.getWorkInProgressRoot
+local getExecutionContext = ReactFiberWorkLoop.getExecutionContext
+local RetryAfterError = ReactFiberWorkLoop.RetryAfterError
+local NoContext = ReactFiberWorkLoop.NoContext
+
 -- local {unstable_wrap as Schedule_tracing_wrap} = require(Workspace.scheduler/tracing'
 local setWorkInProgressVersion = require(script.Parent["ReactMutableSource.new"]).setWorkInProgressVersion
 local markSkippedUpdateLanes = require(script.Parent.ReactFiberWorkInProgress).markSkippedUpdateLanes
@@ -245,31 +259,35 @@ local ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner
 
 local exports: {[string]: any} = {}
 
--- deviation: Pre-declare functions
+-- ROBLOX deviation: Pre-declare functions
 local bailoutOnAlreadyFinishedWork, updateFunctionComponent
 
 local didReceiveUpdate: boolean = false
 
-local didWarnAboutBadClass
-local didWarnAboutModulePatternComponent
-local didWarnAboutContextTypeOnFunctionComponent
-local didWarnAboutGetDerivedStateOnFunctionComponent
-local didWarnAboutFunctionRefs
+
+-- ROBLOX deviation: put didWarns in table to reduce number of local variables
+local DidWarn = {
+  didWarnAboutBadClass = nil,
+  didWarnAboutModulePatternComponent = nil,
+  didWarnAboutContextTypeOnFunctionComponent = nil,
+  didWarnAboutGetDerivedStateOnFunctionComponent = nil,
+  didWarnAboutFunctionRefs = nil,
+  didWarnAboutDefaultPropsOnFunctionComponent = nil
+}
 -- export local didWarnAboutReassigningProps
 -- local didWarnAboutRevealOrder
 -- local didWarnAboutTailOptions
-local didWarnAboutDefaultPropsOnFunctionComponent
 
 if _G.__DEV__ then
-  didWarnAboutBadClass = {}
-  didWarnAboutModulePatternComponent = {}
-  didWarnAboutContextTypeOnFunctionComponent = {}
-  didWarnAboutGetDerivedStateOnFunctionComponent = {}
-  didWarnAboutFunctionRefs = {}
+  DidWarn.didWarnAboutBadClass = {}
+  DidWarn.didWarnAboutModulePatternComponent = {}
+  DidWarn.didWarnAboutContextTypeOnFunctionComponent = {}
+  DidWarn.didWarnAboutGetDerivedStateOnFunctionComponent = {}
+  DidWarn.didWarnAboutFunctionRefs = {}
   exports.didWarnAboutReassigningProps = false
 --   didWarnAboutRevealOrder = {}
 --   didWarnAboutTailOptions = {}
-  didWarnAboutDefaultPropsOnFunctionComponent = {}
+  DidWarn.didWarnAboutDefaultPropsOnFunctionComponent = {}
 end
 
 -- FIXME (roblox): type refinements, reintroduce parameter annotation
@@ -386,7 +404,7 @@ local function updateForwardRef(
     )
     if
       debugRenderPhaseSideEffectsForStrictMode and
-      bit32.band(workInProgress.mode, StrictMode)
+      bit32.band(workInProgress.mode, StrictMode) ~= 0
     then
       disableLogs()
       local ok, result = pcall(function()
@@ -598,7 +616,7 @@ end
 --           workInProgress,
 --           renderLanes,
 --         )
---       } else if (current.flags & ForceUpdateForLegacySuspense) ~= NoFlags)
+--       } elseif (current.flags & ForceUpdateForLegacySuspense) ~= NoFlags)
 --         -- This is a special case that only exists for legacy mode.
 --         -- See https://github.com/facebook/react/pull/19216.
 --         didReceiveUpdate = true
@@ -614,94 +632,98 @@ end
 --   )
 -- end
 
--- local function updateOffscreenComponent(
---   current: Fiber?,
---   workInProgress: Fiber,
---   renderLanes: Lanes
--- )
---   local nextProps: OffscreenProps = workInProgress.pendingProps
---   local nextChildren = nextProps.children
+local function updateOffscreenComponent(
+  current: Fiber?,
+  workInProgress: Fiber,
+  renderLanes: Lanes
+)
+  local nextProps: OffscreenProps = workInProgress.pendingProps
+  local nextChildren = nextProps.children
 
---   local prevState: OffscreenState?
---   if current ~= nil then
---     prevState = current.MutableSourceMemoizedState
---   end
+  local prevState: OffscreenState?
+  if current ~= nil then
+    -- ROBLOX FIXME: remove :: recast once Luau understands if-statement nil checks
+    prevState = (current :: Fiber).memoizedState
+  end
 
---   if
---     nextProps.mode == 'hidden' or
---     nextProps.mode == 'unstable-defer-without-hiding' then
---     if bit32.band(workInProgress.mode, ConcurrentMode) == NoMode then
---       -- In legacy sync mode, don't defer the subtree. Render it now.
---       -- TODO: Figure out what we should do in Blocking mode.
---       local nextState: OffscreenState = {
---         baseLanes = NoLanes
---       }
---       workInProgress.memoizedState = nextState
---       pushRenderLanes(workInProgress, renderLanes)
---     -- ROBLOX TODO: recast OffscreenLane to type Lane
---     elseif not includesSomeLane(renderLanes, OffscreenLane) then
---       local nextBaseLanes
---       if prevState ~= nil then
---         local prevBaseLanes = prevState.baseLanes
---         nextBaseLanes = mergeLanes(prevBaseLanes, renderLanes)
---       else
---         nextBaseLanes = renderLanes
---       end
+  if
+    nextProps.mode == 'hidden' or
+    nextProps.mode == 'unstable-defer-without-hiding' then
+    if bit32.band(workInProgress.mode, ConcurrentMode) == NoMode then
+      -- In legacy sync mode, don't defer the subtree. Render it now.
+      -- TODO: Figure out what we should do in Blocking mode.
+      local nextState: OffscreenState = {
+        baseLanes = NoLanes
+      }
+      workInProgress.memoizedState = nextState
+      pushRenderLanes(workInProgress, renderLanes)
+    -- ROBLOX TODO: recast OffscreenLane to type Lane
+    elseif not includesSomeLane(renderLanes, OffscreenLane) then
+      local nextBaseLanes
+      if prevState ~= nil then
+        -- ROBLOX FIXME: remove :: recast once Luau understands if-statement nil check
+        local prevBaseLanes = (prevState :: OffscreenState).baseLanes
+        nextBaseLanes = mergeLanes(prevBaseLanes, renderLanes)
+      else
+        nextBaseLanes = renderLanes
+      end
 
---       -- Schedule this fiber to re-render at offscreen priority. Then bailout.
---       if enableSchedulerTracing then
---         -- ROBLOX TODO: recast OffscreenLane to type Lane
---         markSpawnedWork(OffscreenLane)
---       end
+      -- Schedule this fiber to re-render at offscreen priority. Then bailout.
+      if enableSchedulerTracing then
+        -- ROBLOX TODO: recast OffscreenLane to type Lane
+        markSpawnedWork(OffscreenLane)
+      end
 
---       -- deviation: unchain multiple assignment into two discrete assignments.
---       workInProgress.childLanes = laneToLanes(
---         OffscreenLane
---       )
---       workInProgress.lanes = workInProgress.childLanes
+      -- deviation: unchain multiple assignment into two discrete assignments.
+      workInProgress.childLanes = laneToLanes(
+        OffscreenLane
+      )
+      workInProgress.lanes = workInProgress.childLanes
 
---       local nextState: OffscreenState = {
---         baseLanes = nextBaseLanes
---       }
---       workInProgress.memoizedState = nextState
---       -- We're about to bail out, but we need to push this to the stack anyway
---       -- to avoid a push/pop misalignment.
---       pushRenderLanes(workInProgress, nextBaseLanes)
---       return nil
---     else
---       -- Rendering at offscreen, so we can clear the base lanes.
---       local nextState: OffscreenState = {
---         baseLanes = NoLanes
---       }
---       workInProgress.memoizedState = nextState
---       -- Push the lanes that were skipped when we bailed out.
---       local subtreeRenderLanes = renderLanes
+      local nextState: OffscreenState = {
+        baseLanes = nextBaseLanes
+      }
+      workInProgress.memoizedState = nextState
+      -- We're about to bail out, but we need to push this to the stack anyway
+      -- to avoid a push/pop misalignment.
+      pushRenderLanes(workInProgress, nextBaseLanes)
+      return nil
+    else
+      -- Rendering at offscreen, so we can clear the base lanes.
+      local nextState: OffscreenState = {
+        baseLanes = NoLanes
+      }
+      workInProgress.memoizedState = nextState
+      -- Push the lanes that were skipped when we bailed out.
+      local subtreeRenderLanes = renderLanes
 
---       -- deviation: ternary converted to if statement
---       if prevState ~= nil then
---         subtreeRenderLanes = prevState.baseLanes
---       end
+      -- deviation: ternary converted to if statement
+      if prevState ~= nil then
+        -- ROBLOX FIXME: remove :: recast once Luau understands if-statement nil check
+        subtreeRenderLanes = (prevState :: OffscreenState).baseLanes
+      end
 
---       pushRenderLanes(workInProgress, subtreeRenderLanes)
---     end
---   else
---     local subtreeRenderLanes
---     if prevState ~= nil then
---       subtreeRenderLanes = mergeLanes(prevState.baseLanes, renderLanes)
---       -- Since we're not hidden anymore, reset the state
---       workInProgress.memoizedState = nil
---     else
---       -- We weren't previously hidden, and we still aren't, so there's nothing
---       -- special to do. Need to push to the stack regardless, though, to avoid
---       -- a push/pop misalignment.
---       subtreeRenderLanes = renderLanes
---     end
---     pushRenderLanes(workInProgress, subtreeRenderLanes)
---   end
+      pushRenderLanes(workInProgress, subtreeRenderLanes)
+    end
+  else
+    local subtreeRenderLanes
+    if prevState ~= nil then
+        -- ROBLOX FIXME: remove :: recast once Luau understands if-statement nil check
+      subtreeRenderLanes = mergeLanes((prevState :: OffscreenState).baseLanes, renderLanes)
+      -- Since we're not hidden anymore, reset the state
+      workInProgress.memoizedState = nil
+    else
+      -- We weren't previously hidden, and we still aren't, so there's nothing
+      -- special to do. Need to push to the stack regardless, though, to avoid
+      -- a push/pop misalignment.
+      subtreeRenderLanes = renderLanes
+    end
+    pushRenderLanes(workInProgress, subtreeRenderLanes)
+  end
 
---   reconcileChildren(current, workInProgress, nextChildren, renderLanes)
---   return workInProgress.child
--- end
+  reconcileChildren(current, workInProgress, nextChildren, renderLanes)
+  return workInProgress.child
+end
 
 -- -- Note: These happen to have identical begin phases, for now. We shouldn't hold
 -- -- ourselves to this constraint, though. If the behavior diverges, we should
@@ -767,7 +789,8 @@ updateFunctionComponent = function(
   renderLanes
 )
   if _G.__DEV__ then
-    if workInProgress.type ~= workInProgress.elementType then
+    -- ROBLOX deviation: function components can't have props in Lua
+    if typeof(Component) ~= 'function' and (workInProgress.type ~= workInProgress.elementType) then
       -- Lazy component props can't be validated in createElement
       -- because they're only guaranteed to be resolved here.
       local innerPropTypes = Component.propTypes
@@ -1084,15 +1107,12 @@ function finishClassComponent(
   -- React DevTools reads this flag.
   workInProgress.flags = bit32.bor(workInProgress.flags, PerformedWork)
   if current ~= nil and didCaptureError then
-    -- Recast to silence analyze
-    local currentAsAny: any = current
-
     -- If we're recovering from an error, reconcile without reusing any of
     -- the existing children. Conceptually, the normal children and the children
     -- that are shown on error are two different sets, so we shouldn't reuse
     -- normal children even if their identities match.
     forceUnmountCurrentAndReconcile(
-      currentAsAny,
+      (current :: Fiber),
       workInProgress,
       nextChildren,
       renderLanes
@@ -1252,7 +1272,7 @@ local function updateHostComponent(
   return workInProgress.child
 end
 
-function updateHostText(current, workInProgress)
+local function updateHostText(current, workInProgress)
   if current == nil then
     tryToClaimNextHydratableInstance(workInProgress)
   end
@@ -1261,7 +1281,7 @@ function updateHostText(current, workInProgress)
   return nil
 end
 
-function mountLazyComponent(
+local function mountLazyComponent(
   _current,
   workInProgress,
   elementType,
@@ -1488,14 +1508,14 @@ local function mountIndeterminateComponent(
     then
       local componentName = getComponentName(Component) or "Unknown"
 
-      if not didWarnAboutBadClass[componentName] then
+      if not DidWarn.didWarnAboutBadClass[componentName] then
         console.error(
           "The <%s /> component appears to have a render method, but doesn't extend React.Component. " ..
             "This is likely to cause errors. Change %s to extend React.Component instead.",
           componentName,
           componentName
         )
-        didWarnAboutBadClass[componentName] = true
+        DidWarn.didWarnAboutBadClass[componentName] = true
       end
     end
 
@@ -1537,7 +1557,7 @@ local function mountIndeterminateComponent(
       value["$$typeof"] == nil
     then
       local componentName = getComponentName(Component) or "Unknown"
-      if not didWarnAboutModulePatternComponent[componentName] then
+      if not DidWarn.didWarnAboutModulePatternComponent[componentName] then
         console.error(
           "The <%s /> component appears to be a function component that returns a class instance. " ..
             "Change %s to a class that extends React.Component instead. " ..
@@ -1548,7 +1568,7 @@ local function mountIndeterminateComponent(
           componentName,
           componentName
         )
-        didWarnAboutModulePatternComponent[componentName] = true
+        DidWarn.didWarnAboutModulePatternComponent[componentName] = true
       end
     end
   end
@@ -1563,7 +1583,7 @@ local function mountIndeterminateComponent(
   then
     if _G.__DEV__ then
       local componentName = getComponentName(Component) or "Unknown"
-      if not didWarnAboutModulePatternComponent[componentName] then
+      if not DidWarn.didWarnAboutModulePatternComponent[componentName] then
         console.error(
           "The <%s /> component appears to be a function component that returns a class instance. " ..
             "Change %s to a class that extends React.Component instead. " ..
@@ -1574,7 +1594,7 @@ local function mountIndeterminateComponent(
           componentName,
           componentName
         )
-        didWarnAboutModulePatternComponent[componentName] = true
+        DidWarn.didWarnAboutModulePatternComponent[componentName] = true
       end
     end
 
@@ -1686,8 +1706,8 @@ function validateFunctionComponentInDev(workInProgress: Fiber, Component: any)
       if debugSource then
         warningKey = debugSource.fileName .. ':' .. debugSource.lineNumber
       end
-      if not didWarnAboutFunctionRefs[warningKey] then
-        didWarnAboutFunctionRefs[warningKey] = true
+      if not DidWarn.didWarnAboutFunctionRefs[warningKey] then
+        DidWarn.didWarnAboutFunctionRefs[warningKey] = true
         console.error(
           'Function components cannot be given refs. ' ..
             'Attempts to access this ref will fail. ' ..
@@ -1705,13 +1725,13 @@ function validateFunctionComponentInDev(workInProgress: Fiber, Component: any)
     then
       local componentName = getComponentName(Component) or 'Unknown'
 
-      if not didWarnAboutDefaultPropsOnFunctionComponent[componentName] then
+      if not DidWarn.didWarnAboutDefaultPropsOnFunctionComponent[componentName] then
         console.error(
           '%s: Support for defaultProps will be removed from function components ' ..
             'in a future major release. Use JavaScript default parameters instead.',
           componentName
         )
-        didWarnAboutDefaultPropsOnFunctionComponent[componentName] = true
+        DidWarn.didWarnAboutDefaultPropsOnFunctionComponent[componentName] = true
       end
     end
 
@@ -1719,12 +1739,12 @@ function validateFunctionComponentInDev(workInProgress: Fiber, Component: any)
     if typeof(Component) ~= 'function' and typeof(Component.getDerivedStateFromProps) == 'function' then
       local componentName = getComponentName(Component) or 'Unknown'
 
-      if not didWarnAboutGetDerivedStateOnFunctionComponent[componentName] then
+      if not DidWarn.didWarnAboutGetDerivedStateOnFunctionComponent[componentName] then
         console.error(
           '%s: Function components do not support getDerivedStateFromProps.',
           componentName
         )
-        didWarnAboutGetDerivedStateOnFunctionComponent[componentName] = true
+        DidWarn.didWarnAboutGetDerivedStateOnFunctionComponent[componentName] = true
       end
     end
 
@@ -1735,805 +1755,830 @@ function validateFunctionComponentInDev(workInProgress: Fiber, Component: any)
     then
       local componentName = getComponentName(Component) or 'Unknown'
 
-      if not didWarnAboutContextTypeOnFunctionComponent[componentName] then
+      if not DidWarn.didWarnAboutContextTypeOnFunctionComponent[componentName] then
         console.error(
           '%s: Function components do not support contextType.',
           componentName
         )
-        didWarnAboutContextTypeOnFunctionComponent[componentName] = true
+        DidWarn.didWarnAboutContextTypeOnFunctionComponent[componentName] = true
       end
     end
   end
 end
 
--- local SUSPENDED_MARKER: SuspenseState = {
---   dehydrated: nil,
---   retryLane: NoLane,
--- end
+local SUSPENDED_MARKER: SuspenseState = {
+  dehydrated = nil,
+  retryLane = NoLane
+}
 
--- function mountSuspenseOffscreenState(renderLanes: Lanes): OffscreenState {
---   return {
---     baseLanes: renderLanes,
---   end
--- end
+local function mountSuspenseOffscreenState(renderLanes: Lanes): OffscreenState
+  return {
+    baseLanes = renderLanes
+  }
+end
 
--- function updateSuspenseOffscreenState(
---   prevOffscreenState: OffscreenState,
---   renderLanes: Lanes,
--- ): OffscreenState {
---   return {
---     baseLanes: mergeLanes(prevOffscreenState.baseLanes, renderLanes),
---   end
--- end
+local function updateSuspenseOffscreenState(
+  prevOffscreenState: OffscreenState,
+  renderLanes: Lanes
+): OffscreenState
+  return {
+    baseLanes = mergeLanes(prevOffscreenState.baseLanes, renderLanes),
+  }
+end
 
--- -- TODO: Probably should inline this back
--- function shouldRemainOnFallback(
---   suspenseContext: SuspenseContext,
---   current: nil | Fiber,
---   workInProgress: Fiber,
---   renderLanes: Lanes,
--- )
---   -- If we're already showing a fallback, there are cases where we need to
---   -- remain on that fallback regardless of whether the content has resolved.
---   -- For example, SuspenseList coordinates when nested content appears.
---   if current ~= nil)
---     local suspenseState: SuspenseState = current.memoizedState
---     if suspenseState == nil)
---       -- Currently showing content. Don't hide it, even if ForceSuspenseFallack
---       -- is true. More precise name might be "ForceRemainSuspenseFallback".
---       -- Note: This is a factoring smell. Can't remain on a fallback if there's
---       -- no fallback to remain on.
---       return false
---     end
---   end
+-- TODO: Probably should inline this back
+local function shouldRemainOnFallback(
+  suspenseContext: SuspenseContext,
+  current: nil | Fiber,
+  workInProgress: Fiber,
+  renderLanes: Lanes
+)
+  -- If we're already showing a fallback, there are cases where we need to
+  -- remain on that fallback regardless of whether the content has resolved.
+  -- For example, SuspenseList coordinates when nested content appears.
+  if current ~= nil then
+    local suspenseState: SuspenseState = (current :: Fiber).memoizedState
+    if suspenseState == nil then
+      -- Currently showing content. Don't hide it, even if ForceSuspenseFallack
+      -- is true. More precise name might be "ForceRemainSuspenseFallback".
+      -- Note: This is a factoring smell. Can't remain on a fallback if there's
+      -- no fallback to remain on.
+      return false
+    end
+  end
 
---   -- Not currently showing content. Consult the Suspense context.
---   return hasSuspenseContext(
---     suspenseContext,
---     (ForceSuspenseFallback: SuspenseContext),
---   )
--- end
+  -- Not currently showing content. Consult the Suspense context.
+  return hasSuspenseContext(
+    suspenseContext,
+    ForceSuspenseFallback
+  )
+end
 
--- function getRemainingWorkInPrimaryTree(current: Fiber, renderLanes)
---   -- TODO: Should not remove render lanes that were pinged during this render
---   return removeLanes(current.childLanes, renderLanes)
--- end
+local function getRemainingWorkInPrimaryTree(current: Fiber, renderLanes)
+  -- TODO: Should not remove render lanes that were pinged during this render
+  return removeLanes(current.childLanes, renderLanes)
+end
 
--- function updateSuspenseComponent(current, workInProgress, renderLanes)
---   local nextProps = workInProgress.pendingProps
+-- ROBLOX deviation: predeclare these methods to resolve method declaration ordering
+local updateSuspensePrimaryChildren
+local mountDehydratedSuspenseComponent
+local mountSuspensePrimaryChildren
+local updateSuspenseFallbackChildren
+local updateDehydratedSuspenseComponent
 
---   -- This is used by DevTools to force a boundary to suspend.
---   if  _G.__DEV__ then
---     if shouldSuspend(workInProgress))
---       workInProgress.flags |= DidCapture
---     end
---   end
+local function updateSuspenseComponent(current, workInProgress, renderLanes)
+  local nextProps = workInProgress.pendingProps
 
---   local suspenseContext: SuspenseContext = suspenseStackCursor.current
+  -- This is used by DevTools to force a boundary to suspend.
+  if  _G.__DEV__ then
+    if shouldSuspend(workInProgress) then
+      workInProgress.flags = bit32.bor(workInProgress.flags, DidCapture)
+    end
+  end
 
---   local showFallback = false
---   local didSuspend = (workInProgress.flags & DidCapture) ~= NoFlags
+  local suspenseContext: SuspenseContext = suspenseStackCursor.current
 
---   if
---     didSuspend or
---     shouldRemainOnFallback(
---       suspenseContext,
---       current,
---       workInProgress,
---       renderLanes,
---     )
---   )
---     -- Something in this boundary's subtree already suspended. Switch to
---     -- rendering the fallback children.
---     showFallback = true
---     workInProgress.flags &= ~DidCapture
---   else
---     -- Attempting the main content
---     if
---       current == nil or
---       (current.memoizedState: nil | SuspenseState) ~= nil
---     )
---       -- This is a new mount or this boundary is already showing a fallback state.
---       -- Mark this subtree context as having at least one invisible parent that could
---       -- handle the fallback state.
---       -- Boundaries without fallbacks or should be avoided are not considered since
---       -- they cannot handle preferred fallback states.
---       if
---         nextProps.fallback ~= undefined and
---         nextProps.unstable_avoidThisFallback ~= true
---       )
---         suspenseContext = addSubtreeSuspenseContext(
---           suspenseContext,
---           InvisibleParentSuspenseContext,
---         )
---       end
---     end
---   end
+  local showFallback = false
+  local didSuspend = bit32.band(workInProgress.flags, DidCapture) ~= NoFlags
 
---   suspenseContext = setDefaultShallowSuspenseContext(suspenseContext)
+  if
+    didSuspend or
+    shouldRemainOnFallback(
+      suspenseContext,
+      current,
+      workInProgress,
+      renderLanes
+    )
+  then
+    -- Something in this boundary's subtree already suspended. Switch to
+    -- rendering the fallback children.
+    showFallback = true
+    workInProgress.flags = bit32.band(workInProgress.flags, bit32.bnot(DidCapture))
+  else
+    -- Attempting the main content
+    if
+      current == nil or
+      current.memoizedState ~= nil
+    then
+      -- This is a new mount or this boundary is already showing a fallback state.
+      -- Mark this subtree context as having at least one invisible parent that could
+      -- handle the fallback state.
+      -- Boundaries without fallbacks or should be avoided are not considered since
+      -- they cannot handle preferred fallback states.
+      if
+        nextProps.fallback ~= nil and
+        nextProps.unstable_avoidThisFallback ~= true
+      then
+        suspenseContext = addSubtreeSuspenseContext(
+          suspenseContext,
+          InvisibleParentSuspenseContext
+        )
+      end
+    end
+  end
 
---   pushSuspenseContext(workInProgress, suspenseContext)
+  suspenseContext = setDefaultShallowSuspenseContext(suspenseContext)
 
---   -- OK, the next part is confusing. We're about to reconcile the Suspense
---   -- boundary's children. This involves some custom reconcilation logic. Two
---   -- main reasons this is so complicated.
---   --
---   -- First, Legacy Mode has different semantics for backwards compatibility. The
---   -- primary tree will commit in an inconsistent state, so when we do the
---   -- second pass to render the fallback, we do some exceedingly, uh, clever
---   -- hacks to make that not totally break. Like transferring effects and
---   -- deletions from hidden tree. In Concurrent Mode, it's much simpler,
---   -- because we bailout on the primary tree completely and leave it in its old
---   -- state, no effects. Same as what we do for Offscreen (except that
---   -- Offscreen doesn't have the first render pass).
---   --
---   -- Second is hydration. During hydration, the Suspense fiber has a slightly
---   -- different layout, where the child points to a dehydrated fragment, which
---   -- contains the DOM rendered by the server.
---   --
---   -- Third, even if you set all that aside, Suspense is like error boundaries in
---   -- that we first we try to render one tree, and if that fails, we render again
---   -- and switch to a different tree. Like a try/catch block. So we have to track
---   -- which branch we're currently rendering. Ideally we would model this using
---   -- a stack.
---   if current == nil)
---     -- Initial mount
---     -- If we're currently hydrating, try to hydrate this boundary.
---     -- But only if this has a fallback.
---     if nextProps.fallback ~= undefined)
---       tryToClaimNextHydratableInstance(workInProgress)
---       -- This could've been a dehydrated suspense component.
---       if enableSuspenseServerRenderer)
---         local suspenseState: nil | SuspenseState =
---           workInProgress.memoizedState
---         if suspenseState ~= nil)
---           local dehydrated = suspenseState.dehydrated
---           if dehydrated ~= nil)
---             return mountDehydratedSuspenseComponent(
---               workInProgress,
---               dehydrated,
---               renderLanes,
---             )
---           end
---         end
---       end
---     end
+  pushSuspenseContext(workInProgress, suspenseContext)
 
---     local nextPrimaryChildren = nextProps.children
---     local nextFallbackChildren = nextProps.fallback
---     if showFallback)
---       local fallbackFragment = mountSuspenseFallbackChildren(
---         workInProgress,
---         nextPrimaryChildren,
---         nextFallbackChildren,
---         renderLanes,
---       )
---       local primaryChildFragment: Fiber = (workInProgress.child: any)
---       primaryChildFragment.memoizedState = mountSuspenseOffscreenState(
---         renderLanes,
---       )
---       workInProgress.memoizedState = SUSPENDED_MARKER
---       return fallbackFragment
---     } else if typeof nextProps.unstable_expectedLoadTime == 'number')
---       -- This is a CPU-bound tree. Skip this tree and show a placeholder to
---       -- unblock the surrounding content. Then immediately retry after the
---       -- initial commit.
---       local fallbackFragment = mountSuspenseFallbackChildren(
---         workInProgress,
---         nextPrimaryChildren,
---         nextFallbackChildren,
---         renderLanes,
---       )
---       local primaryChildFragment: Fiber = (workInProgress.child: any)
---       primaryChildFragment.memoizedState = mountSuspenseOffscreenState(
---         renderLanes,
---       )
---       workInProgress.memoizedState = SUSPENDED_MARKER
+  -- OK, the next part is confusing. We're about to reconcile the Suspense
+  -- boundary's children. This involves some custom reconcilation logic. Two
+  -- main reasons this is so complicated.
+  --
+  -- First, Legacy Mode has different semantics for backwards compatibility. The
+  -- primary tree will commit in an inconsistent state, so when we do the
+  -- second pass to render the fallback, we do some exceedingly, uh, clever
+  -- hacks to make that not totally break. Like transferring effects and
+  -- deletions from hidden tree. In Concurrent Mode, it's much simpler,
+  -- because we bailout on the primary tree completely and leave it in its old
+  -- state, no effects. Same as what we do for Offscreen (except that
+  -- Offscreen doesn't have the first render pass).
+  --
+  -- Second is hydration. During hydration, the Suspense fiber has a slightly
+  -- different layout, where the child points to a dehydrated fragment, which
+  -- contains the DOM rendered by the server.
+  --
+  -- Third, even if you set all that aside, Suspense is like error boundaries in
+  -- that we first we try to render one tree, and if that fails, we render again
+  -- and switch to a different tree. Like a try/catch block. So we have to track
+  -- which branch we're currently rendering. Ideally we would model this using
+  -- a stack.
+  if current == nil then
+    -- Initial mount
+    -- If we're currently hydrating, try to hydrate this boundary.
+    -- But only if this has a fallback.
+    if nextProps.fallback ~= nil then
+      tryToClaimNextHydratableInstance(workInProgress)
+      -- This could've been a dehydrated suspense component.
+      if enableSuspenseServerRenderer then
+        local suspenseState: nil | SuspenseState =
+          workInProgress.memoizedState
+        if suspenseState ~= nil then
+          local dehydrated = (suspenseState :: SuspenseState).dehydrated
+          if dehydrated ~= nil then
+            return mountDehydratedSuspenseComponent(
+              workInProgress,
+              dehydrated,
+              renderLanes
+            )
+          end
+        end
+      end
+    end
 
---       -- Since nothing actually suspended, there will nothing to ping this to
---       -- get it started back up to attempt the next item. While in terms of
---       -- priority this work has the same priority as this current render, it's
---       -- not part of the same transition once the transition has committed. If
---       -- it's sync, we still want to yield so that it can be painted.
---       -- Conceptually, this is really the same as pinging. We can use any
---       -- RetryLane even if it's the one currently rendering since we're leaving
---       -- it behind on this node.
---       workInProgress.lanes = SomeRetryLane
---       if enableSchedulerTracing)
---         markSpawnedWork(SomeRetryLane)
---       end
---       return fallbackFragment
---     else
---       return mountSuspensePrimaryChildren(
---         workInProgress,
---         nextPrimaryChildren,
---         renderLanes,
---       )
---     end
---   else
---     -- This is an update.
+    local nextPrimaryChildren = nextProps.children
+    local nextFallbackChildren = nextProps.fallback
+    if showFallback then
+      local fallbackFragment = mountSuspenseFallbackChildren(
+        workInProgress,
+        nextPrimaryChildren,
+        nextFallbackChildren,
+        renderLanes
+      )
+      local primaryChildFragment: Fiber = workInProgress.child
+      primaryChildFragment.memoizedState = mountSuspenseOffscreenState(
+        renderLanes
+      )
+      workInProgress.memoizedState = SUSPENDED_MARKER
+      return fallbackFragment
+    elseif typeof(nextProps.unstable_expectedLoadTime) == 'number' then
+      -- This is a CPU-bound tree. Skip this tree and show a placeholder to
+      -- unblock the surrounding content. Then immediately retry after the
+      -- initial commit.
+      local fallbackFragment = mountSuspenseFallbackChildren(
+        workInProgress,
+        nextPrimaryChildren,
+        nextFallbackChildren,
+        renderLanes
+      )
+      local primaryChildFragment: Fiber = workInProgress.child
+      primaryChildFragment.memoizedState = mountSuspenseOffscreenState(
+        renderLanes
+      )
+      workInProgress.memoizedState = SUSPENDED_MARKER
 
---     -- If the current fiber has a SuspenseState, that means it's already showing
---     -- a fallback.
---     local prevState: nil | SuspenseState = current.memoizedState
---     if prevState ~= nil)
---       -- The current tree is already showing a fallback
+      -- Since nothing actually suspended, there will nothing to ping this to
+      -- get it started back up to attempt the next item. While in terms of
+      -- priority this work has the same priority as this current render, it's
+      -- not part of the same transition once the transition has committed. If
+      -- it's sync, we still want to yield so that it can be painted.
+      -- Conceptually, this is really the same as pinging. We can use any
+      -- RetryLane even if it's the one currently rendering since we're leaving
+      -- it behind on this node.
+      workInProgress.lanes = SomeRetryLane
+      if enableSchedulerTracing then
+        markSpawnedWork(SomeRetryLane)
+      end
+      return fallbackFragment
+    else
+      return mountSuspensePrimaryChildren(
+        workInProgress,
+        nextPrimaryChildren,
+        renderLanes
+      )
+    end
+  else
+    -- This is an update.
 
---       -- Special path for hydration
---       if enableSuspenseServerRenderer)
---         local dehydrated = prevState.dehydrated
---         if dehydrated ~= nil)
---           if not didSuspend)
---             return updateDehydratedSuspenseComponent(
---               current,
---               workInProgress,
---               dehydrated,
---               prevState,
---               renderLanes,
---             )
---           } else if
---             (workInProgress.memoizedState: nil | SuspenseState) ~= nil
---           )
---             -- Something suspended and we should still be in dehydrated mode.
---             -- Leave the existing child in place.
---             workInProgress.child = current.child
---             -- The dehydrated completion pass expects this flag to be there
---             -- but the normal suspense pass doesn't.
---             workInProgress.flags |= DidCapture
---             return nil
---           else
---             -- Suspended but we should no longer be in dehydrated mode.
---             -- Therefore we now have to render the fallback.
---             local nextPrimaryChildren = nextProps.children
---             local nextFallbackChildren = nextProps.fallback
---             local fallbackChildFragment = mountSuspenseFallbackAfterRetryWithoutHydrating(
---               current,
---               workInProgress,
---               nextPrimaryChildren,
---               nextFallbackChildren,
---               renderLanes,
---             )
---             local primaryChildFragment: Fiber = (workInProgress.child: any)
---             primaryChildFragment.memoizedState = mountSuspenseOffscreenState(
---               renderLanes,
---             )
---             workInProgress.memoizedState = SUSPENDED_MARKER
---             return fallbackChildFragment
---           end
---         end
---       end
+    -- If the current fiber has a SuspenseState, that means it's already showing
+    -- a fallback.
+    local prevState: nil | SuspenseState = current.memoizedState
+    if prevState ~= nil then
+      -- The current tree is already showing a fallback
 
---       if showFallback)
---         local nextFallbackChildren = nextProps.fallback
---         local nextPrimaryChildren = nextProps.children
---         local fallbackChildFragment = updateSuspenseFallbackChildren(
---           current,
---           workInProgress,
---           nextPrimaryChildren,
---           nextFallbackChildren,
---           renderLanes,
---         )
---         local primaryChildFragment: Fiber = (workInProgress.child: any)
---         local prevOffscreenState: OffscreenState | nil = (current.child: any)
---           .memoizedState
---         primaryChildFragment.memoizedState =
---           prevOffscreenState == nil
---             ? mountSuspenseOffscreenState(renderLanes)
---             : updateSuspenseOffscreenState(prevOffscreenState, renderLanes)
---         primaryChildFragment.childLanes = getRemainingWorkInPrimaryTree(
---           current,
---           renderLanes,
---         )
---         workInProgress.memoizedState = SUSPENDED_MARKER
---         return fallbackChildFragment
---       else
---         local nextPrimaryChildren = nextProps.children
---         local primaryChildFragment = updateSuspensePrimaryChildren(
---           current,
---           workInProgress,
---           nextPrimaryChildren,
---           renderLanes,
---         )
---         workInProgress.memoizedState = nil
---         return primaryChildFragment
---       end
---     else
---       -- The current tree is not already showing a fallback.
---       if showFallback)
---         -- Timed out.
---         local nextFallbackChildren = nextProps.fallback
---         local nextPrimaryChildren = nextProps.children
---         local fallbackChildFragment = updateSuspenseFallbackChildren(
---           current,
---           workInProgress,
---           nextPrimaryChildren,
---           nextFallbackChildren,
---           renderLanes,
---         )
---         local primaryChildFragment: Fiber = (workInProgress.child: any)
---         local prevOffscreenState: OffscreenState | nil = (current.child: any)
---           .memoizedState
---         primaryChildFragment.memoizedState =
---           prevOffscreenState == nil
---             ? mountSuspenseOffscreenState(renderLanes)
---             : updateSuspenseOffscreenState(prevOffscreenState, renderLanes)
---         primaryChildFragment.childLanes = getRemainingWorkInPrimaryTree(
---           current,
---           renderLanes,
---         )
---         -- Skip the primary children, and continue working on the
---         -- fallback children.
---         workInProgress.memoizedState = SUSPENDED_MARKER
---         return fallbackChildFragment
---       else
---         -- Still haven't timed out. Continue rendering the children, like we
---         -- normally do.
---         local nextPrimaryChildren = nextProps.children
---         local primaryChildFragment = updateSuspensePrimaryChildren(
---           current,
---           workInProgress,
---           nextPrimaryChildren,
---           renderLanes,
---         )
---         workInProgress.memoizedState = nil
---         return primaryChildFragment
---       end
---     end
---   end
--- end
+      -- Special path for hydration
+      if enableSuspenseServerRenderer then
+        -- ROBLOX FIXME: remove :: when Luau understands ~= nil
+        local dehydrated = (prevState :: SuspenseState).dehydrated
 
--- function mountSuspensePrimaryChildren(
---   workInProgress,
---   primaryChildren,
---   renderLanes,
--- )
---   local mode = workInProgress.mode
---   local primaryChildProps: OffscreenProps = {
---     mode: 'visible',
---     children: primaryChildren,
---   end
---   local primaryChildFragment = createFiberFromOffscreen(
---     primaryChildProps,
---     mode,
---     renderLanes,
---     nil,
---   )
---   primaryChildFragment.return = workInProgress
---   workInProgress.child = primaryChildFragment
---   return primaryChildFragment
--- end
+        if dehydrated ~= nil then
+          if not didSuspend then
+            return updateDehydratedSuspenseComponent(
+              current,
+              workInProgress,
+              dehydrated,
+              prevState,
+              renderLanes
+            )
+          elseif
+            workInProgress.memoizedState ~= nil
+          then
+            -- Something suspended and we should still be in dehydrated mode.
+            -- Leave the existing child in place.
+            workInProgress.child = current.child
+            -- The dehydrated completion pass expects this flag to be there
+            -- but the normal suspense pass doesn't.
+            workInProgress.flags = bit32.bor(workInProgress, DidCapture)
+            return nil
+          else
+            -- Suspended but we should no longer be in dehydrated mode.
+            -- Therefore we now have to render the fallback.
+            local nextPrimaryChildren = nextProps.children
+            local nextFallbackChildren = nextProps.fallback
+            local fallbackChildFragment = mountSuspenseFallbackAfterRetryWithoutHydrating(
+              current,
+              workInProgress,
+              nextPrimaryChildren,
+              nextFallbackChildren,
+              renderLanes
+            )
+            local primaryChildFragment: Fiber = workInProgress.child
+            primaryChildFragment.memoizedState = mountSuspenseOffscreenState(
+              renderLanes
+            )
+            workInProgress.memoizedState = SUSPENDED_MARKER
+            return fallbackChildFragment
+          end
+        end
+      end
 
--- function mountSuspenseFallbackChildren(
---   workInProgress,
---   primaryChildren,
---   fallbackChildren,
---   renderLanes,
--- )
---   local mode = workInProgress.mode
---   local progressedPrimaryFragment: Fiber | nil = workInProgress.child
+      if showFallback then
+        local nextFallbackChildren = nextProps.fallback
+        local nextPrimaryChildren = nextProps.children
+        local fallbackChildFragment = updateSuspenseFallbackChildren(
+          current,
+          workInProgress,
+          nextPrimaryChildren,
+          nextFallbackChildren,
+          renderLanes
+        )
+        local primaryChildFragment: Fiber = workInProgress.child
+        local prevOffscreenState: OffscreenState | nil = current.child
+          .memoizedState
 
---   local primaryChildProps: OffscreenProps = {
---     mode: 'hidden',
---     children: primaryChildren,
---   end
+        -- ROBLOX deviation: if/else in place of ternary
+        if prevOffscreenState == nil then
+          primaryChildFragment.memoizedState = mountSuspenseOffscreenState(renderLanes)
+        else
+          -- ROBLOX FIXME: remove :: when Luau understands ~= nil
+          primaryChildFragment.memoizedState = updateSuspenseOffscreenState((prevOffscreenState :: OffscreenState), renderLanes)
+        end
 
---   local primaryChildFragment
---   local fallbackChildFragment
---   if (mode & BlockingMode) == NoMode and progressedPrimaryFragment ~= nil)
---     -- In legacy mode, we commit the primary tree as if it successfully
---     -- completed, even though it's in an inconsistent state.
---     primaryChildFragment = progressedPrimaryFragment
---     primaryChildFragment.childLanes = NoLanes
---     primaryChildFragment.pendingProps = primaryChildProps
+        primaryChildFragment.childLanes = getRemainingWorkInPrimaryTree(
+          current,
+          renderLanes
+        )
+        workInProgress.memoizedState = SUSPENDED_MARKER
+        return fallbackChildFragment
+      else
+        local nextPrimaryChildren = nextProps.children
+        local primaryChildFragment = updateSuspensePrimaryChildren(
+          current,
+          workInProgress,
+          nextPrimaryChildren,
+          renderLanes
+        )
+        workInProgress.memoizedState = nil
+        return primaryChildFragment
+      end
+    else
+      -- The current tree is not already showing a fallback.
+      if showFallback then
+        -- Timed out.
+        local nextFallbackChildren = nextProps.fallback
+        local nextPrimaryChildren = nextProps.children
+        local fallbackChildFragment = updateSuspenseFallbackChildren(
+          current,
+          workInProgress,
+          nextPrimaryChildren,
+          nextFallbackChildren,
+          renderLanes
+        )
+        local primaryChildFragment: Fiber = workInProgress.child
+        local prevOffscreenState: OffscreenState | nil = current.child
+          .memoizedState
 
---     if enableProfilerTimer and workInProgress.mode & ProfileMode)
---       -- Reset the durations from the first pass so they aren't included in the
---       -- final amounts. This seems counterintuitive, since we're intentionally
---       -- not measuring part of the render phase, but this makes it match what we
---       -- do in Concurrent Mode.
---       primaryChildFragment.actualDuration = 0
---       primaryChildFragment.actualStartTime = -1
---       primaryChildFragment.selfBaseDuration = 0
---       primaryChildFragment.treeBaseDuration = 0
---     end
+        -- ROBLOX deviation: if/else in place of ternary
+        if prevOffscreenState == nil then
+          primaryChildFragment.memoizedState = mountSuspenseOffscreenState(renderLanes)
+        else
+          -- ROBLOX FIXME: remove :: once Luau understands nil check
+          primaryChildFragment.memoizedState = updateSuspenseOffscreenState((prevOffscreenState :: OffscreenState), renderLanes)
+        end
 
---     fallbackChildFragment = createFiberFromFragment(
---       fallbackChildren,
---       mode,
---       renderLanes,
---       nil,
---     )
---   else
---     primaryChildFragment = createFiberFromOffscreen(
---       primaryChildProps,
---       mode,
---       NoLanes,
---       nil,
---     )
---     fallbackChildFragment = createFiberFromFragment(
---       fallbackChildren,
---       mode,
---       renderLanes,
---       nil,
---     )
---   end
+        primaryChildFragment.childLanes = getRemainingWorkInPrimaryTree(
+          current,
+          renderLanes
+        )
+        -- Skip the primary children, and continue working on the
+        -- fallback children.
+        workInProgress.memoizedState = SUSPENDED_MARKER
+        return fallbackChildFragment
+      else
+        -- Still haven't timed out. Continue rendering the children, like we
+        -- normally do.
+        local nextPrimaryChildren = nextProps.children
+        local primaryChildFragment = updateSuspensePrimaryChildren(
+          current,
+          workInProgress,
+          nextPrimaryChildren,
+          renderLanes
+        )
+        workInProgress.memoizedState = nil
+        return primaryChildFragment
+      end
+    end
+  end
+end
 
---   primaryChildFragment.return = workInProgress
---   fallbackChildFragment.return = workInProgress
---   primaryChildFragment.sibling = fallbackChildFragment
---   workInProgress.child = primaryChildFragment
---   return fallbackChildFragment
--- end
+function mountSuspensePrimaryChildren(
+  workInProgress,
+  primaryChildren,
+  renderLanes
+)
+  local mode = workInProgress.mode
+  local primaryChildProps: OffscreenProps = {
+    mode = 'visible',
+    children = primaryChildren
+  }
+  local primaryChildFragment = createFiberFromOffscreen(
+    primaryChildProps,
+    mode,
+    renderLanes,
+    nil
+  )
+  primaryChildFragment.return_ = workInProgress
+  workInProgress.child = primaryChildFragment
+  return primaryChildFragment
+end
 
--- function createWorkInProgressOffscreenFiber(
---   current: Fiber,
---   offscreenProps: OffscreenProps,
--- )
---   -- The props argument to `createWorkInProgress` is `any` typed, so we use this
---   -- wrapper function to constrain it.
---   return createWorkInProgress(current, offscreenProps)
--- end
+function mountSuspenseFallbackChildren(
+  workInProgress,
+  primaryChildren,
+  fallbackChildren,
+  renderLanes
+)
+  local mode = workInProgress.mode
+  local progressedPrimaryFragment: Fiber | nil = workInProgress.child
 
--- function updateSuspensePrimaryChildren(
---   current,
---   workInProgress,
---   primaryChildren,
---   renderLanes,
--- )
---   local currentPrimaryChildFragment: Fiber = (current.child: any)
---   local currentFallbackChildFragment: Fiber | nil =
---     currentPrimaryChildFragment.sibling
+  local primaryChildProps: OffscreenProps = {
+    mode = 'hidden',
+    children = primaryChildren
+  }
 
---   local primaryChildFragment = createWorkInProgressOffscreenFiber(
---     currentPrimaryChildFragment,
---     {
---       mode: 'visible',
---       children: primaryChildren,
---     },
---   )
---   if (workInProgress.mode & BlockingMode) == NoMode)
---     primaryChildFragment.lanes = renderLanes
---   end
---   primaryChildFragment.return = workInProgress
---   primaryChildFragment.sibling = nil
---   if currentFallbackChildFragment ~= nil)
---     -- Delete the fallback child fragment
---     local deletions = workInProgress.deletions
---     if deletions == nil)
---       workInProgress.deletions = [currentFallbackChildFragment]
---       -- TODO (effects) Rename this to better reflect its new usage (e.g. ChildDeletions)
---       workInProgress.flags |= Deletion
---     else
---       deletions.push(currentFallbackChildFragment)
---     end
---   end
+  local primaryChildFragment
+  local fallbackChildFragment
+  if bit32.band(mode, BlockingMode) == NoMode and progressedPrimaryFragment ~= nil then
+    -- In legacy mode, we commit the primary tree as if it successfully
+    -- completed, even though it's in an inconsistent state.
+    primaryChildFragment = progressedPrimaryFragment
+    primaryChildFragment.childLanes = NoLanes
+    primaryChildFragment.pendingProps = primaryChildProps
 
---   workInProgress.child = primaryChildFragment
---   return primaryChildFragment
--- end
+    if enableProfilerTimer and bit32.band(workInProgress.mode, ProfileMode) ~= 0 then
+      -- Reset the durations from the first pass so they aren't included in the
+      -- final amounts. This seems counterintuitive, since we're intentionally
+      -- not measuring part of the render phase, but this makes it match what we
+      -- do in Concurrent Mode.
+      primaryChildFragment.actualDuration = 0
+      primaryChildFragment.actualStartTime = -1
+      primaryChildFragment.selfBaseDuration = 0
+      primaryChildFragment.treeBaseDuration = 0
+    end
 
--- function updateSuspenseFallbackChildren(
---   current,
---   workInProgress,
---   primaryChildren,
---   fallbackChildren,
---   renderLanes,
--- )
---   local mode = workInProgress.mode
---   local currentPrimaryChildFragment: Fiber = (current.child: any)
---   local currentFallbackChildFragment: Fiber | nil =
---     currentPrimaryChildFragment.sibling
+    fallbackChildFragment = createFiberFromFragment(
+      fallbackChildren,
+      mode,
+      renderLanes,
+      nil
+    )
+  else
+    primaryChildFragment = createFiberFromOffscreen(
+      primaryChildProps,
+      mode,
+      NoLanes,
+      nil
+    )
+    fallbackChildFragment = createFiberFromFragment(
+      fallbackChildren,
+      mode,
+      renderLanes,
+      nil
+    )
+  end
 
---   local primaryChildProps: OffscreenProps = {
---     mode: 'hidden',
---     children: primaryChildren,
---   end
+  primaryChildFragment.return_ = workInProgress
+  fallbackChildFragment.return_ = workInProgress
+  primaryChildFragment.sibling = fallbackChildFragment
+  workInProgress.child = primaryChildFragment
+  return fallbackChildFragment
+end
 
---   local primaryChildFragment
---   if
---     -- In legacy mode, we commit the primary tree as if it successfully
---     -- completed, even though it's in an inconsistent state.
---     (mode & BlockingMode) == NoMode and
---     -- Make sure we're on the second pass, i.e. the primary child fragment was
---     -- already cloned. In legacy mode, the only case where this isn't true is
---     -- when DevTools forces us to display a fallback; we skip the first render
---     -- pass entirely and go straight to rendering the fallback. (In Concurrent
---     -- Mode, SuspenseList can also trigger this scenario, but this is a legacy-
---     -- only codepath.)
---     workInProgress.child ~= currentPrimaryChildFragment
---   )
---     local progressedPrimaryFragment: Fiber = (workInProgress.child: any)
---     primaryChildFragment = progressedPrimaryFragment
---     primaryChildFragment.childLanes = NoLanes
---     primaryChildFragment.pendingProps = primaryChildProps
+local function createWorkInProgressOffscreenFiber(
+  current: Fiber,
+  offscreenProps: OffscreenProps
+)
+  -- The props argument to `createWorkInProgress` is `any` typed, so we use this
+  -- wrapper function to constrain it.
+  return createWorkInProgress(current, offscreenProps)
+end
 
---     if enableProfilerTimer and workInProgress.mode & ProfileMode)
---       -- Reset the durations from the first pass so they aren't included in the
---       -- final amounts. This seems counterintuitive, since we're intentionally
---       -- not measuring part of the render phase, but this makes it match what we
---       -- do in Concurrent Mode.
---       primaryChildFragment.actualDuration = 0
---       primaryChildFragment.actualStartTime = -1
---       primaryChildFragment.selfBaseDuration =
---         currentPrimaryChildFragment.selfBaseDuration
---       primaryChildFragment.treeBaseDuration =
---         currentPrimaryChildFragment.treeBaseDuration
---     end
+function updateSuspensePrimaryChildren(
+  current,
+  workInProgress,
+  primaryChildren,
+  renderLanes
+)
+  local currentPrimaryChildFragment: Fiber = current.child
+  local currentFallbackChildFragment: Fiber | nil =
+    currentPrimaryChildFragment.sibling
 
---     -- The fallback fiber was added as a deletion effect during the first pass.
---     -- However, since we're going to remain on the fallback, we no longer want
---     -- to delete it.
---     workInProgress.deletions = nil
---   else
---     primaryChildFragment = createWorkInProgressOffscreenFiber(
---       currentPrimaryChildFragment,
---       primaryChildProps,
---     )
+  local primaryChildFragment = createWorkInProgressOffscreenFiber(
+    currentPrimaryChildFragment,
+    {
+      mode = 'visible',
+      children = primaryChildren
+    }
+  )
+  if bit32.band(workInProgress.mode, BlockingMode) == NoMode then
+    primaryChildFragment.lanes = renderLanes
+  end
+  primaryChildFragment.return_ = workInProgress
+  primaryChildFragment.sibling = nil
+  if currentFallbackChildFragment ~= nil then
+    -- Delete the fallback child fragment
+    local deletions = workInProgress.deletions
+    if deletions == nil then
+      workInProgress.deletions = {currentFallbackChildFragment}
+      -- TODO (effects) Rename this to better reflect its new usage (e.g. ChildDeletions)
+      workInProgress.flags = bit32.bor(workInProgress.flags, Deletion)
+    else
+      table.insert(deletions, currentFallbackChildFragment)
+    end
+  end
 
---     -- Since we're reusing a current tree, we need to reuse the flags, too.
---     -- (We don't do this in legacy mode, because in legacy mode we don't re-use
---     -- the current tree; see previous branch.)
---     primaryChildFragment.subtreeFlags =
---       currentPrimaryChildFragment.subtreeFlags & StaticMask
---   end
---   local fallbackChildFragment
---   if currentFallbackChildFragment ~= nil)
---     fallbackChildFragment = createWorkInProgress(
---       currentFallbackChildFragment,
---       fallbackChildren,
---     )
---   else
---     fallbackChildFragment = createFiberFromFragment(
---       fallbackChildren,
---       mode,
---       renderLanes,
---       nil,
---     )
---     -- Needs a placement effect because the parent (the Suspense boundary) already
---     -- mounted but this is a new fiber.
---     fallbackChildFragment.flags |= Placement
---   end
+  workInProgress.child = primaryChildFragment
+  return primaryChildFragment
+end
 
---   fallbackChildFragment.return = workInProgress
---   primaryChildFragment.return = workInProgress
---   primaryChildFragment.sibling = fallbackChildFragment
---   workInProgress.child = primaryChildFragment
+function updateSuspenseFallbackChildren(
+  current,
+  workInProgress,
+  primaryChildren,
+  fallbackChildren,
+  renderLanes
+)
+  local mode = workInProgress.mode
+  local currentPrimaryChildFragment: Fiber = current.child
+  local currentFallbackChildFragment: Fiber | nil = currentPrimaryChildFragment.sibling
 
---   return fallbackChildFragment
--- end
+  local primaryChildProps: OffscreenProps = {
+    mode = 'hidden',
+    children = primaryChildren
+  }
 
--- function retrySuspenseComponentWithoutHydrating(
---   current: Fiber,
---   workInProgress: Fiber,
---   renderLanes: Lanes,
--- )
---   -- This will add the old fiber to the deletion list
---   reconcileChildFibers(workInProgress, current.child, nil, renderLanes)
+  local primaryChildFragment
+  if
+    -- In legacy mode, we commit the primary tree as if it successfully
+    -- completed, even though it's in an inconsistent state.
+    bit32.band(mode, BlockingMode) == NoMode and
+    -- Make sure we're on the second pass, i.e. the primary child fragment was
+    -- already cloned. In legacy mode, the only case where this isn't true is
+    -- when DevTools forces us to display a fallback; we skip the first render
+    -- pass entirely and go straight to rendering the fallback. (In Concurrent
+    -- Mode, SuspenseList can also trigger this scenario, but this is a legacy-
+    -- only codepath.)
+    workInProgress.child ~= currentPrimaryChildFragment
+  then
+    local progressedPrimaryFragment: Fiber = workInProgress.child
+    primaryChildFragment = progressedPrimaryFragment
+    primaryChildFragment.childLanes = NoLanes
+    primaryChildFragment.pendingProps = primaryChildProps
 
---   -- We're now not suspended nor dehydrated.
---   local nextProps = workInProgress.pendingProps
---   local primaryChildren = nextProps.children
---   local primaryChildFragment = mountSuspensePrimaryChildren(
---     workInProgress,
---     primaryChildren,
---     renderLanes,
---   )
---   -- Needs a placement effect because the parent (the Suspense boundary) already
---   -- mounted but this is a new fiber.
---   primaryChildFragment.flags |= Placement
---   workInProgress.memoizedState = nil
+    if enableProfilerTimer and bit32.band(workInProgress.mode, ProfileMode) ~= 0 then
+      -- Reset the durations from the first pass so they aren't included in the
+      -- final amounts. This seems counterintuitive, since we're intentionally
+      -- not measuring part of the render phase, but this makes it match what we
+      -- do in Concurrent Mode.
+      primaryChildFragment.actualDuration = 0
+      primaryChildFragment.actualStartTime = -1
+      primaryChildFragment.selfBaseDuration =
+        currentPrimaryChildFragment.selfBaseDuration
+      primaryChildFragment.treeBaseDuration =
+        currentPrimaryChildFragment.treeBaseDuration
+    end
 
---   return primaryChildFragment
--- end
+    -- The fallback fiber was added as a deletion effect during the first pass.
+    -- However, since we're going to remain on the fallback, we no longer want
+    -- to delete it.
+    workInProgress.deletions = nil
+  else
+    primaryChildFragment = createWorkInProgressOffscreenFiber(
+      currentPrimaryChildFragment,
+      primaryChildProps
+    )
 
--- function mountSuspenseFallbackAfterRetryWithoutHydrating(
---   current,
---   workInProgress,
---   primaryChildren,
---   fallbackChildren,
---   renderLanes,
--- )
---   local mode = workInProgress.mode
---   local primaryChildFragment = createFiberFromOffscreen(
---     primaryChildren,
---     mode,
---     NoLanes,
---     nil,
---   )
---   local fallbackChildFragment = createFiberFromFragment(
---     fallbackChildren,
---     mode,
---     renderLanes,
---     nil,
---   )
---   -- Needs a placement effect because the parent (the Suspense
---   -- boundary) already mounted but this is a new fiber.
---   fallbackChildFragment.flags |= Placement
+    -- Since we're reusing a current tree, we need to reuse the flags, too.
+    -- (We don't do this in legacy mode, because in legacy mode we don't re-use
+    -- the current tree; see previous branch.)
+    primaryChildFragment.subtreeFlags =
+      bit32.band(currentPrimaryChildFragment.subtreeFlags, StaticMask)
+  end
+  local fallbackChildFragment
+  if currentFallbackChildFragment ~= nil then
+    fallbackChildFragment = createWorkInProgress(
+      currentFallbackChildFragment,
+      fallbackChildren
+    )
+  else
+    fallbackChildFragment = createFiberFromFragment(
+      fallbackChildren,
+      mode,
+      renderLanes,
+      nil
+    )
+    -- Needs a placement effect because the parent (the Suspense boundary) already
+    -- mounted but this is a new fiber.
+    bit32.bor(fallbackChildFragment.flags, Placement)
+  end
 
---   primaryChildFragment.return = workInProgress
---   fallbackChildFragment.return = workInProgress
---   primaryChildFragment.sibling = fallbackChildFragment
---   workInProgress.child = primaryChildFragment
+  fallbackChildFragment.return_ = workInProgress
+  primaryChildFragment.return_ = workInProgress
+  primaryChildFragment.sibling = fallbackChildFragment
+  workInProgress.child = primaryChildFragment
 
---   if (workInProgress.mode & BlockingMode) ~= NoMode)
---     -- We will have dropped the effect list which contains the
---     -- deletion. We need to reconcile to delete the current child.
---     reconcileChildFibers(workInProgress, current.child, nil, renderLanes)
---   end
+  return fallbackChildFragment
+end
 
---   return fallbackChildFragment
--- end
+local function retrySuspenseComponentWithoutHydrating(
+  current: Fiber,
+  workInProgress: Fiber,
+  renderLanes: Lanes
+)
+  -- This will add the old fiber to the deletion list
+  reconcileChildFibers(workInProgress, current.child, nil, renderLanes)
 
--- function mountDehydratedSuspenseComponent(
---   workInProgress: Fiber,
---   suspenseInstance: SuspenseInstance,
---   renderLanes: Lanes,
--- ): nil | Fiber {
---   -- During the first pass, we'll bail out and not drill into the children.
---   -- Instead, we'll leave the content in place and try to hydrate it later.
---   if (workInProgress.mode & BlockingMode) == NoMode)
---     if  _G.__DEV__ then
---       console.error(
---         'Cannot hydrate Suspense in legacy mode. Switch = require(Workspace. +
---           'ReactDOM.hydrate(element, container) to ' +
---           'ReactDOM.createBlockingRoot(container, { hydrate: true })' +
---           '.render(element) or remove the Suspense components = require(Workspace. +
---           'the server rendered components.',
---       )
---     end
---     workInProgress.lanes = laneToLanes(SyncLane)
---   } else if isSuspenseInstanceFallback(suspenseInstance))
---     -- This is a client-only boundary. Since we won't get any content from the server
---     -- for this, we need to schedule that at a higher priority based on when it would
---     -- have timed out. In theory we could render it in this pass but it would have the
---     -- wrong priority associated with it and will prevent hydration of parent path.
---     -- Instead, we'll leave work left on it to render it in a separate commit.
+  -- We're now not suspended nor dehydrated.
+  local nextProps = workInProgress.pendingProps
+  local primaryChildren = nextProps.children
+  local primaryChildFragment = mountSuspensePrimaryChildren(
+    workInProgress,
+    primaryChildren,
+    renderLanes
+  )
+  -- Needs a placement effect because the parent (the Suspense boundary) already
+  -- mounted but this is a new fiber.
+  primaryChildFragment.flags = bit32.bor(primaryChildFragment.flags, Placement)
+  workInProgress.memoizedState = nil
 
---     -- TODO This time should be the time at which the server rendered response that is
---     -- a parent to this boundary was displayed. However, since we currently don't have
---     -- a protocol to transfer that time, we'll just estimate it by using the current
---     -- time. This will mean that Suspense timeouts are slightly shifted to later than
---     -- they should be.
---     -- Schedule a normal pri update to render this content.
---     if enableSchedulerTracing)
---       markSpawnedWork(DefaultHydrationLane)
---     end
---     workInProgress.lanes = laneToLanes(DefaultHydrationLane)
---   else
---     -- We'll continue hydrating the rest at offscreen priority since we'll already
---     -- be showing the right content coming from the server, it is no rush.
---     workInProgress.lanes = laneToLanes(OffscreenLane)
---     if enableSchedulerTracing)
---       markSpawnedWork(OffscreenLane)
---     end
---   end
---   return nil
--- end
+  return primaryChildFragment
+end
 
--- function updateDehydratedSuspenseComponent(
---   current: Fiber,
---   workInProgress: Fiber,
---   suspenseInstance: SuspenseInstance,
---   suspenseState: SuspenseState,
---   renderLanes: Lanes,
--- ): nil | Fiber {
---   -- We should never be hydrating at this point because it is the first pass,
---   -- but after we've already committed once.
---   warnIfHydrating()
+function mountSuspenseFallbackAfterRetryWithoutHydrating(
+  current,
+  workInProgress,
+  primaryChildren,
+  fallbackChildren,
+  renderLanes
+)
+  local mode = workInProgress.mode
+  local primaryChildFragment = createFiberFromOffscreen(
+    primaryChildren,
+    mode,
+    NoLanes,
+    nil
+  )
+  local fallbackChildFragment = createFiberFromFragment(
+    fallbackChildren,
+    mode,
+    renderLanes,
+    nil
+  )
+  -- Needs a placement effect because the parent (the Suspense
+  -- boundary) already mounted but this is a new fiber.
+  fallbackChildFragment.flags = bit32.bor(fallbackChildFragment.flags, Placement)
 
---   if (getExecutionContext() & RetryAfterError) ~= NoContext)
---     return retrySuspenseComponentWithoutHydrating(
---       current,
---       workInProgress,
---       renderLanes,
---     )
---   end
+  primaryChildFragment.return_ = workInProgress
+  fallbackChildFragment.return_ = workInProgress
+  primaryChildFragment.sibling = fallbackChildFragment
+  workInProgress.child = primaryChildFragment
 
---   if (workInProgress.mode & BlockingMode) == NoMode)
---     return retrySuspenseComponentWithoutHydrating(
---       current,
---       workInProgress,
---       renderLanes,
---     )
---   end
+  if bit32.band(workInProgress.mode, BlockingMode) ~= NoMode then
+    -- We will have dropped the effect list which contains the
+    -- deletion. We need to reconcile to delete the current child.
+    reconcileChildFibers(workInProgress, current.child, nil, renderLanes)
+  end
 
---   if isSuspenseInstanceFallback(suspenseInstance))
---     -- This boundary is in a permanent fallback state. In this case, we'll never
---     -- get an update and we'll never be able to hydrate the final content. Let's just try the
---     -- client side render instead.
---     return retrySuspenseComponentWithoutHydrating(
---       current,
---       workInProgress,
---       renderLanes,
---     )
---   end
---   -- We use lanes to indicate that a child might depend on context, so if
---   -- any context has changed, we need to treat is as if the input might have changed.
---   local hasContextChanged = includesSomeLane(renderLanes, current.childLanes)
---   if didReceiveUpdate or hasContextChanged)
---     -- This boundary has changed since the first render. This means that we are now unable to
---     -- hydrate it. We might still be able to hydrate it using a higher priority lane.
---     local root = getWorkInProgressRoot()
---     if root ~= nil)
---       local attemptHydrationAtLane = getBumpedLaneForHydration(
---         root,
---         renderLanes,
---       )
---       if
---         attemptHydrationAtLane ~= NoLane and
---         attemptHydrationAtLane ~= suspenseState.retryLane
---       )
---         -- Intentionally mutating since this render will get interrupted. This
---         -- is one of the very rare times where we mutate the current tree
---         -- during the render phase.
---         suspenseState.retryLane = attemptHydrationAtLane
---         -- TODO: Ideally this would inherit the event time of the current render
---         local eventTime = NoTimestamp
---         scheduleUpdateOnFiber(current, attemptHydrationAtLane, eventTime)
---       else
---         -- We have already tried to ping at a higher priority than we're rendering with
---         -- so if we got here, we must have failed to hydrate at those levels. We must
---         -- now give up. Instead, we're going to delete the whole subtree and instead inject
---         -- a new real Suspense boundary to take its place, which may render content
---         -- or fallback. This might suspend for a while and if it does we might still have
---         -- an opportunity to hydrate before this pass commits.
---       end
---     end
+  return fallbackChildFragment
+end
 
---     -- If we have scheduled higher pri work above, this will probably just abort the render
---     -- since we now have higher priority work, but in case it doesn't, we need to prepare to
---     -- render something, if we time out. Even if that requires us to delete everything and
---     -- skip hydration.
---     -- Delay having to do this as long as the suspense timeout allows us.
---     renderDidSuspendDelayIfPossible()
---     return retrySuspenseComponentWithoutHydrating(
---       current,
---       workInProgress,
---       renderLanes,
---     )
---   } else if isSuspenseInstancePending(suspenseInstance))
---     -- This component is still pending more data from the server, so we can't hydrate its
---     -- content. We treat it as if this component suspended itself. It might seem as if
---     -- we could just try to render it client-side instead. However, this will perform a
---     -- lot of unnecessary work and is unlikely to complete since it often will suspend
---     -- on missing data anyway. Additionally, the server might be able to render more
---     -- than we can on the client yet. In that case we'd end up with more fallback states
---     -- on the client than if we just leave it alone. If the server times out or errors
---     -- these should update this boundary to the permanent Fallback state instead.
---     -- Mark it as having captured (i.e. suspended).
---     workInProgress.flags |= DidCapture
---     -- Leave the child in place. I.e. the dehydrated fragment.
---     workInProgress.child = current.child
---     -- Register a callback to retry this boundary once the server has sent the result.
---     local retry = retryDehydratedSuspenseBoundary.bind(null, current)
---     if enableSchedulerTracing)
---       retry = Schedule_tracing_wrap(retry)
---     end
---     registerSuspenseInstanceRetry(suspenseInstance, retry)
---     return nil
---   else
---     -- This is the first attempt.
---     reenterHydrationStateFromDehydratedSuspenseInstance(
---       workInProgress,
---       suspenseInstance,
---     )
---     local nextProps = workInProgress.pendingProps
---     local primaryChildren = nextProps.children
---     local primaryChildFragment = mountSuspensePrimaryChildren(
---       workInProgress,
---       primaryChildren,
---       renderLanes,
---     )
---     -- Mark the children as hydrating. This is a fast path to know whether this
---     -- tree is part of a hydrating tree. This is used to determine if a child
---     -- node has fully mounted yet, and for scheduling event replaying.
---     -- Conceptually this is similar to Placement in that a new subtree is
---     -- inserted into the React tree here. It just happens to not need DOM
---     -- mutations because it already exists.
---     primaryChildFragment.flags |= Hydrating
---     return primaryChildFragment
---   end
--- end
+function mountDehydratedSuspenseComponent(
+  workInProgress: Fiber,
+  suspenseInstance: SuspenseInstance,
+  renderLanes: Lanes
+): nil | Fiber
+  -- During the first pass, we'll bail out and not drill into the children.
+  -- Instead, we'll leave the content in place and try to hydrate it later.
+  if bit32.band(workInProgress.mode, BlockingMode) == NoMode then
+    if _G.__DEV__ then
+      console.error(
+        'Cannot hydrate Suspense in legacy mode. Switch from' ..
+          'ReactDOM.hydrate(element, container) to ' ..
+          'ReactDOM.createBlockingRoot(container, { hydrate: true })' ..
+          '.render(element) or remove the Suspense components' ..
+          'the server rendered components.'
+      )
+    end
+    workInProgress.lanes = laneToLanes(SyncLane)
+  elseif isSuspenseInstanceFallback(suspenseInstance) then
+    -- This is a client-only boundary. Since we won't get any content from the server
+    -- for this, we need to schedule that at a higher priority based on when it would
+    -- have timed out. In theory we could render it in this pass but it would have the
+    -- wrong priority associated with it and will prevent hydration of parent path.
+    -- Instead, we'll leave work left on it to render it in a separate commit.
+
+    -- TODO This time should be the time at which the server rendered response that is
+    -- a parent to this boundary was displayed. However, since we currently don't have
+    -- a protocol to transfer that time, we'll just estimate it by using the current
+    -- time. This will mean that Suspense timeouts are slightly shifted to later than
+    -- they should be.
+    -- Schedule a normal pri update to render this content.
+    if enableSchedulerTracing then
+      markSpawnedWork(DefaultHydrationLane)
+    end
+    workInProgress.lanes = laneToLanes(DefaultHydrationLane)
+  else
+    -- We'll continue hydrating the rest at offscreen priority since we'll already
+    -- be showing the right content coming from the server, it is no rush.
+    workInProgress.lanes = laneToLanes(OffscreenLane)
+    if enableSchedulerTracing then
+      markSpawnedWork(OffscreenLane)
+    end
+  end
+  return nil
+end
+
+function updateDehydratedSuspenseComponent(
+  current: Fiber,
+  workInProgress: Fiber,
+  suspenseInstance: SuspenseInstance,
+  suspenseState: SuspenseState,
+  renderLanes: Lanes
+): nil | Fiber
+  -- We should never be hydrating at this point because it is the first pass,
+  -- but after we've already committed once.
+  warnIfHydrating()
+
+  if bit32.band(getExecutionContext(), RetryAfterError) ~= NoContext then
+    return retrySuspenseComponentWithoutHydrating(
+      current,
+      workInProgress,
+      renderLanes
+    )
+  end
+
+  if bit32.band(workInProgress.mode, BlockingMode) == NoMode then
+    return retrySuspenseComponentWithoutHydrating(
+      current,
+      workInProgress,
+      renderLanes
+    )
+  end
+
+  if isSuspenseInstanceFallback(suspenseInstance) then
+    -- This boundary is in a permanent fallback state. In this case, we'll never
+    -- get an update and we'll never be able to hydrate the final content. Let's just try the
+    -- client side render instead.
+    return retrySuspenseComponentWithoutHydrating(
+      current,
+      workInProgress,
+      renderLanes
+    )
+  end
+  -- We use lanes to indicate that a child might depend on context, so if
+  -- any context has changed, we need to treat is as if the input might have changed.
+  local hasContextChanged = includesSomeLane(renderLanes, current.childLanes)
+  if didReceiveUpdate or hasContextChanged then
+    -- This boundary has changed since the first render. This means that we are now unable to
+    -- hydrate it. We might still be able to hydrate it using a higher priority lane.
+    local root = getWorkInProgressRoot()
+    if root ~= nil then
+      local attemptHydrationAtLane = getBumpedLaneForHydration(
+        root,
+        renderLanes
+      )
+      if
+        attemptHydrationAtLane ~= NoLane and
+        attemptHydrationAtLane ~= suspenseState.retryLane
+      then
+        -- Intentionally mutating since this render will get interrupted. This
+        -- is one of the very rare times where we mutate the current tree
+        -- during the render phase.
+        suspenseState.retryLane = attemptHydrationAtLane
+        -- TODO: Ideally this would inherit the event time of the current render
+        local eventTime = NoTimestamp
+        scheduleUpdateOnFiber(current, attemptHydrationAtLane, eventTime)
+      else
+        -- We have already tried to ping at a higher priority than we're rendering with
+        -- so if we got here, we must have failed to hydrate at those levels. We must
+        -- now give up. Instead, we're going to delete the whole subtree and instead inject
+        -- a new real Suspense boundary to take its place, which may render content
+        -- or fallback. This might suspend for a while and if it does we might still have
+        -- an opportunity to hydrate before this pass commits.
+      end
+    end
+
+    -- If we have scheduled higher pri work above, this will probably just abort the render
+    -- since we now have higher priority work, but in case it doesn't, we need to prepare to
+    -- render something, if we time out. Even if that requires us to delete everything and
+    -- skip hydration.
+    -- Delay having to do this as long as the suspense timeout allows us.
+    renderDidSuspendDelayIfPossible()
+    return retrySuspenseComponentWithoutHydrating(
+      current,
+      workInProgress,
+      renderLanes
+    )
+  elseif isSuspenseInstancePending(suspenseInstance) then
+    -- This component is still pending more data from the server, so we can't hydrate its
+    -- content. We treat it as if this component suspended itself. It might seem as if
+    -- we could just try to render it client-side instead. However, this will perform a
+    -- lot of unnecessary work and is unlikely to complete since it often will suspend
+    -- on missing data anyway. Additionally, the server might be able to render more
+    -- than we can on the client yet. In that case we'd end up with more fallback states
+    -- on the client than if we just leave it alone. If the server times out or errors
+    -- these should update this boundary to the permanent Fallback state instead.
+    -- Mark it as having captured (i.e. suspended).
+    workInProgress.flags = bit32.bor(workInProgress.flags, DidCapture)
+    -- Leave the child in place. I.e. the dehydrated fragment.
+    workInProgress.child = current.child
+
+    -- Register a callback to retry this boundary once the server has sent the result.
+    -- ROBLOX deviation: wrapper function in place of bind
+    local retry = function()
+      return retryDehydratedSuspenseBoundary(current)
+    end
+
+    -- ROBLOX FIXME: scheduler tracing unimplemented
+    -- if enableSchedulerTracing then
+    --   retry = Schedule_tracing_wrap(retry)
+    -- end
+
+    registerSuspenseInstanceRetry(suspenseInstance, retry)
+    return nil
+  else
+    -- This is the first attempt.
+    reenterHydrationStateFromDehydratedSuspenseInstance(
+      workInProgress,
+      suspenseInstance
+    )
+    local nextProps = workInProgress.pendingProps
+    local primaryChildren = nextProps.children
+    local primaryChildFragment = mountSuspensePrimaryChildren(
+      workInProgress,
+      primaryChildren,
+      renderLanes
+    )
+    -- Mark the children as hydrating. This is a fast path to know whether this
+    -- tree is part of a hydrating tree. This is used to determine if a child
+    -- node has fully mounted yet, and for scheduling event replaying.
+    -- Conceptually this is similar to Placement in that a new subtree is
+    -- inserted into the React tree here. It just happens to not need DOM
+    -- mutations because it already exists.
+    primaryChildFragment.flags = bit32.bor(primaryChildFragment.flags, Hydrating)
+    return primaryChildFragment
+  end
+end
 
 -- function scheduleWorkOnFiber(fiber: Fiber, renderLanes: Lanes)
 --   fiber.lanes = mergeLanes(fiber.lanes, renderLanes)
@@ -2559,14 +2604,14 @@ end
 --       if state ~= nil)
 --         scheduleWorkOnFiber(node, renderLanes)
 --       end
---     } else if node.tag == SuspenseListComponent)
+--     } elseif node.tag == SuspenseListComponent)
 --       -- If the tail is hidden there might not be an Suspense boundaries
 --       -- to schedule work on. In this case we have to schedule it on the
 --       -- list itself.
 --       -- We don't have to traverse to the children of the list since
 --       -- the list will propagate the change when it rerenders.
 --       scheduleWorkOnFiber(node, renderLanes)
---     } else if node.child ~= nil)
+--     } elseif node.child ~= nil)
 --       node.child.return = node
 --       node = node.child
 --       continue
@@ -2673,7 +2718,7 @@ end
 --             'Did you mean "collapsed" or "hidden"?',
 --           tailMode,
 --         )
---       } else if revealOrder ~= 'forwards' and revealOrder ~= 'backwards')
+--       } elseif revealOrder ~= 'forwards' and revealOrder ~= 'backwards')
 --         didWarnAboutTailOptions[tailMode] = true
 --         console.error(
 --           '<SuspenseList tail="%s" /> is only valid if revealOrder is ' +
@@ -3168,7 +3213,7 @@ function remountFiber(
       -- TODO (effects) Rename this to better reflect its new usage (e.g. ChildDeletions)
       returnFiber.flags = bit32.bor(returnFiber.flags, Deletion)
     else
-      deletions.push(current)
+      table.insert(deletions, current)
     end
 
     newWorkInProgress.flags = bit32.bor(newWorkInProgress.flags, Placement)
@@ -3463,8 +3508,7 @@ exports.beginWork = function(
   elseif workInProgress.tag == HostText then
     return updateHostText(current, workInProgress)
   elseif workInProgress.tag == SuspenseComponent then
-    unimplemented("beginWork: SuspenseComponent")
-    -- return updateSuspenseComponent(current, workInProgress, renderLanes)
+    return updateSuspenseComponent(current, workInProgress, renderLanes)
   elseif workInProgress.tag == HostPortal then
     unimplemented("beginWork: HostPortal")
     -- return updatePortalComponent(current, workInProgress, renderLanes)
@@ -3557,8 +3601,7 @@ exports.beginWork = function(
       return updateScopeComponent(current, workInProgress, renderLanes)
     end
   elseif workInProgress.tag == OffscreenComponent then
-    unimplemented("beginWork: OffscreenComponent")
-    -- return updateOffscreenComponent(current, workInProgress, renderLanes)
+    return updateOffscreenComponent(current, workInProgress, renderLanes)
   elseif workInProgress.tag == LegacyHiddenComponent then
     unimplemented("beginWork: LegacyHiddenComponent")
     -- return updateLegacyHiddenComponent(current, workInProgress, renderLanes)

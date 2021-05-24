@@ -17,7 +17,7 @@ export type CapturedValue<T> = {
   value: T,
   source: Fiber | nil,
   stack: string | nil,
-};
+}
 
 local exports = {}
 

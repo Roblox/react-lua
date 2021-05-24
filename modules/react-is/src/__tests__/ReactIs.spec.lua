@@ -87,8 +87,7 @@ return function()
 			--}
 			jestExpect(ReactIs.isValidElementType(React.Fragment)).toEqual(true)
 			jestExpect(ReactIs.isValidElementType(React.StrictMode)).toEqual(true)
-			-- ROBLOX TODO: uncomment once Suspense is implemented
-			--jestExpect(ReactIs.isValidElementType(React.Suspense)).toEqual(true)
+			jestExpect(ReactIs.isValidElementType(React.Suspense)).toEqual(true)
 			jestExpect(ReactIs.isValidElementType(true)).toEqual(false)
 			jestExpect(ReactIs.isValidElementType(123)).toEqual(false)
 			jestExpect(ReactIs.isValidElementType({})).toEqual(false)
@@ -199,8 +198,7 @@ return function()
 			jestExpect(ReactIs.isStrictMode(React.createElement("div"))).toBe(false)
 		end)
 
-		-- ROBLOX TODO: make this pass once Suspense is implemented
-		itSKIP("should identify suspense", function()
+		it("should identify suspense", function()
 			jestExpect(ReactIs.isValidElementType(React.Suspense)).toBe(true)
 			jestExpect(ReactIs.typeOf(React.createElement(React.Suspense))).toBe(ReactIs.Suspense)
 			jestExpect(ReactIs.isSuspense(React.createElement(React.Suspense))).toBe(true)
