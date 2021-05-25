@@ -6,19 +6,22 @@ return {
 	Component = React.Component,
 	PureComponent = React.PureComponent,
 	createElement = React.createElement,
-	-- cloneElement = React.cloneElement,
-	-- isValidElement = React.isValidElement,
+	cloneElement = React.cloneElement,
+	isValidElement = React.isValidElement,
 	createRef = React.createRef,
-	-- forwardRef = React.forwardRef,
-	-- Fragment = React.REACT_FRAGMENT_TYPE,
-	-- Profiler = React.REACT_PROFILER_TYPE,
-	-- StrictMode = React.REACT_STRICT_MODE_TYPE,
-	-- Suspense = React.REACT_SUSPENSE_TYPE,
+	forwardRef = React.forwardRef,
+	Fragment = React.REACT_FRAGMENT_TYPE,
+	Profiler = React.REACT_PROFILER_TYPE,
+	StrictMode = React.REACT_STRICT_MODE_TYPE,
+	Suspense = React.REACT_SUSPENSE_TYPE,
+	lazy = React.lazy,
 	memo = React.memo,
+	useCallback = React.useCallback,
 	useState = React.useState,
 	useReducer = React.useReducer,
 	useEffect = React.useEffect,
-	-- useLayoutEffect = React.useLayoutEffect,
+	useImperativeHandle = React.useImperativeHandle,
+	useLayoutEffect = React.useLayoutEffect,
 	useRef = React.useRef,
 	useMemo = React.useMemo,
 	useContext = React.useContext,
@@ -29,7 +32,7 @@ return {
 	-- render = ReactRobloxRenderer.render,
 	createRoot = ReactRobloxRenderer.createRoot,
 	createBlockingRoot = ReactRobloxRenderer.createBlockingRoot,
-	-- createLegacyRoot = ReactRobloxRenderer.createLegacyRoot,
+	createLegacyRoot = ReactRobloxRenderer.createLegacyRoot,
 	Event = ReactRobloxRenderer.Event,
 	Change = ReactRobloxRenderer.Change,
 	createBinding = ReactRobloxRenderer.createBinding,
@@ -48,6 +51,9 @@ return {
 	unmount = function(root)
 		root:unmount()
 	end,
+
+	-- Additional compatibility affordances
+	createFragment = React.createFragment,
 
 	-- Compatibility layer for special symbol keys, aligning them with simple
 	-- reserved props used by upstream
