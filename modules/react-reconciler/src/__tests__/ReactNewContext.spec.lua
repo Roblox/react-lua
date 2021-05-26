@@ -1127,26 +1127,26 @@ return function()
 			return render(contextValue)
 		end)
 	end)
-	-- ROBLOX FIXME: implement Memo component
-	-- sharedContextTests(
-	--   "useContext inside memoized function component",
-	--   function(Context)
-	--     return React.memo(function (props)
-	--       local observedBits = props.unstable_observedBits
-	--       local contextValue
-	--       jestExpect(function()
-	--         contextValue = useContext(Context, observedBits)
-	--       end).toErrorDev(
-	--         observedBits ~= nil
-	--           and "useContext() second argument is reserved for future use in React. " ..
-	--               "Passing it is not supported. You passed: " .. tostring(observedBits) .. "."
-	--           or {}
-	--       )
-	--       local render = props.children
-	--       return render(contextValue)
-	--     end)
-	--   end
-	-- )
+
+	sharedContextTests(
+	  "useContext inside memoized function component",
+	  function(Context)
+	    return React.memo(function (props)
+	      local observedBits = props.unstable_observedBits
+	      local contextValue
+	      jestExpect(function()
+	        contextValue = useContext(Context, observedBits)
+	      end).toErrorDev(
+	        observedBits ~= nil
+	          and "useContext() second argument is reserved for future use in React. " ..
+	              "Passing it is not supported. You passed: " .. tostring(observedBits) .. "."
+	          or {}
+	      )
+	      local render = props.children
+	      return render(contextValue)
+	    end)
+	  end
+	)
 	sharedContextTests("readContext(Context) inside class component", function(Context)
 		local Consumer = React.Component:extend("Consumer")
 

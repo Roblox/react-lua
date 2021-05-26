@@ -8,6 +8,8 @@
  * @flow
 ]]
 --!nolint LocalShadowPedantic
+-- ROBLOX TODO remove this when CLI-38793 lands
+--!nolint LocalShadow
 -- FIXME (roblox): remove this when our unimplemented
 local function unimplemented(message)
   print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
@@ -96,7 +98,7 @@ local enableFundamentalAPI = ReactFeatureFlags.enableFundamentalAPI
 local warnAboutDefaultPropsOnFunctionComponents = ReactFeatureFlags.warnAboutDefaultPropsOnFunctionComponents
 local enableScopeAPI = ReactFeatureFlags.enableScopeAPI
 local invariant = require(Workspace.Shared.invariant)
--- local shallowEqual = require(Workspace.Shared.shallowEqual)
+local shallowEqual = require(Workspace.Shared.shallowEqual)
 local getComponentName = require(Workspace.Shared.getComponentName)
 local ReactStrictModeWarnings = require(script.Parent["ReactStrictModeWarnings.new"])
 local ReactSymbolsModule = require(Workspace.Shared.ReactSymbols)
@@ -118,18 +120,6 @@ local ReactUpdateQueue = require(script.Parent["ReactUpdateQueue.new"])
 local processUpdateQueue = ReactUpdateQueue.processUpdateQueue
 local cloneUpdateQueue = ReactUpdateQueue.cloneUpdateQueue
 local initializeUpdateQueue = ReactUpdateQueue.initializeUpdateQueue
-local NoLane = ReactFiberLane.NoLane
-local NoLanes = ReactFiberLane.NoLanes
-local SyncLane = ReactFiberLane.SyncLane
-local OffscreenLane = ReactFiberLane.OffscreenLane
-local DefaultHydrationLane = ReactFiberLane.DefaultHydrationLane
-local SomeRetryLane = ReactFiberLane.SomeRetryLane
-local NoTimestamp = ReactFiberLane.NoTimestamp
-local includesSomeLane = ReactFiberLane.includesSomeLane
-local laneToLanes = ReactFiberLane.laneToLanes
-local removeLanes = ReactFiberLane.removeLanes
-local mergeLanes = ReactFiberLane.mergeLanes
-local getBumpedLaneForHydration = ReactFiberLane.getBumpedLaneForHydration
 local ReactTypeOfMode = require(script.Parent.ReactTypeOfMode)
 local ConcurrentMode = ReactTypeOfMode.ConcurrentMode
 local NoMode = ReactTypeOfMode.NoMode
@@ -228,15 +218,14 @@ local resumeMountClassInstance = ReactFiberClassComponent.resumeMountClassInstan
 local updateClassInstance = ReactFiberClassComponent.updateClassInstance
 
 local resolveDefaultProps = require(script.Parent["ReactFiberLazyComponent.new"]).resolveDefaultProps
-
 local ReactFiber = require(script.Parent["ReactFiber.new"])
 local resolveLazyComponentTag = ReactFiber.resolveLazyComponentTag
 local createFiberFromFragment = ReactFiber.createFiberFromFragment
 local createFiberFromOffscreen = ReactFiber.createFiberFromOffscreen
-local createWorkInProgress = ReactFiber.createWorkInProgress
--- local isSimpleFunctionComponent = ReactFiber.isSimpleFunctionComponent
 
 local createFiberFromTypeAndProps = ReactFiber.createFiberFromTypeAndProps
+local isSimpleFunctionComponent = ReactFiber.isSimpleFunctionComponent
+local createWorkInProgress = ReactFiber.createWorkInProgress
 local ReactFiberWorkLoop = require(script.Parent["ReactFiberWorkLoop.new"]) :: any
 local pushRenderLanes = ReactFiberWorkLoop.pushRenderLanes
 local markSpawnedWork = ReactFiberWorkLoop.markSpawnedWork
@@ -277,6 +266,7 @@ local DidWarn = {
 -- export local didWarnAboutReassigningProps
 -- local didWarnAboutRevealOrder
 -- local didWarnAboutTailOptions
+local updateSimpleMemoComponent
 
 if _G.__DEV__ then
   DidWarn.didWarnAboutBadClass = {}
@@ -447,190 +437,204 @@ local function updateForwardRef(
   return workInProgress.child
 end
 
--- function updateMemoComponent(
---   current: Fiber | nil,
---   workInProgress: Fiber,
---   Component: any,
---   nextProps: any,
---   updateLanes: Lanes,
---   renderLanes: Lanes,
--- ): nil | Fiber {
---   if current == nil)
---     local type = Component.type
---     if
---       isSimpleFunctionComponent(type) and
---       Component.compare == nil and
---       -- SimpleMemoComponent codepath doesn't resolve outer props either.
---       Component.defaultProps == undefined
---     )
---       local resolvedType = type
---       if  _G.__DEV__ then
---         resolvedType = resolveFunctionForHotReloading(type)
---       end
---       -- If this is a plain function component without default props,
---       -- and with only the default shallow comparison, we upgrade it
---       -- to a SimpleMemoComponent to allow fast path updates.
---       workInProgress.tag = SimpleMemoComponent
---       workInProgress.type = resolvedType
---       if  _G.__DEV__ then
---         validateFunctionComponentInDev(workInProgress, type)
---       end
---       return updateSimpleMemoComponent(
---         current,
---         workInProgress,
---         resolvedType,
---         nextProps,
---         updateLanes,
---         renderLanes,
---       )
---     end
---     if  _G.__DEV__ then
---       local innerPropTypes = type.propTypes
---       if innerPropTypes)
---         -- Inner memo component props aren't currently validated in createElement.
---         -- We could move it there, but we'd still need this for lazy code path.
---         checkPropTypes(
---           innerPropTypes,
---           nextProps, -- Resolved props
---           'prop',
---           getComponentName(type),
---         )
---       end
---     end
---     local child = createFiberFromTypeAndProps(
---       Component.type,
---       nil,
---       nextProps,
---       workInProgress,
---       workInProgress.mode,
---       renderLanes,
---     )
---     child.ref = workInProgress.ref
---     child.return = workInProgress
---     workInProgress.child = child
---     return child
---   end
---   if  _G.__DEV__ then
---     local type = Component.type
---     local innerPropTypes = type.propTypes
---     if innerPropTypes)
---       -- Inner memo component props aren't currently validated in createElement.
---       -- We could move it there, but we'd still need this for lazy code path.
---       checkPropTypes(
---         innerPropTypes,
---         nextProps, -- Resolved props
---         'prop',
---         getComponentName(type),
---       )
---     end
---   end
---   local currentChild = ((current.child: any): Fiber); -- This is always exactly one child
---   if not includesSomeLane(updateLanes, renderLanes))
---     -- This will be the props with resolved defaultProps,
---     -- unlike current.memoizedProps which will be the unresolved ones.
---     local prevProps = currentChild.memoizedProps
---     -- Default to shallow comparison
---     local compare = Component.compare
---     compare = compare ~= nil ? compare : shallowEqual
---     if compare(prevProps, nextProps) and current.ref == workInProgress.ref)
---       return bailoutOnAlreadyFinishedWork(current, workInProgress, renderLanes)
---     end
---   end
---   -- React DevTools reads this flag.
---   workInProgress.flags |= PerformedWork
---   local newChild = createWorkInProgress(currentChild, nextProps)
---   newChild.ref = workInProgress.ref
---   newChild.return = workInProgress
---   workInProgress.child = newChild
---   return newChild
--- end
+local function updateMemoComponent(
+  current: Fiber | nil,
+  workInProgress: Fiber,
+  Component: any,
+  nextProps: any,
+  updateLanes: Lanes,
+  renderLanes: Lanes
+): nil | Fiber 
+  if current == nil then
+    local type = Component.type
+    if
+      isSimpleFunctionComponent(type) and
+      Component.compare == nil and
+      -- SimpleMemoComponent codepath doesn't resolve outer props either.
+      Component.defaultProps == nil
+    then
+      local resolvedType = type
+      if  _G.__DEV__ then
+        resolvedType = resolveFunctionForHotReloading(type)
+      end
+      -- If this is a plain function component without default props,
+      -- and with only the default shallow comparison, we upgrade it
+      -- to a SimpleMemoComponent to allow fast path updates.
+      workInProgress.tag = SimpleMemoComponent
+      workInProgress.type = resolvedType
+      if  _G.__DEV__ then
+        validateFunctionComponentInDev(workInProgress, type)
+      end
+      return updateSimpleMemoComponent(
+        current,
+        workInProgress,
+        resolvedType,
+        nextProps,
+        updateLanes,
+        renderLanes
+      )
+    end
+    if  _G.__DEV__ then
+      local innerPropTypes = type.propTypes
+      if innerPropTypes then
+        -- Inner memo component props aren't currently validated in createElement.
+        -- We could move it there, but we'd still need this for lazy code path.
+        checkPropTypes(
+          innerPropTypes,
+          nextProps, -- Resolved props
+          "prop",
+          getComponentName(type)
+        )
+      end
+    end
+    local child = createFiberFromTypeAndProps(
+      Component.type,
+      nil,
+      nextProps,
+      workInProgress,
+      workInProgress.mode,
+      renderLanes
+    )
+    child.ref = workInProgress.ref
+    child.return_ = workInProgress
+    workInProgress.child = child
+    return child
+  end
+  -- ROBLOX TODO Deviation: remove redefinition + typecast when this lands: CLI-38793
+  -- ROBLOX the if clause above returns early if current is nil
+  local current = (current :: Fiber)
+  if  _G.__DEV__ then
+    local type = Component.type
+    local innerPropTypes = type.propTypes
+    if innerPropTypes then
+      -- Inner memo component props aren't currently validated in createElement.
+      -- We could move it there, but we'd still need this for lazy code path.
+      checkPropTypes(
+        innerPropTypes,
+        nextProps, -- Resolved props
+        'prop',
+        getComponentName(type)
+      )
+    end
+  end
+  local currentChild = ((current.child :: any) :: Fiber) -- This is always exactly one child
+  if not ReactFiberLane.includesSomeLane(updateLanes, renderLanes) then
+    -- This will be the props with resolved defaultProps,
+    -- unlike current.memoizedProps which will be the unresolved ones.
+    local prevProps = currentChild.memoizedProps
+    -- Default to shallow comparison
+    local compare = Component.compare
+    if compare == nil then
+      compare = shallowEqual
+    end
+    if compare(prevProps, nextProps) and current.ref == workInProgress.ref then
+      return bailoutOnAlreadyFinishedWork(current, workInProgress, renderLanes)
+    end
+  end
+  -- React DevTools reads this flag.
+  workInProgress.flags = bit32.bor(workInProgress.flags, PerformedWork)
+  local newChild = createWorkInProgress(currentChild, nextProps)
+  newChild.ref = workInProgress.ref
+  newChild.return_ = workInProgress
+  workInProgress.child = newChild
+  return newChild
+end
 
--- function updateSimpleMemoComponent(
---   current: Fiber | nil,
---   workInProgress: Fiber,
---   Component: any,
---   nextProps: any,
---   updateLanes: Lanes,
---   renderLanes: Lanes,
--- ): nil | Fiber {
---   -- TODO: current can be non-null here even if the component
---   -- hasn't yet mounted. This happens when the inner render suspends.
---   -- We'll need to figure out if this is fine or can cause issues.
+function updateSimpleMemoComponent(
+  current: Fiber | nil,
+  workInProgress: Fiber,
+  Component: any,
+  nextProps: any,
+  updateLanes: Lanes,
+  renderLanes: Lanes
+): nil | Fiber 
+  -- TODO: current can be non-null here even if the component
+  -- hasn't yet mounted. This happens when the inner render suspends.
+  -- We'll need to figure out if this is fine or can cause issues.
 
---   if  _G.__DEV__ then
---     if workInProgress.type ~= workInProgress.elementType)
---       -- Lazy component props can't be validated in createElement
---       -- because they're only guaranteed to be resolved here.
---       local outerMemoType = workInProgress.elementType
---       if outerMemoType.$$typeof == REACT_LAZY_TYPE)
---         -- We warn when you define propTypes on lazy()
---         -- so let's just skip over it to find memo() outer wrapper.
---         -- Inner props for memo are validated later.
---         local lazyComponent: LazyComponentType<any, any> = outerMemoType
---         local payload = lazyComponent._payload
---         local init = lazyComponent._init
---         try {
---           outerMemoType = init(payload)
---         } catch (x)
---           outerMemoType = nil
---         end
---         -- Inner propTypes will be validated in the function component path.
---         local outerPropTypes = outerMemoType and (outerMemoType: any).propTypes
---         if outerPropTypes)
---           checkPropTypes(
---             outerPropTypes,
---             nextProps, -- Resolved (SimpleMemoComponent has no defaultProps)
---             'prop',
---             getComponentName(outerMemoType),
---           )
---         end
---       end
---     end
---   end
---   if current ~= nil)
---     local prevProps = current.memoizedProps
---     if
---       shallowEqual(prevProps, nextProps) and
---       current.ref == workInProgress.ref and
---       -- Prevent bailout if the implementation changed due to hot reload.
---       (__DEV__ ? workInProgress.type == current.type : true)
---     )
---       didReceiveUpdate = false
---       if not includesSomeLane(renderLanes, updateLanes))
---         -- The pending lanes were cleared at the beginning of beginWork. We're
---         -- about to bail out, but there might be other lanes that weren't
---         -- included in the current render. Usually, the priority level of the
---         -- remaining updates is accumlated during the evaluation of the
---         -- component (i.e. when processing the update queue). But since since
---         -- we're bailing out early *without* evaluating the component, we need
---         -- to account for it here, too. Reset to the value of the current fiber.
---         -- NOTE: This only applies to SimpleMemoComponent, not MemoComponent,
---         -- because a MemoComponent fiber does not have hooks or an update queue
---         -- rather, it wraps around an inner component, which may or may not
---         -- contains hooks.
---         -- TODO: Move the reset at in beginWork out of the common path so that
---         -- this is no longer necessary.
---         workInProgress.lanes = current.lanes
---         return bailoutOnAlreadyFinishedWork(
---           current,
---           workInProgress,
---           renderLanes,
---         )
---       } elseif (current.flags & ForceUpdateForLegacySuspense) ~= NoFlags)
---         -- This is a special case that only exists for legacy mode.
---         -- See https://github.com/facebook/react/pull/19216.
---         didReceiveUpdate = true
---       end
---     end
---   end
---   return updateFunctionComponent(
---     current,
---     workInProgress,
---     Component,
---     nextProps,
---     renderLanes,
---   )
--- end
+  if  _G.__DEV__ then
+    if workInProgress.type ~= workInProgress.elementType then
+      -- Lazy component props can't be validated in createElement
+      -- because they're only guaranteed to be resolved here.
+      local outerMemoType = workInProgress.elementType
+      if outerMemoType["$$typeof"] == REACT_LAZY_TYPE then
+        -- We warn when you define propTypes on lazy()
+        -- so let's just skip over it to find memo() outer wrapper.
+        -- Inner props for memo are validated later.
+        local lazyComponent: LazyComponentType<any, any> = outerMemoType
+        local payload = lazyComponent._payload
+        local init = lazyComponent._init
+        local ok, _result = pcall(function()
+          outerMemoType = init(payload)
+        end)
+        if not ok then
+          outerMemoType = nil
+        end
+        -- Inner propTypes will be validated in the function component path.
+        local outerPropTypes = outerMemoType and (outerMemoType :: any).propTypes
+        if outerPropTypes then
+          checkPropTypes(
+            outerPropTypes,
+            nextProps, -- Resolved (SimpleMemoComponent has no defaultProps)
+            "prop",
+            getComponentName(outerMemoType)
+          )
+        end
+      end
+    end
+  end
+  if current ~= nil then
+    -- ROBLOX TODO Deviation: remove redefinition + typecast when this lands: CLI-38793
+    -- This unfortunately breaks if current gets reassigned somewhere in this if clause
+    local current = (current :: Fiber)
+    local prevProps = current.memoizedProps
+    -- ROBLOX Deviation: replacing ternary operator
+    local preventBailout = true
+    if _G.__DEV__ then
+      preventBailout = workInProgress.type == current.type
+    end
+    if
+      shallowEqual(prevProps, nextProps) and
+      current.ref == workInProgress.ref and
+      -- Prevent bailout if the implementation changed due to hot reload.
+      preventBailout
+    then
+      didReceiveUpdate = false
+      if not ReactFiberLane.includesSomeLane(renderLanes, updateLanes) then
+        -- The pending lanes were cleared at the beginning of beginWork. We're
+        -- about to bail out, but there might be other lanes that weren't
+        -- included in the current render. Usually, the priority level of the
+        -- remaining updates is accumlated during the evaluation of the
+        -- component (i.e. when processing the update queue). But since since
+        -- we're bailing out early *without* evaluating the component, we need
+        -- to account for it here, too. Reset to the value of the current fiber.
+        -- NOTE: This only applies to SimpleMemoComponent, not MemoComponent,
+        -- because a MemoComponent fiber does not have hooks or an update queue
+        -- rather, it wraps around an inner component, which may or may not
+        -- contains hooks.
+        -- TODO: Move the reset at in beginWork out of the common path so that
+        -- this is no longer necessary.
+        workInProgress.lanes = current.lanes
+        return bailoutOnAlreadyFinishedWork(
+          current,
+          workInProgress,
+          renderLanes
+        )
+      elseif bit32.band(current.flags, ForceUpdateForLegacySuspense) ~= NoFlags then
+        -- This is a special case that only exists for legacy mode.
+        -- See https://github.com/facebook/react/pull/19216.
+        didReceiveUpdate = true
+      end
+    end
+  end
+  return updateFunctionComponent(
+    current,
+    workInProgress,
+    Component,
+    nextProps,
+    renderLanes
+  )
+end
 
 local function updateOffscreenComponent(
   current: Fiber?,
@@ -653,30 +657,30 @@ local function updateOffscreenComponent(
       -- In legacy sync mode, don't defer the subtree. Render it now.
       -- TODO: Figure out what we should do in Blocking mode.
       local nextState: OffscreenState = {
-        baseLanes = NoLanes
+        baseLanes = ReactFiberLane.NoLanes
       }
       workInProgress.memoizedState = nextState
       pushRenderLanes(workInProgress, renderLanes)
-    -- ROBLOX TODO: recast OffscreenLane to type Lane
-    elseif not includesSomeLane(renderLanes, OffscreenLane) then
+    -- ROBLOX TODO: recast ReactFiberLane.OffscreenLane to type Lane
+    elseif not ReactFiberLane.includesSomeLane(renderLanes, ReactFiberLane.OffscreenLane) then
       local nextBaseLanes
       if prevState ~= nil then
         -- ROBLOX FIXME: remove :: recast once Luau understands if-statement nil check
         local prevBaseLanes = (prevState :: OffscreenState).baseLanes
-        nextBaseLanes = mergeLanes(prevBaseLanes, renderLanes)
+        nextBaseLanes = ReactFiberLane.mergeLanes(prevBaseLanes, renderLanes)
       else
         nextBaseLanes = renderLanes
       end
 
       -- Schedule this fiber to re-render at offscreen priority. Then bailout.
       if enableSchedulerTracing then
-        -- ROBLOX TODO: recast OffscreenLane to type Lane
-        markSpawnedWork(OffscreenLane)
+        -- ROBLOX TODO: recast ReactFiberLane.OffscreenLane to type Lane
+        markSpawnedWork(ReactFiberLane.OffscreenLane)
       end
 
       -- deviation: unchain multiple assignment into two discrete assignments.
-      workInProgress.childLanes = laneToLanes(
-        OffscreenLane
+      workInProgress.childLanes = ReactFiberLane.laneToLanes(
+        ReactFiberLane.OffscreenLane
       )
       workInProgress.lanes = workInProgress.childLanes
 
@@ -691,7 +695,7 @@ local function updateOffscreenComponent(
     else
       -- Rendering at offscreen, so we can clear the base lanes.
       local nextState: OffscreenState = {
-        baseLanes = NoLanes
+        baseLanes = ReactFiberLane.NoLanes
       }
       workInProgress.memoizedState = nextState
       -- Push the lanes that were skipped when we bailed out.
@@ -709,7 +713,7 @@ local function updateOffscreenComponent(
     local subtreeRenderLanes
     if prevState ~= nil then
         -- ROBLOX FIXME: remove :: recast once Luau understands if-statement nil check
-      subtreeRenderLanes = mergeLanes((prevState :: OffscreenState).baseLanes, renderLanes)
+      subtreeRenderLanes = ReactFiberLane.mergeLanes((prevState :: OffscreenState).baseLanes, renderLanes)
       -- Since we're not hidden anymore, reset the state
       workInProgress.memoizedState = nil
     else
@@ -793,7 +797,11 @@ updateFunctionComponent = function(
     if typeof(Component) ~= 'function' and (workInProgress.type ~= workInProgress.elementType) then
       -- Lazy component props can't be validated in createElement
       -- because they're only guaranteed to be resolved here.
-      local innerPropTypes = Component.propTypes
+      local innerPropTypes
+      -- ROBLOX deviation: Roact won't support propTypes on functional components
+      if typeof(Component) == "table" then
+        innerPropTypes = Component.propTypes
+      end
       if innerPropTypes then
         checkPropTypes(
           innerPropTypes,
@@ -1370,15 +1378,14 @@ local function mountLazyComponent(
         end
       end
     end
-    unimplemented("MemoComponent")
-    -- child = updateMemoComponent(
-    --   nil,
-    --   workInProgress,
-    --   Component,
-    --   resolveDefaultProps(Component.type, resolvedProps), -- The inner type can have defaults too
-    --   updateLanes,
-    --   renderLanes
-    -- )
+    child = updateMemoComponent(
+      nil,
+      workInProgress,
+      Component,
+      resolveDefaultProps(Component.type, resolvedProps), -- The inner type can have defaults too
+      updateLanes,
+      renderLanes
+    )
     return child
   -- elseif resolvedTag == Block then
   --   unimplemented("Blocks API")
@@ -1768,7 +1775,7 @@ end
 
 local SUSPENDED_MARKER: SuspenseState = {
   dehydrated = nil,
-  retryLane = NoLane
+  retryLane = ReactFiberLane.NoLane
 }
 
 local function mountSuspenseOffscreenState(renderLanes: Lanes): OffscreenState
@@ -1782,7 +1789,7 @@ local function updateSuspenseOffscreenState(
   renderLanes: Lanes
 ): OffscreenState
   return {
-    baseLanes = mergeLanes(prevOffscreenState.baseLanes, renderLanes),
+    baseLanes = ReactFiberLane.mergeLanes(prevOffscreenState.baseLanes, renderLanes),
   }
 end
 
@@ -1816,7 +1823,7 @@ end
 
 local function getRemainingWorkInPrimaryTree(current: Fiber, renderLanes)
   -- TODO: Should not remove render lanes that were pinged during this render
-  return removeLanes(current.childLanes, renderLanes)
+  return ReactFiberLane.removeLanes(current.childLanes, renderLanes)
 end
 
 -- ROBLOX deviation: predeclare these methods to resolve method declaration ordering
@@ -1965,9 +1972,9 @@ local function updateSuspenseComponent(current, workInProgress, renderLanes)
       -- Conceptually, this is really the same as pinging. We can use any
       -- RetryLane even if it's the one currently rendering since we're leaving
       -- it behind on this node.
-      workInProgress.lanes = SomeRetryLane
+      workInProgress.lanes = ReactFiberLane.SomeRetryLane
       if enableSchedulerTracing then
-        markSpawnedWork(SomeRetryLane)
+        markSpawnedWork(ReactFiberLane.SomeRetryLane)
       end
       return fallbackFragment
     else
@@ -2162,7 +2169,7 @@ function mountSuspenseFallbackChildren(
     -- In legacy mode, we commit the primary tree as if it successfully
     -- completed, even though it's in an inconsistent state.
     primaryChildFragment = progressedPrimaryFragment
-    primaryChildFragment.childLanes = NoLanes
+    primaryChildFragment.childLanes = ReactFiberLane.NoLanes
     primaryChildFragment.pendingProps = primaryChildProps
 
     if enableProfilerTimer and bit32.band(workInProgress.mode, ProfileMode) ~= 0 then
@@ -2186,7 +2193,7 @@ function mountSuspenseFallbackChildren(
     primaryChildFragment = createFiberFromOffscreen(
       primaryChildProps,
       mode,
-      NoLanes,
+      ReactFiberLane.NoLanes,
       nil
     )
     fallbackChildFragment = createFiberFromFragment(
@@ -2282,7 +2289,7 @@ function updateSuspenseFallbackChildren(
   then
     local progressedPrimaryFragment: Fiber = workInProgress.child
     primaryChildFragment = progressedPrimaryFragment
-    primaryChildFragment.childLanes = NoLanes
+    primaryChildFragment.childLanes = ReactFiberLane.NoLanes
     primaryChildFragment.pendingProps = primaryChildProps
 
     if enableProfilerTimer and bit32.band(workInProgress.mode, ProfileMode) ~= 0 then
@@ -2375,7 +2382,7 @@ function mountSuspenseFallbackAfterRetryWithoutHydrating(
   local primaryChildFragment = createFiberFromOffscreen(
     primaryChildren,
     mode,
-    NoLanes,
+    ReactFiberLane.NoLanes,
     nil
   )
   local fallbackChildFragment = createFiberFromFragment(
@@ -2419,7 +2426,7 @@ function mountDehydratedSuspenseComponent(
           'the server rendered components.'
       )
     end
-    workInProgress.lanes = laneToLanes(SyncLane)
+    workInProgress.lanes = ReactFiberLane.laneToLanes(ReactFiberLane.SyncLane)
   elseif isSuspenseInstanceFallback(suspenseInstance) then
     -- This is a client-only boundary. Since we won't get any content from the server
     -- for this, we need to schedule that at a higher priority based on when it would
@@ -2434,15 +2441,15 @@ function mountDehydratedSuspenseComponent(
     -- they should be.
     -- Schedule a normal pri update to render this content.
     if enableSchedulerTracing then
-      markSpawnedWork(DefaultHydrationLane)
+      markSpawnedWork(ReactFiberLane.DefaultHydrationLane)
     end
-    workInProgress.lanes = laneToLanes(DefaultHydrationLane)
+    workInProgress.lanes = ReactFiberLane.laneToLanes(ReactFiberLane.DefaultHydrationLane)
   else
     -- We'll continue hydrating the rest at offscreen priority since we'll already
     -- be showing the right content coming from the server, it is no rush.
-    workInProgress.lanes = laneToLanes(OffscreenLane)
+    workInProgress.lanes = ReactFiberLane.laneToLanes(ReactFiberLane.OffscreenLane)
     if enableSchedulerTracing then
-      markSpawnedWork(OffscreenLane)
+      markSpawnedWork(ReactFiberLane.OffscreenLane)
     end
   end
   return nil
@@ -2487,18 +2494,18 @@ function updateDehydratedSuspenseComponent(
   end
   -- We use lanes to indicate that a child might depend on context, so if
   -- any context has changed, we need to treat is as if the input might have changed.
-  local hasContextChanged = includesSomeLane(renderLanes, current.childLanes)
+  local hasContextChanged = ReactFiberLane.includesSomeLane(renderLanes, current.childLanes)
   if didReceiveUpdate or hasContextChanged then
     -- This boundary has changed since the first render. This means that we are now unable to
     -- hydrate it. We might still be able to hydrate it using a higher priority lane.
     local root = getWorkInProgressRoot()
     if root ~= nil then
-      local attemptHydrationAtLane = getBumpedLaneForHydration(
+      local attemptHydrationAtLane = ReactFiberLane.getBumpedLaneForHydration(
         root,
         renderLanes
       )
       if
-        attemptHydrationAtLane ~= NoLane and
+        attemptHydrationAtLane ~= ReactFiberLane.NoLane and
         attemptHydrationAtLane ~= suspenseState.retryLane
       then
         -- Intentionally mutating since this render will get interrupted. This
@@ -2506,7 +2513,7 @@ function updateDehydratedSuspenseComponent(
         -- during the render phase.
         suspenseState.retryLane = attemptHydrationAtLane
         -- TODO: Ideally this would inherit the event time of the current render
-        local eventTime = NoTimestamp
+        local eventTime = ReactFiberLane.NoTimestamp
         scheduleUpdateOnFiber(current, attemptHydrationAtLane, eventTime)
       else
         -- We have already tried to ping at a higher priority than we're rendering with
@@ -2581,10 +2588,10 @@ function updateDehydratedSuspenseComponent(
 end
 
 -- function scheduleWorkOnFiber(fiber: Fiber, renderLanes: Lanes)
---   fiber.lanes = mergeLanes(fiber.lanes, renderLanes)
+--   fiber.lanes = ReactFiberLane.mergeLanes(fiber.lanes, renderLanes)
 --   local alternate = fiber.alternate
 --   if alternate ~= nil)
---     alternate.lanes = mergeLanes(alternate.lanes, renderLanes)
+--     alternate.lanes = ReactFiberLane.mergeLanes(alternate.lanes, renderLanes)
 --   end
 --   scheduleWorkOnParentPath(fiber.return, renderLanes)
 -- end
@@ -3153,7 +3160,7 @@ bailoutOnAlreadyFinishedWork = function(
   markSkippedUpdateLanes(workInProgress.lanes)
 
   -- Check if the children have any pending work.
-  if not includesSomeLane(renderLanes, workInProgress.childLanes) then
+  if not ReactFiberLane.includesSomeLane(renderLanes, workInProgress.childLanes) then
     -- The children don't have any work either. We can skip them.
     -- TODO: Once we add back resuming, we should check if the children are
     -- a work-in-progress set. If so, we need to transfer their effects.
@@ -3274,7 +3281,7 @@ exports.beginWork = function(
       -- If props or context changed, mark the fiber as having performed work.
       -- This may be unset if the props are determined to be equal later (memo).
       didReceiveUpdate = true
-    elseif not includesSomeLane(renderLanes, updateLanes) then
+    elseif not ReactFiberLane.includesSomeLane(renderLanes, updateLanes) then
       didReceiveUpdate = false
       -- This fiber does not have any pending work. Bailout without entering
       -- the begin phase. There's still some bookkeeping we that needs to be done
@@ -3332,7 +3339,7 @@ exports.beginWork = function(
         --   -- child fragment.
         --   local primaryChildFragment: Fiber = (workInProgress.child: any)
         --   local primaryChildLanes = primaryChildFragment.childLanes
-        --   if includesSomeLane(renderLanes, primaryChildLanes) then
+        --   if ReactFiberLane.includesSomeLane(renderLanes, primaryChildLanes) then
         --     -- The primary children have pending work. Use the normal path
         --     -- to attempt to render the primary children again.
         --     return updateSuspenseComponent(
@@ -3372,7 +3379,7 @@ exports.beginWork = function(
         unimplemented("beginWork: SuspenseListComponent")
         -- local didSuspendBefore = bit32.band(current.flags, DidCapture) ~= NoFlags
 
-        -- local hasChildWork = includesSomeLane(
+        -- local hasChildWork = ReactFiberLane.includesSomeLane(
         --   renderLanes,
         --   workInProgress.childLanes
         -- )
@@ -3427,7 +3434,7 @@ exports.beginWork = function(
         -- -- TODO: Probably should refactor `beginWork` to split the bailout
         -- -- path from the normal path. I'm tempted to do a labeled break here
         -- -- but I won't :)
-        -- workInProgress.lanes = NoLanes
+        -- workInProgress.lanes = ReactFiberLane.NoLanes
         -- return updateOffscreenComponent(current, workInProgress, renderLanes)
       end
       return bailoutOnAlreadyFinishedWork(current, workInProgress, renderLanes)
@@ -3453,7 +3460,7 @@ exports.beginWork = function(
   -- the update queue. However, there's an exception: SimpleMemoComponent
   -- sometimes bails out later in the begin phase. This indicates that we should
   -- move this assignment out of the common path and into each branch.
-  workInProgress.lanes = NoLanes
+  workInProgress.lanes = ReactFiberLane.NoLanes
 
   if workInProgress.tag == IndeterminateComponent then
     return mountIndeterminateComponent(
@@ -3538,43 +3545,41 @@ exports.beginWork = function(
   elseif workInProgress.tag == ContextConsumer then
     return updateContextConsumer(current, workInProgress, renderLanes)
   elseif workInProgress.tag == MemoComponent then
-    unimplemented("beginWork: MemoComponent")
-    -- local type = workInProgress.type
-    -- local unresolvedProps = workInProgress.pendingProps
-    -- -- Resolve outer props first, then resolve inner props.
-    -- local resolvedProps = resolveDefaultProps(type, unresolvedProps)
-    -- if _G.__DEV__ then
-    --   if workInProgress.type ~= workInProgress.elementType)
-    --     local outerPropTypes = type.propTypes
-    --     if outerPropTypes then
-    --       checkPropTypes(
-    --         outerPropTypes,
-    --         resolvedProps, -- Resolved for outer only
-    --         "prop",
-    --         getComponentName(type)
-    --       )
-    --     end
-    --   end
-    -- end
-    -- resolvedProps = resolveDefaultProps(type.type, resolvedProps)
-    -- return updateMemoComponent(
-    --   current,
-    --   workInProgress,
-    --   type,
-    --   resolvedProps,
-    --   updateLanes,
-    --   renderLanes
-    -- )
+    local type = workInProgress.type
+    local unresolvedProps = workInProgress.pendingProps
+    -- Resolve outer props first, then resolve inner props.
+    local resolvedProps = resolveDefaultProps(type, unresolvedProps)
+    if _G.__DEV__ then
+      if workInProgress.type ~= workInProgress.elementType then
+        local outerPropTypes = type.propTypes
+        if outerPropTypes then
+          checkPropTypes(
+            outerPropTypes,
+            resolvedProps, -- Resolved for outer only
+            "prop",
+            getComponentName(type)
+          )
+        end
+      end
+    end
+    resolvedProps = resolveDefaultProps(type.type, resolvedProps)
+    return updateMemoComponent(
+      current,
+      workInProgress,
+      type,
+      resolvedProps,
+      updateLanes,
+      renderLanes
+    )
   elseif workInProgress.tag == SimpleMemoComponent then
-    unimplemented("beginWork: SimpleMemoComponent")
-    -- return updateSimpleMemoComponent(
-    --   current,
-    --   workInProgress,
-    --   workInProgress.type,
-    --   workInProgress.pendingProps,
-    --   updateLanes,
-    --   renderLanes
-    -- )
+    return updateSimpleMemoComponent(
+      current,
+      workInProgress,
+      workInProgress.type,
+      workInProgress.pendingProps,
+      updateLanes,
+      renderLanes
+    )
   elseif workInProgress.tag == IncompleteClassComponent then
     local Component = workInProgress.type
     local unresolvedProps = workInProgress.pendingProps
