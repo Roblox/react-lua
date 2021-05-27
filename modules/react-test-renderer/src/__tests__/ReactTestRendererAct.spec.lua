@@ -102,10 +102,11 @@ return function()
 
                 local root
 
-                act(function()
-                    root = ReactTestRenderer.create(React.createElement(App))
-                    return Promise.resolve()
-                end)
+                Promise.try(function()
+                    act(function()
+                        root = ReactTestRenderer.create(React.createElement(App))
+                    end)
+                end):await()
                 
                 jestExpect(root.toJSON()).toEqual({'1','2','3'})
             end))
@@ -114,6 +115,7 @@ return function()
                 local alreadyResolvedPromise = Promise.resolve()
                 
                 local function App()
+                    -- This component will keep updating itself until step === 3
                     local step, proceed = useReducer(function(s)
                             if s == 3 then
                                 return 3
@@ -135,21 +137,27 @@ return function()
 
                 local root = ReactTestRenderer.create(nil)
 
-                act(function()
-                    root.update(React.createElement(App))
-                    return Promise.resolve()
-                end)
-
+                Promise.try(function()
+                    act(function()
+                        root.update(React.createElement(App))
+                    end)
+                end):await()
+                
                 jestExpect(Scheduler).toHaveYielded({
+                    -- Should not flush effects without also flushing microtasks
+                    -- First render:
                     'Effect',
                     'Microtask',
+                    -- Second render:
                     'Effect',
                     'Microtask',
+                    -- Final render:
                     'Effect',
                     'Microtask',
                 })    
 
-                jestExpect(root).toMatchRenderedOutput('3')
+                jestExpect(root).toMatchRenderedOutput('3') 
+
             end))
         end)
     end)

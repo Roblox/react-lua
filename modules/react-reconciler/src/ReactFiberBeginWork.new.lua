@@ -1406,8 +1406,7 @@ local function mountLazyComponent(
   if  _G.__DEV__ then
     if
       Component ~= nil and
-      -- ROBLOX deviation: invert object check to be ~= function
-      typeof(Component) ~= 'function' and
+      typeof(Component) == 'table' and
       Component["$$typeof"] == REACT_LAZY_TYPE
     then
       hint = ' Did you wrap a component in React.lazy() more than once?'
@@ -1420,7 +1419,7 @@ local function mountLazyComponent(
     false,
     'Element type is invalid. Received a promise that resolves to: %s. ' ..
       'Lazy element type must resolve to a class or function.%s',
-    Component,
+    tostring(Component),
     hint
   )
   -- ROBLOX deviation: add nil to satisfy Luau, which doesn't doesn't bubble up the unconditional error() inside invariant

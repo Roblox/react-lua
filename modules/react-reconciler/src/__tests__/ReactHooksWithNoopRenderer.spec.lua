@@ -772,10 +772,8 @@ return function()
 			})
 			jestExpect(ReactNoop.getChildren()).toEqual({ span(22) })
 		end)
-
-		-- ROBLOX TODO: needs toMatchRenderedOutput expectations uncommented
 		it('discards render phase updates if something suspends', function()
-		    local thenable = {then_ = function() end}
+		    local thenable = {andThen = function() end}
 			local Bar
 
 		    local function Foo(props)
@@ -809,31 +807,19 @@ return function()
 		    root.render(React.createElement(Foo, {signal=true}))
 
 		    jestExpect(Scheduler).toFlushAndYield({0})
-		    -- jestExpect(root).toMatchRenderedOutput(
-			-- 	React.createElement(span, {prop=0})
-			-- )
-			-- local renderedOutput = ReactNoop.getChildren()
-			-- jestExpect(#renderedOutput).toEqual(1)
-			-- jestExpect(renderedOutput[1]).toEqual(React.createElement(span, {prop=0}))
+		    jestExpect(root).toMatchRenderedOutput(React.createElement("span", {prop=0}))
 
 
 		    root.render(React.createElement(Foo, {signal=false}))
 		    jestExpect(Scheduler).toFlushAndYield({'Suspend!'})
-		    -- jestExpect(root).toMatchRenderedOutput(
-			-- 	React.createElement(span, {prop=0})
-			-- )
-			-- renderedOutput = ReactNoop.getChildren()
-			-- jestExpect(#renderedOutput).toEqual(1)
-			-- jestExpect(renderedOutput[1]).toEqual(React.createElement(span, {prop=0}))
+		    jestExpect(root).toMatchRenderedOutput(React.createElement("span", {prop=0}))
 
 		    -- Rendering again should suspend again.
 		    root.render(React.createElement(Foo, {signal=false}))
 		    jestExpect(Scheduler).toFlushAndYield({'Suspend!'})
 		end)
-
-		-- ROBLOX TODO: needs toMatchRenderedOutput expectations uncommented
 		it('discards render phase updates if something suspends, but not other updates in the same component', function()
-		    local thenable = {then_ = function() end}
+		    local thenable = {andThen = function() end}
 			local Bar
 
 		    local function Foo(props)
@@ -874,14 +860,14 @@ return function()
 		    root.render(React.createElement(Foo, {signal=true}))
 
 		    jestExpect(Scheduler).toFlushAndYield({'A:0'})
-		    -- jestExpect(root).toMatchRenderedOutput(<span prop="A:0" />)
+		    jestExpect(root).toMatchRenderedOutput(React.createElement("span", {prop="A:0"}))
 
 		    ReactNoop.act(function()
 		      root.render(React.createElement(Foo, {signal=false}))
 		      setLabel('B')
 
 		      jestExpect(Scheduler).toFlushAndYield({'Suspend!'})
-		    --   jestExpect(root).toMatchRenderedOutput(<span prop="A:0" />)
+		      jestExpect(root).toMatchRenderedOutput(React.createElement("span", {prop="A:0"}))
 
 		      -- Rendering again should suspend again.
 		      root.render(React.createElement(Foo, {signal=false}))
@@ -891,7 +877,7 @@ return function()
 		      -- label should still proceed. It shouldn't have been dropped.
 		      root.render(React.createElement(Foo, {signal=true}))
 		      jestExpect(Scheduler).toFlushAndYield({'B:0'})
-		    --   jestExpect(root).toMatchRenderedOutput(<span prop="B:0" />)
+		      jestExpect(root).toMatchRenderedOutput(React.createElement("span", {prop="B:0"}))
 			  return Promise.resolve()
 			end)
 		end)

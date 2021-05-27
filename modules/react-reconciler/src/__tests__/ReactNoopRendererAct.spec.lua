@@ -18,6 +18,7 @@ local Scheduler
 return function()
 	local RobloxJest = require(Workspace.RobloxJest)
 	local Packages = Workspace.Parent
+	local Promise = require(Packages.Promise)
 	local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
 
 	beforeEach(function()
@@ -54,28 +55,26 @@ return function()
 		jestExpect(Scheduler).toFlushWithoutYielding()
 		jestExpect(calledLog).toEqual({0})
 	end)
-
-	-- ROBLOX TODO: act should return a Promise when it receives a Promise
-	-- it('should work with async/await', function()
-	-- 	local function App()
-	-- 		local [ctr, setCtr] = React.useState(0)
-	-- 		async function someAsyncFunction()
-	-- 			Scheduler.unstable_yieldValue('stage 1')
-	-- 			await nil
-	-- 			Scheduler.unstable_yieldValue('stage 2')
-	-- 			await nil
-	-- 			setCtr(1)
-	-- 		end
-	-- 		React.useEffect(() => {
-	-- 			someAsyncFunction()
-	-- 		}, [])
-	-- 		return ctr
-	-- 	end
-	-- 	await ReactNoop.act(async () => {
-	-- 		ReactNoop.render(<App />)
-	-- 	})
-	-- 	jestExpect(Scheduler).toHaveYielded(['stage 1', 'stage 2'])
-	-- 	jestExpect(Scheduler).toFlushWithoutYielding()
-	-- 	jestExpect(ReactNoop.getChildren()).toEqual([{text: '1', hidden: false}])
-	-- })
+	it('should work with async/await', function()
+		local function App()
+			local ctr, setCtr = React.useState(0)
+			local function someAsyncFunction()
+				Scheduler.unstable_yieldValue('stage 1')
+				Scheduler.unstable_yieldValue('stage 2')
+				setCtr(1)
+			end
+			React.useEffect(function ()
+				someAsyncFunction()
+			end, {})
+			return ctr
+		end
+		Promise.try(function()
+			ReactNoop.act(function()
+				ReactNoop.render(React.createElement(App))
+			end)
+		end):await()
+		jestExpect(Scheduler).toHaveYielded({'stage 1', 'stage 2'})
+		jestExpect(Scheduler).toFlushWithoutYielding()
+		jestExpect(ReactNoop.getChildren()).toEqual({{text = '1', hidden = false}})
+	end)
 end

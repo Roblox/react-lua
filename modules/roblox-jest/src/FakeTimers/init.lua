@@ -11,6 +11,11 @@ local realTick = tick
 local timers: { [number]: Timer } = {}
 local now = 0
 
+local function reset()
+	timers = {}
+	now = 0
+end
+
 local function runAllTimers()
 	for _, timer in pairs(timers) do
 		-- Move now to target time, in case the callback reads it via
@@ -48,13 +53,16 @@ local function mockTick(_)
 end
 
 local function advanceTimersByTime(msToRun: number): ()
-    -- Only run a generous number of timers and then bail.
-    -- This is just to help avoid recursive loops
-    local i = 0
-    while i < 100000 do
+	-- Only run a generous number of timers and then bail.
+	-- This is just to help avoid recursive loops
+	local i = 0
+	while i < 100000 do
 		i += 1
 		-- If there are no more timers handles, stop!
 		if #timers == 0 then
+			-- If we run out of timers, we still need to finish advancing the
+			-- time the rest of the way
+			now += msToRun
 			break
 		end
 
@@ -72,7 +80,6 @@ local function advanceTimersByTime(msToRun: number): ()
 			table.remove(timers, 1)
 			callback()
 		end
-		
 	end
 	if i == 100000 then
 		error(
@@ -80,7 +87,6 @@ local function advanceTimersByTime(msToRun: number): ()
 			' timers, and there are still more! ' ..
 			"Assuming we've hit an infinite recursion and bailing out...")
 	end
-    
 end
 
 local delayOverride = {}
@@ -106,4 +112,5 @@ return {
 	useFakeTimers = useFakeTimers,
 	useRealTimers = useRealTimers,
 	advanceTimersByTime = advanceTimersByTime,
+	reset = reset,
 }

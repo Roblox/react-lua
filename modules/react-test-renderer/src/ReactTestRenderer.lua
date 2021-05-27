@@ -702,9 +702,9 @@ local function unstable_concurrentAct(scope: () -> () | Thenable<any, any>)
         if 
             typeof(thenable) == 'table' and
             thenable ~= nil and
-            typeof(thenable.then_) == 'function' then
+            typeof(thenable.andThen) == 'function' then
                 return function(resolve, reject)
-                    thenable.then_(function()
+                    thenable:andThen(function()
                         flushActWork(function()
                             unwind()
                             resolve()

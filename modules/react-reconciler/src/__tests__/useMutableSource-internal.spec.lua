@@ -1764,16 +1764,18 @@ return function()
             end
 
             local root = ReactNoop.createRoot()
-            act(Promise.promisify(function()
-                root.render(React.createElement(App, {parentConfig = configA, childConfig = configB}))
-            end))
+            Promise.try(function()
+                act(function()
+                    root.render(React.createElement(App, {parentConfig = configA, childConfig = configB}))
+                end)
+            end):await()
+            
 
             jestExpect(Scheduler).toHaveYielded({
                 "Parent: 1",
                 "Child: 2",
                 "Commit: 1, 2",
-            })
-
+            })  
             act(function()
                 -- Switch the parent and the child to read using the same config
                 root.render(React.createElement(App, {parentConfig = configB, childConfig = configB}))
@@ -1810,6 +1812,7 @@ return function()
                     "Commit: 3, 3"
                 })
             end)
+
         end)
 
         -- ROBLOX TODO: beginWork: Profiler is unimplemented

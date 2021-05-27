@@ -55,7 +55,7 @@ return function()
             --     local value = nil
 
             --     return {
-            --         then_ = function(resolve, reject)
+            --         andThen = function(self, resolve, reject)
             --             -- ROBLOX deviation: if/else in place of switch
             --             if status == 'pending' then
             --                 if listeners == nil then
@@ -110,7 +110,7 @@ return function()
         --     end)
         --     if not ok then
         --         local promise = result
-        --         if typeof(promise.then_) == 'function' then
+        --         if typeof(promise.andThen) == 'function' then
         --           Scheduler.unstable_yieldValue(("Suspend! [%s]"):format(text))
         --         else 
         --           Scheduler.unstable_yieldValue(('Error! [%s]'):format(text))
@@ -243,7 +243,7 @@ return function()
             local didResolve = false
             local listeners = {}
             local thenable = {
-                then_ = function(resolve)
+                andThen = function(self, resolve)
                     if not didResolve then
                         table.insert(listeners, resolve)
                     else
@@ -659,10 +659,15 @@ return function()
         --     })
         --     jestExpect(root).toMatchRenderedOutput('A2B2C2')
         -- end)
+        -- ROBLOX TODO: address resolveLazyComponentTag FIXME in ReactFiber.new.lua
         xit('mounts a lazy class component in non-concurrent mode', function()
-            local fakeImport = Promise.promisify(function(result)
-                return {default = result}
-            end)
+            local fakeImport = function(result)
+                -- ROBLOX FIXME: delay(0) because resolved promises are andThen'd on the same tick cycle
+                -- remove once addressed in polyfill
+                return Promise.delay(0):andThen(function()
+                    return {default = result}
+                end)
+            end
             local Class = React.Component:extend("Class")
 
             function Class:componentDidMount()
@@ -692,14 +697,14 @@ return function()
                 'Loading...',
             })
             jestExpect(root).toMatchRenderedOutput('Loading...')
+            
+            LazyClass:await()
 
-            return LazyClass:andThen(function()
-                jestExpect(Scheduler).toFlushExpired({
-                    'Hi',
-                    'Did mount: Hi',
-                })
-                jestExpect(root).toMatchRenderedOutput('Hi')
-            end)
+            jestExpect(Scheduler).toFlushExpired({
+                'Hi',
+                'Did mount: Hi',
+            })
+            jestExpect(root).toMatchRenderedOutput('Hi')
         end)
         -- it('only captures if `fallback` is defined', function()
         --     local root = ReactTestRenderer.create(React.createElement(Suspense, {
@@ -751,7 +756,7 @@ return function()
         --             Scheduler.unstable_yieldValue(text)
         --         end)
         --         if not ok then
-        --             if typeof(result.then_) == 'function' then
+        --             if typeof(result.andThen) == 'function' then
         --                 Scheduler.unstable_yieldValue('Suspend! ' .. tostring(text))
         --             else
         --                 Scheduler.unstable_yieldValue('Error! ' .. tostring(text))
@@ -1003,7 +1008,7 @@ return function()
             --             return text;
             --         end)
             --         if not ok then
-            --             if typeof(result.then_) == 'function' then
+            --             if typeof(result.andThen) == 'function' then
             --                 Scheduler.unstable_yieldValue("Suspend! [" .. text .. "]")
             --                 else
             --                 Scheduler.unstable_yieldValue("Error! [" .. text .. "]")

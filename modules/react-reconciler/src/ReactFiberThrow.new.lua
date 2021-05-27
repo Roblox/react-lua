@@ -241,7 +241,7 @@ local function attachPingListener(root: FiberRoot, wakeable: Wakeable, lanes: La
     local ping = function()
       return pingSuspendedRoot(root, wakeable, lanes)
     end
-    wakeable.then_(ping, ping)
+    wakeable:andThen(ping, ping)
   end
 end
 
@@ -260,7 +260,7 @@ function throwException(
   if
     value ~= nil and
     typeof(value) == 'table' and
-    typeof(value.then_) == 'function'
+    typeof(value.andThen) == 'function'
   then
     -- This is a wakeable.
     local wakeable: Wakeable = value

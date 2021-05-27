@@ -270,7 +270,8 @@ local function resolveLazyComponentTag(Component: any): WorkTag
 	-- ROBLOX FIXME: Need to actually differentiate correctly
 	if typeof(Component) == "function" then
 		return shouldConstruct(Component) and ClassComponent or FunctionComponent
-	elseif Component ~= nil then
+	-- ROBLOX deviation: we can only index ["$$typeof"] on a table
+	elseif Component ~= nil and typeof(Component) == 'table' then
 		local __typeof = Component["$$typeof"]
 		if __typeof == REACT_FORWARD_REF_TYPE then
 			return ForwardRef

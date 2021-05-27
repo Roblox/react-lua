@@ -483,7 +483,7 @@ local function commitHookEffectListMount(flags: HookFlags, finishedWork: Fiber)
               addendum =
                 ' You returned nil. If your effect does not require clean ' ..
                 'up, return undefined (or nothing).'
-            elseif typeof(destroy.then_) == 'function' then
+            elseif typeof(destroy.andThen) == 'function' then
               addendum =
                 '\n\nIt looks like you wrote useEffect(async () => ...) or returned a Promise. ' ..
                 'Instead, write the async function inside your effect ' ..
@@ -1988,11 +1988,10 @@ end
     finishedWork.tag == OffscreenComponent or
     finishedWork.tag == LegacyHiddenComponent
   then
-    unimplemented("commitWork: OffscreenComponent / LegacyHiddenComponent")
-    -- local newState: OffscreenState | nil = finishedWork.memoizedState
-    -- local isHidden = newState ~= nil
-    -- hideOrUnhideAllChildren(finishedWork, isHidden)
-    -- return
+    local newState: OffscreenState | nil = finishedWork.memoizedState
+    local isHidden = newState ~= nil
+    hideOrUnhideAllChildren(finishedWork, isHidden)
+    return
   end
   invariant(
     false,
@@ -2095,7 +2094,7 @@ function attachSuspenseRetryListeners(finishedWork: Fiber)
           -- end
         -- end
         table.insert(retryCache, wakeable)
-        wakeable.then_(retry, retry)
+        wakeable:andThen(retry, retry)
       end
     end
   end

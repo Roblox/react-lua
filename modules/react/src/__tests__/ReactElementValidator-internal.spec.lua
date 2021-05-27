@@ -600,7 +600,7 @@ return function()
 			local didCall = false
 			local Lazy = React.lazy(function()
 				didCall = true
-				return { then_ = function() end }
+				return { andThen = function() end }
 			end)
 			React.createElement(Lazy)
 			jestExpect(didCall).toBe(false)

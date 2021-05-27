@@ -72,7 +72,7 @@ function lazyInitializer(payload: Payload<any>): any
 		local pending = payload
 		pending._status = Pending
 		pending._result = thenable
-		thenable.then_(function(moduleObject)
+		thenable:andThen(function(moduleObject)
 			if payload._status == Pending then
 				local defaultExport = moduleObject.default
 				if _G.__DEV__ then

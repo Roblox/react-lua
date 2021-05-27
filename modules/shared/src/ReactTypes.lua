@@ -208,7 +208,7 @@ export type MutableSource<Source> = {
 -- -- The subset of a Thenable required by things thrown by Suspense.
 -- -- This doesn't require a value to be passed to either handler.
 export type Wakeable = {
-  then_: (() -> any, () -> any) -> (Wakeable?),
+  andThen: (any, () -> any, () -> any) -> (Wakeable?),
   -- Special flag to opt out of tracing interactions across a Suspense boundary.
   __reactDoNotTraceInteractions: boolean?,
   [any]: any,
@@ -226,7 +226,8 @@ export type Wakeable = {
 --   ): void | Thenable<U>;
 -- }
 export type Thenable<R, U> = {
-  then_: (
+  andThen: (
+    any,
     (R) -> () | Thenable<R, U> | U,
     (any) -> () | Thenable<R, U> | U
   ) -> () | Thenable<R, U>

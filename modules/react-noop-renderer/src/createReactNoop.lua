@@ -1220,18 +1220,14 @@ local function createReactNoop(reconciler, useMutation: boolean)
 		-- returned and 2) we could use async/await. Since it's only our used in
 		-- our test suite, we should be able to.
 		local ok, result = pcall(function()
-			-- deviation: FIXME: I'm using `then_` instead of `then`, since
-			-- then is a reserved keyword for Lua. Need to revisit this in the
-			-- future when we figure out what promises and other async
-			-- primitives look like
 			local thenable = batchedUpdates(scope)
 			if
 				typeof(thenable) == "table" and
-				typeof(thenable.then_) == "function"
+				typeof(thenable.andThen) == "function"
 			then
 				return {
-					then_ = function(resolve: () -> (), reject: (any) -> ())
-						thenable.then_(
+					andThen = function(self, resolve: () -> (), reject: (any) -> ())
+						thenable:andThen(
 							function()
 								flushActWork(
 									function()
@@ -1271,6 +1267,7 @@ local function createReactNoop(reconciler, useMutation: boolean)
 			unwind()
 			error(result)
 		end
+		return result
 	end
 
 	flushActWork = function(resolve, reject)

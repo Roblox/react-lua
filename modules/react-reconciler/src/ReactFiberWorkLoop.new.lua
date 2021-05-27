@@ -208,6 +208,8 @@ local invokeLayoutEffectUnmountInDEV = ReactFiberCommitWork.invokeLayoutEffectUn
 local invokePassiveEffectUnmountInDEV = ReactFiberCommitWork.invokePassiveEffectUnmountInDEV
 local recursivelyCommitLayoutEffects = ReactFiberCommitWork.recursivelyCommitLayoutEffects
 
+local Promise = require(Workspace.Parent.Promise)
+
 local enqueueUpdate = require(script.Parent["ReactUpdateQueue.new"]).enqueueUpdate
 
 local resetContextDependencies = require(script.Parent["ReactFiberNewContext.new"]).resetContextDependencies
@@ -3506,7 +3508,7 @@ if _G.__DEV__ and ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallb
       if
         originalError ~= nil and
         typeof(originalError) == "table" and
-        typeof(originalError.then_) == "function"
+        typeof(originalError.andThen) == "function"
       then
         -- Don't replay promises. Treat everything else like an error.
         error(originalError)
@@ -4010,17 +4012,6 @@ local function flushWorkAndMicroTasks(onDone: (any?) -> ())
   end
 end
 
--- ROBLOX FIXME stub of Promise that we should fill in later
-local Promise = {
-  resolve = function()
-    return {
-      then_ = function(resolve, reject)
-        resolve()
-      end
-    }
-  end
-}
-
 exports.act = function(callback: () -> Thenable<any, any>): Thenable<any?, any?>
   if not _G.__DEV__ then
     if didWarnAboutUsingActInProd == false then
@@ -4069,19 +4060,17 @@ exports.act = function(callback: () -> Thenable<any, any>): Thenable<any?, any?>
   if
     result ~= nil and
     typeof(result) == "table" and
-    typeof(result.then_) == 'function'
+    typeof(result.andThen) == 'function'
   then
     -- setup a boolean that gets set to true only
     -- once this act() call is await-ed
     local called = false
     if _G.__DEV__ then
-      -- FIXME (roblox): No global promise definition, need to depend on one or
-      -- expose it through polyfills
       if typeof(Promise) ~= nil then
         --eslint-disable-next-line no-undef
         Promise.resolve()
-          .then_(function() end)
-          .then_(function()
+          :andThen(function() end)
+          :andThen(function()
             if called == false then
               -- FIXME (roblox): We should replace this with proper Lua promise
               -- logic
@@ -4099,9 +4088,9 @@ exports.act = function(callback: () -> Thenable<any, any>): Thenable<any?, any?>
     -- effects and microtasks in a loop until flushPassiveEffects() == false,
     -- and cleans up
     return {
-      then_ = function(resolve, reject)
+      andThen = function(self, resolve, reject)
         called = true
-        result.then_(
+        result:andThen(
           function()
             if
               actingUpdatesScopeDepth > 1 or
@@ -4161,7 +4150,7 @@ exports.act = function(callback: () -> Thenable<any, any>): Thenable<any?, any?>
 
     -- in the sync case, the returned thenable only warns *if* await-ed
     return {
-      then_ = function(resolve)
+      andThen = function(self, resolve)
         if _G.__DEV__ then
           console.error(
             "Do not await the result of calling act(...) with sync logic, it is not a Promise."

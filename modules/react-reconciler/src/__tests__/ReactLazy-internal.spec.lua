@@ -5,29 +5,28 @@ local Scheduler
 local ReactFeatureFlags
 local Suspense
 local lazy
-local RobloxJest
 local Workspace = script.Parent.Parent.Parent
 local Packages = Workspace.Parent
 
--- local Promise = require(Packages.Promise)
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local Error = LuauPolyfill.Error
-
--- local setTimeout = LuauPolyfill.setTimeout
-
--- local function normalizeCodeLocInfo(str)
---     return str and str.replace(function(m, name)
---         return'\n    in ' .. name .. ' (at **)'
---     end)
--- end
+local setTimeout = LuauPolyfill.setTimeout
+local function normalizeCodeLocInfo(str)
+    return str and str.replace(function(m, name)
+        return'\n    in ' .. name .. ' (at **)'
+    end)
+end
 
 return function()
-    describe('ReactLazy', function()
-        RobloxJest = require(Workspace.RobloxJest)
-        local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
+    local RobloxJest = require(Workspace.RobloxJest)
+    local Promise = require(Packages.Promise)
+    local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
 
+    describe('ReactLazy', function()
         beforeEach(function()
             RobloxJest.resetModules()
+            RobloxJest.useFakeTimers()
+
             -- deviation: In react, jest _always_ mocks Scheduler -> unstable_mock;
             -- in our case, we need to do it anywhere we want to use the scheduler,
             -- directly or indirectly, until we have some form of bundling logic
@@ -96,11 +95,11 @@ return function()
         -- end)
 
         local fakeImport = function(result)
-            return {
-                then_ = function(resolve)
-                    return resolve({default = result})
-                end
-            }
+            -- ROBLOX FIXME: delay(0) because resolved promises are andThen'd on the same tick cycle
+            -- remove once addressed in polyfill
+            return Promise.delay(0):andThen(function()
+                return {default = result}
+            end)
         end
 
         local function Text(props)
@@ -109,57 +108,59 @@ return function()
             return props.text
         end
 
-        -- local delay = function(ms)
-        --     return Promise.new(function(resolve)
-        --         return setTimeout(function()
-        --             return resolve()
-        --         end, ms)
-        --     end)
-        -- end
+        local delay_ = function(ms)
+            return Promise.new(function(resolve)
+                return setTimeout(function()
+                    return resolve()
+                end, ms)
+            end)
+        end
 
-        -- xit('suspends until module has loaded', function()
-        --     local LazyText = lazy(function()
-        --         return fakeImport(Text)
-        --     end)
-        --     local root = ReactTestRenderer.create(React.createElement(Suspense, {
-        --         fallback = React.createElement(Text, {
-        --             text = 'Loading...',
-        --         }),
-        --     }, React.createElement(LazyText, {
-        --         text = 'Hi',
-        --     })), {unstable_isConcurrent = true})
+        it('suspends until module has loaded', function()
+            local LazyText = lazy(function()
+                return fakeImport(Text)
+            end)
+            local root = ReactTestRenderer.create(
+                React.createElement(Suspense, {
+                    fallback = React.createElement(Text, {
+                        text = 'Loading...',
+                    }),
+                }, React.createElement(LazyText, {
+                    text = 'Hi',
+            })), {unstable_isConcurrent = true})
 
-        --     jestExpect(Scheduler).toFlushAndYield({
-        --         'Loading...',
-        --     })
+            jestExpect(Scheduler).toFlushAndYield({
+                'Loading...',
+            })
 
-        --     jestExpect(root).never.toMatchRenderedOutput('Hi')
+            jestExpect(root).never.toMatchRenderedOutput('Hi')
 
-        --     Promise.resolve():await()
+            -- ROBLOX FIXME: delay by one frame is current best translation of `await Promise.resolve()`
+            Promise.delay(0):await()
 
-        --     jestExpect(Scheduler).toFlushAndYield({
-        --         'Hi',
-        --     })
-        --     jestExpect(root).toMatchRenderedOutput('Hi')
+            jestExpect(Scheduler).toFlushAndYield({
+                'Hi',
+            })
+            jestExpect(root).toMatchRenderedOutput('Hi')
 
-        --     -- Should not suspend on update
-        --     root.update(React.createElement(Suspense, {
-        --         fallback = React.createElement(Text, {
-        --             text = 'Loading...',
-        --         }),
-        --     }, React.createElement(LazyText, {
-        --         text = 'Hi again',
-        --     })))
-        --     jestExpect(Scheduler).toFlushAndYield({
-        --         'Hi again',
-        --     })
-        --     jestExpect(root).toMatchRenderedOutput('Hi again')
+            -- Should not suspend on update
+            root.update(React.createElement(Suspense, {
+                fallback = React.createElement(Text, {
+                    text = 'Loading...',
+                }),
+            }, React.createElement(LazyText, {
+                text = 'Hi again',
+            })))
+            jestExpect(Scheduler).toFlushAndYield({
+                'Hi again',
+            })
+            jestExpect(root).toMatchRenderedOutput('Hi again')
 
-        -- end)
+        end)
         it('can resolve synchronously without suspending', function()
             local LazyText = lazy(function()
                 return {
-                    then_ = function(cb)
+                    andThen = function(self, cb)
                         cb({default = Text})
                     end,
                 }
@@ -180,7 +181,7 @@ return function()
         it('can reject synchronously without suspending', function()
             local LazyText = lazy(function()
                 return {
-                    then_ = function(resolve, reject)
+                    andThen = function(self, resolve, reject)
                         reject(Error('oh no'))
                     end,
                 }
@@ -213,57 +214,57 @@ return function()
             jestExpect(Scheduler).toHaveYielded({})
             jestExpect(root).toMatchRenderedOutput('Error: oh no')
         end)
-        -- xit('multiple lazy components', function()
-        --     local function Foo()
-        --         return React.createElement(Text, {
-        --             text = 'Foo',
-        --         })
-        --     end
-        --     local function Bar()
-        --         return React.createElement(Text, {
-        --             text = 'Bar',
-        --         })
-        --     end
+        it('multiple lazy components', function()
+            local function Foo()
+                return React.createElement(Text, {
+                    text = 'Foo',
+                })
+            end
+            local function Bar()
+                return React.createElement(Text, {
+                    text = 'Bar',
+                })
+            end
 
-        --     local promiseForFoo = delay(100):andThen(function()
-        --         return fakeImport(Foo)
-        --     end)
-        --     local promiseForBar = delay(500):andThen(function()
-        --         return fakeImport(Bar)
-        --     end)
-        --     local LazyFoo = lazy(function()
-        --         return promiseForFoo
-        --     end)
-        --     local LazyBar = lazy(function()
-        --         return promiseForBar
-        --     end)
-        --     local root = ReactTestRenderer.create(React.createElement(Suspense, {
-        --         fallback = React.createElement(Text, {
-        --             text = 'Loading...',
-        --         }),
-        --     }, React.createElement(LazyFoo, nil), React.createElement(LazyBar, nil)), {unstable_isConcurrent = true})
+            local promiseForFoo = delay_(100):andThen(function()
+                return fakeImport(Foo)
+            end)
+            local promiseForBar = delay_(500):andThen(function()
+                return fakeImport(Bar)
+            end)
+            local LazyFoo = lazy(function()
+                return promiseForFoo
+            end)
+            local LazyBar = lazy(function()
+                return promiseForBar
+            end)
+            local root = ReactTestRenderer.create(React.createElement(Suspense, {
+                fallback = React.createElement(Text, {
+                    text = 'Loading...',
+                }),
+            }, React.createElement(LazyFoo, nil), React.createElement(LazyBar, nil)), {unstable_isConcurrent = true})
 
-        --     jestExpect(Scheduler).toFlushAndYield({
-        --         'Loading...',
-        --     })
-        --     jestExpect(root).never.toMatchRenderedOutput('FooBar')
-        --     RobloxJest.advanceTimersByTime(100)
+            jestExpect(Scheduler).toFlushAndYield({
+                'Loading...',
+            })
+            jestExpect(root).never.toMatchRenderedOutput('FooBar')
+            RobloxJest.advanceTimersByTime(100)
 
-        --     promiseForFoo:await()
-        --     RobloxJest.Expect(Scheduler).toFlushAndYield({
-        --         'Foo',
-        --     })
-        --     jestExpect(root).never.toMatchRenderedOutput('FooBar')
-        --     RobloxJest.advanceTimersByTime(500)
+            promiseForFoo:await()
+            jestExpect(Scheduler).toFlushAndYield({
+                'Foo',
+            })
+            jestExpect(root).never.toMatchRenderedOutput('FooBar')
+            RobloxJest.advanceTimersByTime(500)
 
-        --     promiseForBar:await()
+            promiseForBar:await()
 
-        --     jestExpect(Scheduler).toFlushAndYield({
-        --         'Foo',
-        --         'Bar',
-        --     })
-        --     jestExpect(root).toMatchRenderedOutput('FooBar')
-        -- end)
+            jestExpect(Scheduler).toFlushAndYield({
+                'Foo',
+                'Bar',
+            })
+            jestExpect(root).toMatchRenderedOutput('FooBar')
+        end)
         -- it('does not support arbitrary promises, only module objects', _async(function()
         --     spyOnDev(console, 'error')
 
@@ -292,113 +293,122 @@ return function()
         --         expect(Scheduler).toFlushAndThrow('Element type is invalid')
         --     end)
         -- end))
-        -- xit('throws if promise rejects', function()
-        --     local LazyText = lazy(Promise.promisify(function()
-        --         error(Error('Bad network'))
-        --     end))
-        --     local root = ReactTestRenderer.create(React.createElement(Suspense, {
-        --         fallback = React.createElement(Text, {
-        --             text = 'Loading...',
-        --         }),
-        --     }, React.createElement(LazyText, {
-        --         text = 'Hi',
-        --     })), {unstable_isConcurrent = true})
+        it('throws if promise rejects', function()
+            local badImport = function()
+                 -- ROBLOX FIXME: delay(0) because resolved promises are andThen'd on the same tick cycle
+                -- remove once addressed in polyfill
+                return Promise.delay(0):andThen(function()
+                    error(Error('Bad network'))
+                end)
+            end
+            local LazyText = lazy(badImport)
+            local root = ReactTestRenderer.create(React.createElement(Suspense, {
+                fallback = React.createElement(Text, {
+                    text = 'Loading...',
+                }),
+            }, React.createElement(LazyText, {
+                text = 'Hi',
+            })), {unstable_isConcurrent = true})
 
-        --     jestExpect(Scheduler).toFlushAndYield({
-        --         'Loading...',
-        --     })
-        --     jestExpect(root).never.toMatchRenderedOutput('Hi')
+            -- ROBLOX TODO: this gets the 'Bad Network' error, Suspense fallback 'Loading...' not rendered first
+            jestExpect(Scheduler).toFlushAndYield({
+                'Loading...',
+            })
+            jestExpect(root).never.toMatchRenderedOutput('Hi')
 
-        --     local _, _ = pcall(function()
-        --         Promise.resolve():await()
-        --     end)
+            local _, _ = pcall(function()
+                -- ROBLOX FIXME: delay by one frame is current best translation of `await Promise.resolve()`
+                Promise.delay(0):await()
+            end)
 
-        --     jestExpect(Scheduler).toFlushAndThrow('Bad network')
+            jestExpect(Scheduler).toFlushAndThrow('Bad network')
 
-        -- end)
-        -- xit('mount and reorder', function()
-        --     local Child = React.Component:extend("Child")
+        end)
 
-        --     function Child:componentDidMount()
-        --         Scheduler.unstable_yieldValue('Did mount: ' .. self.props.label)
-        --     end
-        --     function Child:componentDidUpdate()
-        --         Scheduler.unstable_yieldValue('Did update: ' .. self.props.label)
-        --     end
-        --     function Child:render()
-        --         return React.createElement(Text, {
-        --             text = self.props.label,
-        --         })
-        --     end
+        -- ROBLOX TODO:  Error: Element type is invalid. Received a promise that resolves to: Child.
+        xit('mount and reorder', function()
+            local Child = React.Component:extend("Child")
 
-        --     local LazyChildA = lazy(function()
-        --         return fakeImport(Child)
-        --     end)
-        --     local LazyChildB = lazy(function()
-        --         return fakeImport(Child)
-        --     end)
+            function Child:componentDidMount()
+                Scheduler.unstable_yieldValue('Did mount: ' .. self.props.label)
+            end
+            function Child:componentDidUpdate()
+                Scheduler.unstable_yieldValue('Did update: ' .. self.props.label)
+            end
+            function Child:render()
+                return React.createElement(Text, {
+                    text = self.props.label,
+                })
+            end
 
-        --     local function Parent(props)
-        --         local children
-        --         if props.swap then
-        --             children = {
-        --                 React.createElement(LazyChildB, {
-        --                     key = 'B',
-        --                     label = 'B',
-        --                 }),
-        --                 React.createElement(LazyChildA, {
-        --                     key = 'A',
-        --                     label = 'A',
-        --                 }),
-        --             }
-        --         else
-        --             children = {
-        --                 React.createElement(LazyChildA, {
-        --                     key = 'A',
-        --                     label = 'A',
-        --                 }),
-        --                 React.createElement(LazyChildB, {
-        --                     key = 'B',
-        --                     label = 'B',
-        --                 }),
-        --             }
-        --         end
-        --         return React.createElement(Suspense, {
-        --             fallback = React.createElement(Text, {
-        --                 text = 'Loading...',
-        --             }),
-        --         }, children)
-        --     end
+            local LazyChildA = lazy(function()
+                return fakeImport(Child)
+            end)
+            local LazyChildB = lazy(function()
+                return fakeImport(Child)
+            end)
 
-        --     local root = ReactTestRenderer.create(React.createElement(Parent, {swap = false}), {unstable_isConcurrent = true})
+            local function Parent(props)
+                local children
+                if props.swap then
+                    children = {
+                        React.createElement(LazyChildB, {
+                            key = 'B',
+                            label = 'B',
+                        }),
+                        React.createElement(LazyChildA, {
+                            key = 'A',
+                            label = 'A',
+                        }),
+                    }
+                else
+                    children = {
+                        React.createElement(LazyChildA, {
+                            key = 'A',
+                            label = 'A',
+                        }),
+                        React.createElement(LazyChildB, {
+                            key = 'B',
+                            label = 'B',
+                        }),
+                    }
+                end
+                return React.createElement(Suspense, {
+                    fallback = React.createElement(Text, {
+                        text = 'Loading...',
+                    }),
+                }, children)
+            end
+
+            local root = ReactTestRenderer.create(React.createElement(Parent, {swap = false}), {unstable_isConcurrent = true})
 
 
-        --     jestExpect(Scheduler).toFlushAndYield({
-        --         'Loading...',
-        --     })
-        --     jestExpect(root).never.toMatchRenderedOutput('AB')
+            jestExpect(Scheduler).toFlushAndYield({
+                'Loading...',
+            })
+            jestExpect(root).never.toMatchRenderedOutput('AB')
 
-        --     LazyChildA:await()
-        --     LazyChildB:await()
+            LazyChildA:await()
+            LazyChildB:await()
 
-        --     jestExpect(Scheduler).toFlushAndYield({
-        --         'A',
-        --         'B',
-        --         'Did mount: A',
-        --         'Did mount: B',
-        --     })
-        --     jestExpect(root).toMatchRenderedOutput('AB')
+            jestExpect(Scheduler).toFlushAndYield({
+                'A',
+                'B',
+                'Did mount: A',
+                'Did mount: B',
+            })
+            jestExpect(root).toMatchRenderedOutput('AB')
 
-        --     -- Swap the potsition of A and B
-        --     root.update(React.createElement(Parent, {swap = true}))
-        --     jestExpect(Scheduler).toFlushAndYield({
-        --         'B',
-        --         'A',
-        --         'Did update: B',
-        --         'Did update: A',
-        --     })
-        --     jestExpect(root).toMatchRenderedOutput('BA')
-        -- end)
+            -- Swap the potsition of A and B
+            root.update(React.createElement(Parent, {swap = true}))
+            jestExpect(Scheduler).toFlushAndYield({
+                'B',
+                'A',
+                'Did update: B',
+                'Did update: A',
+            })
+            jestExpect(root).toMatchRenderedOutput('BA')
+        end)
         -- it('resolves defaultProps, on mount and update', _async(function()
         --     local function T(props)
         --         return React.createElement(Text, props)
@@ -829,67 +839,67 @@ return function()
         --         expect(root).toMatchRenderedOutput('Friends Bye')
         --     end)
         -- end))
-        -- it('throws with a useful error when wrapping invalid type with lazy()', _async(function()
-        --     local BadLazy = lazy(function()
-        --         return fakeImport(42)
-        --     end)
-        --     local root = ReactTestRenderer.create(React.createElement(Suspense, {
-        --         fallback = React.createElement(Text, {
-        --             text = 'Loading...',
-        --         }),
-        --     }, React.createElement(BadLazy, nil)), {unstable_isConcurrent = true})
+        it('throws with a useful error when wrapping invalid type with lazy()', function()
+            local BadLazy = lazy(function()
+                return fakeImport(42)
+            end)
+            local root = ReactTestRenderer.create(React.createElement(Suspense, {
+                fallback = React.createElement(Text, {
+                    text = 'Loading...',
+                }),
+            }, React.createElement(BadLazy, nil)), {unstable_isConcurrent = true})
 
-        --     expect(Scheduler).toFlushAndYield({
-        --         'Loading...',
-        --     })
+            jestExpect(Scheduler).toFlushAndYield({
+                'Loading...',
+            })
 
-        --     return _await(Promise.resolve(), function()
-        --         root.update(React.createElement(Suspense, {
-        --             fallback = React.createElement(Text, {
-        --                 text = 'Loading...',
-        --             }),
-        --         }, React.createElement(BadLazy, nil)))
-        --         expect(Scheduler).toFlushAndThrow('Element type is invalid. Received a promise that resolves to: 42. ' + 'Lazy element type must resolve to a class or function.')
-        --     end)
-        -- end))
-        -- it('throws with a useful error when wrapping lazy() multiple times', _async(function()
-        --     local Lazy1 = lazy(function()
-        --         return fakeImport(Text)
-        --     end)
-        --     local Lazy2 = lazy(function()
-        --         return fakeImport(Lazy1)
-        --     end)
-        --     local root = ReactTestRenderer.create(React.createElement(Suspense, {
-        --         fallback = React.createElement(Text, {
-        --             text = 'Loading...',
-        --         }),
-        --     }, React.createElement(Lazy2, {
-        --         text = 'Hello',
-        --     })), {unstable_isConcurrent = true})
+            Promise.delay(0):await()
 
-        --     expect(Scheduler).toFlushAndYield({
-        --         'Loading...',
-        --     })
-        --     expect(root).not.toMatchRenderedOutput('Hello')
+            root.update(React.createElement(Suspense, {
+                fallback = React.createElement(Text, {
+                    text = 'Loading...',
+                }),
+            }, React.createElement(BadLazy, nil)))
+            jestExpect(Scheduler).toFlushAndThrow('Element type is invalid. Received a promise that resolves to: 42. ' .. 'Lazy element type must resolve to a class or function.')
+        end)
+        it('throws with a useful error when wrapping lazy() multiple times', function()
+            local Lazy1 = lazy(function()
+                return fakeImport(Text)
+            end)
+            local Lazy2 = lazy(function()
+                return fakeImport(Lazy1)
+            end)
+            local root = ReactTestRenderer.create(React.createElement(Suspense, {
+                fallback = React.createElement(Text, {
+                    text = 'Loading...',
+                }),
+            }, React.createElement(Lazy2, {
+                text = 'Hello',
+            })), {unstable_isConcurrent = true})
 
-        --     return _await(Promise.resolve(), function()
-        --         root.update(React.createElement(Suspense, {
-        --             fallback = React.createElement(Text, {
-        --                 text = 'Loading...',
-        --             }),
-        --         }, React.createElement(Lazy2, {
-        --             text = 'Hello',
-        --         })))
-        --         expect(Scheduler).toFlushAndThrow('Element type is invalid. Received a promise that resolves to: [object Object]. ' + 'Lazy element type must resolve to a class or function.' + (function(
-        --         )
-        --             if __DEV__ then
-        --                 return' Did you wrap a component in React.lazy() more than once?'
-        --             end
+            jestExpect(Scheduler).toFlushAndYield({
+                'Loading...',
+            })
+            jestExpect(root).never.toMatchRenderedOutput('Hello')
 
-        --             return''
-        --         end)())
-        --     end)
-        -- end))
+            -- ROBLOX FIXME: delay by one frame is current best translation of `await Promise.resolve()`
+            Promise.delay(0):await()
+
+            root.update(React.createElement(Suspense, {
+                fallback = React.createElement(Text, {
+                    text = 'Loading...',
+                }),
+            }, React.createElement(Lazy2, {
+                text = 'Hello',
+            })))
+
+            local moreThanOnce = _G.__DEV__ and ' Did you wrap a component in React.lazy() more than once?' or ''
+
+            -- ROBLOX FIXME: Using substring of error, not RegExp because currently missing from LuauPolyfill.
+            -- Still tests optional dev error and substring of main error, but missing the first sentence below
+            -- 'Element type is invalid. Received a promise that resolves to: table: '
+            jestExpect(Scheduler).toFlushAndThrow('Lazy element type must resolve to a class or function.' .. moreThanOnce)
+        end)
         it('warns about defining propTypes on the outer wrapper', function()
             local LazyText = lazy(function()
                 return fakeImport(Text)
@@ -1095,7 +1105,7 @@ return function()
         --     end)
         -- end))
 
-        -- ROBLOX FIXME:
+        -- ROBLOX TODO: wrong stacktrace
         xit('includes lazy-loaded component in warning stack', function()
             local LazyFoo = lazy(function()
                 Scheduler.unstable_yieldValue('Started loading')
@@ -1127,7 +1137,8 @@ return function()
             })
             jestExpect(root).never.toMatchRenderedOutput(React.createElement('div', nil, 'AB'))
 
-            -- Promise.resolve()
+            -- ROBLOX FIXME: delay by one frame is current best translation of `await Promise.resolve()`
+            Promise.delay(0):await()
 
             jestExpect(function()
                 jestExpect(Scheduler).toFlushAndYield({
@@ -1137,58 +1148,60 @@ return function()
             end).toErrorDev('    in Text (at **)\n' .. '    in Foo (at **)')
             jestExpect(root).toMatchRenderedOutput(React.createElement('div', nil, 'AB'))
         end)
-        -- it('supports class and forwardRef components', _async(function()
-        --     local LazyClass = lazy(function()
-        --         local Foo = {}
-        --         local FooMetatable = {__index = Foo}
+        -- ROBLOX TODO: Error: Element type is invalid. Received a promise that resolves to: Foo.
+        xit('supports class and forwardRef components', function()
+            local LazyClass = lazy(function()
+                local Foo = React.Component:extend("Foo")
 
-        --         function Foo:render()
-        --             return React.createElement(Text, {
-        --                 text = 'Foo',
-        --             })
-        --         end
+                function Foo:render()
+                    return React.createElement(Text, {
+                        text = 'Foo',
+                    })
+                end
 
-        --         return fakeImport(Foo)
-        --     end)
-        --     local LazyForwardRef = lazy(function()
-        --         local Bar = {}
-        --         local BarMetatable = {__index = Bar}
+                return fakeImport(Foo)
+            end)
 
-        --         function Bar:render()
-        --             return React.createElement(Text, {
-        --                 text = 'Bar',
-        --             })
-        --         end
+            local LazyForwardRef = lazy(function()
+                local Bar = React.Component:extend("Bar")
 
-        --         return fakeImport(React.forwardRef(function(props, ref)
-        --             Scheduler.unstable_yieldValue('forwardRef')
+                function Bar:render()
+                    return React.createElement(Text, {
+                        text = 'Bar',
+                    })
+                end
 
-        --             return React.createElement(Bar, {ref = ref})
-        --         end))
-        --     end)
-        --     local ref = React.createRef()
-        --     local root = ReactTestRenderer.create(React.createElement(Suspense, {
-        --         fallback = React.createElement(Text, {
-        --             text = 'Loading...',
-        --         }),
-        --     }, React.createElement(LazyClass, nil), React.createElement(LazyForwardRef, {ref = ref})), {unstable_isConcurrent = true})
+                return fakeImport(React.forwardRef(function(props, ref)
+                    Scheduler.unstable_yieldValue('forwardRef')
 
-        --     expect(Scheduler).toFlushAndYield({
-        --         'Loading...',
-        --     })
-        --     expect(root).not.toMatchRenderedOutput('FooBar')
-        --     expect(ref.current).toBe(nil)
+                    return React.createElement(Bar, {ref = ref})
+                end))
+            end)
 
-        --     return _await(Promise.resolve(), function()
-        --         expect(Scheduler).toFlushAndYield({
-        --             'Foo',
-        --             'forwardRef',
-        --             'Bar',
-        --         })
-        --         expect(root).toMatchRenderedOutput('FooBar')
-        --         expect(ref.current).not.toBe(nil)
-        --     end)
-        -- end))
+            local ref = React.createRef()
+            local root = ReactTestRenderer.create(React.createElement(Suspense, {
+                fallback = React.createElement(Text, {
+                    text = 'Loading...',
+                }),
+            }, React.createElement(LazyClass, nil), React.createElement(LazyForwardRef, {ref = ref})), {unstable_isConcurrent = true})
+
+            jestExpect(Scheduler).toFlushAndYield({
+                'Loading...',
+            })
+            jestExpect(root).never.toMatchRenderedOutput('FooBar')
+            jestExpect(ref.current).toBe(nil)
+
+            -- ROBLOX FIXME: delay by one frame is current best translation of `await Promise.resolve()`
+            Promise.delay(0):await()
+
+            jestExpect(Scheduler).toFlushAndYield({
+                'Foo',
+                'forwardRef',
+                'Bar',
+            })
+            jestExpect(root).toMatchRenderedOutput('FooBar')
+            jestExpect(ref.current).never.toBe(nil)
+        end)
         -- it('supports defaultProps defined on the memo() return value', _async(function()
         --     local Add = React.memo(function(props)
         --         return props.inner + props.outer
@@ -1308,13 +1321,11 @@ return function()
         --         expect(root).toMatchRenderedOutput('2')
         --     end)
         -- end))
-        -- ROBLOX FIXME: needs a proper Promise to be returned from fakeImport
-        xit('warns about ref on functions for lazy-loaded components', function()
+        it('warns about ref on functions for lazy-loaded components', function()
             local LazyFoo = lazy(function()
                 local Foo = function(props)
                     return React.createElement('div', nil)
                 end
-
                 return fakeImport(Foo)
             end)
             local ref = React.createRef()
@@ -1328,78 +1339,72 @@ return function()
                 'Loading...',
             })
 
-            -- return _await(Promise.resolve(), function()
+            -- ROBLOX FIXME: delay by one frame is current best translation of `await Promise.resolve()`
+            Promise.delay(0):await()
+
             jestExpect(function()
-                    jestExpect(Scheduler).toFlushAndYield({})
-                end).toErrorDev('Function components cannot be given refs')
-            -- end)
+                jestExpect(Scheduler).toFlushAndYield({})
+            end).toErrorDev('Function components cannot be given refs')
         end)
-        -- it('should error with a component stack naming the resolved component', _async(function()
+        -- ROBLOX TODO: normalizeCodeLocInfo needs regex
+        xit('should error with a component stack naming the resolved component', function()
+            local componentStackMessage
+            local LazyText = lazy(function()
+                return fakeImport(function()
+                    error(Error('oh no'))
+                end)
+            end)
+            local ErrorBoundary = React.Component:extend("ErrorBoundary")
+
+            function ErrorBoundary:init()
+                self.state = {error = nil}
+            end
+            function ErrorBoundary:componentDidCatch(error_, errMessage)
+                componentStackMessage = normalizeCodeLocInfo(errMessage.componentStack)
+
+                self.setState({error = error_})
+            end
+            function ErrorBoundary:render()
+                if self.state.error then
+                    return nil
+                else
+                    return self.props.children
+                end
+            end
+
+            ReactTestRenderer.create(React.createElement(ErrorBoundary, nil, React.createElement(Suspense, {
+                fallback = React.createElement(Text, {
+                    text = 'Loading...',
+                }),
+            }, React.createElement(LazyText, {
+                text = 'Hi',
+            }))), {unstable_isConcurrent = true})
+            jestExpect(Scheduler).toFlushAndYield({
+                'Loading...',
+            })
+
+            _ = pcall(function()
+                Promise.delay(0):await()
+            end)
+
+            jestExpect(Scheduler).toFlushAndYield({})
+            jestExpect(componentStackMessage).toContain('in ResolvedText')
+        end)
+        -- xit('should error with a component stack containing Lazy if unresolved', function()
         --     local componentStackMessage
         --     local LazyText = lazy(function()
-        --         return fakeImport(function()
-        --             error(Error('oh no'))
-        --         end)
-        --     end)
-        --     local ErrorBoundary = {}
-        --     local ErrorBoundaryMetatable = {__index = ErrorBoundary}
-
-        --     function ErrorBoundary.new()
-        --         local self = setmetatable({}, ErrorBoundaryMetatable)
-        --         local _temp5
-
-        --         return
-        --     end
-        --     function ErrorBoundary:componentDidCatch(error, errMessage)
-        --         componentStackMessage = normalizeCodeLocInfo(errMessage.componentStack)
-
-        --         self.setState({error = error})
-        --     end
-        --     function ErrorBoundary:render()
-        --         return(function()
-        --             if self.state.error then
-        --                 return nil
-        --             end
-
-        --             return self.props.children
-        --         end)()
-        --     end
-
-        --     ReactTestRenderer.create(React.createElement(ErrorBoundary, nil, React.createElement(Suspense, {
-        --         fallback = React.createElement(Text, {
-        --             text = 'Loading...',
-        --         }),
-        --     }, React.createElement(LazyText, {
-        --         text = 'Hi',
-        --     }))), {unstable_isConcurrent = true})
-        --     expect(Scheduler).toFlushAndYield({
-        --         'Loading...',
-        --     })
-
-        --     return _continue(_catch(function()
-        --         return _awaitIgnored(Promise.resolve())
-        --     end, _empty), function()
-        --         expect(Scheduler).toFlushAndYield({})
-        --         expect(componentStackMessage).toContain('in ResolvedText')
-        --     end)
-        -- end))
-        -- it('should error with a component stack containing Lazy if unresolved', function()
-        --     local componentStackMessage
-        --     local LazyText = lazy(function()
-        --         return{
-        --             then = function(resolve, reject)
+        --         return {
+        --             andThen = function(resolve, reject)
         --                 reject(Error('oh no'))
         --             end,
         --         }
         --     end)
-        --     local ErrorBoundary = {}
-        --     local ErrorBoundaryMetatable = {__index = ErrorBoundary}
+        --     local ErrorBoundary = React.Component:extend("ErrorBoundary")
 
-        --     function ErrorBoundary.new()
-        --         local self = setmetatable({}, ErrorBoundaryMetatable)
-        --         local _temp6
-
-        --         return
+        --     function ErrorBoundary:init()
+        --         self.state = {
+        --             error = nil
+        --         }
         --     end
         --     function ErrorBoundary:componentDidCatch(error, errMessage)
         --         componentStackMessage = normalizeCodeLocInfo(errMessage.componentStack)
@@ -1426,9 +1431,8 @@ return function()
         --     expect(Scheduler).toHaveYielded({})
         --     expect(componentStackMessage).toContain('in Lazy')
         -- end)
-        -- it('mount and reorder lazy elements', _async(function()
-        --     local Child = {}
-        --     local ChildMetatable = {__index = Child}
+        -- it('mount and reorder lazy elements', function()
+        --     local Child = React.Component:extend("Child")
 
         --     function Child:componentDidMount()
         --         Scheduler.unstable_yieldValue('Did mount: ' + self.props.label)
@@ -1467,8 +1471,17 @@ return function()
         --         }))
         --     end)
 
-        --     local function Parent(_ref2)
-        --         local swap = _ref2.swap
+        --     local lazyChildB2 = lazy(function()
+        --         Scheduler.unstable_yieldValue('Init B2')
+
+        --         return fakeImport(React.createElement(Child, {
+        --             key = 'B',
+        --             label = 'b',
+        --         }))
+        --     end)
+
+        --     local function Parent(props)
+        --         local swap = props.swap
 
         --         return React.createElement(Suspense, {
         --             fallback = React.createElement(Text, {
@@ -1483,21 +1496,14 @@ return function()
         --         end)())
         --     end
 
-        --     local lazyChildB2 = lazy(function()
-        --         Scheduler.unstable_yieldValue('Init B2')
 
-        --         return fakeImport(React.createElement(Child, {
-        --             key = 'B',
-        --             label = 'b',
-        --         }))
-        --     end)
         --     local root = ReactTestRenderer.create(React.createElement(Parent, {swap = false}), {unstable_isConcurrent = true})
 
         --     expect(Scheduler).toFlushAndYield({
         --         'Init A',
         --         'Loading...',
         --     })
-        --     expect(root).not.toMatchRenderedOutput('AB')
+        --     expect(root).never.toMatchRenderedOutput('AB')
 
         --     return _await(lazyChildA, function()
         --         expect(Scheduler).toFlushAndYield({
@@ -1536,6 +1542,6 @@ return function()
         --             end)
         --         end)
         --     end)
-        -- end))
+        -- end)
     end)
 end
