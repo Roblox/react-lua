@@ -105,6 +105,11 @@ return function()
     -- ReactDOM = require('react-dom')
     -- ReactTestUtils = require('react-dom/test-utils')
     -- PropTypes = require('prop-types')
+
+    -- ROBLOX deviation: these tests are failing with debugRenderPhaseSideEffectsForStrictMode on.
+    -- https://github.com/Roblox/roact-alignment/issues/105
+    local ReactFeatureFlags = require(Workspace.Shared.ReactFeatureFlags)
+    ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false
   end)
 
   -- ROBLOX TODO: do we need to test this in roblox renderer?

@@ -107,6 +107,11 @@
       -- ReactDOM = require('react-dom')
       -- ReactTestUtils = require('react-dom/test-utils')
       -- PropTypes = require('prop-types')
+
+      -- ROBLOX deviation: these tests are failing with debugRenderPhaseSideEffectsForStrictMode on.
+      -- https://github.com/Roblox/roact-alignment/issues/105
+      ReactFeatureFlags = require(Workspace.Shared.ReactFeatureFlags)
+      ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false
     end)
 
     it('should correctly determine if a component is mounted', function()

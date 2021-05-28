@@ -20,6 +20,10 @@ local didStop: boolean = false
 local isFlushing: boolean = false
 local needsPaint: boolean = false
 local shouldYieldForPaint: boolean = false
+local Workspace = script.Parent.Parent.Parent
+local console = require(Workspace.Shared.console)
+local ConsolePatchingDev = require(Workspace.Shared["ConsolePatchingDev.roblox"])
+local disabledLog = ConsolePatchingDev.disabledLog
 
 exports.requestHostCallback = function(callback: (boolean) -> ())
 	scheduledCallback = callback
@@ -222,11 +226,11 @@ end
 
 exports.unstable_yieldValue = function(value: any)
 	-- eslint-disable-next-line react-internal/no-production-logging
-	-- if console.log.name == 'disabledLog' then
-	-- 	-- If console.log has been patched, we assume we're in render
-	-- 	-- replaying and we ignore any values yielding in the second pass.
-	-- 	return
-	-- end
+	if console.log == disabledLog then
+		-- If console.log has been patched, we assume we're in render
+		-- replaying and we ignore any values yielding in the second pass.
+		return
+	end
 	if yieldedValues == nil then
 		yieldedValues = { value }
 	else
@@ -239,11 +243,11 @@ end
 
 exports.unstable_advanceTime = function(ms: number)
 	-- eslint-disable-next-line react-internal/no-production-logging
-	-- if console.log.name == 'disabledLog' then
+	if console.log == disabledLog then
 	-- 	-- If console.log has been patched, we assume we're in render
 	-- 	-- replaying and we ignore any time advancing in the second pass.
-	-- 	return
-	-- end
+		return
+	end
 	currentTime += ms
 
 	if scheduledTimeout ~= nil and timeoutTime <= currentTime then

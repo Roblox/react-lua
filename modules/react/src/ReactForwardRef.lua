@@ -12,24 +12,23 @@ local console = require(Workspace.Shared.console)
 
 local ReactSymbols = require(Workspace.Shared.ReactSymbols)
 local REACT_FORWARD_REF_TYPE = ReactSymbols.REACT_FORWARD_REF_TYPE
+local REACT_MEMO_TYPE = ReactSymbols.REACT_MEMO_TYPE
 
 -- ROBLOX TODO: Luau doesn't have function generics yet
 local exports = {}
-exports.forwardRef = function(
-  render: (any, any) -> any
-)
+exports.forwardRef = function(render)
   if _G.__DEV__ then
     -- ROBLOX deviation: Lua functions can't have properties
     -- given a table (which we can index to see if it's the Memo type)
-    -- if typeof(render) == "table" and render["$$typeof"] == REACT_MEMO_TYPE then
-    --   console.error(
-    --     'forwardRef requires a render function but received a `memo` ' ..
-    --       'component. Instead of forwardRef(memo(...)), use ' ..
-    --       'memo(forwardRef(...)).'
-    --   )
-    if typeof(render) ~= 'function' then
+    if typeof(render) == "table" and render["$$typeof"] == REACT_MEMO_TYPE then
       console.error(
-        'forwardRef requires a render function but was given %s.',
+        "forwardRef requires a render function but received a `memo` " ..
+          "component. Instead of forwardRef(memo(...)), use " ..
+          "memo(forwardRef(...))."
+      )
+    elseif typeof(render) ~= "function" then
+      console.error(
+        "forwardRef requires a render function but was given %s.",
         typeof(render)
       )
     else

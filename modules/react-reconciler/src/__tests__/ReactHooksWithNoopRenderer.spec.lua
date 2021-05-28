@@ -470,8 +470,7 @@ return function()
 			)
 		end)
 
-		-- ROBLOX TODO: MemoComponent unimplemented (ReactFiberBeginWork.new:3454)
-		xit("works with memo", function()
+		it("works with memo", function()
 			local count, updateCount
 			local function Counter()
 				count, updateCount = useState(0)
@@ -2645,8 +2644,7 @@ return function()
 			jestExpect(ReactNoop.getChildren()).toEqual({})
 		end)
 
-		-- ROBLOX TODO: MemoComponent is unimplemented
-		xit("works with memo", function()
+		it("works with memo", function()
 			local function Counter(props)
 				local count = props.count
 

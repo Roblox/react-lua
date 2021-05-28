@@ -22,6 +22,12 @@ local prevGroupEnd
 local disabledLog = function() end
 
 local exports = {}
+
+-- ROBLOX deviation: console.log's name property is checked in SchedulerHostConfig.
+-- But since Lua functions don't carry properties, we export this and import it there
+-- for a reference equality.
+exports.disabledLog = disabledLog
+
 exports.disableLogs = function()
 	if _G.__DEV__ then
 		if disabledDepth == 0 then
@@ -61,7 +67,8 @@ exports.reenableLogs = function()
 		end
 
 		if disabledDepth < 0 then
-			console.error('disabledDepth fell below zero. ' .. 'This is a bug in React. Please file an issue.')
+			console.error("disabledDepth fell below zero. " ..
+				"This is a bug in React. Please file an issue.")
 		end
 	end
 end
