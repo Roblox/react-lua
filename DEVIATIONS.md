@@ -4,15 +4,15 @@ Upstream naming and logic has some deviations and incompatibilities with existin
 
 #### Table of Contents
 * [Naming](#naming)
-  * [Component Lifecycle](#component-lifecycle)
+  * [Component Lifecycle](#component-lifecycle) ✔️
   * [Reserved Prop Keys: "ref"](#reserved-prop-keys-ref)
   * [Reserved Prop Keys: "key"](#reserved-prop-keys-key)
   * [Reserved Prop Keys: "children"](#reserved-prop-keys-children)
 * [Behavior](#behavior)
   * [Old Context](#old-context-roact-only)
-  * [createFragment](#createfragment)
+  * [createFragment](#createfragment) ✔️
   * [Ref Forwarding](#ref-forwarding)
-  * [Stable Keys](#stable-keys)
+  * [Stable Keys](#stable-keys) ✔️
   * [Use of setState](#use-of-setstate)
 
 ## Naming
