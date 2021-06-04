@@ -1,30 +1,30 @@
 
-local Workspace = script.Parent.Parent.Parent
-local Packages = Workspace.Parent
-local jest = require(Workspace.RobloxJest)
-local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
 local React
 local ReactTestRenderer
 local ReactFeatureFlags
 local Scheduler
-local Promise = require(Packages.Promise)
--- local LuauPolyfill = require(Packages.LuauPolyfill)
--- local setTimeout = LuauPolyfill.setTimeout
--- local Error = LuauPolyfill.Error
 -- local SchedulerTracing
--- local ReactCache
+local ReactCache
 local Suspense
 local _act
--- local TextResource
--- local textResourceShouldFail
+local TextResource
+local textResourceShouldFail
 
 return function()
-    -- Additional tests can be found in ReactSuspenseWithNoopRenderer. Plan is
+    local Workspace = script.Parent.Parent.Parent
+    local Packages = Workspace.Parent
+    local jest = require(Workspace.RobloxJest)
+    local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
+    local Promise = require(Packages.Promise)
+    local LuauPolyfill = require(Packages.LuauPolyfill)
+    local setTimeout = LuauPolyfill.setTimeout
+    local Error = LuauPolyfill.Error
+        -- Additional tests can be found in ReactSuspenseWithNoopRenderer. Plan is
     -- to gradually migrate those to this file.
     describe('ReactSuspense', function()
         beforeEach(function()
-            jest.useFakeTimers()
             jest.resetModules()
+            jest.useFakeTimers()
             -- deviation: In react, jest _always_ mocks Scheduler -> unstable_mock;
             -- in our case, we need to do it anywhere we want to use the scheduler,
             -- until we have some form of bundling logic
@@ -46,54 +46,58 @@ return function()
             _act = ReactTestRenderer.unstable_concurrentAct
             Scheduler = require(Workspace.Scheduler)
             -- SchedulerTracing = require('scheduler/tracing')
-            -- ReactCache = require('react-cache')
+            ReactCache = require(Workspace.ReactCache)
             Suspense = React.Suspense
-            -- TextResource = ReactCache.unstable_createResource(function(input)
-            --     local text, ms = input[1], (input[2] or 0)
-            --     local listeners
-            --     local status = 'pending'
-            --     local value = nil
+            TextResource = ReactCache.unstable_createResource(
+                function(input)
+                    local text, ms = input[1], (input[2] or 0)
+                    local listeners
+                    local status = 'pending'
+                    local value = nil
 
-            --     return {
-            --         andThen = function(self, resolve, reject)
-            --             -- ROBLOX deviation: if/else in place of switch
-            --             if status == 'pending' then
-            --                 if listeners == nil then
-            --                     listeners = {{resolve = resolve, reject = reject}}
-            --                     setTimeout(function()
-            --                         if textResourceShouldFail then
-            --                             Scheduler.unstable_yieldValue(
-            --                                 ('Promise rejected [%s]'):format(text)
-            --                             )
-            --                             status = 'rejected'
-            --                             value = Error('Failed to load: ' .. text)
-            --                             for _, listener in ipairs(listeners) do
-            --                                 listener.reject(value)
-            --                             end
-            --                         else
-            --                             Scheduler.unstable_yieldValue(
-            --                                 ('Promise resolved [%s]'):format(text)
-            --                             )
-            --                             status = 'resolved'
-            --                             value = text
-            --                             for _, listener in ipairs(listeners) do
-            --                                 listener.resolve(value)
-            --                             end
-            --                         end
-            --                     end, ms)
-            --                 end
-            --             elseif status == 'resolved' then
-            --                 resolve(value)
-            --             elseif status == 'rejected' then
-            --                 reject(value)
-            --             end
-            --         end
-            --     }
-            -- end,
-            -- function(inputArr)
-            --     return inputArr[1]
-            -- end)
-            -- textResourceShouldFail = false
+                    return {
+                        andThen = function(_self, resolve, reject)
+                            -- ROBLOX deviation: if/else in place of switch
+                            if status == 'pending' then
+                                if listeners == nil then
+                                    listeners = {{resolve = resolve, reject = reject}}
+                                    setTimeout(function()
+                                        if textResourceShouldFail then
+                                            Scheduler.unstable_yieldValue(
+                                                ('Promise rejected [%s]'):format(text)
+                                            )
+                                            status = 'rejected'
+                                            value = Error.new('Failed to load: ' .. text)
+                                            for _, listener in ipairs(listeners) do
+                                                listener.reject(value)
+                                            end
+                                        else
+                                            Scheduler.unstable_yieldValue(
+                                                ('Promise resolved [%s]'):format(text)
+                                            )
+                                            status = 'resolved'
+                                            value = text
+                                            for _, listener in ipairs(listeners) do
+                                                listener.resolve(value)
+                                            end
+                                        end
+                                    end, ms)
+                                else
+                                    table.insert(listeners, {resolve = resolve, reject = reject})
+                                end
+                            elseif status == 'resolved' then
+                                resolve(value)
+                            elseif status == 'rejected' then
+                                reject(value)
+                            end
+                        end
+                    }
+                end,
+                function(input)
+                    return input[1]
+                end
+            )
+            textResourceShouldFail = false
         end)
 
         local function Text(props)
@@ -101,144 +105,144 @@ return function()
             return props.text
         end
 
-        -- local function AsyncText(props)
-        --     local text = props.text
-        --     local ok, result = pcall(function()
-        --         TextResource.read({props.text, props.ms})
-        --         Scheduler.unstable_yieldValue(text)
-        --         return text
-        --     end)
-        --     if not ok then
-        --         local promise = result
-        --         if typeof(promise.andThen) == 'function' then
-        --           Scheduler.unstable_yieldValue(("Suspend! [%s]"):format(text))
-        --         else 
-        --           Scheduler.unstable_yieldValue(('Error! [%s]'):format(text))
-        --         end
-        --         error(promise)
-        --     end
-        -- end
+        local function AsyncText(props)
+            local text = props.text
+            local ok, result = pcall(function()
+                TextResource.read({props.text, props.ms})
+                Scheduler.unstable_yieldValue(text)
+                return text
+            end)
+            if not ok then
+                local promise = result
+                if typeof(promise.andThen) == 'function' then
+                  Scheduler.unstable_yieldValue(("Suspend! [%s]"):format(text))
+                else
+                  Scheduler.unstable_yieldValue(('Error! [%s]'):format(text))
+                end
+                error(promise)
+            end
+            return result
+        end
 
-        -- -- ROBLOX TODO: AsyncText component
-        -- xit('suspends rendering and continues later', function()
-        --     local function Bar(props)
-        --         Scheduler.unstable_yieldValue('Bar')
-        --         return props.children
-        --     end
+        it('suspends rendering and continues later', function()
+            local function Bar(props)
+                Scheduler.unstable_yieldValue('Bar')
+                return props.children
+            end
 
-        --     local function Foo(props)
-        --         local renderBar = props.renderBar
+            local function Foo(props)
+                local renderBar = props.renderBar
 
-        --         Scheduler.unstable_yieldValue('Foo')
+                Scheduler.unstable_yieldValue('Foo')
 
-        --         return React.createElement(Suspense, {
-        --             fallback = React.createElement(Text, {
-        --                 text = 'Loading...',
-        --             }),
-        --         }, (function()
-        --             if renderBar then
-        --                 return React.createElement(Bar, nil, React.createElement(AsyncText, {
-        --                     text = 'A',
-        --                     ms = 100,
-        --                 }), React.createElement(Text, {
-        --                     text = 'B',
-        --                 }))
-        --             else
-        --                 return nil
-        --             end
-        --         end)())
-        --     end
+                return React.createElement(Suspense, {
+                    fallback = React.createElement(Text, {
+                        text = 'Loading...',
+                    }),
+                }, (function()
+                    if renderBar then
+                        return React.createElement(Bar, nil, {React.createElement(AsyncText, {
+                            text = 'A',
+                            ms = 100,
+                        }), React.createElement(Text, {
+                            text = 'B',
+                        })})
+                    else
+                        return nil
+                    end
+                end)())
+            end
 
-        --     -- Render an empty shell
-        --     local root = ReactTestRenderer.create(React.createElement(Foo, nil), {unstable_isConcurrent = true})
+            -- Render an empty shell
+            local root = ReactTestRenderer.create(React.createElement(Foo), {unstable_isConcurrent = true})
 
-        --     jestExpect(Scheduler).toFlushAndYield({'Foo'})
-        --     jestExpect(root).toMatchRenderedOutput(nil)
+            jestExpect(Scheduler).toFlushAndYield({'Foo'})
+            jestExpect(root).toMatchRenderedOutput(nil)
 
-        --     -- Navigate the shell to now render the child content.
-        --     -- This should suspend.
-        --     root.update(React.createElement(Foo, {renderBar = true}))
-        --     jestExpect(Scheduler).toFlushAndYield({
-        --         'Foo',
-        --         'Bar',
-        --         -- A suspends
-        --         'Suspend! [A]',
-        --         'B',
-        --         -- But we keep rendering the siblings
-        --         'Loading...',
-        --     })
-        --     jestExpect(root).toMatchRenderedOutput(nil)
-        --     -- Flush some of the time
-        --     jest.advanceTimersByTime(50)
-        --     -- Still nothing...
-        --     jestExpect(Scheduler).toFlushWithoutYielding()
-        --     jestExpect(root).toMatchRenderedOutput(nil)
+            -- Navigate the shell to now render the child content.
+            -- This should suspend.
+            root.update(React.createElement(Foo, {renderBar = true}))
+            jestExpect(Scheduler).toFlushAndYield({
+                'Foo',
+                'Bar',
+                -- A suspends
+                'Suspend! [A]',
+                -- But we keep rendering the siblings
+                'B',
+                'Loading...',
+            })
+            jestExpect(root).toMatchRenderedOutput(nil)
 
-        --     -- Flush the promise completely
-        --     jest.advanceTimersByTime(50)
-        --     -- Renders successfully
-        --     jestExpect(Scheduler).toHaveYielded({
-        --         'Promise resolved [A]',
-        --     })
-        --     jestExpect(Scheduler).toFlushAndYield({
-        --         'Foo',
-        --         'Bar',
-        --         'A',
-        --         'B',
-        --     })
-        --     jestExpect(root).toMatchRenderedOutput('AB')
-        -- end)
-        -- -- ROBLOX TODO: AsyncText component
-        -- xit('suspends siblings and later recovers each independently', function()
-        --     -- Render two sibling Suspense components
-        --     local root = ReactTestRenderer.create(React.createElement(React.Fragment, nil, React.createElement(Suspense, {
-        --         fallback = React.createElement(Text, {
-        --             text = 'Loading A...',
-        --         }),
-        --     }, React.createElement(AsyncText, {
-        --         text = 'A',
-        --         ms = 5000,
-        --     })), React.createElement(Suspense, {
-        --         fallback = React.createElement(Text, {
-        --             text = 'Loading B...',
-        --         }),
-        --     }, React.createElement(AsyncText, {
-        --         text = 'B',
-        --         ms = 6000,
-        --     }))), {unstable_isConcurrent = true})
+            -- Flush some of the time
+            jest.advanceTimersByTime(50)
+            -- Still nothing...
+            jestExpect(Scheduler).toFlushWithoutYielding()
+            jestExpect(root).toMatchRenderedOutput(nil)
 
-        --     jestExpect(Scheduler).toFlushAndYield({
-        --         'Suspend! [A]',
-        --         'Loading A...',
-        --         'Suspend! [B]',
-        --         'Loading B...',
-        --     })
-        --     Scheduler.unstable_flushAll()
-        --     jestExpect(root).toMatchRenderedOutput('Loading A...Loading B...')
-        --     -- Advance time by enough that the first Suspense's promise resolves and
-        --     -- switches back to the normal view. The second Suspense should still
-        --     -- show the placeholder
-        --     jest.advanceTimersByTime(5000)
-        --     -- TODO: Should we throw if you forget to call toHaveYielded?
-        --     jestExpect(Scheduler).toHaveYielded({
-        --         'Promise resolved [A]',
-        --     })
-        --     jestExpect(Scheduler).toFlushAndYield({
-        --         'A',
-        --     })
-        --     jestExpect(root).toMatchRenderedOutput('ALoading B...')
+            -- Flush the promise completely
+            jest.advanceTimersByTime(50)
+            -- Renders successfully
+            jestExpect(Scheduler).toHaveYielded({
+                'Promise resolved [A]',
+            })
+            jestExpect(Scheduler).toFlushAndYield({
+                'Foo',
+                'Bar',
+                'A',
+                'B',
+            })
+            jestExpect(root).toMatchRenderedOutput('AB')
+        end)
+        it('suspends siblings and later recovers each independently', function()
+            -- Render two sibling Suspense components
+            local root = ReactTestRenderer.create(React.createElement(React.Fragment, nil, React.createElement(Suspense, {
+                fallback = React.createElement(Text, {
+                    text = 'Loading A...',
+                }),
+            }, React.createElement(AsyncText, {
+                text = 'A',
+                ms = 5000,
+            })), React.createElement(Suspense, {
+                fallback = React.createElement(Text, {
+                    text = 'Loading B...',
+                }),
+            }, React.createElement(AsyncText, {
+                text = 'B',
+                ms = 6000,
+            }))), {unstable_isConcurrent = true})
 
-        --     -- Advance time by enough that the second Suspense's promise resolves
-        --     -- and switches back to the normal view
-        --     jest.advanceTimersByTime(1000)
-        --     jestExpect(Scheduler).toHaveYielded({
-        --         'Promise resolved [B]',
-        --     })
-        --     jestExpect(Scheduler).toFlushAndYield({
-        --         'B',
-        --     })
-        --     jestExpect(root).toMatchRenderedOutput('AB')
-        -- end)
+            jestExpect(Scheduler).toFlushAndYield({
+                'Suspend! [A]',
+                'Loading A...',
+                'Suspend! [B]',
+                'Loading B...',
+            })
+            Scheduler.unstable_flushAll()
+            jestExpect(root).toMatchRenderedOutput('Loading A...Loading B...')
+            -- Advance time by enough that the first Suspense's promise resolves and
+            -- switches back to the normal view. The second Suspense should still
+            -- show the placeholder
+            jest.advanceTimersByTime(5000)
+            -- TODO: Should we throw if you forget to call toHaveYielded?
+            jestExpect(Scheduler).toHaveYielded({
+                'Promise resolved [A]',
+            })
+            jestExpect(Scheduler).toFlushAndYield({
+                'A',
+            })
+            jestExpect(root).toMatchRenderedOutput('ALoading B...')
+
+            -- Advance time by enough that the second Suspense's promise resolves
+            -- and switches back to the normal view
+            jest.advanceTimersByTime(1000)
+            jestExpect(Scheduler).toHaveYielded({
+                'Promise resolved [B]',
+            })
+            jestExpect(Scheduler).toFlushAndYield({
+                'B',
+            })
+            jestExpect(root).toMatchRenderedOutput('AB')
+        end)
         it('interrupts current render if promise resolves before current render phase', function()
             local didResolve = false
             local listeners = {}
@@ -277,7 +281,7 @@ return function()
                         fallback = React.createElement(Text, {
                                 text = 'Loading...'
                             })
-                    }), 
+                    }),
                     React.createElement(Text, {
                         text = 'Initial',
                     })
@@ -306,7 +310,7 @@ return function()
                 'Loading...',
                 'After Suspense',
             })
-                
+
             -- The promise resolves before the current render phase has completed
             resolveThenable()
             jestExpect(Scheduler).toHaveYielded({})
@@ -321,60 +325,60 @@ return function()
             })
             jestExpect(root).toMatchRenderedOutput('AsyncAfter SuspenseSibling')
         end)
-        -- ROBLOX TODO: AsyncText component
-        -- it('interrupts current render if something already suspended with a ' .. "delay, and then subsequently there's a lower priority update", function(
-        -- )
-        --     local root = ReactTestRenderer.create(React.createElement(React.Fragment, nil, React.createElement(Suspense, {
-        --         fallback = React.createElement(Text, {
-        --             text = 'Loading...',
-        --         }),
-        --     }), React.createElement(Text, {
-        --         text = 'Initial',
-        --     })), {unstable_isConcurrent = true})
 
-        --     jestExpect(Scheduler).toFlushAndYield({
-        --         'Initial',
-        --     })
-        --     jestExpect(root).toMatchRenderedOutput('Initial')
-        --     -- The update will suspend.
-        --     root.update(React.createElement(React.Fragment, nil, React.createElement(Suspense, {
-        --         fallback = React.createElement(Text, {
-        --             text = 'Loading...',
-        --         }),
-        --     }, React.createElement(AsyncText, {
-        --         text = 'Async',
-        --         ms = 2000,
-        --     })), React.createElement(Text, {
-        --         text = 'After Suspense',
-        --     }), React.createElement(Text, {
-        --         text = 'Sibling',
-        --     })))
-        --     -- Yield past the Suspense boundary but don't complete the last sibling.
-        --     jestExpect(Scheduler).toFlushAndYieldThrough({
-        --         'Suspend! [Async]',
-        --         'Loading...',
-        --         'After Suspense',
-        --     })
-        --     -- Receives a lower priority update before the current render phase
-        --     -- has completed.
-        --     Scheduler.unstable_advanceTime(1000)
-        --     root.update(React.createElement(React.Fragment, nil, React.createElement(Suspense, {
-        --         fallback = React.createElement(Text, {
-        --             text = 'Loading...',
-        --         }),
-        --     }), React.createElement(Text, {
-        --         text = 'Updated',
-        --     })))
-        --     jestExpect(Scheduler).toHaveYielded({})
-        --     jestExpect(root).toMatchRenderedOutput('Initial')
-        --     -- Render the update, instead of continuing
-        --     jestExpect(Scheduler).toFlushAndYield({
-        --         'Updated',
-        --     })
-        --     jestExpect(root).toMatchRenderedOutput('Updated')
-        -- end)
+        -- ROBLOX FIXME: this test somehow interferes with later tests, 'Async' pops up. maybe because we aren't resetting FakeTimers?
+        xit('interrupts current render if something already suspended with a ' .. "delay, and then subsequently there's a lower priority update", function(
+        )
+            local root = ReactTestRenderer.create(React.createElement(React.Fragment, nil, React.createElement(Suspense, {
+                fallback = React.createElement(Text, {
+                    text = 'Loading...',
+                }),
+            }), React.createElement(Text, {
+                text = 'Initial',
+            })), {unstable_isConcurrent = true})
 
-        -- ROBLOX TODO: AsyncText component
+            jestExpect(Scheduler).toFlushAndYield({
+                'Initial',
+            })
+            jestExpect(root).toMatchRenderedOutput('Initial')
+            -- The update will suspend.
+            root.update(React.createElement(React.Fragment, nil, React.createElement(Suspense, {
+                fallback = React.createElement(Text, {
+                    text = 'Loading...',
+                }),
+            }, React.createElement(AsyncText, {
+                text = 'Async',
+                ms = 2000,
+            })), React.createElement(Text, {
+                text = 'After Suspense',
+            }), React.createElement(Text, {
+                text = 'Sibling',
+            })))
+            -- Yield past the Suspense boundary but don't complete the last sibling.
+            jestExpect(Scheduler).toFlushAndYieldThrough({
+                'Suspend! [Async]',
+                'Loading...',
+                'After Suspense',
+            })
+            -- Receives a lower priority update before the current render phase
+            -- has completed.
+            Scheduler.unstable_advanceTime(1000)
+            root.update(React.createElement(React.Fragment, nil, React.createElement(Suspense, {
+                fallback = React.createElement(Text, {
+                    text = 'Loading...',
+                }),
+            }), React.createElement(Text, {
+                text = 'Updated',
+            })))
+            jestExpect(Scheduler).toHaveYielded({})
+            jestExpect(root).toMatchRenderedOutput('Initial')
+            -- Render the update, instead of continuing
+            jestExpect(Scheduler).toFlushAndYield({
+                'Updated',
+            })
+            jestExpect(root).toMatchRenderedOutput('Updated')
+        end)
+
         -- -- @gate experimental
         -- it('interrupts current render when something suspends with a ' .. "delay and we've already skipped over a lower priority update in " .. 'a parent', function(
         -- )
@@ -583,83 +587,82 @@ return function()
         --         return _await()
         --     end)))
         -- end))
-        -- it('interrupts current render when something suspends with a ' .. 'delay, and a parent received an update after it completed', function(
-        -- )
-        --     local function App(props)
-        --         local shouldSuspend, step = props.shouldSuspend, props.step
+        xit('interrupts current render when something suspends with a ' .. 'delay, and a parent received an update after it completed', function(
+        )
+            local function App(props)
+                local shouldSuspend, step = props.shouldSuspend, props.step
 
-        --         return React.createElement(React.Fragment, nil, React.createElement(Text, {
-        --             text = ('A%s'):format(step),
-        --         }), React.createElement(Suspense, {
-        --             fallback = React.createElement(Text, {
-        --                 text = 'Loading...',
-        --             }),
-        --         }, (function()
-        --             if shouldSuspend then
-        --                 return React.createElement(AsyncText, {
-        --                     text = 'Async',
-        --                     ms = 2000,
-        --                 })
-        --             end
+                return React.createElement(React.Fragment, nil, {
+                    React.createElement(Text, {text = ('A%s'):format(step)}),
+                    React.createElement(Suspense, {
+                        fallback = React.createElement(Text, {
+                            text = 'Loading...',
+                        })},
+                        (function()
+                            if shouldSuspend then
+                                return React.createElement(AsyncText, {
+                                    text = 'Async',
+                                    ms = 2000,
+                                })
+                            end
 
-        --             return nil
-        --         end)()), React.createElement(Text, {
-        --             text = ('B%s'):format(step),
-        --         }), React.createElement(Text, {
-        --             text = ('C%s'):format(step),
-        --         }))
-        --     end
+                            return nil
+                        end)()),
+                    React.createElement(Text, {text = ('B%s'):format(step)}),
+                    React.createElement(Text, {text = ('C%s'):format(step)})
+                })
+            end
 
-        --     local root = ReactTestRenderer.create(nil, {unstable_isConcurrent = true})
+            local root = ReactTestRenderer.create(nil, {unstable_isConcurrent = true})
 
-        --     root.update(React.createElement(App, {
-        --         shouldSuspend = false,
-        --         step = 0,
-        --     }))
-        --     jestExpect(Scheduler).toFlushAndYield({
-        --         'A0',
-        --         'B0',
-        --         'C0',
-        --     })
-        --     jestExpect(root).toMatchRenderedOutput('A0B0C0')
+            root.update(React.createElement(App, {
+                shouldSuspend = false,
+                step = 0,
+            }))
+            jestExpect(Scheduler).toFlushAndYield({
+                'A0',
+                'B0',
+                'C0',
+            })
+            jestExpect(root).toMatchRenderedOutput('A0B0C0')
 
-        --     -- This update will suspend.
-        --     root.update(React.createElement(App, {
-        --         shouldSuspend = true,
-        --         step = 1,
-        --     }))
-        --     -- Flush past the root, but stop before the async component.
-        --     jestExpect(Scheduler).toFlushAndYieldThrough({
-        --         'A1',
-        --     })
+            -- This update will suspend.
+            root.update(React.createElement(App, {
+                shouldSuspend = true,
+                step = 1,
+            }))
+            -- Flush past the root, but stop before the async component.
+            jestExpect(Scheduler).toFlushAndYieldThrough({
+                'A1',
+            })
 
-        --     -- Schedule an update on the root, which already completed.
-        --     root.update(React.createElement(App, {
-        --         shouldSuspend = false,
-        --         step = 2,
-        --     }))
-        --     -- We'll keep working on the existing update.
-        --     jestExpect(Scheduler).toFlushAndYieldThrough({
-        --         'Suspend! [Async]',
-        --         'Loading...',
-        --         'B1',
-        --     })
-        --     -- Should not have committed loading state
-        --     jestExpect(root).toMatchRenderedOutput('A0B0C0')
+            -- Schedule an update on the root, which already completed.
+            root.update(React.createElement(App, {
+                shouldSuspend = false,
+                step = 2,
+            }))
+            -- We'll keep working on the existing update.
+            jestExpect(Scheduler).toFlushAndYieldThrough({
+                'Suspend! [Async]',
+                'Loading...',
+                'B1',
+            })
+            -- Should not have committed loading state
+            jestExpect(root).toMatchRenderedOutput('A0B0C0')
 
-        --     -- After suspending, should abort the first update and switch to the
-        --     -- second update. So, C1 should not appear in the log.
-        --     -- TODO: This should work even if React does not yield to the main
-        --     -- thread. Should use same mechanism as selective hydration to interrupt
-        --     -- the render before the end of the current slice of work.
-        --     jestExpect(Scheduler).toFlushAndYield({
-        --         'A2',
-        --         'B2',
-        --         'C2',
-        --     })
-        --     jestExpect(root).toMatchRenderedOutput('A2B2C2')
-        -- end)
-        -- ROBLOX TODO: address resolveLazyComponentTag FIXME in ReactFiber.new.lua
+            -- After suspending, should abort the first update and switch to the
+            -- second update. So, C1 should not appear in the log.
+            -- TODO: This should work even if React does not yield to the main
+            -- thread. Should use same mechanism as selective hydration to interrupt
+            -- the render before the end of the current slice of work.
+            -- ROBLOX FIXME: currently failing right here, gets empty
+            jestExpect(Scheduler).toFlushAndYield({
+                'A2',
+                'B2',
+                'C2',
+            })
+            jestExpect(root).toMatchRenderedOutput('A2B2C2')
+        end)
         xit('mounts a lazy class component in non-concurrent mode', function()
             local fakeImport = function(result)
                 -- ROBLOX FIXME: delay(0) because resolved promises are andThen'd on the same tick cycle
@@ -697,7 +700,8 @@ return function()
                 'Loading...',
             })
             jestExpect(root).toMatchRenderedOutput('Loading...')
-            
+
+            -- ROBLOX FIXME: LazyClass seemingly isn't a Promise? 'attempt to call a nil value'
             LazyClass:await()
 
             jestExpect(Scheduler).toFlushExpired({
@@ -706,106 +710,108 @@ return function()
             })
             jestExpect(root).toMatchRenderedOutput('Hi')
         end)
-        -- it('only captures if `fallback` is defined', function()
-        --     local root = ReactTestRenderer.create(React.createElement(Suspense, {
-        --         fallback = React.createElement(Text, {
-        --             text = 'Loading...',
-        --         }),
-        --     }, React.createElement(Suspense, nil, React.createElement(AsyncText, {
-        --         text = 'Hi',
-        --         ms = 5000,
-        --     }))), {unstable_isConcurrent = true})
+        it('only captures if `fallback` is defined', function()
+            local root = ReactTestRenderer.create(React.createElement(Suspense, {
+                fallback = React.createElement(Text, {
+                    text = 'Loading...',
+                }),
+            }, React.createElement(Suspense, nil, React.createElement(AsyncText, {
+                text = 'Hi',
+                ms = 5000,
+            }))), {unstable_isConcurrent = true})
 
-        --     jestExpect(Scheduler).toFlushAndYield({
-        --         'Suspend! [Hi]',
-        --         -- The outer fallback should be rendered, because the inner one does not
-        --         -- have a `fallback` prop
-        --         'Loading...',
-        --     })
-        --     jest.advanceTimersByTime(1000)
-        --     jestExpect(Scheduler).toHaveYielded({})
-        --     jestExpect(Scheduler).toFlushAndYield({})
-        --     jestExpect(root).toMatchRenderedOutput('Loading...')
-        --     jest.advanceTimersByTime(5000)
-        --     jestExpect(Scheduler).toHaveYielded({
-        --         'Promise resolved [Hi]',
-        --     })
-        --     jestExpect(Scheduler).toFlushAndYield({
-        --         'Hi',
-        --     })
-        --     jestExpect(root).toMatchRenderedOutput('Hi')
-        -- end)
-        -- it('throws if tree suspends and none of the Suspense ancestors have a fallback', function()
-        --     ReactTestRenderer.create(React.createElement(Suspense, nil, React.createElement(AsyncText, {
-        --         text = 'Hi',
-        --         ms = 1000,
-        --     })), {unstable_isConcurrent = true})
-        --     jestExpect(Scheduler).toFlushAndThrow('AsyncText suspended while rendering, but no fallback UI was specified.')
-        --     jestExpect(Scheduler).toHaveYielded({
-        --         'Suspend! [Hi]',
-        --         'Suspend! [Hi]',
-        --     })
-        -- end)
-        -- it('updates memoized child of suspense component when context updates (simple memo)', function()
-        --     local useContext, createContext, useState, memo = React.useContext, React.createContext, React.useState, React.memo
-        --     local ValueContext = createContext(nil)
-        --     local MemoizedChild = memo(function()
-        --         local text = useContext(ValueContext)
-        --         local ok, result = pcall(function()
-        --             TextResource.read({text, 1000})
-        --             Scheduler.unstable_yieldValue(text)
-        --         end)
-        --         if not ok then
-        --             if typeof(result.andThen) == 'function' then
-        --                 Scheduler.unstable_yieldValue('Suspend! ' .. tostring(text))
-        --             else
-        --                 Scheduler.unstable_yieldValue('Error! ' .. tostring(text))
-        --             end
-        --             error(result)
-        --         end
-        --     end)
-        --     local setValue
+            jestExpect(Scheduler).toFlushAndYield({
+                'Suspend! [Hi]',
+                -- The outer fallback should be rendered, because the inner one does not
+                -- have a `fallback` prop
+                'Loading...',
+            })
+            jest.advanceTimersByTime(1000)
+            jestExpect(Scheduler).toHaveYielded({})
+            jestExpect(Scheduler).toFlushAndYield({})
+            jestExpect(root).toMatchRenderedOutput('Loading...')
+            jest.advanceTimersByTime(5000)
+            jestExpect(Scheduler).toHaveYielded({
+                'Promise resolved [Hi]',
+            })
+            jestExpect(Scheduler).toFlushAndYield({
+                'Hi',
+            })
+            jestExpect(root).toMatchRenderedOutput('Hi')
+        end)
+        it('throws if tree suspends and none of the Suspense ancestors have a fallback', function()
+            ReactTestRenderer.create(React.createElement(Suspense, nil, React.createElement(AsyncText, {
+                text = 'Hi',
+                ms = 1000,
+            })), {unstable_isConcurrent = true})
+            jestExpect(Scheduler).toFlushAndThrow('AsyncText suspended while rendering, but no fallback UI was specified.')
+            jestExpect(Scheduler).toHaveYielded({
+                'Suspend! [Hi]',
+                'Suspend! [Hi]',
+            })
+        end)
+        xit('updates memoized child of suspense component when context updates (simple memo)', function()
+            local useContext, createContext, useState, memo = React.useContext, React.createContext, React.useState, React.memo
+            local ValueContext = createContext(nil)
+            local MemoizedChild = memo(function()
+                local text = useContext(ValueContext)
+                local ok, result = pcall(function()
+                    TextResource.read({text, 1000})
+                    Scheduler.unstable_yieldValue(text)
+                end)
+                if not ok then
+                    if typeof(result.andThen) == 'function' then
+                        Scheduler.unstable_yieldValue(string.format('Suspend! [%s]', text))
+                    else
+                        Scheduler.unstable_yieldValue(string.format('Error! [%s]', text))
+                    end
+                    error(result)
+                end
+                return text
+            end)
+            local value, setValue
 
-        --     local function App()
-        --         local value, setValue = useState('default')
+            local function App()
+                value, setValue = useState('default')
 
-        --         return React.createElement(ValueContext.Provider, {value = value}, React.createElement(Suspense, {
-        --             fallback = React.createElement(Text, {
-        --                 text = 'Loading...',
-        --             }),
-        --         }, React.createElement(MemoizedChild, nil)))
-        --     end
+                return React.createElement(ValueContext.Provider, {value = value}, React.createElement(Suspense, {
+                    fallback = React.createElement(Text, {
+                        text = 'Loading...',
+                    }),
+                }, React.createElement(MemoizedChild)))
+            end
 
-        --     local root = ReactTestRenderer.create(React.createElement(App, nil), {unstable_isConcurrent = true})
+            local root = ReactTestRenderer.create(React.createElement(App, nil), {unstable_isConcurrent = true})
 
-        --     jestExpect(Scheduler).toFlushAndYield({
-        --         'Suspend! [default]',
-        --         'Loading...',
-        --     })
-        --     jest.advanceTimersByTime(1000)
-        --     jestExpect(Scheduler).toHaveYielded({
-        --         'Promise resolved [default]',
-        --     })
-        --     jestExpect(Scheduler).toFlushAndYield({
-        --         'default',
-        --     })
-        --     jestExpect(root).toMatchRenderedOutput('default')
-        --     ReactTestRenderer.act(function()
-        --         return setValue('new value')
-        --     end)
-        --     jestExpect(Scheduler).toHaveYielded({
-        --         'Suspend! [new value]',
-        --         'Loading...',
-        --     })
-        --     jest.advanceTimersByTime(1000)
-        --     jestExpect(Scheduler).toHaveYielded({
-        --         'Promise resolved [new value]',
-        --     })
-        --     jestExpect(Scheduler).toFlushAndYield({
-        --         'new value',
-        --     })
-        --     jestExpect(root).toMatchRenderedOutput('new value')
-        -- end)
+            jestExpect(Scheduler).toFlushAndYield({
+                'Suspend! [default]',
+                'Loading...',
+            })
+            jest.advanceTimersByTime(1000)
+            jestExpect(Scheduler).toHaveYielded({
+                'Promise resolved [default]',
+            })
+            jestExpect(Scheduler).toFlushAndYield({
+                'default',
+            })
+            jestExpect(root).toMatchRenderedOutput('default')
+            ReactTestRenderer.act(function()
+                return setValue('new value')
+            end)
+            jestExpect(Scheduler).toHaveYielded({
+                'Suspend! [new value]',
+                'Loading...',
+            })
+            jest.advanceTimersByTime(1000)
+            jestExpect(Scheduler).toHaveYielded({
+                'Promise resolved [new value]',
+            })
+            jestExpect(Scheduler).toFlushAndYield({
+                'new value',
+            })
+            -- ROBLOX FIXME: this last render doesn't flush, so this fails because it receives nil
+            jestExpect(root).toMatchRenderedOutput('new value')
+        end)
         -- it('updates memoized child of suspense component when context updates (manual memo)', function()
         --     local _React3, useContext, createContext, useState, memo = React, _React3.useContext, _React3.createContext, _React3.useState, _React3.memo
         --     local ValueContext = createContext(nil)
@@ -1151,229 +1157,255 @@ return function()
         --         })
         --         jestExpect(root).toMatchRenderedOutput('Stateful: 2B')
         --     end)
-        --     it('when updating a timed-out tree, always retries the suspended component', function()
-        --         local instance
-        --         local Stateful = {}
-        --         local StatefulMetatable = {__index = Stateful}
+            xit('when updating a timed-out tree, always retries the suspended component', function()
+                local instance
+                local Stateful = React.Component:extend("Stateful")
+                function Stateful:init()
+                    self.state = { step = 1 }
+                end
+                function Stateful:render()
+                        instance = self
 
-        --         function Stateful.new()
-        --             local self = setmetatable({}, StatefulMetatable)
-        --             local _temp3
+                    return React.createElement(Text, {
+                        text = ('Stateful: %s'):format(self.state.step),
+                    })
+                end
 
-        --             return
-        --         end
-        --         function Stateful:render()
-        --             instance = self
+                local Indirection = React.Fragment
 
-        --             return React.createElement(Text, {
-        --                 text = ('Stateful: %s'):format(self.state.step),
-        --             })
-        --         end
+                local function App(props)
+                    return React.createElement(Suspense, {
+                        fallback = React.createElement(Text, {
+                            text = 'Loading...',
+                        }),
+                    }, React.createElement(Stateful, nil), React.createElement(Indirection, nil, React.createElement(Indirection, nil, React.createElement(Indirection, nil, React.createElement(AsyncText, {
+                        ms = 1000,
+                        text = props.text,
+                    })))))
+                end
 
-        --         local Indirection = React.Fragment
+                local root = ReactTestRenderer.create(React.createElement(App, {
+                    text = 'A',
+                }))
 
-        --         local function App(props)
-        --             return React.createElement(Suspense, {
-        --                 fallback = React.createElement(Text, {
-        --                     text = 'Loading...',
-        --                 }),
-        --             }, React.createElement(Stateful, nil), React.createElement(Indirection, nil, React.createElement(Indirection, nil, React.createElement(Indirection, nil, React.createElement(AsyncText, {
-        --                 ms = 1000,
-        --                 text = props.text,
-        --             })))))
-        --         end
+                jestExpect(Scheduler).toHaveYielded({
+                    'Stateful: 1',
+                    'Suspend! [A]',
+                    'Loading...',
+                })
+                jest.advanceTimersByTime(1000)
+                jestExpect(Scheduler).toHaveYielded({
+                    'Promise resolved [A]',
+                })
+                jestExpect(Scheduler).toFlushExpired({
+                    'A',
+                })
+                jestExpect(root).toMatchRenderedOutput('Stateful: 1A')
+                root.update(React.createElement(App, {
+                    text = 'B',
+                }))
+                jestExpect(Scheduler).toHaveYielded({
+                    'Stateful: 1',
+                    'Suspend! [B]',
+                    'Loading...',
+                })
+                -- ROBLOX FIXME: test fails here, rendered output is empty
+                jestExpect(root).toMatchRenderedOutput('Loading...')
+                instance.setState({step = 2})
+                jestExpect(Scheduler).toHaveYielded({
+                    'Stateful: 2',
+                    'Suspend! [B]',
+                })
+                jestExpect(root).toMatchRenderedOutput('Loading...')
+                jest.advanceTimersByTime(1000)
+                jestExpect(Scheduler).toHaveYielded({
+                    'Promise resolved [B]',
+                })
+                jestExpect(Scheduler).toFlushExpired({
+                    'B',
+                })
+                jestExpect(root).toMatchRenderedOutput('Stateful: 2B')
+            end)
+            it('suspends in a class that has componentWillUnmount and is then deleted', function()
+                local AsyncTextWithUnmount = React.Component:extend("AsyncTextWithUnmount")
+                function AsyncTextWithUnmount:componentWillUnmount()
+                    Scheduler.unstable_yieldValue('will unmount')
+                end
+                function AsyncTextWithUnmount:render()
+                    local text = self.props.text
+                    local ms = self.props.ms
+                    local ok, result = pcall(function()
+                        TextResource.read({text, ms})
+                        Scheduler.unstable_yieldValue(text)
+                        return text
+                    end)
+                    if not ok then
+                        local promise = result
+                        if typeof(promise.andThen) == 'function' then
+                          Scheduler.unstable_yieldValue(("Suspend! [%s]"):format(text))
+                        else
+                          Scheduler.unstable_yieldValue(('Error! [%s]'):format(text))
+                        end
+                        error(promise)
+                    end
+                    return result
+                end
 
-        --         local root = ReactTestRenderer.create(React.createElement(App, {
-        --             text = 'A',
-        --         }))
+                local function App(props)
+                    local text = props.text
 
-        --         jestExpect(Scheduler).toHaveYielded({
-        --             'Stateful: 1',
-        --             'Suspend! [A]',
-        --             'Loading...',
-        --         })
-        --         jest.advanceTimersByTime(1000)
-        --         jestExpect(Scheduler).toHaveYielded({
-        --             'Promise resolved [A]',
-        --         })
-        --         jestExpect(Scheduler).toFlushExpired({
-        --             'A',
-        --         })
-        --         jestExpect(root).toMatchRenderedOutput('Stateful: 1A')
-        --         root.update(React.createElement(App, {
-        --             text = 'B',
-        --         }))
-        --         jestExpect(Scheduler).toHaveYielded({
-        --             'Stateful: 1',
-        --             'Suspend! [B]',
-        --             'Loading...',
-        --         })
-        --         jestExpect(root).toMatchRenderedOutput('Loading...')
-        --         instance.setState({step = 2})
-        --         jestExpect(Scheduler).toHaveYielded({
-        --             'Stateful: 2',
-        --             'Suspend! [B]',
-        --         })
-        --         jestExpect(root).toMatchRenderedOutput('Loading...')
-        --         jest.advanceTimersByTime(1000)
-        --         jestExpect(Scheduler).toHaveYielded({
-        --             'Promise resolved [B]',
-        --         })
-        --         jestExpect(Scheduler).toFlushExpired({
-        --             'B',
-        --         })
-        --         jestExpect(root).toMatchRenderedOutput('Stateful: 2B')
-        --     end)
-        --     it('suspends in a class that has componentWillUnmount and is then deleted', function()
-        --         local AsyncTextWithUnmount = {}
-        --         local AsyncTextWithUnmountMetatable = {__index = AsyncTextWithUnmount}
+                    return React.createElement(Suspense, {
+                        fallback = React.createElement(Text, {
+                            text = 'Loading...',
+                        }),
+                    }, React.createElement(AsyncTextWithUnmount, {
+                        text = text,
+                        ms = 100,
+                    }))
+                end
 
-        --         function AsyncTextWithUnmount:componentWillUnmount()
-        --             Scheduler.unstable_yieldValue('will unmount')
-        --         end
-        --         function AsyncTextWithUnmount:render()
-        --             local text = self.props.text
-        --             local ms = self.props.ms
-        --         end
+                local root = ReactTestRenderer.create(React.createElement(App, {
+                    text = 'A',
+                }))
 
-        --         local function App(_ref10)
-        --             local text = _ref10.text
+                jestExpect(Scheduler).toHaveYielded({
+                    'Suspend! [A]',
+                    'Loading...',
+                })
+                root.update(React.createElement(Text, {
+                    text = 'B',
+                }))
+                -- Should not fire componentWillUnmount
+                jestExpect(Scheduler).toHaveYielded({
+                    'B',
+                })
+                jestExpect(root).toMatchRenderedOutput('B')
+            end)
+            -- ROBLOX FIXME: only passes when focused,
+            xit('suspends in a component that also contains useEffect', function()
+                local useLayoutEffect = React.useLayoutEffect
 
-        --             return React.createElement(Suspense, {
-        --                 fallback = React.createElement(Text, {
-        --                     text = 'Loading...',
-        --                 }),
-        --             }, React.createElement(AsyncTextWithUnmount, {
-        --                 text = text,
-        --                 ms = 100,
-        --             }))
-        --         end
+                local function AsyncTextWithEffect(props)
+                    local text = props.text
 
-        --         local root = ReactTestRenderer.create(React.createElement(App, {
-        --             text = 'A',
-        --         }))
+                    useLayoutEffect(function()
+                        Scheduler.unstable_yieldValue('Did commit: ' .. text)
+                    end, {text})
 
-        --         jestExpect(Scheduler).toHaveYielded({
-        --             'Suspend! [A]',
-        --             'Loading...',
-        --         })
-        --         root.update(React.createElement(Text, {
-        --             text = 'B',
-        --         }))
-        --         -- Should not fire componentWillUnmount
-        --         jestExpect(Scheduler).toHaveYielded({
-        --             'B',
-        --         })
-        --         jestExpect(root).toMatchRenderedOutput('B')
-        --     end)
-        --     it('suspends in a component that also contains useEffect', function()
-        --         local _React6, useLayoutEffect = React, _React6.useLayoutEffect
+                    local ok, result = pcall(function()
+                        TextResource.read({props.text, props.ms})
+                        Scheduler.unstable_yieldValue(text)
+                        return text
+                    end)
+                    if not ok then
+                        local promise = result
+                        if typeof(promise.andThen) == 'function' then
+                          Scheduler.unstable_yieldValue(("Suspend! [%s]"):format(text))
+                        else
+                          Scheduler.unstable_yieldValue(('Error! [%s]'):format(text))
+                        end
+                        error(promise)
+                    end
+                    return result
+                end
 
-        --         local function AsyncTextWithEffect(props)
-        --             local text = props.text
+                local function App(props)
+                    local text = props.text
 
-        --             useLayoutEffect(function()
-        --                 Scheduler.unstable_yieldValue('Did commit: ' + text)
-        --             end, {text})
-        --         end
-        --         local function App(_ref11)
-        --             local text = _ref11.text
+                    return React.createElement(Suspense, {
+                        fallback = React.createElement(Text, {
+                            text = 'Loading...',
+                        }),
+                    }, React.createElement(AsyncTextWithEffect, {
+                        text = text,
+                        ms = 100,
+                    }))
+                end
 
-        --             return React.createElement(Suspense, {
-        --                 fallback = React.createElement(Text, {
-        --                     text = 'Loading...',
-        --                 }),
-        --             }, React.createElement(AsyncTextWithEffect, {
-        --                 text = text,
-        --                 ms = 100,
-        --             }))
-        --         end
+                ReactTestRenderer.create(React.createElement(App, {
+                    text = 'A',
+                }))
+                jestExpect(Scheduler).toHaveYielded({
+                    'Suspend! [A]',
+                    'Loading...',
+                })
+                jest.advanceTimersByTime(500)
+                -- ROBLOX FIXME: when not focused, the test fails by getting *two* 'Promise resolved [A]'
+                jestExpect(Scheduler).toHaveYielded({
+                    'Promise resolved [A]',
+                })
+                jestExpect(Scheduler).toFlushExpired({
+                    'A',
+                    'Did commit: A',
+                })
+            end)
+            xit('retries when an update is scheduled on a timed out tree', function()
+                local instance
+                local Stateful = React.Component:extend("Stateful")
 
-        --         ReactTestRenderer.create(React.createElement(App, {
-        --             text = 'A',
-        --         }))
-        --         jestExpect(Scheduler).toHaveYielded({
-        --             'Suspend! [A]',
-        --             'Loading...',
-        --         })
-        --         jest.advanceTimersByTime(500)
-        --         jestExpect(Scheduler).toHaveYielded({
-        --             'Promise resolved [A]',
-        --         })
-        --         jestExpect(Scheduler).toFlushExpired({
-        --             'A',
-        --             'Did commit: A',
-        --         })
-        --     end)
-        --     it('retries when an update is scheduled on a timed out tree', function()
-        --         local instance
-        --         local Stateful = {}
-        --         local StatefulMetatable = {__index = Stateful}
+                function Stateful:init()
+                    self.state = { step = 1 }
+                end
 
-        --         function Stateful.new()
-        --             local self = setmetatable({}, StatefulMetatable)
-        --             local _temp4
+                function Stateful:render()
+                    instance = self
 
-        --             return
-        --         end
-        --         function Stateful:render()
-        --             instance = self
+                    return React.createElement(AsyncText, {
+                        ms = 1000,
+                        text = ('Step: %s'):format(self.state.step),
+                    })
+                end
 
-        --             return React.createElement(AsyncText, {
-        --                 ms = 1000,
-        --                 text = ('Step: %s'):format(self.state.step),
-        --             })
-        --         end
+                local function App(props)
+                    return React.createElement(Suspense, {
+                        fallback = React.createElement(Text, {
+                            text = 'Loading...',
+                        }),
+                    }, React.createElement(Stateful))
+                end
 
-        --         local function App(props)
-        --             return React.createElement(Suspense, {
-        --                 fallback = React.createElement(Text, {
-        --                     text = 'Loading...',
-        --                 }),
-        --             }, React.createElement(Stateful, nil))
-        --         end
+                local root = ReactTestRenderer.create(React.createElement(App), {unstable_isConcurrent = true})
 
-        --         local root = ReactTestRenderer.create(React.createElement(App, nil), {unstable_isConcurrent = true})
+                -- Initial render
+                jestExpect(Scheduler).toFlushAndYield({
+                    'Suspend! [Step: 1]',
+                    'Loading...',
+                })
+                jest.advanceTimersByTime(1000)
+                jestExpect(Scheduler).toHaveYielded({
+                    'Promise resolved [Step: 1]',
+                })
+                jestExpect(Scheduler).toFlushAndYield({
+                    'Step: 1',
+                })
+                jestExpect(root).toMatchRenderedOutput('Step: 1')
 
-        --         -- Initial render
-        --         jestExpect(Scheduler).toFlushAndYield({
-        --             'Suspend! [Step: 1]',
-        --             'Loading...',
-        --         })
-        --         jest.advanceTimersByTime(1000)
-        --         jestExpect(Scheduler).toHaveYielded({
-        --             'Promise resolved [Step: 1]',
-        --         })
-        --         jestExpect(Scheduler).toFlushAndYield({
-        --             'Step: 1',
-        --         })
-        --         jestExpect(root).toMatchRenderedOutput('Step: 1')
+                -- Update that suspends
+                instance:setState({step = 2})
+                jestExpect(Scheduler).toFlushAndYield({
+                    'Suspend! [Step: 2]',
+                    'Loading...',
+                })
+                jest.advanceTimersByTime(500)
+                -- ROBLOX FIXME: expect fails because rendered output is nil
+                jestExpect(root).toMatchRenderedOutput('Loading...')
 
-        --         -- Update that suspends
-        --         instance.setState({step = 2})
-        --         jestExpect(Scheduler).toFlushAndYield({
-        --             'Suspend! [Step: 2]',
-        --             'Loading...',
-        --         })
-        --         jest.advanceTimersByTime(500)
-        --         jestExpect(root).toMatchRenderedOutput('Loading...')
-
-        --         -- Update while still suspended
-        --         instance.setState({step = 3})
-        --         jestExpect(Scheduler).toFlushAndYield({
-        --             'Suspend! [Step: 3]',
-        --         })
-        --         jestExpect(root).toMatchRenderedOutput('Loading...')
-        --         jest.advanceTimersByTime(1000)
-        --         jestExpect(Scheduler).toHaveYielded({
-        --             'Promise resolved [Step: 2]',
-        --             'Promise resolved [Step: 3]',
-        --         })
-        --         jestExpect(Scheduler).toFlushAndYield({
-        --             'Step: 3',
-        --         })
-        --         jestExpect(root).toMatchRenderedOutput('Step: 3')
-        --     end)
+                -- Update while still suspended
+                instance:setState({step = 3})
+                jestExpect(Scheduler).toFlushAndYield({
+                    'Suspend! [Step: 3]',
+                })
+                jestExpect(root).toMatchRenderedOutput('Loading...')
+                jest.advanceTimersByTime(1000)
+                jestExpect(Scheduler).toHaveYielded({
+                    'Promise resolved [Step: 2]',
+                    'Promise resolved [Step: 3]',
+                })
+                jestExpect(Scheduler).toFlushAndYield({
+                    'Step: 3',
+                })
+                jestExpect(root).toMatchRenderedOutput('Step: 3')
+            end)
         --     it('does not remount the fallback while suspended children resolve in legacy mode', function()
         --         local mounts = 0
         --         local ShouldMountOnce = {}
@@ -1659,7 +1691,7 @@ return function()
         --             -- The promise for C has now been thrown three times
         --             'Suspend! [C]',
         --         })
-                
+
         --         -- Resolve C
         --         jest.advanceTimersByTime(1000)
         --         jestExpect(Scheduler).toHaveYielded({

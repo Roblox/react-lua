@@ -444,7 +444,7 @@ local function updateMemoComponent(
   nextProps: any,
   updateLanes: Lanes,
   renderLanes: Lanes
-): nil | Fiber 
+): nil | Fiber
   if current == nil then
     local type = Component.type
     if
@@ -547,7 +547,7 @@ function updateSimpleMemoComponent(
   nextProps: any,
   updateLanes: Lanes,
   renderLanes: Lanes
-): nil | Fiber 
+): nil | Fiber
   -- TODO: current can be non-null here even if the component
   -- hasn't yet mounted. This happens when the inner render suspends.
   -- We'll need to figure out if this is fine or can cause issues.
@@ -729,10 +729,10 @@ local function updateOffscreenComponent(
   return workInProgress.child
 end
 
--- -- Note: These happen to have identical begin phases, for now. We shouldn't hold
--- -- ourselves to this constraint, though. If the behavior diverges, we should
--- -- fork the function.
--- local updateLegacyHiddenComponent = updateOffscreenComponent
+-- Note: These happen to have identical begin phases, for now. We shouldn't hold
+-- ourselves to this constraint, though. If the behavior diverges, we should
+-- fork the function.
+local updateLegacyHiddenComponent = updateOffscreenComponent
 
 function updateFragment(
   current: Fiber | nil,
@@ -3313,67 +3313,66 @@ exports.beginWork = function(
           -- stateNode.passiveEffectDuration = 0
         end
       elseif workInProgress.tag == SuspenseComponent then
-        unimplemented("beginWork: SuspenseComponent")
-        -- local state: SuspenseState | nil = workInProgress.memoizedState
-        -- if state ~= nil then
-        --   if enableSuspenseServerRenderer then
-        --     if state.dehydrated ~= nil then
-        --       pushSuspenseContext(
-        --         workInProgress,
-        --         setDefaultShallowSuspenseContext(suspenseStackCursor.current)
-        --       )
-        --       -- We know that this component will suspend again because if it has
-        --       -- been unsuspended it has committed as a resolved Suspense component.
-        --       -- If it needs to be retried, it should have work scheduled on it.
-        --       workInProgress.flags = bit32.bor(workInProgress.flags, DidCapture)
-        --       -- We should never render the children of a dehydrated boundary until we
-        --       -- upgrade it. We return nil instead of bailoutOnAlreadyFinishedWork.
-        --       return nil
-        --     end
-        --   end
+        local state: SuspenseState | nil = workInProgress.memoizedState
+        if state ~= nil then
+          if enableSuspenseServerRenderer then
+            if (state :: SuspenseState).dehydrated ~= nil then
+              pushSuspenseContext(
+                workInProgress,
+                setDefaultShallowSuspenseContext(suspenseStackCursor.current)
+              )
+              -- We know that this component will suspend again because if it has
+              -- been unsuspended it has committed as a resolved Suspense component.
+              -- If it needs to be retried, it should have work scheduled on it.
+              workInProgress.flags = bit32.bor(workInProgress.flags, DidCapture)
+              -- We should never render the children of a dehydrated boundary until we
+              -- upgrade it. We return nil instead of bailoutOnAlreadyFinishedWork.
+              return nil
+            end
+          end
 
-        --   -- If this boundary is currently timed out, we need to decide
-        --   -- whether to retry the primary children, or to skip over it and
-        --   -- go straight to the fallback. Check the priority of the primary
-        --   -- child fragment.
-        --   local primaryChildFragment: Fiber = (workInProgress.child: any)
-        --   local primaryChildLanes = primaryChildFragment.childLanes
-        --   if ReactFiberLane.includesSomeLane(renderLanes, primaryChildLanes) then
-        --     -- The primary children have pending work. Use the normal path
-        --     -- to attempt to render the primary children again.
-        --     return updateSuspenseComponent(
-        --       current,
-        --       workInProgress,
-        --       renderLanes
-        --     )
-        --   else
-        --     -- The primary child fragment does not have pending work marked
-        --     -- on it
-        --     pushSuspenseContext(
-        --       workInProgress,
-        --       setDefaultShallowSuspenseContext(suspenseStackCursor.current)
-        --     )
-        --     -- The primary children do not have pending work with sufficient
-        --     -- priority. Bailout.
-        --     local child = bailoutOnAlreadyFinishedWork(
-        --       current,
-        --       workInProgress,
-        --       renderLanes
-        --     )
-        --     if child ~= nil then
-        --       -- The fallback children have pending work. Skip over the
-        --       -- primary children and work on the fallback.
-        --       return child.sibling
-        --     else
-        --       return nil
-        --     end
-        --   end
-        -- else
-        --   pushSuspenseContext(
-        --     workInProgress,
-        --     setDefaultShallowSuspenseContext(suspenseStackCursor.current)
-        --   )
-        -- end
+          -- If this boundary is currently timed out, we need to decide
+          -- whether to retry the primary children, or to skip over it and
+          -- go straight to the fallback. Check the priority of the primary
+          -- child fragment.
+          local primaryChildFragment: Fiber = (workInProgress.child :: Fiber)
+          local primaryChildLanes = primaryChildFragment.childLanes
+          if ReactFiberLane.includesSomeLane(renderLanes, primaryChildLanes) then
+            -- The primary children have pending work. Use the normal path
+            -- to attempt to render the primary children again.
+            return updateSuspenseComponent(
+              current,
+              workInProgress,
+              renderLanes
+            )
+          else
+            -- The primary child fragment does not have pending work marked
+            -- on it
+            pushSuspenseContext(
+              workInProgress,
+              setDefaultShallowSuspenseContext(suspenseStackCursor.current)
+            )
+            -- The primary children do not have pending work with sufficient
+            -- priority. Bailout.
+            local child = bailoutOnAlreadyFinishedWork(
+              current,
+              workInProgress,
+              renderLanes
+            )
+            if child ~= nil then
+              -- The fallback children have pending work. Skip over the
+              -- primary children and work on the fallback.
+              return child.sibling
+            else
+              return nil
+            end
+          end
+        else
+          pushSuspenseContext(
+            workInProgress,
+            setDefaultShallowSuspenseContext(suspenseStackCursor.current)
+          )
+        end
       elseif workInProgress.tag == SuspenseListComponent then
         unimplemented("beginWork: SuspenseListComponent")
         -- local didSuspendBefore = bit32.band(current.flags, DidCapture) ~= NoFlags
@@ -3424,17 +3423,16 @@ exports.beginWork = function(
         workInProgress.tag == OffscreenComponent or
         workInProgress.tag == LegacyHiddenComponent
       then
-        unimplemented("beginWork: OffscreenComponent and LegacyHiddenComponent")
-        -- -- Need to check if the tree still needs to be deferred. This is
-        -- -- almost identical to the logic used in the normal update path,
-        -- -- so we'll just enter that. The only difference is we'll bail out
-        -- -- at the next level instead of this one, because the child props
-        -- -- have not changed. Which is fine.
-        -- -- TODO: Probably should refactor `beginWork` to split the bailout
-        -- -- path from the normal path. I'm tempted to do a labeled break here
-        -- -- but I won't :)
-        -- workInProgress.lanes = ReactFiberLane.NoLanes
-        -- return updateOffscreenComponent(current, workInProgress, renderLanes)
+        -- Need to check if the tree still needs to be deferred. This is
+        -- almost identical to the logic used in the normal update path,
+        -- so we'll just enter that. The only difference is we'll bail out
+        -- at the next level instead of this one, because the child props
+        -- have not changed. Which is fine.
+        -- TODO: Probably should refactor `beginWork` to split the bailout
+        -- path from the normal path. I'm tempted to do a labeled break here
+        -- but I won't :)
+        workInProgress.lanes = ReactFiberLane.NoLanes
+        return updateOffscreenComponent(current, workInProgress, renderLanes)
       end
       return bailoutOnAlreadyFinishedWork(current, workInProgress, renderLanes)
     else
@@ -3607,8 +3605,7 @@ exports.beginWork = function(
   elseif workInProgress.tag == OffscreenComponent then
     return updateOffscreenComponent(current, workInProgress, renderLanes)
   elseif workInProgress.tag == LegacyHiddenComponent then
-    unimplemented("beginWork: LegacyHiddenComponent")
-    -- return updateLegacyHiddenComponent(current, workInProgress, renderLanes)
+    return updateLegacyHiddenComponent(current, workInProgress, renderLanes)
   end
   invariant(
     false,

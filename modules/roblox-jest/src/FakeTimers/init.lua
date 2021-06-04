@@ -55,6 +55,8 @@ end
 local function advanceTimersByTime(msToRun: number): ()
 	-- Only run a generous number of timers and then bail.
 	-- This is just to help avoid recursive loops
+	-- ROBLOX TODO: this needs to match the conversion in the setTimeout polyfill for now
+	local secondsToRun = msToRun / 1000
 	local i = 0
 	while i < 100000 do
 		i += 1
@@ -62,19 +64,19 @@ local function advanceTimersByTime(msToRun: number): ()
 		if #timers == 0 then
 			-- If we run out of timers, we still need to finish advancing the
 			-- time the rest of the way
-			now += msToRun
+			now += secondsToRun
 			break
 		end
 
 		local nextTimerExpiry = timers[1].expiry
 
-		if now + msToRun < nextTimerExpiry then
+		if now + secondsToRun < nextTimerExpiry then
 			-- There are no timers between now and the target we're running to, so
 			-- adjust our time cursor and quit
-			now += msToRun
+			now += secondsToRun
 			break;
 		else
-			msToRun -= nextTimerExpiry - now
+			secondsToRun -= nextTimerExpiry - now
 			now = nextTimerExpiry
 			local callback = timers[1].callback
 			table.remove(timers, 1)

@@ -16,18 +16,18 @@ return function()
 		it('one timer advances', function()
 			local log = {}
 			-- add timer
-			FakeTimers.delayOverride(100, function()
+			FakeTimers.delayOverride(0.1, function()
 				table.insert(log, "timer callback")
 			end)
 
 			-- advance timers but not beyond timer expiry
 			FakeTimers.advanceTimersByTime(50)
-			jestExpect(FakeTimers.tickOverride()).toEqual(50)
+			jestExpect(FakeTimers.tickOverride()).toEqual(0.05)
 			jestExpect(log).toEqual({})
 
 			-- advance timers to exactly timer expiry
 			FakeTimers.advanceTimersByTime(50)
-			jestExpect(FakeTimers.tickOverride()).toEqual(100)
+			jestExpect(FakeTimers.tickOverride()).toEqual(0.1)
 			jestExpect(log).toEqual({"timer callback"})
 
 			-- reset log
@@ -41,19 +41,19 @@ return function()
 			local log = {}
 
 			-- add timers
-			FakeTimers.delayOverride(100, function()
+			FakeTimers.delayOverride(0.1, function()
 				table.insert(log, "timer 1 callback")
 			end)
-			FakeTimers.delayOverride(100, function()
+			FakeTimers.delayOverride(0.1, function()
 				table.insert(log, "timer 2 callback")
 			end)
-			FakeTimers.delayOverride(104, function()
+			FakeTimers.delayOverride(0.104, function()
 				table.insert(log, "timer 3 callback")
 			end)
-			FakeTimers.delayOverride(50, function()
+			FakeTimers.delayOverride(0.05, function()
 				table.insert(log, "timer 4 callback")
 			end)
-			FakeTimers.delayOverride(300, function()
+			FakeTimers.delayOverride(0.3, function()
 				table.insert(log, "timer 5 callback")
 			end)
 
@@ -68,8 +68,8 @@ return function()
 			-- advance timers passed rest of expiries
 			FakeTimers.advanceTimersByTime(1000)
 			jestExpect(log).toEqual({
-				"timer 4 callback", 
-				"timer 1 callback", 
+				"timer 4 callback",
+				"timer 1 callback",
 				"timer 2 callback",
 				"timer 3 callback",
 				"timer 5 callback"

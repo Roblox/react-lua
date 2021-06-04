@@ -2085,7 +2085,7 @@ function attachSuspenseRetryListeners(finishedWork: Fiber)
       local retry = function()
         return resolveRetryWakeable(finishedWork, wakeable)
       end
-      
+
       if not retryCache[wakeable] then
         -- ROBLOX FIXME: scheduler tracing unimplemented
         -- if enableSchedulerTracing then
@@ -2100,29 +2100,30 @@ function attachSuspenseRetryListeners(finishedWork: Fiber)
   end
 end
 
--- -- This function detects when a Suspense boundary goes from visible to hidden.
--- -- It returns false if the boundary is already hidden.
--- -- TODO: Use an effect tag.
--- exports.isSuspenseBoundaryBeingHidden(
---   current: Fiber | nil,
---   finishedWork: Fiber,
--- ): boolean {
---   if current ~= nil)
---     local oldState: SuspenseState | nil = current.memoizedState
---     if oldState == nil or oldState.dehydrated ~= nil)
---       local newState: SuspenseState | nil = finishedWork.memoizedState
---       return newState ~= nil and newState.dehydrated == nil
---     end
---   end
---   return false
--- end
+-- This function detects when a Suspense boundary goes from visible to hidden.
+-- It returns false if the boundary is already hidden.
+-- TODO: Use an effect tag.
+function isSuspenseBoundaryBeingHidden(
+  current: Fiber | nil,
+  finishedWork: Fiber
+): boolean
+  if current ~= nil then
+    -- ROBLOX TODO: remove typechecks when narrowing works better
+    local oldState: SuspenseState | nil = (current :: Fiber).memoizedState
+    if oldState == nil or (oldState :: SuspenseState).dehydrated ~= nil then
+      local newState: SuspenseState | nil = finishedWork.memoizedState
+      return newState ~= nil and (newState :: SuspenseState).dehydrated == nil
+    end
+  end
+  return false
+end
 
--- function commitResetTextContent(current: Fiber): void {
---   if !supportsMutation)
---     return
---   end
---   resetTextContent(current.stateNode)
--- end
+function commitResetTextContent(current: Fiber): ()
+  if not supportsMutation then
+    return
+  end
+  resetTextContent(current.stateNode)
+end
 
 local function commitPassiveUnmount(finishedWork: Fiber)
   if
@@ -2324,12 +2325,11 @@ function invokePassiveEffectUnmountInDEV(fiber: Fiber)
   end
 end
 
-
 return {
   safelyCallDestroy = safelyCallDestroy,
 
   commitBeforeMutationLifeCycles = commitBeforeMutationLifeCycles,
-  -- commitResetTextContent = commitResetTextContent,
+  commitResetTextContent = commitResetTextContent,
   commitPlacement = commitPlacement,
   commitDeletion = commitDeletion,
   commitWork = commitWork,
@@ -2342,5 +2342,6 @@ return {
   invokeLayoutEffectUnmountInDEV = invokeLayoutEffectUnmountInDEV,
   invokePassiveEffectMountInDEV = invokePassiveEffectMountInDEV,
   invokePassiveEffectUnmountInDEV = invokePassiveEffectUnmountInDEV,
+  isSuspenseBoundaryBeingHidden = isSuspenseBoundaryBeingHidden,
   recursivelyCommitLayoutEffects = recursivelyCommitLayoutEffects,
 }

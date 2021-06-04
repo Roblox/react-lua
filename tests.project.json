@@ -9,6 +9,9 @@
         "React": {
           "$path": "modules/react/src"
         },
+        "ReactCache": {
+          "$path": "modules/react-cache/src"
+        },
         "ReactIs": {
           "$path": "modules/react-is/src"
         },

@@ -80,13 +80,14 @@ local HookHasEffect = ReactHookEffectTags.HasEffect
 local HookLayout = ReactHookEffectTags.Layout
 local HookPassive = ReactHookEffectTags.Passive
 local ReactFiberWorkLoop = require(script.Parent['ReactFiberWorkLoop.new']) :: any
-local warnIfNotCurrentlyActingUpdatesInDev = ReactFiberWorkLoop.warnIfNotCurrentlyActingUpdatesInDev
+local warnIfNotCurrentlyActingUpdatesInDEV = ReactFiberWorkLoop.warnIfNotCurrentlyActingUpdatesInDEV
 local scheduleUpdateOnFiber = ReactFiberWorkLoop.scheduleUpdateOnFiber
 local warnIfNotScopedWithMatchingAct = ReactFiberWorkLoop.warnIfNotScopedWithMatchingAct
 local requestEventTime = ReactFiberWorkLoop.requestEventTime
 local requestUpdateLane = ReactFiberWorkLoop.requestUpdateLane
 local markSkippedUpdateLanes = ReactFiberWorkLoop.markSkippedUpdateLanes
 local getWorkInProgressRoot = ReactFiberWorkLoop.getWorkInProgressRoot
+local warnIfNotCurrentlyActingEffectsInDEV = ReactFiberWorkLoop.warnIfNotCurrentlyActingEffectsInDEV
 -- local {
 --   getWorkInProgressRoot,
 --   requestUpdateLane,
@@ -1279,8 +1280,7 @@ local function mountEffect(
     -- deviation: use TestEZ's __TESTEZ_RUNNING_TEST__ as well as jest
     -- $FlowExpectedError - jest isn't a global, and isn't recognized outside of tests
     if typeof(_G.jest) ~= "nil" or _G.__TESTEZ_RUNNING_TEST__ then
-      warn("Skip warnIfNotCurrentlyActingEffectsInDEV (creates cycles)")
-      -- warnIfNotCurrentlyActingEffectsInDEV(currentlyRenderingFiber)
+      warnIfNotCurrentlyActingEffectsInDEV(currentlyRenderingFiber)
     end
   end
 
@@ -1309,8 +1309,7 @@ local function updateEffect(
     -- deviation: use TestEZ's __TESTEZ_RUNNING_TEST__ in addition to jest
     -- $FlowExpectedError - jest isn't a global, and isn't recognized outside of tests
     if typeof(_G.jest) ~= "nil" or _G.__TESTEZ_RUNNING_TEST__ then
-      warn("Skip warnIfNotCurrentlyActingEffectsInDEV (creates cycles)")
-      -- warnIfNotCurrentlyActingEffectsInDEV(currentlyRenderingFiber)
+      warnIfNotCurrentlyActingEffectsInDEV(currentlyRenderingFiber)
     end
   end
   return updateEffectImpl(
@@ -1900,7 +1899,7 @@ function dispatchAction(
       -- deviation: use TestEZ's __TESTEZ_RUNNING_TEST__ as well as jest
       if typeof(_G.jest) ~= "nil" or _G.__TESTEZ_RUNNING_TEST__ then
         warnIfNotScopedWithMatchingAct(fiber)
-        warnIfNotCurrentlyActingUpdatesInDev(fiber)
+        warnIfNotCurrentlyActingUpdatesInDEV(fiber)
       end
     end
     scheduleUpdateOnFiber(fiber, lane, eventTime)

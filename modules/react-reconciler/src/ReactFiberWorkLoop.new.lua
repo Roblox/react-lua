@@ -2511,15 +2511,14 @@ mod.commitBeforeMutationEffectsImpl = function(fiber: Fiber)
   if not shouldFireAfterActiveInstanceBlur and focusedInstanceHandle ~= nil then
     -- Check to see if the focused element was inside of a hidden (Suspense) subtree.
     -- TODO: Move this out of the hot path using a dedicated effect tag.
-    unimplemented("isSuspenseBoundaryBeingHidden")
-    -- if
-    --   fiber.tag == ReactWorkTags.SuspenseComponent and
-    --   isSuspenseBoundaryBeingHidden(current, fiber) and
-    --   doesFiberContain(fiber, focusedInstanceHandle)
-    -- then
-    --   shouldFireAfterActiveInstanceBlur = true
-    --   beforeActiveInstanceBlur()
-    -- end
+    if
+      fiber.tag == ReactWorkTags.SuspenseComponent and
+      ReactFiberCommitWork.isSuspenseBoundaryBeingHidden(current, fiber) and
+      doesFiberContain(fiber, focusedInstanceHandle)
+    then
+      shouldFireAfterActiveInstanceBlur = true
+      ReactFiberHostConfig.beforeActiveInstanceBlur()
+    end
   end
 
   if bit32.band(flags, ReactFiberFlags.Snapshot) ~= ReactFiberFlags.NoFlags then
@@ -3661,32 +3660,33 @@ exports.warnIfNotScopedWithMatchingAct = function(fiber: Fiber)
   end
 end
 
--- exports.warnIfNotCurrentlyActingEffectsInDEV(fiber: Fiber): void {
---   if _G.__DEV__)
---     if
---       warnsIfNotActing == true and
---       (fiber.mode & StrictMode) ~= ReactTypeOfMode.NoMode and
---       IsSomeRendererActing.current == false and
---       IsThisRendererActing.current == false
---     )
---       console.error(
---         'An update to %s ran an effect, but was not wrapped in act(...).\n\n' +
---           'When testing, code that causes React state updates should be ' +
---           'wrapped into act(...):\n\n' +
---           'act(() => {\n' +
---           '  --[[ fire events that update state ]]\n' +
---           '});\n' +
---           '--[[ assert on the output ]]\n\n' +
---           "This ensures that you're testing the behavior the user would see " +
---           'in the browser.' +
---           ' Learn more at https://reactjs.org/link/wrap-tests-with-act',
---         getComponentName(fiber.type),
---       )
---     end
---   end
--- end
 
-local warnIfNotCurrentlyActingUpdatesInDEV = function (fiber: Fiber): ()
+exports.warnIfNotCurrentlyActingEffectsInDEV = function(fiber: Fiber): ()
+  if _G.__DEV__ then
+    if
+      warnsIfNotActing == true and
+      bit32.band(fiber.mode, ReactTypeOfMode.StrictMode) ~= ReactTypeOfMode.NoMode and
+      IsSomeRendererActing.current == false and
+      exports.IsThisRendererActing.current == false
+    then
+      console.error(
+        'An update to %s ran an effect, but was not wrapped in act(...).\n\n' ..
+          'When testing, code that causes React state updates should be ' ..
+          'wrapped into act(...):\n\n' ..
+          'act(() => {\n' ..
+          '  --[[ fire events that update state ]]\n' ..
+          '});\n' ..
+          '--[[ assert on the output ]]\n\n' ..
+          "This ensures that you're testing the behavior the user would see " ..
+          'in the browser.' ..
+          ' Learn more at https://reactjs.org/link/wrap-tests-with-act',
+        getComponentName(fiber.type)
+      )
+    end
+  end
+end
+
+exports.warnIfNotCurrentlyActingUpdatesInDEV = function (fiber: Fiber): ()
   if _G.__DEV__ then
     if
       warnsIfNotActing == true and
@@ -3727,8 +3727,6 @@ local warnIfNotCurrentlyActingUpdatesInDEV = function (fiber: Fiber): ()
   -- ROBLOX deviation: explicit return to silence analyze
   return
 end
-
-exports.warnIfNotCurrentlyActingUpdatesInDev = warnIfNotCurrentlyActingUpdatesInDEV
 
 -- In tests, we want to enforce a mocked scheduler.
 local didWarnAboutUnmockedScheduler = false

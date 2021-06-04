@@ -336,7 +336,7 @@ exports.createInstance = function(
   --   -- TODO: take namespace into account when validating.
   --   local hostContextDev = ((hostContext: any): HostContextDev)
   --   validateDOMNesting(type, nil, hostContextDev.ancestorInfo)
-  --   if 
+  --   if
   --     typeof props.children == 'string' or
   --     typeof props.children == 'number'
   --   )
@@ -389,7 +389,7 @@ exports.prepareUpdate = function(
 ): nil | Array<any>
   -- if _G.__DEV__ then
   --   local hostContextDev = ((hostContext: any): HostContextDev)
-  --   if 
+  --   if
   --     typeof newProps.children ~= typeof oldProps.children and
   --     (typeof newProps.children == 'string' or
   --       typeof newProps.children == 'number')
@@ -647,7 +647,7 @@ exports.clearSuspenseBoundary = function(
 --         } else {
 --           depth--
 --         end
---       } else if 
+--       } else if
 --         data == SUSPENSE_START_DATA or
 --         data == SUSPENSE_PENDING_START_DATA or
 --         data == SUSPENSE_FALLBACK_START_DATA
@@ -744,7 +744,7 @@ end
 --   type: string,
 --   props: Props,
 -- ): nil | Instance {
---   if 
+--   if
 --     instance.nodeType ~= ELEMENT_NODE or
 --     type.toLowerCase() ~= instance.nodeName.toLowerCase()
 --   )
@@ -802,7 +802,7 @@ end
 --     if enableSuspenseServerRenderer)
 --       if nodeType == COMMENT_NODE)
 --         local nodeData = (node: any).data
---         if 
+--         if
 --           nodeData == SUSPENSE_START_DATA or
 --           nodeData == SUSPENSE_FALLBACK_START_DATA or
 --           nodeData == SUSPENSE_PENDING_START_DATA
@@ -888,7 +888,7 @@ end
 --         } else {
 --           depth--
 --         end
---       } else if 
+--       } else if
 --         data == SUSPENSE_START_DATA or
 --         data == SUSPENSE_FALLBACK_START_DATA or
 --         data == SUSPENSE_PENDING_START_DATA
@@ -916,7 +916,7 @@ end
 --   while (node)
 --     if node.nodeType == COMMENT_NODE)
 --       local data = ((node: any).data: string)
---       if 
+--       if
 --         data == SUSPENSE_START_DATA or
 --         data == SUSPENSE_FALLBACK_START_DATA or
 --         data == SUSPENSE_PENDING_START_DATA
