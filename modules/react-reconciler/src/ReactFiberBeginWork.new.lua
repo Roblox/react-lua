@@ -23,6 +23,9 @@ end
 local Workspace = script.Parent.Parent
 -- ROBLOX: use patched console from shared
 local console = require(Workspace.Shared.console)
+local Packages = Workspace.Parent
+local LuauPolyfill = require(Packages.LuauPolyfill)
+local Array = LuauPolyfill.Array
 
 local ReactTypes = require(Workspace.Shared.ReactTypes)
 type ReactProviderType<T> = ReactTypes.ReactProviderType<T>
@@ -1627,7 +1630,11 @@ local function mountIndeterminateComponent(
 
     initializeUpdateQueue(workInProgress)
 
-    local getDerivedStateFromProps = Component.getDerivedStateFromProps
+    -- ROBLOX deviation: don't access field on function
+    local getDerivedStateFromProps
+    if typeof(Component) ~= "function" then
+      getDerivedStateFromProps = Component.getDerivedStateFromProps
+    end
     if typeof(getDerivedStateFromProps) == "function" then
       applyDerivedStateFromProps(
         workInProgress,
@@ -2990,7 +2997,7 @@ end
 --   return workInProgress.child
 -- end
 
--- local hasWarnedAboutUsingNoValuePropOnContextProvider = false
+local hasWarnedAboutUsingNoValuePropOnContextProvider = false
 
 local function updateContextProvider(
   current: Fiber | nil,
@@ -3006,15 +3013,14 @@ local function updateContextProvider(
   local newValue = newProps.value
 
   if  _G.__DEV__ then
-    -- deviation: No distinction between
-    -- if not newProps('value' in newProps))
-    --   if not hasWarnedAboutUsingNoValuePropOnContextProvider)
-    --     hasWarnedAboutUsingNoValuePropOnContextProvider = true
-    --     console.error(
-    --       'The `value` prop is required for the `<Context.Provider>`. Did you misspell it or forget to pass it?',
-    --     )
-    --   end
-    -- end
+    if Array.indexOf(newProps, "value") < 1 then
+      if not hasWarnedAboutUsingNoValuePropOnContextProvider then
+        hasWarnedAboutUsingNoValuePropOnContextProvider = true
+        console.error(
+          "The `value` prop is required for the `<Context.Provider>`. Did you misspell it or forget to pass it?"
+        )
+      end
+    end
     local providerPropTypes = workInProgress.type.propTypes
 
     if providerPropTypes then

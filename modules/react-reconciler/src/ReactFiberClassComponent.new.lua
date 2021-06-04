@@ -506,7 +506,9 @@ local function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: an
         )
       end
 
+      -- ROBLOX deviation: don't access fields on a function
       if
+        typeof(ctor) ~= "function" and
         ctor.contextType and
         ctor.contextTypes and
         not didWarnAboutContextTypeAndContextTypes[ctor]
@@ -529,9 +531,9 @@ local function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: an
         name
       )
     end
-    -- deviation: for us, the isPureReactComponent flag will be visible as a
-    -- direct member of the 'ctor', which in reality is the component definition
+    -- ROBLOX deviation: don't access fields on a function
     if
+      typeof(ctor) ~= "function" and
       ctor.isPureReactComponent and
       instance.shouldComponentUpdate ~= nil
     then
@@ -636,7 +638,9 @@ local function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: an
       if state ~= nil and typeof(state) ~= "table" then
         console.error("%s.state: must be set to an object or nil", name)
       end
+    -- ROBLOX deviation: don't access fields on a function
     if
+      typeof(ctor) ~= "function" and
       typeof(instance.getChildContext) == "function" and
       typeof(ctor.childContextTypes) ~= "table"
     then
@@ -955,7 +959,11 @@ local function mountClassInstance(
 
   initializeUpdateQueue(workInProgress)
 
-  local contextType = ctor.contextType
+  -- RObLOX deviation: don't access field on a function
+  local contextType
+  if typeof(ctor) ~= "function" then
+    contextType = ctor.contextType
+  end
   if typeof(contextType) == "table" and contextType ~= nil then
     instance.context = readContext(contextType)
   elseif disableLegacyContext then
@@ -997,7 +1005,11 @@ local function mountClassInstance(
   processUpdateQueue(workInProgress, newProps, instance, renderLanes)
   instance.state = workInProgress.memoizedState
 
-  local getDerivedStateFromProps = ctor.getDerivedStateFromProps
+  -- ROBLOX deviation: don't access field on a function
+  local getDerivedStateFromProps
+  if typeof(ctor) ~= "function" then
+    getDerivedStateFromProps = ctor.getDerivedStateFromProps
+  end
   if typeof(getDerivedStateFromProps) == "function" then
     applyDerivedStateFromProps(
       workInProgress,
@@ -1010,7 +1022,9 @@ local function mountClassInstance(
 
   -- In order to support react-lifecycles-compat polyfilled components,
   -- Unsafe lifecycles should not be invoked for components using the new APIs.
+  -- ROBLOX deviation: don't access fields on a function
   if
+    typeof(ctor) ~= "function" and
     typeof(ctor.getDerivedStateFromProps) ~= "function" and
     typeof(instance.getSnapshotBeforeUpdate) ~= "function" and
     (typeof(instance.UNSAFE_componentWillMount) == "function" or

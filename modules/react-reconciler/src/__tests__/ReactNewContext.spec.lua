@@ -71,12 +71,11 @@ return function()
 	local function LegacyHiddenDiv(props)
 		local children, mode = props.children, props.mode
 
-		return React.createElement(
-			"div",
+		return React.createElement("div", {
+			hidden = mode == "hidden",
+		}, React.createElement(
+			React.unstable_LegacyHidden,
 			{
-				hidden = mode == "hidden",
-			},
-			React.createElement(React.unstable_LegacyHidden, {
 				mode = (function()
 					if mode == "hidden" then
 						return "unstable-defer-without-hiding"
@@ -84,8 +83,9 @@ return function()
 
 					return mode
 				end)(),
-			}, children)
-		)
+			},
+			children
+		))
 	end
 
 	local function sharedContextTests(label, getConsumer)
@@ -103,13 +103,9 @@ return function()
 						React.createElement(
 							Indirection,
 							nil,
-							React.createElement(
-								Indirection,
-								nil,
-								React.createElement(Consumer, nil, function(value)
-										return React.createElement("span", { prop = "Result: " .. tostring(value) })
-									end)
-							)
+							React.createElement(Indirection, nil, React.createElement(Consumer, nil, function(value)
+								return React.createElement("span", { prop = "Result: " .. tostring(value) })
+							end))
 						)
 					)
 				end
@@ -290,11 +286,11 @@ return function()
 											Indirection,
 											nil,
 											React.createElement(Consumer, nil, function(value)
-													return React.createElement(
-														"span",
-														{ prop = "Result: " .. tostring(value) }
-													)
-												end)
+												return React.createElement(
+													"span",
+													{ prop = "Result: " .. tostring(value) }
+												)
+											end)
 										)
 									)
 								)
@@ -330,14 +326,14 @@ return function()
 						BarContext.Provider,
 						{ value = { value = "bar-updated" } },
 						React.createElement(BarConsumer, nil, function(value)
-								return React.createElement(Verify, { actual = value, expected = "bar-updated" })
-							end),
+							return React.createElement(Verify, { actual = value, expected = "bar-updated" })
+						end),
 						React.createElement(
 							FooContext.Provider,
 							{ value = { value = "foo-updated" } },
 							React.createElement(FooConsumer, nil, function(value)
-									return React.createElement(Verify, { actual = value, expected = "foo-updated" })
-								end)
+								return React.createElement(Verify, { actual = value, expected = "foo-updated" })
+							end)
 						)
 					),
 					React.createElement(FooConsumer, nil, function(value)
@@ -383,21 +379,13 @@ return function()
 							React.createElement(
 								Indirection,
 								nil,
-								React.createElement(
-									Provider,
-									nil,
-									React.createElement(Consumer, nil, function(value)
-											return React.createElement("span", { prop = "Result: " .. value })
-										end)
-								)
-							),
-							React.createElement(
-								Indirection,
-								nil,
-								React.createElement(Consumer, nil, function(value)
+								React.createElement(Provider, nil, React.createElement(Consumer, nil, function(value)
 									return React.createElement("span", { prop = "Result: " .. value })
-								end)
-							)
+								end))
+							),
+							React.createElement(Indirection, nil, React.createElement(Consumer, nil, function(value)
+								return React.createElement("span", { prop = "Result: " .. value })
+							end))
 						)
 					)
 				end
@@ -540,27 +528,21 @@ return function()
 					return self.props.children
 				end
 				local function App(props)
-					return React.createElement(
-						React.Fragment,
+					return React.createElement(React.Fragment, nil, React.createElement(Context.Provider, {
+						value = "Does not unwind",
+					}, React.createElement(
+						ErrorBoundary,
 						nil,
-						React.createElement(
-							Context.Provider,
-							{
-								value = "Does not unwind",
-							},
-							React.createElement(
-								ErrorBoundary,
-								nil,
-								React.createElement(Context.Provider, {
-									value = "Unwinds after BadRender throws",
-								}, React.createElement(
-									BadRender,
-									nil
-								))
-							),
-							React.createElement(Consumer, nil)
-						)
-					)
+						React.createElement(Context.Provider, {
+							value = "Unwinds after BadRender throws",
+						}, React.createElement(
+							BadRender,
+							nil
+						))
+					), React.createElement(
+						Consumer,
+						nil
+					)))
 				end
 
 				ReactNoop.render(React.createElement(App, {
@@ -714,14 +696,9 @@ return function()
 						unstable_observedBits = 0b01,
 					}, function(value)
 						Scheduler.unstable_yieldValue("Foo")
-						return React.createElement(
-							React.Fragment,
-							nil,
-							React.createElement("span", {
-								prop = "Foo: " .. value.foo,
-							}),
-							props.children and props.children()
-						)
+						return React.createElement(React.Fragment, nil, React.createElement("span", {
+							prop = "Foo: " .. value.foo,
+						}), props.children and props.children())
 					end)
 				end
 
@@ -730,14 +707,9 @@ return function()
 						unstable_observedBits = 0b10,
 					}, function(value)
 						Scheduler.unstable_yieldValue("Bar")
-						return React.createElement(
-							React.Fragment,
-							nil,
-							React.createElement("span", {
-								prop = "Bar: " .. value.bar,
-							}),
-							props.children and props.children()
-						)
+						return React.createElement(React.Fragment, nil, React.createElement("span", {
+							prop = "Bar: " .. value.bar,
+						}), props.children and props.children())
 					end)
 				end
 
@@ -751,26 +723,18 @@ return function()
 				end
 
 				local function App(props)
-					return React.createElement(
-						Provider,
-						{
-							foo = props.foo,
-							bar = props.bar,
-						},
-						React.createElement(
-							Indirection,
-							nil,
-							React.createElement(Foo, nil, function()
-								return React.createElement(
-									Indirection,
-									nil,
-									React.createElement(Bar, nil, function()
-										return React.createElement(Indirection, nil, React.createElement(Foo, nil))
-									end)
-								)
-							end)
-						)
-					)
+					return React.createElement(Provider, {
+						foo = props.foo,
+						bar = props.bar,
+					}, React.createElement(
+						Indirection,
+						nil,
+						React.createElement(Foo, nil, function()
+							return React.createElement(Indirection, nil, React.createElement(Bar, nil, function()
+								return React.createElement(Indirection, nil, React.createElement(Foo, nil))
+							end))
+						end)
+					))
 				end
 
 				ReactNoop.render(React.createElement(App, {
@@ -825,12 +789,12 @@ return function()
 				end
 
 				local function App(props)
-					return React.createElement(
-						Context.Provider,
-						{
-							value = props.value,
-						},
-						React.createElement(Consumer, nil, function(value)
+					return React.createElement(Context.Provider, {
+						value = props.value,
+					}, React.createElement(
+						Consumer,
+						nil,
+						function(value)
 							Scheduler.unstable_yieldValue("Consumer render prop")
 							return React.createElement(Child, {
 								ref = function(inst)
@@ -839,8 +803,8 @@ return function()
 								end,
 								context = value,
 							})
-						end)
-					)
+						end
+					))
 				end
 
 				-- Initial mount
@@ -932,30 +896,26 @@ return function()
 			end)
 
 			-- @gate experimental
-			-- ROBLOX TODO: ReactFiberBeginWork.new:3546: FIXME (roblox): beginWork: LegacyHiddenComponent is unimplemented
+			-- ROBLOX TODO: Unexpected fiber popped, leading to invalid argument #1 to 'band' (number expected, got nil)
 			xit("context consumer doesn't bail out inside hidden subtree", function()
 				local Context = React.createContext("dark")
 				local Consumer = getConsumer(Context)
 
 				local function App(ref)
 					local theme = ref.theme
-					return React.createElement(
-						Context.Provider,
+					return React.createElement(Context.Provider, {
+						value = theme,
+					}, React.createElement(
+						LegacyHiddenDiv,
 						{
-							value = theme,
+							mode = "hidden",
 						},
-						React.createElement(
-							LegacyHiddenDiv,
-							{
-								mode = "hidden",
-							},
-							React.createElement(Consumer, nil, function(value)
-								return React.createElement(Text, {
-									text = value,
-								})
-							end)
-						)
-					)
+						React.createElement(Consumer, nil, function(value)
+							return React.createElement(Text, {
+								text = value,
+							})
+						end)
+					))
 				end
 
 				ReactNoop.render(React.createElement(App, {
@@ -991,14 +951,13 @@ return function()
 
 				local App = React.Component:extend("App")
 				function App:renderItem(id)
-					return React.createElement(
+					return React.createElement("span", { key = id }, React.createElement(Consumer, nil, function()
+						return React.createElement("span", nil, "inner")
+					end), React.createElement(
 						"span",
-						{ key = id },
-						React.createElement(Consumer, nil, function()
-							return React.createElement("span", nil, "inner")
-						end),
-						React.createElement("span", nil, "outer")
-					)
+						nil,
+						"outer"
+					))
 				end
 				function App:renderList()
 					local list = Array.map({ 1, 2 }, function(id)
@@ -1022,77 +981,76 @@ return function()
 			end)
 
 			-- This is a regression case for https://github.com/facebook/react/issues/12686
-			xit("does not skip some siblings", function()
-				-- ROBLOX FIXME: enable this test
-				--     local Context = React.createContext(0)
-				--     local ContextConsumer = getConsumer(Context)
+			it("does not skip some siblings", function()
+				local StaticContent, Indirection
+				local Context = React.createContext(0)
+				local ContextConsumer = getConsumer(Context)
 
-				--     class App extends React.Component {
-				--       state = {
-				--         step: 0,
-				--       end
+				local App = React.Component:extend("App")
+				function App:init()
+					self.state = { step = 0 }
+				end
 
-				--       render()
-				--         Scheduler.unstable_yieldValue('App')
-				--         return (
-				--           <Context.Provider value={this.state.step}>
-				--             <StaticContent />
-				--             {this.state.step > 0 and <Indirection />}
-				--           </Context.Provider>
-				--         )
-				--       end
-				--     end
+				function App:render()
+					Scheduler.unstable_yieldValue("App")
+					return React.createElement(
+						Context.Provider,
+						{ value = self.state.step },
+						React.createElement(StaticContent),
+						self.state.step > 0 and React.createElement(Indirection)
+					)
+				end
 
-				--     class StaticContent extends React.PureComponent {
-				--       render()
-				--         return (
-				--           <>
-				--             <>
-				--               <span prop="static 1" />
-				--               <span prop="static 2" />
-				--             </>
-				--           </>
-				--         )
-				--       end
-				--     end
+				StaticContent = React.PureComponent:extend("StaticContent")
+				function StaticContent:render()
+					return React.createElement(
+						React.Fragment,
+						nil,
+						React.createElement(
+							React.Fragment,
+							nil,
+							React.createElement("span", { prop = "static 1" }),
+							React.createElement("span", { prop = "static 2" })
+						)
+					)
+				end
 
-				--     class Indirection extends React.PureComponent {
-				--       render()
-				--         return (
-				--           <ContextConsumer>
-				--             {value => {
-				--               Scheduler.unstable_yieldValue('Consumer')
-				--               return <span prop={value} />
-				--             }}
-				--           </ContextConsumer>
-				--         )
-				--       end
-				--     end
+				Indirection = React.PureComponent:extend("Indirection")
+				function Indirection:render()
+					return (React.createElement(ContextConsumer, nil, function(value)
+						Scheduler.unstable_yieldValue("Consumer")
+						return React.createElement("span", { prop = value })
+					end))
+				end
 
-				--     -- Initial mount
-				--     local inst
-				--     ReactNoop.render(<App ref={ref => (inst = ref)} />)
-				--     jestExpect(Scheduler).toFlushAndYield(['App'])
-				--     jestExpect(ReactNoop.getChildren()).toEqual([
-				--       span('static 1'),
-				--       span('static 2'),
-				--     ])
-				--     -- Update the first time
-				--     inst.setState({step: 1})
-				--     jestExpect(Scheduler).toFlushAndYield(['App', 'Consumer'])
-				--     jestExpect(ReactNoop.getChildren()).toEqual([
-				--       span('static 1'),
-				--       span('static 2'),
-				--       span(1),
-				--     ])
-				--     -- Update the second time
-				--     inst.setState({step: 2})
-				--     jestExpect(Scheduler).toFlushAndYield(['App', 'Consumer'])
-				--     jestExpect(ReactNoop.getChildren()).toEqual([
-				--       span('static 1'),
-				--       span('static 2'),
-				--       span(2),
-				--     ])
+				-- Initial mount
+				local inst
+				ReactNoop.render(React.createElement(App, {
+					ref = function(ref)
+						inst = ref
+					end,
+				}))
+				jestExpect(Scheduler).toFlushAndYield({ "App" })
+				jestExpect(ReactNoop.getChildren()).toEqual({
+					span("static 1"),
+					span("static 2"),
+				})
+				-- Update the first time
+				inst:setState({ step = 1 })
+				jestExpect(Scheduler).toFlushAndYield({ "App", "Consumer" })
+				jestExpect(ReactNoop.getChildren()).toEqual({
+					span("static 1"),
+					span("static 2"),
+					span(1),
+				})
+				-- Update the second time
+				inst:setState({ step = 2 })
+				jestExpect(Scheduler).toFlushAndYield({ "App", "Consumer" })
+				jestExpect(ReactNoop.getChildren()).toEqual({
+					span("static 1"),
+					span("static 2"),
+					span(2),
+				})
 			end)
 		end)
 	end
@@ -1110,7 +1068,9 @@ return function()
 				contextValue = useContext(Context, observedBits)
 			end).toErrorDev(
 				observedBits ~= nil
-						and "useContext() second argument is reserved for future use in React. " .. "Passing it is not supported. You passed: " .. tostring(observedBits) .. "."
+						and "useContext() second argument is reserved for future use in React. " .. "Passing it is not supported. You passed: " .. tostring(
+							observedBits
+						) .. "."
 					or {}
 			)
 			local render = props.children
@@ -1125,7 +1085,9 @@ return function()
 				contextValue = useContext(Context, observedBits)
 			end).toErrorDev(
 				observedBits ~= nil
-						and "useContext() second argument is reserved for future use in React. " .. "Passing it is not supported. You passed: " .. tostring(observedBits) .. "."
+						and "useContext() second argument is reserved for future use in React. " .. "Passing it is not supported. You passed: " .. tostring(
+							observedBits
+						) .. "."
 					or {}
 			)
 			local render = props.children
@@ -1133,25 +1095,23 @@ return function()
 		end)
 	end)
 
-	sharedContextTests(
-	  "useContext inside memoized function component",
-	  function(Context)
-	    return React.memo(function (props)
-	      local observedBits = props.unstable_observedBits
-	      local contextValue
-	      jestExpect(function()
-	        contextValue = useContext(Context, observedBits)
-	      end).toErrorDev(
-	        observedBits ~= nil
-	          and "useContext() second argument is reserved for future use in React. " ..
-	              "Passing it is not supported. You passed: " .. tostring(observedBits) .. "."
-	          or {}
-	      )
-	      local render = props.children
-	      return render(contextValue)
-	    end)
-	  end
-	)
+	sharedContextTests("useContext inside memoized function component", function(Context)
+		return React.memo(function(props)
+			local observedBits = props.unstable_observedBits
+			local contextValue
+			jestExpect(function()
+				contextValue = useContext(Context, observedBits)
+			end).toErrorDev(
+				observedBits ~= nil
+						and "useContext() second argument is reserved for future use in React. " .. "Passing it is not supported. You passed: " .. tostring(
+							observedBits
+						) .. "."
+					or {}
+			)
+			local render = props.children
+			return render(contextValue)
+		end)
+	end)
 	sharedContextTests("readContext(Context) inside class component", function(Context)
 		local Consumer = React.Component:extend("Consumer")
 
@@ -1201,14 +1161,12 @@ return function()
 			)
 		end)
 
-		-- ROBLOX TODO: toErrorDev, needs LUAFDN-196
-		xit("warns if no value prop provided", function()
+		it("warns if no value prop provided", function()
 			local Context = React.createContext()
 
-			ReactNoop.render(React.createElement(
-				Context.Provider,
-				{ anyPropNameOtherThanValue = "value could be anything" }
-			))
+			ReactNoop.render(
+				React.createElement(Context.Provider, { anyPropNameOtherThanValue = "value could be anything" })
+			)
 
 			jestExpect(function()
 				jestExpect(Scheduler).toFlushWithoutYielding()
@@ -1336,11 +1294,13 @@ return function()
 			local appRef = React.createRef()
 
 			-- Initial mount
-			ReactNoop.render(React.createElement(
-				LegacyProvider,
-				{ ref = legacyProviderRef },
-				React.createElement(App, { ref = appRef, value = 1 }, children)
-			))
+			ReactNoop.render(
+				React.createElement(
+					LegacyProvider,
+					{ ref = legacyProviderRef },
+					React.createElement(App, { ref = appRef, value = 1 }, children)
+				)
+			)
 			jestExpect(function()
 				jestExpect(Scheduler).toFlushAndYield({ "LegacyProvider", "App", "Child" })
 			end).toErrorDev(
@@ -1461,8 +1421,8 @@ return function()
 					Context.Provider,
 					{ value = self.props.value },
 					React.createElement(Consumer, nil, function(context)
-							return self:renderConsumer(context)
-						end)
+						return self:renderConsumer(context)
+					end)
 				)
 			end
 

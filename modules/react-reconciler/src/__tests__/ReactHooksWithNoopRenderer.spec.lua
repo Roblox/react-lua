@@ -398,7 +398,7 @@ return function()
 			jestExpect(firstUpdater).toEqual(secondUpdater)
 		end)
 
-		-- ROBLOX TODO: toErrorDev expects name of function component, needs LUAFDN-207
+		-- ROBLOX FIXME: error message has incorrect component name "LoadedCode.RoactAlignment.Packages.Modules.React.ReactHooks"
 		xit("warns on set after unmount", function()
 			local updateCount
 			local function Counter(props, ref)
@@ -423,18 +423,16 @@ return function()
 			)
 		end)
 
-		-- ROBLOX TODO: toErrorDev expects name of function component, needs LUAFDN-207
+		-- ROBLOX FIXME: error message has incorrect component name "LoadedCode.RoactAlignment.Packages.Modules.React.ReactHooks"
 		xit("dedupes the warning by component name", function()
-			local updateCountA
+			local _useStateCount, updateCountA
 			local function CounterA(props, ref)
-				local useStateCount = useState(0)
-				updateCountA = useStateCount[2]
+				_useStateCount, updateCountA = useState(0)
 				return nil
 			end
 			local updateCountB
 			local function CounterB(props, ref)
-				local useStateCount = useState(0)
-				updateCountB = useStateCount[2]
+				_useStateCount, updateCountB = useState(0)
 				return nil
 			end
 
@@ -1639,7 +1637,7 @@ return function()
 			end)
 		end)
 
-		-- ROBLOX TODO: toErrorDev, needs LUAFDN-196
+		-- ROBLOX FIXME: error message has incorrect component name  LoadedCode.RoactAlignment.Packages.Modules.React.ReactHooks
 		xit("warns if there are updates after pending passive unmount effects have been flushed", function()
 			local updaterFunction
 

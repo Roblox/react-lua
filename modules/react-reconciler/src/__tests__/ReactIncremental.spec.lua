@@ -287,7 +287,7 @@ return function()
 				text2 = "baz",
 			})
 		end)
-		-- ROBLOX TODO: ReactFiberBeginWork.new:3546: FIXME (roblox): beginWork: LegacyHiddenComponent is unimplemented
+		-- ROBLOX TODO: Unexpected pop, leading to invalid argument #1 to 'band' (number expected, got table)
 		-- @gate experimental
 		xit("can deprioritize unfinished work and resume it later", function()
 			local function Bar(props)
@@ -344,7 +344,7 @@ return function()
 			})
 		end)
 
-		-- ROBLOX TODO: ReactFiberBeginWork.new:3559: FIXME (roblox): beginWork: LegacyHiddenComponent is unimplemented
+		-- ROBLOX TODO: Unexpected pop, leading to invalid argument #1 to 'band' (number expected, got table)
 		-- @gate experimental
 		xit("can deprioritize a tree from without dropping work", function()
 			local function Bar(props)
@@ -2200,7 +2200,7 @@ return function()
 				})
 			end)
 		end
-		-- ROBLOX TODO: ReactFiberBeginWork.new:3559: FIXME (roblox): beginWork: LegacyHiddenComponent is unimplemented
+		-- ROBLOX FIXME: ReactFiberLane:657: invalid argument #1 to 'band' (number expected, got nil)
 		-- @gate experimental
 		xit("provides context when reusing work", function()
 			local Intl = React.Component:extend("Intl")
