@@ -8,13 +8,12 @@
  * @flow
  ]]
 
-local Workspace = script.Parent.Parent
-local Packages = Workspace.Parent
+local Packages = script.Parent.Parent
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local setTimeout = LuauPolyfill.setTimeout
 
 -- ROBLOX: use patched console from shared
-local console = require(Workspace.Shared.console)
+local console = require(Packages.Shared).console
 
 local ReactInternalTypes = require(script.Parent.ReactInternalTypes)
 type Fiber = ReactInternalTypes.Fiber
@@ -23,7 +22,7 @@ type CapturedValue<T> = ReactCapturedValue.CapturedValue<T>
 
 local showErrorDialog = require(script.Parent.ReactFiberErrorDialog).showErrorDialog
 local ClassComponent = require(script.Parent.ReactWorkTags).ClassComponent
-local getComponentName = require(Workspace.Shared.getComponentName)
+local getComponentName = require(Packages.Shared).getComponentName
 
 local exports = {}
 

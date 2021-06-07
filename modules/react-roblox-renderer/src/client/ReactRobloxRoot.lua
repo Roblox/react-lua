@@ -8,19 +8,22 @@
  * @flow
 ]]
 
-local Workspace = script.Parent.Parent.Parent
+local Packages = script.Parent.Parent.Parent
 
 local ReactRobloxHostTypes = require(script.Parent["ReactRobloxHostTypes.roblox"])
 type Container = ReactRobloxHostTypes.Container;
 type RootType = ReactRobloxHostTypes.RootType;
 type RootOptions = ReactRobloxHostTypes.RootOptions;
-local ReactRootTags = require(Workspace.ReactReconciler.ReactRootTags)
-type RootTag = ReactRootTags.RootTag;
-local ReactTypes = require(Workspace.Shared.ReactTypes)
-type MutableSource<T> = ReactTypes.MutableSource<T>;
-type ReactNodeList = ReactTypes.ReactNodeList;
-local ReactInternalTypes = require(Workspace.ReactReconciler.ReactInternalTypes)
-type FiberRoot = ReactInternalTypes.FiberRoot;
+
+-- ROBLOX FIXME: Types across package boundaries
+local ReactRootTags = require(Packages.ReactReconciler).ReactRootTags
+-- type RootTag = ReactRootTags.RootTag;
+type RootTag = any
+local ReactTypes = require(Packages.Shared)
+type MutableSource<T> = ReactTypes.MutableSource<T>
+type ReactNodeList = ReactTypes.ReactNodeList
+local ReactInternalTypes = require(Packages.ReactReconciler)
+type FiberRoot = ReactInternalTypes.FiberRoot
 
 type Array<T> = { [number]: T };
 
@@ -35,15 +38,15 @@ local unmarkContainerAsRoot = ReactRobloxComponentTree.unmarkContainerAsRoot
 -- local COMMENT_NODE = HTMLNodeType.COMMENT_NODE
 -- local DOCUMENT_NODE = HTMLNodeType.DOCUMENT_NODE
 -- local DOCUMENT_FRAGMENT_NODE = HTMLNodeType.DOCUMENT_FRAGMENT_NODE
--- local ensureListeningTo = require(Workspace.ReactDOMComponent).ensureListeningTo
+-- local ensureListeningTo = require(Packages.ReactDOMComponent).ensureListeningTo
 
-local ReactFiberReconciler = require(Workspace.ReactReconciler.ReactFiberReconciler)
+local ReactFiberReconciler = require(Packages.ReactReconciler)
 local createContainer = ReactFiberReconciler.createContainer
 local updateContainer = ReactFiberReconciler.updateContainer
 -- local findHostInstanceWithNoPortals = ReactFiberReconciler.findHostInstanceWithNoPortals
 -- local registerMutableSourceForHydration = ReactFiberReconciler.registerMutableSourceForHydration
-local invariant = require(Workspace.Shared.invariant)
-local enableEagerRootListeners = require(Workspace.Shared.ReactFeatureFlags).enableEagerRootListeners
+local invariant = require(Packages.Shared).invariant
+local enableEagerRootListeners = require(Packages.Shared).ReactFeatureFlags.enableEagerRootListeners
 
 local BlockingRoot = ReactRootTags.BlockingRoot
 local ConcurrentRoot = ReactRootTags.ConcurrentRoot

@@ -9,15 +9,14 @@
 ]]
 --!nolint LocalShadowPedantic
 
-local Workspace = script.Parent.Parent
-local Packages = Workspace.Parent
+local Packages = script.Parent.Parent
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local Object = LuauPolyfill.Object
 
 local Cryo = require(Packages.Cryo)
 
 -- ROBLOX: use patched console from shared
-local console = require(Workspace.Shared.console)
+local console = require(Packages.Shared).console
 
 local ReactInternalTypes = require(script.Parent.ReactInternalTypes)
 type Fiber = ReactInternalTypes.Fiber;
@@ -25,13 +24,13 @@ local ReactFiberStack = require(script.Parent["ReactFiberStack.new"])
 type StackCursor<T> = ReactFiberStack.StackCursor<T>;
 
 local isFiberMounted = require(script.Parent.ReactFiberTreeReflection).isFiberMounted
-local disableLegacyContext = require(Workspace.Shared.ReactFeatureFlags).disableLegacyContext
+local disableLegacyContext = require(Packages.Shared).ReactFeatureFlags.disableLegacyContext
 local ReactWorkTags = require(script.Parent.ReactWorkTags)
 local ClassComponent = ReactWorkTags.ClassComponent
 local HostRoot = ReactWorkTags.HostRoot
-local getComponentName = require(Workspace.Shared.getComponentName)
-local invariant = require(Workspace.Shared.invariant)
-local checkPropTypes = require(Workspace.Shared.checkPropTypes)
+local getComponentName = require(Packages.Shared).getComponentName
+local invariant = require(Packages.Shared).invariant
+local checkPropTypes = require(Packages.Shared).checkPropTypes
 
 local createCursor = ReactFiberStack.createCursor
 local push = ReactFiberStack.push

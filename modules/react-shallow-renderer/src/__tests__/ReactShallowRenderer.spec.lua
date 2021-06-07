@@ -10,15 +10,14 @@
 
 return function()
 	-- local Dependencies = script.Parent.Parent.Parent.Parent.Packages
-	local Workspace = script.Parent.Parent.Parent
-	local Packages = Workspace.Parent
-	local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
+	local Packages = script.Parent.Parent.Parent
+  local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
 	local LuauPolyfill = require(Packages.LuauPolyfill)
 	local Array = LuauPolyfill.Array
 	local Error = LuauPolyfill.Error
 	-- local PropTypes = require(Dependencies.PropTypes)
-	local React = require(Workspace.React)
-	local ReactShallowRenderer = require(Workspace.ReactShallowRenderer)
+	local React = require(Packages.React)
+	local ReactShallowRenderer = require(script.Parent.Parent)
 
 	local createRenderer = ReactShallowRenderer.createRenderer
 

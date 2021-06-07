@@ -11,11 +11,10 @@
 
 -- !strict
 
-local Workspace = script.Parent.Parent.Parent
-local RobloxJest = require(Workspace.RobloxJest)
-local Packages = Workspace.Parent
+local Packages = script.Parent.Parent.Parent
+local RobloxJest = require(Packages.Dev.RobloxJest)
 
-local React = require(Workspace.React)
+local React = require(Packages.React)
 local ReactTestRenderer
 local Context
 local RCTView = 'RCTView'
@@ -28,20 +27,9 @@ return function()
     describe('ReactTestRendererTraversal', function()
         beforeEach(function()
             RobloxJest.resetModules()
-            -- deviation: In react, jest _always_ mocks Scheduler -> unstable_mock;
-            -- in our case, we need to do it anywhere we want to use the scheduler,
-            -- directly or indirectly, until we have some form of bundling logic
-            RobloxJest.mock(Workspace.Scheduler, function()
-            return require(Workspace.Scheduler.unstable_mock)
-            end)
-            -- deviation: upstream has jest.mock return a function via
-            -- scripts/setupHostConfigs.js, but it's easier for us to do it here
-            RobloxJest.mock(Workspace.ReactReconciler.ReactFiberHostConfig, function()
-                return require(Workspace.ReactTestRenderer.ReactTestHostConfig)
-            end)
 
-            React = require(Workspace.React)
-            ReactTestRenderer = require(Workspace.ReactTestRenderer)
+            React = require(Packages.React)
+            ReactTestRenderer = require(Packages.ReactTestRenderer)
             Context = React.createContext(nil)
         end)
 

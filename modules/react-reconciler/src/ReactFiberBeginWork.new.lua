@@ -20,25 +20,26 @@ local function unimplemented(message)
   error("FIXME (roblox): " .. message .. " is unimplemented", 2)
 end
 
-local Workspace = script.Parent.Parent
+local Packages = script.Parent.Parent
 -- ROBLOX: use patched console from shared
-local console = require(Workspace.Shared.console)
-local Packages = Workspace.Parent
+local console = require(Packages.Shared).console
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local Array = LuauPolyfill.Array
 
-local ReactTypes = require(Workspace.Shared.ReactTypes)
+local ReactTypes = require(Packages.Shared)
 type ReactProviderType<T> = ReactTypes.ReactProviderType<T>
 type ReactContext<T> = ReactTypes.ReactContext<T>
-local ReactLazyModule = require(Workspace.React.ReactLazy)
-type LazyComponentType<T, P> = ReactLazyModule.LazyComponent<T, P>
+
+local React = require(Packages.React)
+type LazyComponentType<T, P> = React.LazyComponent<T, P>
+
 local ReactInternalTypes = require(script.Parent.ReactInternalTypes)
 type Fiber = ReactInternalTypes.Fiber;
 type FiberRoot = ReactInternalTypes.FiberRoot;
 local ReactFiberLane = require(script.Parent.ReactFiberLane)
 type Lanes = ReactFiberLane.Lanes;
 -- type Lane = ReactFiberLane.Lane;
--- local type {MutableSource} = require(Workspace.Shared.ReactTypes)
+-- local type {MutableSource} = require(Packages.Shared.ReactTypes)
 
 local ReactFiberSuspenseComponent = require(script.Parent["ReactFiberSuspenseComponent.new"])
 type SuspenseState = ReactFiberSuspenseComponent.SuspenseState
@@ -51,7 +52,7 @@ local ReactFiberOffscreenComponent = require(script.Parent.ReactFiberOffscreenCo
 type OffscreenProps = ReactFiberOffscreenComponent.OffscreenProps
 type OffscreenState = ReactFiberOffscreenComponent.OffscreenState
 
-local checkPropTypes = require(Workspace.Shared.checkPropTypes)
+local checkPropTypes = require(Packages.Shared).checkPropTypes
 
 local ReactWorkTags = require(script.Parent.ReactWorkTags)
 local IndeterminateComponent = ReactWorkTags.IndeterminateComponent
@@ -89,8 +90,8 @@ local DidCapture = ReactFiberFlags.DidCapture
 local Ref = ReactFiberFlags.Ref
 local Deletion = ReactFiberFlags.Deletion
 local ForceUpdateForLegacySuspense = ReactFiberFlags.ForceUpdateForLegacySuspense
-local ReactSharedInternals = require(Workspace.Shared.ReactSharedInternals)
-local ReactFeatureFlags = require(Workspace.Shared.ReactFeatureFlags)
+local ReactSharedInternals = require(Packages.Shared).ReactSharedInternals
+local ReactFeatureFlags = require(Packages.Shared).ReactFeatureFlags
 local debugRenderPhaseSideEffectsForStrictMode = ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode
 local disableLegacyContext = ReactFeatureFlags.disableLegacyContext
 local disableModulePatternComponents = ReactFeatureFlags.disableModulePatternComponents
@@ -100,13 +101,13 @@ local enableSuspenseServerRenderer = ReactFeatureFlags.enableSuspenseServerRende
 local enableFundamentalAPI = ReactFeatureFlags.enableFundamentalAPI
 local warnAboutDefaultPropsOnFunctionComponents = ReactFeatureFlags.warnAboutDefaultPropsOnFunctionComponents
 local enableScopeAPI = ReactFeatureFlags.enableScopeAPI
-local invariant = require(Workspace.Shared.invariant)
-local shallowEqual = require(Workspace.Shared.shallowEqual)
-local getComponentName = require(Workspace.Shared.getComponentName)
+local invariant = require(Packages.Shared).invariant
+local shallowEqual = require(Packages.Shared).shallowEqual
+local getComponentName = require(Packages.Shared).getComponentName
+local ReactSymbols = require(Packages.Shared).ReactSymbols
+local REACT_LAZY_TYPE = ReactSymbols.REACT_LAZY_TYPE
+local _getIteratorFn = ReactSymbols.getIteratorFn
 local ReactStrictModeWarnings = require(script.Parent["ReactStrictModeWarnings.new"])
-local ReactSymbolsModule = require(Workspace.Shared.ReactSymbols)
-local REACT_LAZY_TYPE = ReactSymbolsModule.REACT_LAZY_TYPE
-local _getIteratorFn = ReactSymbolsModule.getIteratorFn
 local ReactCurrentFiber = require(script.Parent.ReactCurrentFiber)
 local getCurrentFiberOwnerNameInDevOrNull = ReactCurrentFiber.getCurrentFiberOwnerNameInDevOrNull
 local setIsRendering = ReactCurrentFiber.setIsRendering
@@ -240,10 +241,10 @@ local getExecutionContext = ReactFiberWorkLoop.getExecutionContext
 local RetryAfterError = ReactFiberWorkLoop.RetryAfterError
 local NoContext = ReactFiberWorkLoop.NoContext
 
--- local {unstable_wrap as Schedule_tracing_wrap} = require(Workspace.scheduler/tracing'
+-- local {unstable_wrap as Schedule_tracing_wrap} = require(Packages.scheduler/tracing'
 local setWorkInProgressVersion = require(script.Parent["ReactMutableSource.new"]).setWorkInProgressVersion
 local markSkippedUpdateLanes = require(script.Parent.ReactFiberWorkInProgress).markSkippedUpdateLanes
-local ConsolePatchingDev = require(Workspace.Shared["ConsolePatchingDev.roblox"])
+local ConsolePatchingDev = require(Packages.Shared).ConsolePatchingDev
 local disableLogs = ConsolePatchingDev.disableLogs
 local reenableLogs = ConsolePatchingDev.reenableLogs
 

@@ -10,13 +10,12 @@
 ]]
 
 return function()
-	local Workspace = script.Parent.Parent.Parent
-	local Packages = Workspace.Parent
+	local Packages = script.Parent.Parent.Parent
 	local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
 	local LuauPolyfill = require(Packages.LuauPolyfill)
 	local Object = LuauPolyfill.Object
 
-	local RobloxJest = require(Workspace.RobloxJest)
+	local RobloxJest = require(Packages.Dev.RobloxJest)
 
 	local ReactFiberSchedulerPriorities = require(script.Parent.Parent["ReactFiberSchedulerPriorities.roblox"])
 	local ImmediatePriority = ReactFiberSchedulerPriorities.ImmediatePriority

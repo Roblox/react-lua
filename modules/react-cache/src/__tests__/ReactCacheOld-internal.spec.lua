@@ -22,38 +22,27 @@ local TextResource
 local textResourceShouldFail
 
 return function()
-	local Workspace = script.Parent.Parent.Parent
-	local Packages = Workspace.Parent
-	local LuauPolyfill = require(Packages.LuauPolyfill)
-	local Promise = require(Packages.Promise)
+	local Packages = script.Parent.Parent.Parent
+	local LuauPolyfill = require(Packages.Dev.LuauPolyfill)
+	local Promise = require(Packages.Dev.Promise)
 	local setTimeout = LuauPolyfill.setTimeout
-	local jest = require(Workspace.Parent.Dev.JestRoblox)
+	local jest = require(Packages.Dev.JestRoblox)
 	local jestExpect = jest.Globals.expect
-	local RobloxJest = require(Workspace.RobloxJest)
+	local RobloxJest = require(Packages.Dev.RobloxJest)
 	describe("ReactCache", function()
 		beforeEach(function()
 			RobloxJest.resetModules()
 			RobloxJest.useFakeTimers()
-			-- ROBLOX deviation: In react, jest _always_ mocks Scheduler -> unstable_mock;
-			-- in our case, we need to do it anywhere we want to use the scheduler,
-			-- directly or indirectly, until we have some form of bundling logic
-			RobloxJest.mock(Workspace.Scheduler, function()
-				return require(Workspace.Scheduler.unstable_mock)
-			end)
-			local ReactTestHostConfig = require(Workspace.ReactTestRenderer.ReactTestHostConfig)
-			RobloxJest.mock(Workspace.ReactReconciler.ReactFiberHostConfig, function()
-				return ReactTestHostConfig
-			end)
 
-			ReactFeatureFlags = require(Workspace.Shared.ReactFeatureFlags)
+			ReactFeatureFlags = require(Packages.Shared).ReactFeatureFlags
 
 			ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false
-			React = require(Workspace.React)
+			React = require(Packages.React)
 			Suspense = React.Suspense
 			ReactCache = require(script.Parent.Parent)
 			createResource = ReactCache.unstable_createResource
-			ReactTestRenderer = require(Workspace.ReactTestRenderer)
-			Scheduler = require(Workspace.Scheduler)
+			ReactTestRenderer = require(Packages.Dev.ReactTestRenderer)
+			Scheduler = require(Packages.Scheduler)
 
 			TextResource = createResource(function(input)
 				local text = input[1]

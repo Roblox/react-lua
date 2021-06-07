@@ -8,9 +8,9 @@
  * @flow
 ]]
 
-local Workspace = script.Parent.Parent
+local Packages = script.Parent.Parent
 
-local ReactSharedInternals = require(Workspace.Shared.ReactSharedInternals)
+local ReactSharedInternals = require(Packages.Shared).ReactSharedInternals
 
 local ReactCurrentBatchConfig = ReactSharedInternals.ReactCurrentBatchConfig
 

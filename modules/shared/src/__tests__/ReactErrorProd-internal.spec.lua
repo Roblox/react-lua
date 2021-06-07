@@ -10,10 +10,9 @@
 --!strict
 
 return function()
-	local Workspace = script.Parent.Parent.Parent
-	local Packages = Workspace.Parent
+	local Packages = script.Parent.Parent.Parent
 	local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
-	local RobloxJest = require(Workspace.RobloxJest)
+	local RobloxJest = require(Packages.Dev.RobloxJest)
 	local formatProdErrorMessage
 
 	beforeEach(function()

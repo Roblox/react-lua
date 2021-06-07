@@ -1,8 +1,6 @@
---!nocheck
 return function()
 	local Module = require(script.Parent.Parent)
-	local Workspace = script.Parent.Parent.Parent.Parent
-	local Packages = Workspace.Parent
+	local Packages = script.Parent.Parent.Parent.Parent
 	local jestModule = require(Packages.Dev.JestRoblox)
 	local jestExpect = jestModule.Globals.expect
 
@@ -21,7 +19,12 @@ return function()
 		Module.resetModules()
 	end)
 
-	it("should warn when mocking an already-mocked function", function()
+	afterEach(function()
+		Module.unmock(script.Parent.TestScripts.add)
+	end)
+
+	-- Skipped test: Warnings removed because they seem unhelpful
+	xit("should warn when mocking an already-mocked function", function()
 		-- mock `add` with math.min
 		overrideWarn(Module.mock, script.Parent.TestScripts.add, math.min)
 
@@ -35,7 +38,8 @@ return function()
 		jestExpect(warning).toContain("add")
 	end)
 
-	it("should warn when unmocking a not-currently-mocked function", function()
+	-- Skipped test: Warnings removed because they seem unhelpful
+	xit("should warn when unmocking a not-currently-mocked function", function()
 		-- unmock `add`, which won't be mocked after the `beforeEach` reset
 		overrideWarn(Module.unmock, script.Parent.TestScripts.add)
 

@@ -1,0 +1,15 @@
+[package]
+name = "ReactNoopRenderer"
+version = { workspace = true }
+authors = { workspace = true }
+publish = false
+content_root = "src"
+
+[dependencies]
+LuauPolyfill = { workspace = true }
+Cryo = { workspace = true }
+Scheduler = { path = "../scheduler" }
+Shared = { path = "../shared" }
+ReactReconciler = { path = "../react-reconciler" }
+# For mock timer playback
+RobloxJest = { path = "../roblox-jest" }

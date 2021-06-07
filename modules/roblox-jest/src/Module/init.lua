@@ -43,6 +43,12 @@ local function requireOverride(scriptInstance: ModuleScript): any
 	if scriptInstance == script or scriptInstance == script.Parent or scriptInstance.Name == "jest-roblox" then
 		return require(scriptInstance)
 	end
+	-- FIXME: an extra special hack that prevents us from frequently reloading
+	-- `jest-roblox`, and therefore dodges the expensive modules found in:
+	-- jest-roblox -> luau-polyfill@0.1.5 -> RegExp
+	if scriptInstance.Name == "RegExp" then
+		return require(scriptInstance)
+	end
 
 	-- If already loaded and cached, return cached module. This should behave
 	-- similarly to normal `require` behavior
@@ -93,19 +99,9 @@ end
 local function resetModules()
 	-- Clear all modules in the override require cache
 	requiredModules = {}
-
-	-- Clear any established mocks
-	mocks = {}
 end
 
 local function mock(scriptInstance: ModuleScript, callback: () -> any)
-	if mocks[scriptInstance] ~= nil then
-		warn(string.format(
-			"%s is already being mocked!",
-			tostring(scriptInstance)
-		))
-	end
-
 	-- If there's a cached actual value, clear it out so that a new require
 	-- will get the mock
 	if requiredModules[scriptInstance] ~= nil then
@@ -123,13 +119,6 @@ local function mock(scriptInstance: ModuleScript, callback: () -> any)
 end
 
 local function unmock(scriptInstance: ModuleScript)
-	if mocks[scriptInstance] == nil then
-		warn(string.format(
-			"Attempting to unmock %s, but it's not being mocked!",
-			tostring(scriptInstance)
-		))
-	end
-
 	-- If there's a cached mock value, clear it out so that a new require won't
 	-- get the mock
 	if requiredModules[scriptInstance] ~= nil then

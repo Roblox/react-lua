@@ -8,7 +8,7 @@
  * @flow
 ]]
 
-local Workspace = script.Parent.Parent
+local Packages = script.Parent.Parent
 
 local ReactInternalTypes = require(script.Parent.ReactInternalTypes)
 type FiberRoot = ReactInternalTypes.FiberRoot;
@@ -26,10 +26,10 @@ local NoLanes = ReactFiberLane.NoLanes
 local NoLanePriority = ReactFiberLane.NoLanePriority
 local NoTimestamp = ReactFiberLane.NoTimestamp
 local createLaneMap = ReactFiberLane.createLaneMap
-local ReactFeatureFlags = require(Workspace.Shared.ReactFeatureFlags)
+local ReactFeatureFlags = require(Packages.Shared).ReactFeatureFlags
 local enableSchedulerTracing = ReactFeatureFlags.enableSchedulerTracing
 local enableSuspenseCallback = ReactFeatureFlags.enableSuspenseCallback
--- local Scheduler = require(Workspace.Scheduler.tracing)
+-- local Scheduler = require(Packages.Scheduler.tracing)
 -- local unstable_getThreadID = Scheduler.unstable_getThreadID
 local ReactUpdateQueue = require(script.Parent["ReactUpdateQueue.new"])
 local initializeUpdateQueue = ReactUpdateQueue.initializeUpdateQueue

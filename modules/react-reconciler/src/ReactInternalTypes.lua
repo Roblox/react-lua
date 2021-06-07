@@ -8,21 +8,18 @@
  * @flow
 ]]
 
-local Workspace = script.Parent.Parent
+local Packages = script.Parent.Parent
 
-local ReactElementType = require(Workspace.Shared.ReactElementType)
-type Source = ReactElementType.Source;
--- local ReactTypes = require(Workspace.shared.ReactTypes)
--- type RefObject = ReactTypes.RefObject;
-type RefObject = any; -- FIXME (roblox): type
--- type ReactContext = ReactTypes.ReactContext;
-type ReactContext<T> = any; -- FIXME (roblox): type
+local ReactTypes = require(Packages.Shared)
+-- ROBLOX deviation: ReactElement is defined at the top level of Shared along
+-- with the rest of the ReactTypes
+type Source = ReactTypes.Source
+type RefObject = ReactTypes.RefObject
+type ReactContext<T> = ReactTypes.ReactContext<T>
+type MutableSourceVersion = ReactTypes.MutableSourceVersion
+type MutableSource<Source> = ReactTypes.MutableSource<Source>
 -- type MutableSourceSubscribeFn = ReactTypes.MutableSourceSubscribeFn;
 -- type MutableSourceGetSnapshotFn = ReactTypes.MutableSourceGetSnapshotFn;
--- type MutableSourceVersion = ReactTypes.MutableSourceVersion;
-type MutableSourceVersion = any; -- FIXME (roblox): type
--- type MutableSource = ReactTypes.MutableSource;
-type MutableSource<T> = any; -- FIXME (roblox): type
 
 -- local ReactFiberHostConfig = require(script.Parent.ReactFiberHostConfig)
 -- type SuspenseInstance = ReactFiberHostConfig.SuspenseInstance
@@ -58,10 +55,10 @@ type Flags = any; -- FIXME (roblox)
 export type HookType = string;
 local ReactRootTags = require(script.Parent.ReactRootTags)
 type RootTag = ReactRootTags.RootTag;
--- local ReactTypes = require(Workspace.shared.ReactTypes)
+-- local ReactTypes = require(Packages.shared.ReactTypes)
 -- type Wakeable = ReactTypes.Wakeable;
 type Wakeable = any; -- FIXME (roblox)
--- local Tracing = require(Workspace.Scheduler.Tracing)
+-- local Tracing = require(Packages.Scheduler.Tracing)
 -- type Interaction = Tracing.Interaction;
 type Interaction = any; -- FIXME (roblox): type
 

@@ -16,10 +16,10 @@
  ]]
 return function()
   local HttpService = game:GetService("HttpService")
-  local Workspace = script.Parent.Parent.Parent
-  local RobloxJest = require(Workspace.RobloxJest)
-  local Packages = Workspace.Parent
+  local Packages = script.Parent.Parent.Parent
   local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
+  local RobloxJest = require(Packages.Dev.RobloxJest)
+
   local Error = require(Packages.LuauPolyfill).Error
 
   -- deviation: Move all of the following into the test function body to match
@@ -93,22 +93,16 @@ return function()
   beforeEach(function()
     RobloxJest.resetModules()
     RobloxJest.useFakeTimers()
-    -- deviation: In react, jest _always_ mocks Scheduler -> unstable_mock;
-    -- in our case, we need to do it anywhere we want to use the scheduler,
-    -- directly or indirectly, until we have some form of bundling logic
-    RobloxJest.mock(Workspace.Scheduler, function()
-      return require(Workspace.Scheduler.unstable_mock)
-    end)
 
-    React = require(Workspace.React)
-    ReactNoop = require(Workspace.ReactNoopRenderer)
+    React = require(Packages.React)
+    ReactNoop = require(Packages.Dev.ReactNoopRenderer)
     -- ReactDOM = require('react-dom')
     -- ReactTestUtils = require('react-dom/test-utils')
     -- PropTypes = require('prop-types')
 
     -- ROBLOX deviation: these tests are failing with debugRenderPhaseSideEffectsForStrictMode on.
     -- https://github.com/Roblox/roact-alignment/issues/105
-    local ReactFeatureFlags = require(Workspace.Shared.ReactFeatureFlags)
+    local ReactFeatureFlags = require(Packages.Shared).ReactFeatureFlags
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false
   end)
 

@@ -9,11 +9,10 @@
  * @jest-environment node
 ]]
 
-local Workspace = script.Parent.Parent.Parent
-local Packages = Workspace.Parent
+local Packages = script.Parent.Parent.Parent
 local Array = require(Packages.LuauPolyfill).Array
 -- ROBLOX: use patched console from shared
-local console = require(Workspace.Shared.console)
+local console = require(Packages.Shared).console
 local React
 local useContext
 local ReactNoop
@@ -31,22 +30,16 @@ end
 
 return function()
 	local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
-	local RobloxJest = require(Workspace.RobloxJest)
+	local RobloxJest = require(Packages.Dev.RobloxJest)
 
 	beforeEach(function()
 		RobloxJest.resetModules()
 		RobloxJest.useFakeTimers()
-		-- deviation: In react, jest _always_ mocks Scheduler -> unstable_mock;
-		-- in our case, we need to do it anywhere we want to use the scheduler,
-		-- until we have some form of bundling logic
-		RobloxJest.mock(Workspace.Scheduler, function()
-			return require(Workspace.Scheduler.unstable_mock)
-		end)
 
-		React = require(Workspace.React)
+		React = require(Packages.React)
 		useContext = React.useContext
-		ReactNoop = require(Workspace.ReactNoopRenderer)
-		Scheduler = require(Workspace.Scheduler)
+		ReactNoop = require(Packages.Dev.ReactNoopRenderer)
+		Scheduler = require(Packages.Scheduler)
 		-- gen = nil -- require('random-seed')
 	end)
 
@@ -1202,12 +1195,10 @@ return function()
 
 			-- Get a new copy of ReactNoop
 			RobloxJest.resetModules()
-			RobloxJest.mock(Workspace.Scheduler, function()
-				return require(Workspace.Scheduler.unstable_mock)
-			end)
-			React = require(Workspace.React)
-			ReactNoop = require(Workspace.ReactNoopRenderer)
-			Scheduler = require(Workspace.Scheduler)
+
+			React = require(Packages.React)
+			ReactNoop = require(Packages.Dev.ReactNoopRenderer)
+			Scheduler = require(Packages.Scheduler)
 
 			-- Render the provider again using a different renderer
 			ReactNoop.render(React.createElement(App, { value = 1 }))

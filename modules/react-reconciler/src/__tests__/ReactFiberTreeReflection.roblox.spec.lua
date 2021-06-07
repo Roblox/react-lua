@@ -1,14 +1,13 @@
 --!nolint LocalShadowPedantic
 return function()
 	local Reconciler = script.Parent.Parent
-	local Workspace = script.Parent.Parent.Parent
-	local Packages = Workspace.Parent
+	local Packages = script.Parent.Parent.Parent
 	local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
-	local RobloxJest = require(Workspace.RobloxJest)
+	local RobloxJest = require(Packages.Dev.RobloxJest)
 	local LuauPolyfill = require(Packages.LuauPolyfill)
 	local Object = LuauPolyfill.Object
 
-	local setInstance = require(Workspace.Shared.ReactInstanceMap).set
+	local setInstance = require(Packages.Shared).ReactInstanceMap.set
 	local ReactWorkTags = require(Reconciler.ReactWorkTags)
 	local ClassComponent = ReactWorkTags.ClassComponent
 	local HostRoot = ReactWorkTags.HostRoot
@@ -25,9 +24,6 @@ return function()
 	describe("ReactFiberTreeReflection", function()
 		beforeEach(function()
 			RobloxJest.resetModules()
-			RobloxJest.mock(Reconciler.ReactFiberHostConfig, function()
-				return {}
-			end)
 
 			ReactFiberTreeReflection = require(Reconciler.ReactFiberTreeReflection)
 		end)

@@ -8,30 +8,23 @@
 -- * @jest-environment node
 --
 
-local Workspace = script.Parent.Parent.Parent
+local Packages = script.Parent.Parent.Parent
 local React
 local ReactNoop
 local Scheduler
-local console = require(Workspace.Shared.console)
+local console = require(Packages.Shared).console
 
 return function()
-    local Packages = Workspace.Parent
     local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
 
     describe('ReactIncrementalReflection', function()
-        local RobloxJest = require(Workspace.RobloxJest)
+        local RobloxJest = require(Packages.Dev.RobloxJest)
         beforeEach(function()
             RobloxJest.resetModules()
-            -- deviation: In react, jest _always_ mocks Scheduler -> unstable_mock;
-            -- in our case, we need to do it anywhere we want to use the scheduler,
-            -- directly or indirectly, until we have some form of bundling logic
-            RobloxJest.mock(Workspace.Scheduler, function()
-            return require(Workspace.Scheduler.unstable_mock)
-            end)
 
-            React = require(Workspace.React)
-            ReactNoop = require(Workspace.ReactNoopRenderer)
-            Scheduler = require(Workspace.Scheduler)
+            React = require(Packages.React)
+            ReactNoop = require(Packages.Dev.ReactNoopRenderer)
+            Scheduler = require(Packages.Scheduler)
         end)
 
         local function div(...)

@@ -20,13 +20,12 @@ local function unimplemented(message)
   error("FIXME (roblox): " .. message .. " is unimplemented", 2)
 end
 
-local Workspace = script.Parent.Parent
-local Packages = Workspace.Parent
+local Packages = script.Parent.Parent
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local Object = LuauPolyfill.Object
 
 -- ROBLOX: use patched console from shared
-local console = require(Workspace.Shared.console)
+local console = require(Packages.Shared).console
 local ReactInternalTypes = require(script.Parent.ReactInternalTypes)
 type Fiber = ReactInternalTypes.Fiber
 local ReactFiberLane = require(script.Parent.ReactFiberLane)
@@ -34,14 +33,14 @@ type Lanes = ReactFiberLane.Lanes
 local ReactUpdateQueue = require(script.Parent["ReactUpdateQueue.new"])
 type UpdateQueue<State> = ReactUpdateQueue.UpdateQueue<State>
 
-local React = require(Workspace.React)
+local React = require(Packages.React)
 
 local ReactFiberFlags = require(script.Parent.ReactFiberFlags)
 local Update = ReactFiberFlags.Update
 local Snapshot = ReactFiberFlags.Snapshot
 local MountLayoutDev = ReactFiberFlags.MountLayoutDev
 
-local ReactFeatureFlags = require(Workspace.Shared.ReactFeatureFlags)
+local ReactFeatureFlags = require(Packages.Shared).ReactFeatureFlags
 local debugRenderPhaseSideEffectsForStrictMode = ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode
 local disableLegacyContext = ReactFeatureFlags.disableLegacyContext
 local enableDebugTracing = ReactFeatureFlags.enableDebugTracing
@@ -51,13 +50,13 @@ local enableDoubleInvokingEffects = ReactFeatureFlags.enableDoubleInvokingEffect
 
 local ReactStrictModeWarnings = require(script.Parent["ReactStrictModeWarnings.new"])
 local isMounted = require(script.Parent.ReactFiberTreeReflection).isMounted
-local ReactInstanceMap = require(Workspace.Shared.ReactInstanceMap)
+local ReactInstanceMap = require(Packages.Shared).ReactInstanceMap
 local getInstance = ReactInstanceMap.get
 local setInstance = ReactInstanceMap.set
-local shallowEqual = require(Workspace.Shared.shallowEqual)
-local getComponentName = require(Workspace.Shared.getComponentName)
--- local invariant = require(Workspace.Shared.invariant)
-local ReactSymbols = require(Workspace.Shared.ReactSymbols)
+local shallowEqual = require(Packages.Shared).shallowEqual
+local getComponentName = require(Packages.Shared).getComponentName
+-- local invariant = require(Packages.Shared).invariant
+local ReactSymbols = require(Packages.Shared).ReactSymbols
 local REACT_CONTEXT_TYPE = ReactSymbols.REACT_CONTEXT_TYPE
 local REACT_PROVIDER_TYPE = ReactSymbols.REACT_PROVIDER_TYPE
 
@@ -93,7 +92,7 @@ local readContext = ReactFiberNewContext.readContext
 -- local scheduleUpdateOnFiber = ReactFiberWorkLoop.scheduleUpdateOnFiber
 -- local {logForceUpdateScheduled, logStateUpdateScheduled} = require(script.Parent.DebugTracing)
 
-local ConsolePatchingDev = require(Workspace.Shared["ConsolePatchingDev.roblox"])
+local ConsolePatchingDev = require(Packages.Shared).ConsolePatchingDev
 local disableLogs = ConsolePatchingDev.disableLogs
 local reenableLogs = ConsolePatchingDev.reenableLogs
 

@@ -8,7 +8,7 @@
  * @flow
 ]]
 
-local Workspace = script.Parent.Parent.Parent
+local Packages = script.Parent.Parent.Parent
 
 local ReactRobloxHostTypes = require(script.Parent["ReactRobloxHostTypes.roblox"])
 type HostInstance = ReactRobloxHostTypes.HostInstance;
@@ -16,33 +16,35 @@ type SuspenseInstance = ReactRobloxHostTypes.SuspenseInstance;
 type Container = ReactRobloxHostTypes.Container;
 type Props = ReactRobloxHostTypes.Props;
 
-local ReactInternalTypes = require(Workspace.ReactReconciler.ReactInternalTypes)
-type Fiber = ReactInternalTypes.Fiber;
-local ReactTypes = require(Workspace.Shared.ReactTypes)
+-- ROBLOX ROBLOX FIXME: Types across package boundaries
+-- local ReactInternalTypes = require(Packages.ReactReconciler).ReactInternalTypes
+-- type Fiber = ReactInternalTypes.Fiber;
+type Fiber = any;
+local ReactTypes = require(Packages.Shared)
 type ReactScopeInstance = ReactTypes.ReactScopeInstance;
 -- local type {
 --   ReactDOMEventHandle,
 --   ReactDOMEventHandleListener,
--- } = require(Workspace.../shared/ReactDOMTypes'
+-- } = require(Packages.../shared/ReactDOMTypes'
 -- local type {
 --   Container,
 --   TextInstance,
 --   Instance,
 --   SuspenseInstance,
 --   Props,
--- } = require(Workspace../ReactDOMHostConfig'
+-- } = require(Packages../ReactDOMHostConfig'
 
 -- local {
 --   HostComponent,
 --   HostText,
 --   HostRoot,
 --   SuspenseComponent,
--- } = require(Workspace.react-reconciler/src/ReactWorkTags'
+-- } = require(Packages.react-reconciler/src/ReactWorkTags'
 
--- local {getParentSuspenseInstance} = require(Workspace../ReactDOMHostConfig'
+-- local {getParentSuspenseInstance} = require(Packages../ReactDOMHostConfig'
 
--- local invariant = require(Workspace.shared/invariant'
--- local {enableScopeAPI} = require(Workspace.shared/ReactFeatureFlags'
+-- local invariant = require(Packages.shared/invariant'
+-- local {enableScopeAPI} = require(Packages.shared/ReactFeatureFlags'
 
 local exports: {[any]: any} = {}
 

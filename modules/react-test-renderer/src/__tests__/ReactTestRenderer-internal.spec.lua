@@ -9,7 +9,7 @@
 --  */
 
 -- !strict
-local Workspace = script.Parent.Parent.Parent
+local Packages = script.Parent.Parent.Parent
 local ReactFeatureFlags
 
 local React
@@ -17,17 +17,11 @@ local ReactTestRenderer
 -- local prettyFormat = require('pretty-format')
 
 local RobloxJest
--- deviation: In react, jest _always_ mocks Scheduler -> unstable_mock;
--- in our case, we need to do it anywhere we want to use the scheduler,
--- until we have some form of bundling logic
--- RobloxJest.mock(Workspace.Scheduler, function()
---   return require(Workspace.Scheduler.unstable_mock)
--- end)
 
 -- Isolate noop renderer
--- local ReactNoop = require(Workspace.ReactNoopRenderer)
--- local Scheduler = require(Workspace.Scheduler)
-local Packages = Workspace.Parent
+-- local ReactNoop = require(Packages.ReactNoopRenderer)
+-- local Scheduler = require(Packages.Scheduler)
+
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local Array = LuauPolyfill.Array
 local Symbol = LuauPolyfill.Symbol
@@ -65,29 +59,18 @@ local function cleanNodeOrArray(node)
 end
 
 return function ()
-    RobloxJest = require(Workspace.RobloxJest)
+    RobloxJest = require(Packages.Dev.RobloxJest)
     local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
 
     describe('ReactTestRenderer', function()
         beforeEach(function()
             RobloxJest.resetModules()
-            -- deviation: In react, jest _always_ mocks Scheduler -> unstable_mock;
-            -- in our case, we need to do it anywhere we want to use the scheduler,
-            -- directly or indirectly, until we have some form of bundling logic
-            RobloxJest.mock(Workspace.Scheduler, function()
-              return require(Workspace.Scheduler.unstable_mock)
-            end)
-            -- deviation: upstream has jest.mock return a function via
-            -- scripts/setupHostConfigs.js, but it's easier for us to do it here
-            RobloxJest.mock(Workspace.ReactReconciler.ReactFiberHostConfig, function()
-                return require(Workspace.ReactTestRenderer.ReactTestHostConfig)
-            end)
 
-            ReactFeatureFlags = require(Workspace.Shared.ReactFeatureFlags)
+            ReactFeatureFlags = require(Packages.Shared).ReactFeatureFlags
             ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false
 
-            React = require(Workspace.React)
-            ReactTestRenderer = require(Workspace.ReactTestRenderer)
+            React = require(Packages.React)
+            ReactTestRenderer = require(Packages.ReactTestRenderer)
             -- local prettyFormat = require('pretty-format')
 
         end)

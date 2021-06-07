@@ -1,6 +1,5 @@
 return function()
-	local Workspace = script.Parent.Parent.Parent.Parent.Parent
-	local Packages = Workspace.Parent
+	local Packages = script.Parent.Parent.Parent.Parent.Parent
 	local jestModule = require(Packages.Dev.JestRoblox)
 	local jestExpect = jestModule.Globals.expect
 	local getDefaultInstanceProperty = require(script.Parent.Parent.getDefaultInstanceProperty)

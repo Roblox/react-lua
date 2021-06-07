@@ -17,9 +17,8 @@
  * environment.
 ]]
 
-local Workspace = script.Parent.Parent
-local Packages = Workspace.Parent
-local RobloxJest = require(Workspace.RobloxJest)
+local Packages = script.Parent.Parent
+local RobloxJest = require(Packages.RobloxJest)
 local Cryo = require(Packages.Cryo)
 local LuauPolyfill = require(Packages.LuauPolyfill)
 
@@ -30,21 +29,21 @@ local setTimeout = LuauPolyfill.setTimeout
 local clearTimeout = LuauPolyfill.clearTimeout
 
 -- ROBLOX: use patched console from shared
-local console = require(Workspace.Shared.console)
-local Scheduler = require(Workspace.Scheduler.unstable_mock)
+local console = require(Packages.Shared).console
+local Scheduler = require(Packages.Scheduler)
 -- deviation: These are only used for the JSX logic that's currently omitted
-local ReactSymbols = require(Workspace.Shared.ReactSymbols)
+local ReactSymbols = require(Packages.Shared).ReactSymbols
 local REACT_FRAGMENT_TYPE = ReactSymbols.REACT_FRAGMENT_TYPE
 local REACT_ELEMENT_TYPE = ReactSymbols.REACT_ELEMENT_TYPE
 
 -- TODO (roblox): Figure out what the top-level interface of the reconciler is
-local ReactRootTags = require(Workspace.ReactReconciler.ReactRootTags)
-local ConcurrentRoot = ReactRootTags.ConcurrentRoot
-local BlockingRoot = ReactRootTags.BlockingRoot
-local LegacyRoot = ReactRootTags.LegacyRoot
+-- local ReactRootTags = require(Packages.ReactReconciler).ReactRootTags
+-- local ConcurrentRoot = ReactRootTags.ConcurrentRoot
+-- local BlockingRoot = ReactRootTags.BlockingRoot
+-- local LegacyRoot = ReactRootTags.LegacyRoot
 
-local ReactSharedInternals = require(Workspace.Shared.ReactSharedInternals)
-local enqueueTask = require(Workspace.Shared["enqueueTask.roblox"])
+local ReactSharedInternals = require(Packages.Shared).ReactSharedInternals
+local enqueueTask = require(Packages.Shared).enqueueTask
 local IsSomeRendererActing = ReactSharedInternals.IsSomeRendererActing
 
 type Object = { [string]: any };
@@ -658,6 +657,12 @@ local function createReactNoop(reconciler, useMutation: boolean)
 	end
 
 	local NoopRenderer = reconciler(hostConfig)
+	-- ROBLOX deviation: We can't reach into the reconciler for these, so we
+	-- extract them after we've initialized a mock reconciler
+	local ReactRootTags = NoopRenderer.ReactRootTags
+	local ConcurrentRoot = ReactRootTags.ConcurrentRoot
+	local BlockingRoot = ReactRootTags.BlockingRoot
+	local LegacyRoot = ReactRootTags.LegacyRoot
 
 	local rootContainers = {}
 	local roots = {}
@@ -807,7 +812,9 @@ local function createReactNoop(reconciler, useMutation: boolean)
 			return getPendingChildren(container)
 		end,
 
-		getOrCreateRootContainer = function(rootID: string?, tag: ReactRootTags.RootTag)
+		-- ROBLOX FIXME: Types across package boundaries
+		-- getOrCreateRootContainer = function(rootID: string?, tag: ReactRootTags.RootTag)
+		getOrCreateRootContainer = function(rootID: string?, tag: number)
 			rootID = rootID or DEFAULT_ROOT_ID
 			local root = roots[rootID]
 			if not root then

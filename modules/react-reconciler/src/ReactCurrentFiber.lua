@@ -8,15 +8,15 @@
  * @flow
 ]]
 
-local Workspace = script.Parent.Parent
+local Packages = script.Parent.Parent
 
 local ReactInternalTypes = require(script.Parent.ReactInternalTypes)
 type Fiber = ReactInternalTypes.Fiber;
 
-local ReactSharedInternals = require(Workspace.Shared.ReactSharedInternals)
+local ReactSharedInternals = require(Packages.Shared).ReactSharedInternals
 local ReactFiberComponentStack = require(script.Parent.ReactFiberComponentStack)
 local getStackByFiberInDevAndProd = ReactFiberComponentStack.getStackByFiberInDevAndProd
-local getComponentName = require(Workspace.Shared.getComponentName)
+local getComponentName = require(Packages.Shared).getComponentName
 
 local ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame
 

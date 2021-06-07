@@ -4,13 +4,11 @@
 ]]
 
 return function()
-	local Workspace = script.Parent.Parent.Parent
-	local Packages = Workspace.Parent
+	local Packages = script.Parent.Parent.Parent
 	local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
 
-
-	local RobloxJest = require(Workspace.RobloxJest)
-	local React = require(Workspace.React)
+	local RobloxJest = require(Packages.Dev.RobloxJest)
+	local React = require(Packages.React)
 
 	local ReactUpdateQueue, Fiber, FiberLane
 	local fundamentalFiber, component, update, lane, setStateCallbackWasCalled, workInProgress
@@ -21,9 +19,6 @@ return function()
 
 	beforeEach(function()
 		RobloxJest.resetModules()
-		RobloxJest.mock(script.Parent.Parent.ReactFiberHostConfig, function()
-			return require(script.Parent.Parent.forks["ReactFiberHostConfig.test"])
-		end)
 
 		ReactUpdateQueue = require(script.Parent.Parent["ReactUpdateQueue.new"])
 		Fiber = require(script.Parent.Parent["ReactFiber.new"])

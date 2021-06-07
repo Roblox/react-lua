@@ -1,0 +1,13 @@
+[package]
+name = "Shared"
+version = { workspace = true }
+authors = { workspace = true }
+publish = false
+content_root = "src"
+
+[dependencies]
+LuauPolyfill = { workspace = true }
+
+[dev_dependencies]
+JestRoblox = { workspace = true }
+RobloxJest = { path = "../roblox-jest" }

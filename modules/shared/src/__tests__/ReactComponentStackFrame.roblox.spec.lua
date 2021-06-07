@@ -1,12 +1,11 @@
 return function()
-	local Workspace = script.Parent.Parent.Parent
-	local Packages = Workspace.Parent
-    local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
+	local Packages = script.Parent.Parent.Parent
+	local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
 	local LuauPolyfill = require(Packages.LuauPolyfill)
 	local Object = LuauPolyfill.Object
 	local String = LuauPolyfill.String
 
-	local RobloxJest = require(Workspace.RobloxJest)
+	local RobloxJest = require(Packages.Dev.RobloxJest)
 	local ReactComponentStackFrame = nil
 
 	local function assertStringContains(testString, subString)
@@ -48,6 +47,7 @@ return function()
 
 			local ReactFeatureFlags = require(script.Parent.Parent.ReactFeatureFlags)
 
+			-- ROBLOX FIXME: Calling mock after require won't work
 			RobloxJest.mock(script.Parent.Parent.ReactFeatureFlags, function()
 				return Object.assign({}, ReactFeatureFlags, {
 					enableComponentStackLocations = false,
@@ -149,6 +149,7 @@ return function()
 
 			local ReactFeatureFlags = require(script.Parent.Parent.ReactFeatureFlags)
 
+			-- ROBLOX FIXME: Calling mock after require won't work
 			RobloxJest.mock(script.Parent.Parent.ReactFeatureFlags, function()
 				return Object.assign({}, ReactFeatureFlags, {
 					enableComponentStackLocations = true,

@@ -11,10 +11,9 @@
 
 return function()
   describe('ReactFiberHostContext', function()
-    local Workspace = script.Parent.Parent.Parent
-    local RobloxJest = require(Workspace.RobloxJest)
-    local Packages = Workspace.Parent
+    local Packages = script.Parent.Parent.Parent
     local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
+    local RobloxJest = require(Packages.Dev.RobloxJest)
 
     local ReactFiberReconciler
     local ConcurrentRoot
@@ -22,15 +21,8 @@ return function()
 
     beforeEach(function()
       RobloxJest.resetModules()
-      React = require(Workspace.React)
-      ReactFiberReconciler = function(config)
-        -- ROBLOX deviation: upstream has jest.mock return a function via
-        -- scripts/setupHostConfigs.js, but it's easier for us to do it here
-        RobloxJest.mock(Workspace.ReactReconciler.ReactFiberHostConfig, function()
-          return config
-        end)
-        return require(Workspace.ReactReconciler.ReactFiberReconciler)
-      end
+      React = require(Packages.React)
+      ReactFiberReconciler = require(script.Parent.Parent)
       ConcurrentRoot = require(script.Parent.Parent.ReactRootTags)
     end)
 

@@ -10,8 +10,7 @@
 ]]
 
 --[[ eslint-disable no-func-assign ]]
-local Workspace = script.Parent.Parent.Parent
-local Packages = Workspace.Parent
+local Packages = script.Parent.Parent.Parent
 local React
 
 local LuauPolyfill = require(Packages.LuauPolyfill)
@@ -44,21 +43,15 @@ local act
 
 return function()
 	local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
-	local RobloxJest = require(Workspace.RobloxJest)
+	local RobloxJest = require(Packages.Dev.RobloxJest)
 
 	beforeEach(function()
 		RobloxJest.resetModules()
 		RobloxJest.useFakeTimers()
-		-- ROBLOX deviation: In react, jest _always_ mocks Scheduler -> unstable_mock;
-		-- in our case, we need to do it anywhere we want to use the scheduler,
-		-- until we have some form of bundling logic
-		RobloxJest.mock(Workspace.Scheduler, function()
-			return require(Workspace.Scheduler.unstable_mock)
-		end)
 
-		React = require(Workspace.React)
-		ReactNoop = require(Workspace.ReactNoopRenderer)
-		Scheduler = require(Workspace.Scheduler)
+		React = require(Packages.React)
+		ReactNoop = require(Packages.Dev.ReactNoopRenderer)
+		Scheduler = require(Packages.Scheduler)
 		-- SchedulerTracing = require(Scheduler.tracing)
 		useState = React.useState
 		useReducer = React.useReducer

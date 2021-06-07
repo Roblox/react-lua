@@ -1,0 +1,18 @@
+[package]
+name = "ReactCache"
+version = { workspace = true }
+authors = { workspace = true }
+content_root = "src"
+
+[dependencies]
+Scheduler = { path = "../scheduler" }
+Shared = { path = "../shared" }
+React = { path = "../react" }
+
+[dev_dependencies]
+JestRoblox = { workspace = true }
+LuauPolyfill = { workspace = true }
+Promise = { workspace = true }
+JestReact = { path = "../jest-react" }
+ReactTestRenderer = { path = "../react-test-renderer" }
+RobloxJest = { path = "../roblox-jest" }

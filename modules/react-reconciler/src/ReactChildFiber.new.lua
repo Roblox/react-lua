@@ -18,33 +18,35 @@ local function unimplemented(message)
   error("FIXME (roblox): " .. message .. " is unimplemented", 2)
 end
 
-local Workspace = script.Parent.Parent
-local Packages = Workspace.Parent
+local Packages = script.Parent.Parent
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local Array = LuauPolyfill.Array
 type Array<T> = { [number]: T }
 type Set<T> = { [T]: boolean }
 type Object = { [any]: any }
 -- ROBLOX: use patched console from shared
-local console = require(Workspace.Shared.console)
+local console = require(Packages.Shared).console
 
-local ReactElementType = require(Workspace.Shared.ReactElementType)
-type ReactElement = ReactElementType.ReactElement;
-local ReactTypes = require(Workspace.Shared.ReactTypes)
+local ReactTypes = require(Packages.Shared)
+-- ROBLOX deviation: ReactElement is defined at the top level of Shared along
+-- with the rest of the ReactTypes
+type ReactElement = ReactTypes.ReactElement
 type ReactPortal = ReactTypes.ReactPortal
-local ReactLazyModule = require(Workspace.React.ReactLazy)
-type LazyComponent<T, P> = ReactLazyModule.LazyComponent<T, P>
+
+local React = require(Packages.React)
+type LazyComponent<T, P> = React.LazyComponent<T, P>
+
 local ReactInternalTypes = require(script.Parent.ReactInternalTypes)
 type Fiber = ReactInternalTypes.Fiber;
 type RoactStableKey = ReactInternalTypes.RoactStableKey;
 local ReactFiberLanes = require(script.Parent.ReactFiberLane)
 type Lanes = ReactFiberLanes.Lanes;
 
-local getComponentName = require(Workspace.Shared.getComponentName)
+local getComponentName = require(Packages.Shared).getComponentName
 local ReactFiberFlags = require(script.Parent.ReactFiberFlags)
 local Placement = ReactFiberFlags.Placement
 local Deletion = ReactFiberFlags.Deletion
-local ReactSymbols = require(Workspace.Shared.ReactSymbols)
+local ReactSymbols = require(Packages.Shared).ReactSymbols
 local getIteratorFn = ReactSymbols.getIteratorFn
 local REACT_ELEMENT_TYPE = ReactSymbols.REACT_ELEMENT_TYPE
 local REACT_FRAGMENT_TYPE = ReactSymbols.REACT_FRAGMENT_TYPE
@@ -60,8 +62,8 @@ local ForwardRef = ReactWorkTags.ForwardRef
 local Fragment = ReactWorkTags.Fragment
 local SimpleMemoComponent = ReactWorkTags.SimpleMemoComponent
 local Block = ReactWorkTags.Block
-local invariant = require(Workspace.Shared.invariant)
-local ReactFeatureFlags = require(Workspace.Shared.ReactFeatureFlags)
+local invariant = require(Packages.Shared).invariant
+local ReactFeatureFlags = require(Packages.Shared).ReactFeatureFlags
 local warnAboutStringRefs = ReactFeatureFlags.warnAboutStringRefs
 local enableLazyElements = ReactFeatureFlags.enableLazyElements
 local enableBlocksAPI = ReactFeatureFlags.enableBlocksAPI

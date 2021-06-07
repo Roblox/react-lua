@@ -8,6 +8,6 @@
  * @flow
 ]]
 
-local Workspace = script.Parent.Parent.Parent
+local Packages = script.Parent.Parent.Parent
 
-return require(Workspace.ReactTestRenderer.ReactTestHostConfig)
+return require(Packages.ReactTestRenderer)

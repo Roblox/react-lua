@@ -1,20 +1,15 @@
 --!nolint LocalShadowPedantic
 return function()
 	local Reconciler = script.Parent.Parent
-	local Workspace = script.Parent.Parent.Parent
-	local Packages = Workspace.Parent
+	local Packages = script.Parent.Parent.Parent
 	local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
-	local RobloxJest = require(Workspace.RobloxJest)
+	local RobloxJest = require(Packages.Dev.RobloxJest)
 
 	local ReactFiberSuspenseComponent
 
 	describe("ReactFiberSuspenseComponent", function()
 		beforeEach(function()
 			RobloxJest.resetModules()
-			local ReactTestHostConfig = require(Workspace.ReactTestRenderer.ReactTestHostConfig)
-			RobloxJest.mock(Reconciler.ReactFiberHostConfig, function()
-				return ReactTestHostConfig
-			end)
 
 			ReactFiberSuspenseComponent = require(Reconciler["ReactFiberSuspenseComponent.new"])
 		end)

@@ -10,10 +10,9 @@
 ]]
 
 return function()
-	local Workspace = script.Parent.Parent.Parent
-	local RobloxJest = require(Workspace.RobloxJest)
-	local Packages = Workspace.Parent
+	local Packages = script.Parent.Parent.Parent
 	local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
+	local RobloxJest = require(Packages.Dev.RobloxJest)
 
 	local ReactFiberContext
 	local ReactFiber
@@ -22,14 +21,11 @@ return function()
 
 	beforeEach(function()
 		RobloxJest.resetModules()
-		RobloxJest.mock(script.Parent.Parent.ReactFiberHostConfig, function()
-			return require(script.Parent.Parent.forks["ReactFiberHostConfig.test"])
-		end)
 
 		ReactFiberContext = require(script.Parent.Parent["ReactFiberContext.new"])
 		ReactFiber = require(script.Parent.Parent["ReactFiber.new"])
 		ReactRootTags = require(script.Parent.Parent.ReactRootTags)
-		ReactFeatureFlags = require(Workspace.Shared.ReactFeatureFlags)
+		ReactFeatureFlags = require(Packages.Shared).ReactFeatureFlags
 		ReactFeatureFlags.disableLegacyContext = false
 	end)
 

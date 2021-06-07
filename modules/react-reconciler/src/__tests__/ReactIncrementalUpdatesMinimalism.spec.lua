@@ -11,18 +11,17 @@
 --!strict
 local React
 local ReactNoop
-local Workspace = script.Parent.Parent.Parent
+local Packages = script.Parent.Parent.Parent
 local jest
 return function()
-    local Packages = Workspace.Parent
     local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
 
     describe('ReactIncrementalUpdatesMinimalism', function()
-        jest = require(Workspace.RobloxJest)
+        jest = require(Packages.Dev.RobloxJest)
         beforeEach(function()
             jest.resetModules()
-            React = require(Workspace.React)
-            ReactNoop = require(Workspace.ReactNoopRenderer)
+            React = require(Packages.React)
+            ReactNoop = require(Packages.Dev.ReactNoopRenderer)
         end)
         it('should render a simple component', function()
             local function Child()

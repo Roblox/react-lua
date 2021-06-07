@@ -17,20 +17,19 @@ local function unimplemented(message)
   error("FIXME (roblox): " .. message .. " is unimplemented", 2)
 end
 
-local Workspace = script.Parent.Parent.Parent
-local Packages = Workspace.Parent
+local Packages = script.Parent.Parent.Parent
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local Object = LuauPolyfill.Object
 local setTimeout = LuauPolyfill.setTimeout
 local clearTimeout = LuauPolyfill.clearTimeout
 
--- local type {DOMEventName} = require(Workspace.../events/DOMEventNames'
--- local type {Fiber, FiberRoot} = require(Workspace.react-reconciler/src/ReactInternalTypes'
+-- local type {DOMEventName} = require(Packages.../events/DOMEventNames'
+-- local type {Fiber, FiberRoot} = require(Packages.react-reconciler/src/ReactInternalTypes'
 -- local type {
 --   BoundingRect,
 --   IntersectionObserverOptions,
 --   ObserveVisibleRectsCallback,
--- } = require(Workspace.react-reconciler/src/ReactTestSelectors'
+-- } = require(Packages.react-reconciler/src/ReactTestSelectors'
 local ReactRobloxHostTypes = require(script.Parent["ReactRobloxHostTypes.roblox"])
 type RootType = ReactRobloxHostTypes.RootType;
 type Container = ReactRobloxHostTypes.Container;
@@ -40,8 +39,8 @@ type Props = ReactRobloxHostTypes.Props;
 type Type = ReactRobloxHostTypes.Type;
 type HostContext = ReactRobloxHostTypes.HostContext;
 
--- local type {ReactScopeInstance} = require(Workspace.shared/ReactTypes'
--- local type {ReactDOMFundamentalComponentInstance} = require(Workspace.../shared/ReactDOMTypes'
+-- local type {ReactScopeInstance} = require(Packages.shared/ReactTypes'
+-- local type {ReactDOMFundamentalComponentInstance} = require(Packages.../shared/ReactDOMTypes'
 
 local ReactRobloxComponentTree = require(script.Parent.ReactRobloxComponentTree)
 local precacheFiberNode = ReactRobloxComponentTree.precacheFiberNode
@@ -51,7 +50,7 @@ local updateFiberProps = ReactRobloxComponentTree.updateFiberProps
 -- local getInstanceFromNodeDOMTree = ReactRobloxComponentTree.getInstanceFromNode
 -- local isContainerMarkedAsRoot = ReactRobloxComponentTree.isContainerMarkedAsRoot
 
--- local {hasRole} = require(Workspace../DOMAccessibilityRoles'
+-- local {hasRole} = require(Packages../DOMAccessibilityRoles'
 local ReactRobloxComponent = require(script.Parent.ReactRobloxComponent)
 -- local createElement = ReactRobloxComponent.createElement
 -- local createTextNode = ReactRobloxComponent.createTextNode
@@ -66,38 +65,38 @@ local updateProperties = ReactRobloxComponent.updateProperties
 -- local warnForDeletedHydratableText = ReactRobloxComponent.warnForDeletedHydratableText
 -- local warnForInsertedHydratedElement = ReactRobloxComponent.warnForInsertedHydratedElement
 -- local warnForInsertedHydratedText = ReactRobloxComponent.warnForInsertedHydratedText
--- local {getSelectionInformation, restoreSelection} = require(Workspace../ReactInputSelection'
--- local setTextContent = require(Workspace../setTextContent'
--- local {validateDOMNesting, updatedAncestorInfo} = require(Workspace../validateDOMNesting'
+-- local {getSelectionInformation, restoreSelection} = require(Packages../ReactInputSelection'
+-- local setTextContent = require(Packages../setTextContent'
+-- local {validateDOMNesting, updatedAncestorInfo} = require(Packages../validateDOMNesting'
 -- local {
 --   isEnabled as ReactBrowserEventEmitterIsEnabled,
 --   setEnabled as ReactBrowserEventEmitterSetEnabled,
--- } = require(Workspace.../events/ReactDOMEventListener'
--- local {getChildNamespace} = require(Workspace.../shared/DOMNamespaces'
+-- } = require(Packages.../events/ReactDOMEventListener'
+-- local {getChildNamespace} = require(Packages.../shared/DOMNamespaces'
 -- local {
 --   ELEMENT_NODE,
 --   TEXT_NODE,
 --   COMMENT_NODE,
 --   DOCUMENT_NODE,
 --   DOCUMENT_FRAGMENT_NODE,
--- } = require(Workspace.../shared/HTMLNodeType'
--- local dangerousStyleValue = require(Workspace.../shared/dangerousStyleValue'
+-- } = require(Packages.../shared/HTMLNodeType'
+-- local dangerousStyleValue = require(Packages.../shared/dangerousStyleValue'
 
--- local {REACT_OPAQUE_ID_TYPE} = require(Workspace.shared/ReactSymbols'
--- local {retryIfBlockedOn} = require(Workspace.../events/ReactDOMEventReplaying'
+-- local {REACT_OPAQUE_ID_TYPE} = require(Packages.shared/ReactSymbols'
+-- local {retryIfBlockedOn} = require(Packages.../events/ReactDOMEventReplaying'
 
-local ReactFeatureFlags = require(Workspace.Shared.ReactFeatureFlags)
+local ReactFeatureFlags = require(Packages.Shared).ReactFeatureFlags
 -- local enableSuspenseServerRenderer = ReactFeatureFlags.enableSuspenseServerRenderer
 -- local enableFundamentalAPI = ReactFeatureFlags.enableFundamentalAPI
 local enableCreateEventHandleAPI = ReactFeatureFlags.enableCreateEventHandleAPI
 -- local enableScopeAPI = ReactFeatureFlags.enableScopeAPI
 -- local enableEagerRootListeners = ReactFeatureFlags.enableEagerRootListeners
 
--- local {HostComponent, HostText} = require(Workspace.react-reconciler/src/ReactWorkTags'
+-- local {HostComponent, HostText} = require(Packages.react-reconciler/src/ReactWorkTags'
 -- local {
 --   listenToReactEvent,
 --   listenToAllSupportedEvents,
--- } = require(Workspace.../events/DOMPluginEventSystem'
+-- } = require(Packages.../events/DOMPluginEventSystem'
 
 type Array<T> = { [number]: T };
 type Object = { [any]: any };
@@ -198,7 +197,7 @@ type Object = { [any]: any };
 -- end
 
 local exports: {[any]: any} = {}
-Object.assign(exports, require(Workspace.ReactReconciler.ReactFiberHostConfigWithNoPersistence))
+Object.assign(exports, require(Packages.Shared).ReactFiberHostConfig.WithNoPersistence)
 
 exports.getRootHostContext = function(
   rootContainerInstance: Container
@@ -775,10 +774,6 @@ end
 --   end
 --   -- This has now been refined to a suspense node.
 --   return ((instance: any): SuspenseInstance)
--- end
-
--- exports.isSuspenseInstancePending(instance: SuspenseInstance)
---   return instance.data == SUSPENSE_PENDING_START_DATA
 -- end
 
 -- exports.isSuspenseInstanceFallback(instance: SuspenseInstance)

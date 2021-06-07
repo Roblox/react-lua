@@ -9,7 +9,7 @@
 
 -- deviation: Common types
 type Array<T> = { [number]: T };
-type Object = { [any]: any };
+type Object = { [string]: any };
 
 -- deviation: disabled flow types
 -- export type ReactNode =
@@ -109,14 +109,14 @@ exports.DiscreteEvent = 0
 exports.UserBlockingEvent = 1
 exports.ContinuousEvent = 2
 
--- export type ReactFundamentalComponentInstance<C, H> = {|
---   currentFiber: Object,
---   instance: mixed,
---   prevProps: null | Object,
---   props: Object,
---   impl: ReactFundamentalImpl<C, H>,
---   state: Object,
--- |};
+export type ReactFundamentalComponentInstance<C, H> = {
+  currentFiber: Object,
+  instance: any,
+  prevProps: Object?,
+  props: Object,
+  impl: ReactFundamentalImpl<C, H>,
+  state: Object,
+}
 
 export type ReactFundamentalImpl<C, H> = {
   displayName: string,

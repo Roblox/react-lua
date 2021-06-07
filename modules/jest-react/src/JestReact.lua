@@ -1,14 +1,13 @@
 --[[
     Roblox upstream: https://github.com/facebook/react/blob/e0f89aa056de95afc4c23909fce3d91fefb7dec7/packages/jest-react/src/JestReact.js
 ]]
-local Workspace = script.Parent.Parent
-local Packages = Workspace.Parent.Parent.Packages
-local ReactSymbols = require(Workspace.Shared.ReactSymbols)
+local Packages = script.Parent.Parent
+local ReactSymbols = require(Packages.Shared).ReactSymbols
 local REACT_ELEMENT_TYPE = ReactSymbols.REACT_ELEMENT_TYPE
 local REACT_FRAGMENT_TYPE = ReactSymbols.REACT_FRAGMENT_TYPE
-local invariant = require(Workspace.Shared.invariant)
+local invariant = require(Packages.Shared).invariant
 local LuauPolyfill = require(Packages.LuauPolyfill)
-local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
+local jestExpect = require(Packages.JestRoblox).Globals.expect
 
 local function captureAssertion(fn)
 	-- Trick to use a TestEZ expectation matcher inside another Jest

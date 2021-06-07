@@ -9,10 +9,9 @@
 ]]
 
 return function()
-	local Workspace = script.Parent.Parent.Parent
-	local Packages = Workspace.Parent.Parent.Packages
-    local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
-	local RobloxJest = require(Workspace.RobloxJest)
+	local Packages = script.Parent.Parent.Parent
+	local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
+	local RobloxJest = require(Packages.Dev.RobloxJest)
 
 	local Scheduler
 	local runWithPriority

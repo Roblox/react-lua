@@ -5,8 +5,7 @@ local Scheduler
 local ReactFeatureFlags
 local Suspense
 local lazy
-local Workspace = script.Parent.Parent.Parent
-local Packages = Workspace.Parent
+local Packages = script.Parent.Parent.Parent
 
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local Error = LuauPolyfill.Error
@@ -18,35 +17,22 @@ local function normalizeCodeLocInfo(str)
 end
 
 return function()
-    local RobloxJest = require(Workspace.RobloxJest)
+    local RobloxJest = require(Packages.Dev.RobloxJest)
     local Promise = require(Packages.Promise)
     local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
 
     describe('ReactLazy', function()
         beforeEach(function()
             RobloxJest.resetModules()
-            RobloxJest.useFakeTimers()
 
-            -- deviation: In react, jest _always_ mocks Scheduler -> unstable_mock;
-            -- in our case, we need to do it anywhere we want to use the scheduler,
-            -- directly or indirectly, until we have some form of bundling logic
-            RobloxJest.mock(Workspace.Scheduler, function()
-                return require(Workspace.Scheduler.unstable_mock)
-            end)
-            -- deviation: upstream has jest.mock return a function via
-            -- scripts/setupHostConfigs.js, but it's easier for us to do it here
-            RobloxJest.mock(Workspace.ReactReconciler.ReactFiberHostConfig, function()
-                return require(Workspace.ReactTestRenderer.ReactTestHostConfig)
-            end)
-
-            ReactFeatureFlags = require(Workspace.Shared.ReactFeatureFlags)
+            ReactFeatureFlags = require(Packages.Shared).ReactFeatureFlags
             ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false
             -- PropTypes = require('prop-types');
-            React = require(Workspace.React)
+            React = require(Packages.React)
             Suspense = React.Suspense
             lazy = React.lazy
-            ReactTestRenderer = require(Workspace.ReactTestRenderer)
-            Scheduler = require(Workspace.Scheduler)
+            ReactTestRenderer = require(Packages.Dev.ReactTestRenderer)
+            Scheduler = require(Packages.Scheduler)
         end)
 
         -- local verifyInnerPropTypesAreChecked = _async(function(Add)

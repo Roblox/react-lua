@@ -1,11 +1,12 @@
-local Workspace = script.Parent.Parent.Parent
+local Packages = script.Parent.Parent.Parent
 
-local ReactInternalTypes = require(Workspace.ReactReconciler.ReactInternalTypes)
-type Fiber = ReactInternalTypes.Fiber;
-type FiberRoot = ReactInternalTypes.FiberRoot;
-local ReactTypes = require(Workspace.Shared.ReactTypes)
-type MutableSource<T> = ReactTypes.MutableSource<T>;
-type ReactNodeList = ReactTypes.ReactNodeList;
+-- ROBLOX FIXME: This creates a require cycle when we mock reconciler :(
+-- local ReactReconciler = require(Packages.ReactReconciler)
+-- type FiberRoot = ReactReconciler.FiberRoot
+
+local ReactTypes = require(Packages.Shared)
+type MutableSource<T> = ReactTypes.MutableSource<T>
+type ReactNodeList = ReactTypes.ReactNodeList
 
 type Array<T> = { [number]: T };
 
@@ -63,7 +64,8 @@ export type HostContext = HostContextDev | HostContextProd
 export type RootType = {
   render: (ReactNodeList) -> (),
   unmount: () -> (),
-  _internalRoot: FiberRoot,
+  _internalRoot: any,
+  -- _internalRoot: FiberRoot,
   -- ...
   [any]: any,
 };

@@ -8,19 +8,19 @@
  * @flow
  ]]
 
-local Workspace = script.Parent.Parent
+local Packages = script.Parent.Parent
 -- ROBLOX: use patched console from shared
-local console = require(Workspace.Shared.console)
+local console = require(Packages.Shared).console
 
 local exports = {}
 
-local enableProfilerTimer = require(Workspace.Shared.ReactFeatureFlags).enableProfilerTimer
+local enableProfilerTimer = require(Packages.Shared).ReactFeatureFlags.enableProfilerTimer
 
 local ReactInternalTypes = require(script.Parent.ReactInternalTypes)
 type Fiber = ReactInternalTypes.Fiber
 type FiberRoot = ReactInternalTypes.FiberRoot
 type ReactPriorityLevel = ReactInternalTypes.ReactPriorityLevel
-local ReactTypes = require(Workspace.Shared.ReactTypes)
+local ReactTypes = require(Packages.Shared)
 type ReactNodeList = ReactTypes.ReactNodeList
 
 local DidCapture = require(script.Parent.ReactFiberFlags).DidCapture

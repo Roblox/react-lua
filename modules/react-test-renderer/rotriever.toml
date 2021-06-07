@@ -1,0 +1,20 @@
+[package]
+name = "ReactTestRenderer"
+version = { workspace = true }
+authors = { workspace = true }
+publish = true
+content_root = "src"
+
+[dependencies]
+LuauPolyfill = { workspace = true }
+Cryo = { workspace = true }
+React = { path = "../react" }
+ReactReconciler = { path = "../react-reconciler" }
+Scheduler = { path = "../scheduler" }
+Shared = { path = "../shared" }
+
+[dev_dependencies]
+Promise = { workspace = true }
+JestRoblox = { workspace = true }
+RobloxJest = { path = "../roblox-jest" }
+JestReact = { path = "../jest-react" }

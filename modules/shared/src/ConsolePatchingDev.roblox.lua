@@ -2,9 +2,8 @@
 -- Objects do; this has been modified from the JS, which uses
 -- `Object.defineProperties` to ensure that properties are modifiable. In Lua,
 -- these operations are as simple as assigning to functions.
-local Workspace = script.Parent.Parent
 -- ROBLOX: use patched console from shared
-local console = require(Workspace.Shared.console)
+local console = require(script.Parent.console)
 
  -- Helpers to patch console.logs to avoid logging during side-effect free
 -- replaying on render function. This currently only patches the object

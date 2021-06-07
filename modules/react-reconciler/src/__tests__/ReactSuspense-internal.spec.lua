@@ -11,9 +11,8 @@ local TextResource
 local textResourceShouldFail
 
 return function()
-    local Workspace = script.Parent.Parent.Parent
-    local Packages = Workspace.Parent
-    local jest = require(Workspace.RobloxJest)
+    local Packages = script.Parent.Parent.Parent
+    local jest = require(Packages.Dev.RobloxJest)
     local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
     local Promise = require(Packages.Promise)
     local LuauPolyfill = require(Packages.LuauPolyfill)
@@ -25,28 +24,16 @@ return function()
         beforeEach(function()
             jest.resetModules()
             jest.useFakeTimers()
-            -- deviation: In react, jest _always_ mocks Scheduler -> unstable_mock;
-            -- in our case, we need to do it anywhere we want to use the scheduler,
-            -- until we have some form of bundling logic
-            jest.mock(Workspace.Scheduler, function()
-              return require(Workspace.Scheduler.unstable_mock)
-            end)
 
-            -- deviation: upstream has jest.mock return a function via
-            -- scripts/setupHostConfigs.js, but it's easier for us to do it here
-            jest.mock(Workspace.ReactReconciler.ReactFiberHostConfig, function()
-                return require(Workspace.ReactTestRenderer.ReactTestHostConfig)
-            end)
-
-            ReactFeatureFlags = require(Workspace.Shared.ReactFeatureFlags)
+            ReactFeatureFlags = require(Packages.Shared).ReactFeatureFlags
             ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false
             -- ReactFeatureFlags.enableSchedulerTracing = true
-            React = require(Workspace.React)
-            ReactTestRenderer = require(Workspace.ReactTestRenderer)
+            React = require(Packages.React)
+            ReactTestRenderer = require(Packages.Dev.ReactTestRenderer)
             _act = ReactTestRenderer.unstable_concurrentAct
-            Scheduler = require(Workspace.Scheduler)
+            Scheduler = require(Packages.Scheduler)
             -- SchedulerTracing = require('scheduler/tracing')
-            ReactCache = require(Workspace.ReactCache)
+            ReactCache = require(Packages.Dev.ReactCache)
             Suspense = React.Suspense
             TextResource = ReactCache.unstable_createResource(
                 function(input)

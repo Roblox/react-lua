@@ -1,10 +1,10 @@
 return function()
-	local Workspace = script.Parent.Parent.Parent.Parent.Parent
-	local Packages = Workspace.Parent
+	local createSignal = require(script.Parent.Parent.createSignal)
+
+	local Packages = script.Parent.Parent.Parent.Parent.Parent
 	local jestModule = require(Packages.Dev.JestRoblox)
 	local jestExpect = jestModule.Globals.expect
 	local jest = jestModule.Globals.jest
-	local createSignal = require(script.Parent.Parent.createSignal)
 
 	it("should fire subscribers and disconnect them", function()
 		local signal = createSignal()

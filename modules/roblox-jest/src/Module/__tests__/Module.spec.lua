@@ -1,11 +1,14 @@
 return function()
 	local Module = require(script.Parent.Parent)
-	local Workspace = script.Parent.Parent.Parent.Parent
-	local Packages = Workspace.Parent
+	local Packages = script.Parent.Parent.Parent.Parent
 	local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
 
 	beforeEach(function()
 		Module.resetModules()
+	end)
+
+	afterEach(function()
+		Module.unmock(script.Parent.TestScripts.add)
 	end)
 
 	it("should always use the real require for itself", function()
@@ -50,16 +53,16 @@ return function()
 			jestExpect(getIncrementorValue()).toBe(0)
 		end)
 
-		it("should clear mocks when resetting modules", function()
+		it("should not clear mocks when resetting modules", function()
 			Module.mock(script.Parent.TestScripts.add, function()
 				return math.min
 			end)
 			local addMocked = Module.requireOverride(script.Parent.TestScripts.add)
 
 			Module.resetModules()
-			local addUnmocked = Module.requireOverride(script.Parent.TestScripts.add)
+			local addAfterReset = Module.requireOverride(script.Parent.TestScripts.add)
 
-			jestExpect(addMocked).never.toBe(addUnmocked)
+			jestExpect(addMocked).toBe(addAfterReset)
 		end)
 	end)
 

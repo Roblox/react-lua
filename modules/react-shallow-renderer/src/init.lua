@@ -8,28 +8,27 @@
  ]]
 --!nolint LocalShadowPedantic
 
-local Workspace = script.Parent
-local Packages = Workspace.Parent
+local Packages = script.Parent
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local Object = LuauPolyfill.Object
 local Error = LuauPolyfill.Error
 local Array = LuauPolyfill.Array
 
-local React = require(Workspace.React)
+local React = require(Packages.React)
 
-local ReactIs = require(Workspace.ReactIs)
+local ReactIs = require(Packages.ReactIs)
 local isForwardRef = ReactIs.isForwardRef
 local isMemo = ReactIs.isMemo
 local ForwardRef = ReactIs.ForwardRef
 
-local ReactComponentStackFrame = require(Workspace.Shared.ReactComponentStackFrame)
+local ReactComponentStackFrame = require(Packages.Shared).ReactComponentStackFrame
 local describeComponentFrame = ReactComponentStackFrame.describeComponentFrame
-local getComponentName = require(Workspace.Shared.getComponentName)
-local shallowEqual = require(Workspace.Shared.shallowEqual)
-local checkPropTypes = require(Workspace.Shared.checkPropTypes)
-local ReactSharedInternals = require(Workspace.Shared.ReactSharedInternals)
-local consoleWithStackDev = require(Workspace.Shared.consoleWithStackDev)
-local is = require(Workspace.Shared.objectIs)
+local getComponentName = require(Packages.Shared).getComponentName
+local shallowEqual = require(Packages.Shared).shallowEqual
+local checkPropTypes = require(Packages.Shared).checkPropTypes
+local ReactSharedInternals = require(Packages.Shared).ReactSharedInternals
+local consoleWithStackDev = require(Packages.Shared).consoleWithStackDev
+local is = require(Packages.Shared).objectIs
 
 local ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher
 local ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame

@@ -1,10 +1,9 @@
-local Workspace = script.Parent.Parent.Parent
-local RobloxJest = require(Workspace.RobloxJest)
+local Packages = script.Parent.Parent.Parent
+local RobloxJest = require(Packages.Dev.RobloxJest)
 
-local Packages = Workspace.Parent
 local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
 
-local Promise = require(Packages.Promise)
+local Promise = require(Packages.Dev.Promise)
 local React
 local ReactTestRenderer
 local Scheduler
@@ -16,23 +15,11 @@ return function()
         beforeEach(function()
             RobloxJest.resetModules()
             RobloxJest.useRealTimers()
-            -- deviation: In react, jest _always_ mocks Scheduler -> unstable_mock;
-            -- in our case, we need to do it anywhere we want to use the scheduler,
-            -- directly or indirectly, until we have some form of bundling logic
-            RobloxJest.mock(Workspace.Scheduler, function()
-              return require(Workspace.Scheduler.unstable_mock)
-            end)
 
-            -- deviation: upstream has jest.mock return a function via
-            -- scripts/setupHostConfigs.js, but it's easier for us to do it here
-            RobloxJest.mock(Workspace.ReactReconciler.ReactFiberHostConfig, function()
-                return require(Workspace.ReactTestRenderer.ReactTestHostConfig)
-            end)
-
-            React = require(Workspace.React)
+            React = require(Packages.React)
             useState, useEffect, useReducer = React.useState, React.useEffect, React.useReducer
-            ReactTestRenderer = require(Workspace.ReactTestRenderer)
-            Scheduler = require(Workspace.Scheduler)
+            ReactTestRenderer = require(Packages.ReactTestRenderer)
+            Scheduler = require(Packages.Scheduler)
             act = ReactTestRenderer.act
         end)
         it('can use .act() to flush effects', function()

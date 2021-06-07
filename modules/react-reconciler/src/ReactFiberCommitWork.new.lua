@@ -18,9 +18,9 @@ local function unimplemented(message)
   error("FIXME (roblox): " .. message .. " is unimplemented", 2)
 end
 
-local Workspace = script.Parent.Parent
+local Packages = script.Parent.Parent
 -- ROBLOX: use patched console from shared
-local console = require(Workspace.Shared.console)
+local console = require(Packages.Shared).console
 
 local ReactFiberHostConfig = require(script.Parent.ReactFiberHostConfig)
 type Instance = ReactFiberHostConfig.Instance;
@@ -41,7 +41,7 @@ local ReactUpdateQueueModule = require(script.Parent["ReactUpdateQueue.new"])
 type UpdateQueue<T> = ReactUpdateQueueModule.UpdateQueue<T>
 
 -- local type {FunctionComponentUpdateQueue} = require(script.Parent.ReactFiberHooks.new)
-local ReactTypes = require(Workspace.Shared.ReactTypes)
+local ReactTypes = require(Packages.Shared)
 type Wakeable = ReactTypes.Wakeable
 
 type ReactPriorityLevel = ReactInternalTypes.ReactPriorityLevel
@@ -50,8 +50,8 @@ type OffscreenState = ReactFiberOffscreenComponent.OffscreenState
 local ReactHookEffectTags = require(script.Parent.ReactHookEffectTags)
 type HookFlags = ReactHookEffectTags.HookFlags;
 
--- local {unstable_wrap as Schedule_tracing_wrap} = require(Workspace.scheduler/tracing'
-local ReactFeatureFlags = require(Workspace.Shared.ReactFeatureFlags)
+-- local {unstable_wrap as Schedule_tracing_wrap} = require(Packages.scheduler/tracing'
+local ReactFeatureFlags = require(Packages.Shared).ReactFeatureFlags
 -- local enableSchedulerTracing = ReactFeatureFlags.enableSchedulerTracing
 local enableProfilerTimer = ReactFeatureFlags.enableProfilerTimer
 local enableProfilerCommitHooks = ReactFeatureFlags.enableProfilerCommitHooks
@@ -80,7 +80,7 @@ local ScopeComponent = ReactWorkTags.ScopeComponent
 local Block = ReactWorkTags.Block
 local OffscreenComponent = ReactWorkTags.OffscreenComponent
 local LegacyHiddenComponent = ReactWorkTags.LegacyHiddenComponent
-local ReactErrorUtils = require(Workspace.Shared.ReactErrorUtils)
+local ReactErrorUtils = require(Packages.Shared).ReactErrorUtils
 local invokeGuardedCallback = ReactErrorUtils.invokeGuardedCallback
 local hasCaughtError = ReactErrorUtils.hasCaughtError
 local clearCaughtError = ReactErrorUtils.clearCaughtError
@@ -94,8 +94,8 @@ local Callback = ReactFiberFlags.Callback
 local LayoutMask = ReactFiberFlags.LayoutMask
 local PassiveMask = ReactFiberFlags.PassiveMask
 local Ref = ReactFiberFlags.Ref
-local getComponentName = require(Workspace.Shared.getComponentName)
-local invariant = require(Workspace.Shared.invariant)
+local getComponentName = require(Packages.Shared).getComponentName
+local invariant = require(Packages.Shared).invariant
 local ReactCurrentFiber = require(script.Parent.ReactCurrentFiber)
 -- deviation: this property would be captured as values instead of bound
 -- local currentDebugFiberInDEV = ReactCurrentFiber.current
@@ -147,7 +147,7 @@ local ReactFiberWorkLoop
 
 local resolveRetryWakeable = function(...)
   if not ReactFiberWorkLoop then
-    ReactFiberWorkLoop = require(Workspace.ReactReconciler["ReactFiberWorkLoop.new"]) :: any
+    ReactFiberWorkLoop = require(script.Parent["ReactFiberWorkLoop.new"]) :: any
   end
   return ReactFiberWorkLoop.resolveRetryWakeable(...)
 end
@@ -155,7 +155,7 @@ end
 
 local markCommitTimeOfFallback = function(...)
   if not ReactFiberWorkLoop then
-    ReactFiberWorkLoop = require(Workspace.ReactReconciler["ReactFiberWorkLoop.new"]) :: any
+    ReactFiberWorkLoop = require(script.Parent["ReactFiberWorkLoop.new"]) :: any
   end
   return ReactFiberWorkLoop.markCommitTimeOfFallback(...)
 end
@@ -163,7 +163,7 @@ end
 -- local captureCommitPhaseError = ReactFiberWorkLoop.captureCommitPhaseError
 -- local schedulePassiveEffectCallback = ReactFiberWorkLoop.schedulePassiveEffectCallback
 
-local LuauPolyfill = require(Workspace.Parent.LuauPolyfill)
+local LuauPolyfill = require(Packages.LuauPolyfill)
 local Object = LuauPolyfill.Object
 
 -- deviation: stub to allow dependency injection that breaks circular dependency

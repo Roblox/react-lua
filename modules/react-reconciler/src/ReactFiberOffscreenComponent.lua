@@ -9,8 +9,8 @@
 --  * @flow
 --  */
 
-local Workspace = script.Parent.Parent
-local ReactTypes = require(Workspace.Shared.ReactTypes)
+local Packages = script.Parent.Parent
+local ReactTypes = require(Packages.Shared)
 type ReactNodeList = ReactTypes.ReactNodeList
 
 local ReactFiberLanes = require(script.Parent.ReactFiberLane)

@@ -9,8 +9,7 @@
 --!nolint LocalShadow
 --!nolint LocalShadowPedantic
 
-local Workspace = script.Parent.Parent
-local Packages = Workspace.Parent
+local Packages = script.Parent.Parent
 
 local Cryo = require(Packages.Cryo)
 local LuauPolyfill = require(Packages.LuauPolyfill)
@@ -21,14 +20,12 @@ local setTimeout = LuauPolyfill.setTimeout
 local clearTimeout = LuauPolyfill.clearTimeout
 
 -- ROBLOX: use patched console from shared
-local console = require(Workspace.Shared.console)
+local console = require(Packages.Shared).console
 
--- deviation: strip not-yet-defined types
--- local ReactTypes = require(Workspace.Shared.ReactTypes)
--- local ReactFundamentalComponentInstance = ReactTypes.ReactFundamentalComponentInstance
-type ReactFundamentalComponentInstance<T, U> = any;
+local ReactTypes = require(Packages.Shared)
+type ReactFundamentalComponentInstance<T, U> = ReactTypes.ReactFundamentalComponentInstance<T, U>
 
-local ReactSymbols = require(Workspace.Shared.ReactSymbols)
+local ReactSymbols = require(Packages.Shared).ReactSymbols
 local REACT_OPAQUE_ID_TYPE = ReactSymbols.REACT_OPAQUE_ID_TYPE
 
 type Array<T> = { [number]: T };
@@ -77,10 +74,11 @@ export type OpaqueIDType = string | Object;
 
 export type RendererInspectionConfig = {};
 
+local ReactFiberHostConfig = require(Packages.Shared).ReactFiberHostConfig
 local exports = Cryo.Dictionary.join(
-	require(Workspace.ReactReconciler.ReactFiberHostConfigWithNoPersistence),
-	require(Workspace.ReactReconciler.ReactFiberHostConfigWithNoHydration),
-	require(Workspace.ReactReconciler.ReactFiberHostConfigWithNoTestSelectors)
+	ReactFiberHostConfig.WithNoPersistence,
+	ReactFiberHostConfig.WithNoHydration,
+	ReactFiberHostConfig.WithNoTestSelectors
 )
 
 local NO_CONTEXT = {}

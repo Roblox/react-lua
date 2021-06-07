@@ -6,8 +6,7 @@
  *
  *
  ]]
-local Workspace = script.Parent.Parent
-local Packages = Workspace.Parent
+local Packages = script.Parent.Parent
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local setTimeout = LuauPolyfill.setTimeout
 

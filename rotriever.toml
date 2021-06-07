@@ -1,18 +1,10 @@
-[package]
-name = "roact"
-version = "0.1.0"
-author = "Paul Doyle <pdoyle@roblox.com>"
-content_root = "modules"
+[workspace]
+version = "1.0.0"
+members = ["modules/*"]
+authors = ["Paul Doyle <pdoyle@roblox.com>", "Matt Hargett <mharget@roblox.com>", "Max Mines <mmines@roblox.com>", "Carlo Conte <cconte@roblox.com>"]
 
-# Optional fields and their definitions can be found at:
-# https://pages.github.rbx.com/pdoyle/rotriever-docs/reference/manifest-format/#manifest-fields
-
-[dependencies]
-Cryo = "github.com/roblox/cryo@1.0"
-LuauPolyfill = "github.com/roblox/luau-polyfill@0.2.0"
+[workspace.dependencies]
 Promise = "github.com/evaera/roblox-lua-promise@3.1.0"
-
-[dev_dependencies]
-# Different kinds of dependencies are specified in different ways. See more details at:
-# https://pages.github.rbx.com/pdoyle/rotriever-docs/reference/manifest-format/#specifying-manifest-dependencies
+Cryo = "github.com/roblox/cryo@roblox/cryo@1.0"
+LuauPolyfill = "github.com/roblox/luau-polyfill@roblox/roblox-luau-polyfill@0.2.0"
 JestRoblox = "github.com/roblox/jest-roblox@=1.0.0"

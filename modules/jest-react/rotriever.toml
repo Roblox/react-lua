@@ -1,0 +1,11 @@
+[package]
+name = "JestReact"
+version = { workspace = true }
+authors = { workspace = true }
+publish = true
+content_root = "src"
+
+[dependencies]
+LuauPolyfill = { workspace = true }
+JestRoblox = { workspace = true }
+Shared = { path = "../shared" }

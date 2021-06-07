@@ -8,9 +8,9 @@
  * @flow
 ]]
 
-local Workspace = script.Parent.Parent
+local Packages = script.Parent.Parent
 -- ROBLOX: use patched console from shared
-local console = require(Workspace.Shared.console)
+local console = require(Packages.Shared).console
 
 local ReactInternalTypes = require(script.Parent.ReactInternalTypes)
 type Fiber = ReactInternalTypes.Fiber
@@ -21,11 +21,11 @@ type SuspenseInstance = ReactFiberHostConfig.SuspenseInstance
 -- type SuspenseState = ReactFiberSuspenseComponent.SuspenseState;
 type SuspenseState = any
 
-local invariant = require(Workspace.Shared.invariant)
+local invariant = require(Packages.Shared).invariant
 
-local getInstance = require(Workspace.Shared.ReactInstanceMap).get
-local ReactSharedInternals = require(Workspace.Shared.ReactSharedInternals)
-local getComponentName = require(Workspace.Shared.getComponentName)
+local getInstance = require(Packages.Shared).ReactInstanceMap.get
+local ReactSharedInternals = require(Packages.Shared).ReactSharedInternals
+local getComponentName = require(Packages.Shared).getComponentName
 local ReactWorkTags = require(script.Parent.ReactWorkTags)
 local ClassComponent = ReactWorkTags.ClassComponent
 local HostComponent = ReactWorkTags.HostComponent
@@ -38,7 +38,7 @@ local ReactFiberFlags = require(script.Parent.ReactFiberFlags)
 local NoFlags = ReactFiberFlags.NoFlags
 local Placement = ReactFiberFlags.Placement
 local Hydrating = ReactFiberFlags.Hydrating
-local enableFundamentalAPI = require(Workspace.Shared.ReactFeatureFlags).enableFundamentalAPI
+local enableFundamentalAPI = require(Packages.Shared).ReactFeatureFlags.enableFundamentalAPI
 
 local ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner
 

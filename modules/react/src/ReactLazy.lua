@@ -8,15 +8,15 @@
  * @flow
  *]]
 
-local Workspace = script.Parent.Parent
+local Packages = script.Parent.Parent
 -- ROBLOX: use patched console from shared
-local console = require(Workspace.Shared.console)
-local ReactTypesModule = require(Workspace.Shared.ReactTypes)
-type Wakeable = ReactTypesModule.Wakeable
-type Thenable<R> = ReactTypesModule.Thenable<R, any>
-local ReactSymbolsModule = require(Workspace.Shared.ReactSymbols)
+local console = require(Packages.Shared).console
+local ReactTypes = require(Packages.Shared)
+type Wakeable = ReactTypes.Wakeable
+type Thenable<R> = ReactTypes.Thenable<R, any>
+local ReactSymbols = require(Packages.Shared).ReactSymbols
 
-local REACT_LAZY_TYPE = ReactSymbolsModule.REACT_LAZY_TYPE
+local REACT_LAZY_TYPE = ReactSymbols.REACT_LAZY_TYPE
 
 local Uninitialized = -1
 local Pending = 0
@@ -78,12 +78,12 @@ function lazyInitializer(payload: Payload<any>): any
 				if _G.__DEV__ then
 					if defaultExport == nil then
 						console.error(
-							"lazy: Expected the result of a dynamic import() call. " ..
-								"Instead received: %s\n\nYour code should look like: \n  " ..
+							"lazy: Expected the result of a dynamic import() call. "
+								.. "Instead received: %s\n\nYour code should look like: \n  "
 								-- Break up imports to avoid accidentally parsing them as dependencies.
-							    -- ROBLOX deviation: Lua syntax in message
-                                "local MyComponent = lazy(function() => req" ..
-								"quire('script.Parent.MyComponent') end)",
+								-- ROBLOX deviation: Lua syntax in message
+								.. "local MyComponent = lazy(function() => req"
+								.. "quire('script.Parent.MyComponent') end)",
 							moduleObject
 						)
 					end
@@ -131,50 +131,54 @@ exports.lazy = function(
 	}
 
 	if _G.__DEV__ then
-	    -- In production, this would just set it on the object.
-	    local defaultProps
-	    local propTypes
-	    -- $FlowFixMe
+		-- In production, this would just set it on the object.
+		local defaultProps
+		local propTypes
+		-- $FlowFixMe
 		setmetatable(lazyType, {
 			__index = function(self, key)
-		        if key == "defaultProps" then
+				if key == "defaultProps" then
 					return defaultProps
 				end
-		        if key == "propTypes" then
+				if key == "propTypes" then
 					return propTypes
 				end
 				return
 			end,
 			__newindex = function(self, key, value)
-		        if key == "defaultProps" then
+				if key == "defaultProps" then
 					console.error(
-						'React.lazy(...): It is not supported to assign `defaultProps` to ' ..
-						  'a lazy component import. Either specify them where the component ' ..
-						  'is defined, or create a wrapping component around it.'
-					  )
-					  defaultProps = value
+						"React.lazy(...): It is not supported to assign `defaultProps` to "
+							.. "a lazy component import. Either specify them where the component "
+							.. "is defined, or create a wrapping component around it."
+					)
+					defaultProps = value
 					-- Match production behavior more closely:
 					-- $FlowFixMe
 					setmetatable(self, {
-						__index = function() end,
-						__newindex = function() end
+						__index = function()
+						end,
+						__newindex = function()
+						end,
 					})
 				end
-		        if key == "propTypes" then
+				if key == "propTypes" then
 					console.error(
-					'React.lazy(...): It is not supported to assign `propTypes` to ' ..
-						'a lazy component import. Either specify them where the component ' ..
-						'is defined, or create a wrapping component around it.'
+						"React.lazy(...): It is not supported to assign `propTypes` to "
+							.. "a lazy component import. Either specify them where the component "
+							.. "is defined, or create a wrapping component around it."
 					)
 					propTypes = value
 					-- Match production behavior more closely:
 					-- $FlowFixMe
 					setmetatable(self, {
-						__index = function() end,
-						__newindex = function() end
+						__index = function()
+						end,
+						__newindex = function()
+						end,
 					})
 				end
-			end
+			end,
 		})
 	end
 

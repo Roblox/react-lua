@@ -8,14 +8,14 @@
  * @flow
  ]]
 
-local Workspace = script.Parent.Parent
+local Packages = script.Parent.Parent
 -- ROBLOX: use patched console from shared
-local console = require(Workspace.Shared.console)
+local console = require(Packages.Shared).console
 
 type Array<T> = { [number]: T }
 local exports = {}
 
-local ReactTypes = require(Workspace.Shared.ReactTypes)
+local ReactTypes = require(Packages.Shared)
 type MutableSource<T> = ReactTypes.MutableSource<T>
 type MutableSourceVersion = ReactTypes.MutableSourceVersion
 

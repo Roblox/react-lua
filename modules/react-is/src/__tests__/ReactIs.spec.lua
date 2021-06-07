@@ -1,12 +1,11 @@
 -- upstream: https://github.com/facebook/react/blob/c57fe4a2c1402acdbf31ac48cfc6a6bf336c4067/react-is/src/__tests__/ReactIs-test.js
 
 return function()
-	local Workspace = script.Parent.Parent.Parent
-	local Packages = Workspace.Parent
+	local Packages = script.Parent.Parent.Parent
 	local jestModule = require(Packages.Dev.JestRoblox)
 	local jestExpect = jestModule.Globals.expect
 	local jest = jestModule.Globals.jest
-	local RobloxJest = require(Workspace.RobloxJest)
+	local RobloxJest = require(Packages.Dev.RobloxJest)
 	local React
 	local ReactIs
 	local ReactFeatureFlags
@@ -14,18 +13,11 @@ return function()
 	describe("ReactIs", function()
 		beforeEach(function()
 			RobloxJest.resetModules()
-			ReactFeatureFlags = require(Workspace.Shared.ReactFeatureFlags)
+			ReactFeatureFlags = require(Packages.Shared).ReactFeatureFlags
 			ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
 
-			-- deviation: In react, jest _always_ mocks Scheduler -> unstable_mock;
-			-- in our case, we need to do it anywhere we want to use the scheduler,
-			-- until we have some form of bundling logic
-			RobloxJest.mock(Workspace.Scheduler, function()
-				return require(Workspace.Scheduler.unstable_mock)
-			end)
-
-			React = require(Workspace.React)
-			ReactIs = require(Workspace.ReactIs)
+			React = require(Packages.Dev.React)
+			ReactIs = require(Packages.ReactIs)
 		end)
 
 		it("should return nil for unknown/invalid types", function()

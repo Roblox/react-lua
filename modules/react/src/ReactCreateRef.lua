@@ -7,8 +7,9 @@
  * @flow
 *]]
 
-local Workspace = script.Parent.Parent
-local ReactTypes = require(Workspace.Shared.ReactTypes)
+local Packages = script.Parent.Parent
+-- FIXME: Sharing type definitions across packages
+local ReactTypes = require(Packages.Shared)
 type RefObject = ReactTypes.RefObject
 
 local exports = {}

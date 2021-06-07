@@ -1,0 +1,14 @@
+[package]
+name = "ReactIs"
+version = { workspace = true }
+authors = { workspace = true }
+publish = true
+content_root = "src"
+
+[dependencies]
+Shared = { path = "../shared" }
+
+[dev_dependencies]
+JestRoblox = { workspace = true }
+RobloxJest = { path = "../roblox-jest" }
+React = { path = "../react" }

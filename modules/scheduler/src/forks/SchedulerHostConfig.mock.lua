@@ -20,9 +20,9 @@ local didStop: boolean = false
 local isFlushing: boolean = false
 local needsPaint: boolean = false
 local shouldYieldForPaint: boolean = false
-local Workspace = script.Parent.Parent.Parent
-local console = require(Workspace.Shared.console)
-local ConsolePatchingDev = require(Workspace.Shared["ConsolePatchingDev.roblox"])
+local Packages = script.Parent.Parent.Parent
+local console = require(Packages.Shared).console
+local ConsolePatchingDev = require(Packages.Shared).ConsolePatchingDev
 local disabledLog = ConsolePatchingDev.disabledLog
 
 exports.requestHostCallback = function(callback: (boolean) -> ())
@@ -244,8 +244,8 @@ end
 exports.unstable_advanceTime = function(ms: number)
 	-- eslint-disable-next-line react-internal/no-production-logging
 	if console.log == disabledLog then
-	-- 	-- If console.log has been patched, we assume we're in render
-	-- 	-- replaying and we ignore any time advancing in the second pass.
+		-- If console.log has been patched, we assume we're in render
+		-- replaying and we ignore any time advancing in the second pass.
 		return
 	end
 	currentTime += ms

@@ -8,11 +8,11 @@
  *
  ]]
 
-local Workspace = script.Parent
+local Packages = script.Parent
 -- ROBLOX: use patched console from shared
-local console = require(Workspace.Shared.console)
-local ReactSymbols = require(Workspace.Shared.ReactSymbols)
-local isValidElementType = require(Workspace.Shared.isValidElementType)
+local console = require(Packages.Shared).console
+local ReactSymbols = require(Packages.Shared).ReactSymbols
+local isValidElementType = require(Packages.Shared).isValidElementType
 
 local exports = {}
 

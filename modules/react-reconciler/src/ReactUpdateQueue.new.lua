@@ -85,13 +85,12 @@
 -- regardless of priority. Intermediate state may vary according to system
 -- resources, but the final state is always the same.
 
-local Workspace = script.Parent.Parent
-local Packages = Workspace.Parent
+local Packages = script.Parent.Parent
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local Object = LuauPolyfill.Object
 
 -- ROBLOX: use patched console from shared
-local console = require(Workspace.Shared.console)
+local console = require(Packages.Shared).console
 
 local ReactInternalTypes = require(script.Parent.ReactInternalTypes)
 type Fiber = ReactInternalTypes.Fiber;
@@ -111,7 +110,7 @@ local Callback = ReactFiberFlags.Callback
 local ShouldCapture = ReactFiberFlags.ShouldCapture
 local DidCapture = ReactFiberFlags.DidCapture
 
-local ReactFeatureFlags = require(Workspace.Shared.ReactFeatureFlags)
+local ReactFeatureFlags = require(Packages.Shared).ReactFeatureFlags
 local debugRenderPhaseSideEffectsForStrictMode = ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode
 
 local ReactTypeOfMode = require(script.Parent.ReactTypeOfMode)
@@ -119,9 +118,9 @@ local StrictMode = ReactTypeOfMode.StrictMode
 -- local ReactFiberWorkLoop = require(script.Parent["ReactFiberWorkLoop.new"])
 local markSkippedUpdateLanes = require(script.Parent.ReactFiberWorkInProgress).markSkippedUpdateLanes
 
-local invariant = require(Workspace.Shared.invariant)
+local invariant = require(Packages.Shared).invariant
 
-local ConsolePatchingDev = require(Workspace.Shared["ConsolePatchingDev.roblox"])
+local ConsolePatchingDev = require(Packages.Shared).ConsolePatchingDev
 local disableLogs = ConsolePatchingDev.disableLogs
 local reenableLogs = ConsolePatchingDev.reenableLogs
 

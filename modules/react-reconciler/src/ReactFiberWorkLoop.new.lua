@@ -17,27 +17,28 @@ local function unimplemented(message)
   error("FIXME (roblox): " .. message .. " is unimplemented", 2)
 end
 
-local Workspace = script.Parent.Parent
+local Packages = script.Parent.Parent
 -- ROBLOX: use patched console from shared
-local console = require(Workspace.Shared.console)
+local console = require(Packages.Shared).console
 
-local ReactTypes = require(Workspace.Shared.ReactTypes)
-type Thenable<T, U> = ReactTypes.Thenable<T, U>;
-type Wakeable = ReactTypes.Wakeable;
+local ReactTypes = require(Packages.Shared)
+type Thenable<T, U> = ReactTypes.Thenable<T, U>
+type Wakeable = ReactTypes.Wakeable
+
 local ReactInternalTypes = require(script.Parent.ReactInternalTypes)
 type Fiber = ReactInternalTypes.Fiber;
 type ReactPriorityLevel = ReactInternalTypes.ReactPriorityLevel;
 local ReactFiberLane = require(script.Parent.ReactFiberLane)
 type Lanes = ReactFiberLane.Lanes;
 type Lane = ReactFiberLane.Lane;
--- local type {Interaction} = require(Workspace.Scheduler.Tracing)
+-- local type {Interaction} = require(Packages.Scheduler.Tracing)
 local ReactFiberSuspenseComponent = require(script.Parent["ReactFiberSuspenseComponent.new"])
 type SuspenseState = ReactFiberSuspenseComponent.SuspenseState
 local ReactFiberStack = require(script.Parent["ReactFiberStack.new"])
 type StackCursor<T> = ReactFiberStack.StackCursor<T>;
 -- local type {FunctionComponentUpdateQueue} = require(script.Parent["ReactFiberHooks.new"])
 
-local ReactFeatureFlags = require(Workspace.Shared.ReactFeatureFlags)
+local ReactFeatureFlags = require(Packages.Shared).ReactFeatureFlags
 -- deviation: Use some properties directly instead of localizing to avoid 200 limit
 local warnAboutDeprecatedLifecycles = ReactFeatureFlags.warnAboutDeprecatedLifecycles
 -- local enableSuspenseServerRenderer = ReactFeatureFlags.enableSuspenseServerRenderer
@@ -52,8 +53,8 @@ local enableDebugTracing = ReactFeatureFlags.enableDebugTracing
 local enableSchedulingProfiler = ReactFeatureFlags.enableSchedulingProfiler
 local skipUnmountedBoundaries = ReactFeatureFlags.skipUnmountedBoundaries
 local enableDoubleInvokingEffects = ReactFeatureFlags.enableDoubleInvokingEffects
-local ReactSharedInternals = require(Workspace.Shared.ReactSharedInternals)
-local invariant = require(Workspace.Shared.invariant)
+local ReactSharedInternals = require(Packages.Shared).ReactSharedInternals
+local invariant = require(Packages.Shared).invariant
 
 local SchedulerWithReactIntegration = require(script.Parent["SchedulerWithReactIntegration.new"])
 local scheduleCallback = SchedulerWithReactIntegration.scheduleCallback
@@ -96,9 +97,9 @@ local ReactHookEffectTags = require(script.Parent.ReactHookEffectTags)
 -- } = require(script.Parent.SchedulingProfiler)
 
 -- The scheduler is imported here *only* to detect whether it's been mocked
-local Scheduler = require(Workspace.Scheduler)
+local Scheduler = require(Packages.Scheduler)
 
--- local {__interactionsRef, __subscriberRef} = require(Workspace.Scheduler.tracing)
+-- local {__interactionsRef, __subscriberRef} = require(Packages.Scheduler.tracing)
 
 local ReactFiberHostConfig = require(script.Parent.ReactFiberHostConfig)
 -- deviation: Use properties directly instead of localizing to avoid 200 limit
@@ -208,7 +209,7 @@ local invokeLayoutEffectUnmountInDEV = ReactFiberCommitWork.invokeLayoutEffectUn
 local invokePassiveEffectUnmountInDEV = ReactFiberCommitWork.invokePassiveEffectUnmountInDEV
 local recursivelyCommitLayoutEffects = ReactFiberCommitWork.recursivelyCommitLayoutEffects
 
-local Promise = require(Workspace.Parent.Promise)
+local Promise = require(Packages.Promise)
 
 local enqueueUpdate = require(script.Parent["ReactUpdateQueue.new"]).enqueueUpdate
 
@@ -287,7 +288,7 @@ local createCursor = ReactFiberStack.createCursor
 -- } = require(script.Parent.ReactProfilerTimer.new)
 
 -- -- DEV stuff
-local getComponentName = require(Workspace.Shared.getComponentName)
+local getComponentName = require(Packages.Shared).getComponentName
 local ReactStrictModeWarnings = require(script.Parent["ReactStrictModeWarnings.new"])
 local ReactCurrentFiber = require(script.Parent.ReactCurrentFiber)
 -- deviation: these two properties would be captured as values instead of bound
@@ -295,7 +296,7 @@ local ReactCurrentFiber = require(script.Parent.ReactCurrentFiber)
 local ReactCurrentFiberCurrent = ReactCurrentFiber.current
 local resetCurrentDebugFiberInDEV = ReactCurrentFiber.resetCurrentFiber
 local setCurrentDebugFiberInDEV = ReactCurrentFiber.setCurrentFiber
-local ReactErrorUtils = require(Workspace.Shared.ReactErrorUtils)
+local ReactErrorUtils = require(Packages.Shared).ReactErrorUtils
 local invokeGuardedCallback = ReactErrorUtils.invokeGuardedCallback
 local hasCaughtError = ReactErrorUtils.hasCaughtError
 local clearCaughtError = ReactErrorUtils.clearCaughtError
@@ -303,7 +304,7 @@ local onCommitRootDevTools = require(script.Parent["ReactFiberDevToolsHook.new"]
 local onCommitRootTestSelector = require(script.Parent.ReactTestSelectors).onCommitRoot
 
 -- Used by `act`
-local enqueueTask = require(Workspace.Shared["enqueueTask.roblox"])
+local enqueueTask = require(Packages.Shared).enqueueTask
 local doesFiberContain = require(script.Parent.ReactFiberTreeReflection).doesFiberContain
 
 local ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher

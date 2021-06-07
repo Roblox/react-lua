@@ -2,9 +2,9 @@
 	A manager for a single host virtual node's connected events.
 ]]
 
-local Workspace = script.Parent.Parent.Parent.Parent
+local Packages = script.Parent.Parent.Parent.Parent
 
-local console = require(Workspace.Shared.console)
+local console = require(Packages.Shared).console
 
 local CHANGE_PREFIX = "Change."
 

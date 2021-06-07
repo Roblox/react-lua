@@ -8,19 +8,18 @@
  * @flow
 ]]
 
-local Workspace = script.Parent.Parent
-local Packages = Workspace.Parent
+local Packages = script.Parent.Parent
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local Array = LuauPolyfill.Array
 -- ROBLOX: use patched console from shared
-local console = require(Workspace.Shared.console)
+local console = require(Packages.Shared).console
 
-local ReactTypes = require(Workspace.Shared.ReactTypes)
+local ReactTypes = require(Packages.Shared)
 type ReactContext<T> = ReactTypes.ReactContext<T>
 
-local invariant = require(Workspace.Shared.invariant)
+local invariant = require(Packages.Shared).invariant
 
-local ReactCurrentDispatcher = require(script.Parent.ReactCurrentDispatcher)
+local ReactCurrentDispatcher = require(Packages.Shared).ReactSharedInternals.ReactCurrentDispatcher
 
 local function resolveDispatcher()
 	local dispatcher = ReactCurrentDispatcher.current

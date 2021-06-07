@@ -15,12 +15,12 @@ type Function = (any) -> any;
 type Object = { [any]: any };
 
 
--- local type {Fiber} = require(Workspace.react-reconciler/src/ReactInternalTypes'
--- local type {Instance} = require(Workspace../ReactFiberHostConfig'
+-- local type {Fiber} = require(Packages.react-reconciler/src/ReactInternalTypes'
+-- local type {Instance} = require(Packages../ReactFiberHostConfig'
 
--- local invariant = require(Workspace.shared/invariant'
--- local {HostComponent, HostText} = require(Workspace.react-reconciler/src/ReactWorkTags'
--- local getComponentName = require(Workspace.shared/getComponentName'
+-- local invariant = require(Packages.shared/invariant'
+-- local {HostComponent, HostText} = require(Packages.react-reconciler/src/ReactWorkTags'
+-- local getComponentName = require(Packages.shared/getComponentName'
 
 local ReactFiberHostConfig = require(script.Parent.ReactFiberHostConfig)
 local supportsTestSelectors = ReactFiberHostConfig.supportsTestSelectors
@@ -34,7 +34,7 @@ local supportsTestSelectors = ReactFiberHostConfig.supportsTestSelectors
 --   setFocusIfFocusable,
 --   setupIntersectionObserver,
 --   ,
--- } = require(Workspace../ReactFiberHostConfig'
+-- } = require(Packages../ReactFiberHostConfig'
 
 -- local COMPONENT_TYPE = 0b000
 -- local HAS_PSEUDO_CLASS_TYPE = 0b001

@@ -8,8 +8,8 @@
 --  * @flow
 -- ]]
 
-local Workspace = script.Parent.Parent
-local ReactTypes = require(Workspace.Shared.ReactTypes)
+local Packages = script.Parent.Parent
+local ReactTypes = require(Packages.Shared)
 type MutableSourceGetVersionFn = ReactTypes.MutableSourceGetVersionFn
 type MutableSource<T> = ReactTypes.MutableSource<T>
 

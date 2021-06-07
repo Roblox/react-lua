@@ -17,9 +17,9 @@ local function unimplemented(message)
   error("FIXME (roblox): " .. message .. " is unimplemented", 2)
 end
 
-local Workspace = script.Parent.Parent.Parent
+local Packages = script.Parent.Parent.Parent
 
-local ReactTypes = require(Workspace.Shared.ReactTypes)
+local ReactTypes = require(Packages.Shared)
 type ReactNodeList = ReactTypes.ReactNodeList;
 local ReactRobloxHostTypes = require(script.Parent["ReactRobloxHostTypes.roblox"])
 type Container = ReactRobloxHostTypes.Container;
@@ -40,29 +40,28 @@ local createLegacyRoot = ReactRobloxRoot.createLegacyRoot
 local isValidContainer = ReactRobloxRoot.isValidContainer
 -- local createEventHandle = require(script.Parent.ReactDOMEventHandle).createEventHandle
 
-local ReactFiberReconciler
-ReactFiberReconciler = require(Workspace.ReactReconciler.ReactFiberReconciler)
--- local batchedEventUpdates = ReactFiberReconciler.batchedEventUpdates
--- local batchedUpdates = ReactFiberReconciler.batchedUpdates
--- local discreteUpdates = ReactFiberReconciler.discreteUpdates
--- local flushDiscreteUpdates = ReactFiberReconciler.flushDiscreteUpdates
--- local flushSync = ReactFiberReconciler.flushSync
--- local flushControlled = ReactFiberReconciler.flushControlled
--- local injectIntoDevTools = ReactFiberReconciler.injectIntoDevTools
-local flushPassiveEffects = ReactFiberReconciler.flushPassiveEffects
-local IsThisRendererActing = ReactFiberReconciler.IsThisRendererActing
--- local attemptSynchronousHydration = ReactFiberReconciler.attemptSynchronousHydration
--- local attemptUserBlockingHydration = ReactFiberReconciler.attemptUserBlockingHydration
--- local attemptContinuousHydration = ReactFiberReconciler.attemptContinuousHydration
--- local attemptHydrationAtCurrentPriority = ReactFiberReconciler.attemptHydrationAtCurrentPriority
--- local runWithPriority = ReactFiberReconciler.runWithPriority
--- local getCurrentUpdateLanePriority = ReactFiberReconciler.getCurrentUpdateLanePriority
+local ReactReconciler = require(Packages.ReactReconciler)
+-- local batchedEventUpdates = ReactReconciler.batchedEventUpdates
+-- local batchedUpdates = ReactReconciler.batchedUpdates
+-- local discreteUpdates = ReactReconciler.discreteUpdates
+-- local flushDiscreteUpdates = ReactReconciler.flushDiscreteUpdates
+-- local flushSync = ReactReconciler.flushSync
+-- local flushControlled = ReactReconciler.flushControlled
+-- local injectIntoDevTools = ReactReconciler.injectIntoDevTools
+local flushPassiveEffects = ReactReconciler.flushPassiveEffects
+local IsThisRendererActing = ReactReconciler.IsThisRendererActing
+-- local attemptSynchronousHydration = ReactReconciler.attemptSynchronousHydration
+-- local attemptUserBlockingHydration = ReactReconciler.attemptUserBlockingHydration
+-- local attemptContinuousHydration = ReactReconciler.attemptContinuousHydration
+-- local attemptHydrationAtCurrentPriority = ReactReconciler.attemptHydrationAtCurrentPriority
+-- local runWithPriority = ReactReconciler.runWithPriority
+-- local getCurrentUpdateLanePriority = ReactReconciler.getCurrentUpdateLanePriority
 
--- local createPortalImpl = require(Workspace.ReactReconciler.ReactPortal).createPortal
--- local canUseDOM = require(Workspace.Shared.ExecutionEnvironment).canUseDOM
-local ReactVersion = require(Workspace.Shared.ReactVersion)
-local invariant = require(Workspace.Shared.invariant)
-local ReactFeatureFlags = require(Workspace.Shared.ReactFeatureFlags)
+-- local createPortalImpl = require(Packages.ReactReconciler.ReactPortal).createPortal
+-- local canUseDOM = require(Packages.Shared).ExecutionEnvironment.canUseDOM
+local ReactVersion = require(Packages.Shared).ReactVersion
+local invariant = require(Packages.Shared).invariant
+local ReactFeatureFlags = require(Packages.Shared).ReactFeatureFlags
 -- local warnUnstableRenderSubtreeIntoContainer = ReactFeatureFlags.warnUnstableRenderSubtreeIntoContainer
 local enableNewReconciler = ReactFeatureFlags.enableNewReconciler
 
@@ -73,7 +72,7 @@ local getFiberCurrentPropsFromNode = ReactRobloxComponentTree.getFiberCurrentPro
 -- local getClosestInstanceFromNode = ReactRobloxComponentTree.getClosestInstanceFromNode
 -- local restoreControlledState = require(script.Parent.ReactRobloxComponent).restoreControlledState
 
--- local ReactDOMEventReplaying = require(Workspace.Parent.Parent.events.ReactDOMEventReplaying)
+-- local ReactDOMEventReplaying = require(Packages.Parent.Parent.events.ReactDOMEventReplaying)
 -- local setAttemptSynchronousHydration = ReactDOMEventReplaying.setAttemptSynchronousHydration
 -- local setAttemptUserBlockingHydration = ReactDOMEventReplaying.setAttemptUserBlockingHydration
 -- local setAttemptContinuousHydration = ReactDOMEventReplaying.setAttemptContinuousHydration
@@ -82,7 +81,7 @@ local getFiberCurrentPropsFromNode = ReactRobloxComponentTree.getFiberCurrentPro
 -- local setGetCurrentUpdatePriority = ReactDOMEventReplaying.setGetCurrentUpdatePriority
 -- local setAttemptHydrationAtPriority = ReactDOMEventReplaying.setAttemptHydrationAtPriority
 
--- local setBatchingImplementation = require(Workspace.Parent.Parent.events.ReactDOMUpdateBatching).setBatchingImplementation
+-- local setBatchingImplementation = require(Packages.Parent.Parent.events.ReactDOMUpdateBatching).setBatchingImplementation
 -- local ReactDOMControlledComponent = require(script.Parent.Parent.events.ReactDOMControlledComponent)
 -- local setRestoreImplementation = ReactDOMControlledComponent.setRestoreImplementation
 -- local enqueueStateRestore = ReactDOMControlledComponent.enqueueStateRestore
@@ -257,6 +256,26 @@ local exports = {
   Event = Event,
   Change = Change,
   createBinding = Binding.create,
+
+  -- ROBLOX deviation: Compatibility layer for top-level interface
+  -- ROBLOX TODO: Add warnings
+  update = function(root, element)
+    root:render(element)
+    return root
+  end,
+  mount = function(element)
+    local root = createLegacyRoot(Instance.new("Folder"))
+    root:render(element)
+    return root
+  end,
+  unmount = function(root)
+    root:unmount()
+  end,
+
+  -- ROBLOX deviation: Compatibility layer for special symbol keys, aligning
+  -- them with simple reserved props used by upstream
+  Children = "children",
+  Ref = "ref",
 }
 
 -- local foundDevTools = injectIntoDevTools({

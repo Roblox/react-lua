@@ -15,16 +15,8 @@
  * environment.
 ]]
 
-local Workspace = script.Parent.Parent
-local RobloxJest = require(Workspace.RobloxJest)
-local ReactFiberReconciler = function(config)
-	-- deviation: upstream has jest.mock return a function via
-	-- scripts/setupHostConfigs.js, but it's easier for us to do it here
-	RobloxJest.mock(Workspace.ReactReconciler.ReactFiberHostConfig, function()
-		return config
-	end)
-	return require(Workspace.ReactReconciler.ReactFiberReconciler)
-end
+local Packages = script.Parent.Parent
+local ReactFiberReconciler = require(Packages.ReactReconciler)
 local createReactNoop = require(script.Parent.createReactNoop)
 
 local NoopRenderer = createReactNoop(

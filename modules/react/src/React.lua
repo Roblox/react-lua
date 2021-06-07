@@ -1,8 +1,8 @@
 -- upstream: https://github.com/facebook/react/blob/56e9feead0f91075ba0a4f725c9e4e343bca1c67/packages/react/src/React.js
 local React = script.Parent
-local Workspace = React.Parent
+local Packages = React.Parent
 local createMutableSource = require(React.ReactMutableSource)
-local ReactSharedInternals = require(React.ReactSharedInternals)
+local ReactSharedInternals = require(Packages.Shared).ReactSharedInternals
 local ReactBaseClasses = require(React.ReactBaseClasses)
 local ReactElementValidator = require(React.ReactElementValidator)
 local ReactElement = require(React.ReactElement)
@@ -12,8 +12,8 @@ local ReactHooks = require(React.ReactHooks)
 local ReactMemo = require(React.ReactMemo)
 local ReactContext = require(React.ReactContext)
 local ReactLazy = require(React.ReactLazy)
-local ReactSymbols = require(Workspace.Shared.ReactSymbols)
-local console = require(Workspace.Shared.console)
+local ReactSymbols = require(Packages.Shared).ReactSymbols
+local console = require(Packages.Shared).console
 
 -- ROBLOX deviation: keep track of warnings
 local warnedAbout = {}
@@ -32,7 +32,7 @@ return {
 	createElement = createElement,
 	cloneElement = cloneElement,
 	createMutableSource = createMutableSource,
-	isValidElement = ReactElement.isValidElement,
+	isValidElement = ReactElement.	isValidElement,
 	createRef = ReactCreateRef.createRef,
 	forwardRef = ReactForwardRef.forwardRef,
 	lazy = ReactLazy.lazy,

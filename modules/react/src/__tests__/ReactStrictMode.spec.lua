@@ -7,41 +7,34 @@
 --  * @emails react-core
 --!strict
 
-local Workspace = script.Parent.Parent.Parent
+local Packages = script.Parent.Parent.Parent
 local React
 local ReactNoop
 -- local ReactDOM
 -- local ReactDOMServer
 local Scheduler
 -- local PropTypes
-local RobloxJest = require(Workspace.RobloxJest)
+local RobloxJest = require(Packages.Dev.RobloxJest)
 
 -- ROBLOX TODO: split non-DOM test into separate file, make upstream PR for this division
 
 return function()
-    local Packages = Workspace.Parent
     local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
 
     describe('ReactStrictMode', function()
         beforeEach(function()
             RobloxJest.resetModules()
-            -- deviation: In react, jest _always_ mocks Scheduler -> unstable_mock;
-            -- in our case, we need to do it anywhere we want to use the scheduler,
-            -- directly or indirectly, until we have some form of bundling logic
-            RobloxJest.mock(Workspace.Scheduler, function()
-              return require(Workspace.Scheduler.unstable_mock)
-            end)
 
             -- ROBLOX deviation: workaround because our flag is currently always set to false
-            local ReactFeatureFlags = require(Workspace.Shared.ReactFeatureFlags)
+            local ReactFeatureFlags = require(Packages.Shared).ReactFeatureFlags
             ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = true
-            React = require(Workspace.React)
+            React = require(script.Parent.Parent)
 
             -- ROBLOX deviation: using ReactNoop in place of ReactDOM
-            ReactNoop = require(Workspace.ReactNoopRenderer)
+            ReactNoop = require(Packages.Dev.ReactNoopRenderer)
             -- ReactDOM = require('react-dom')
             -- ReactDOMServer = require('react-dom/server')
-            Scheduler = require(Workspace.Scheduler)
+            Scheduler = require(Packages.Dev.Scheduler)
         end)
         -- ROBLOX TODO: Untranslated ReactDOMInvalidARIAHook file throws the error this test checks
         -- xit('should appear in the client component stack', function()
@@ -381,18 +374,12 @@ return function()
     describe('Concurrent Mode', function()
         beforeEach(function()
             RobloxJest.resetModules()
-            -- deviation: In react, jest _always_ mocks Scheduler -> unstable_mock;
-            -- in our case, we need to do it anywhere we want to use the scheduler,
-            -- directly or indirectly, until we have some form of bundling logic
-            RobloxJest.mock(Workspace.Scheduler, function()
-              return require(Workspace.Scheduler.unstable_mock)
-            end)
-            React = require(Workspace.React)
+            React = require(script.Parent.Parent)
             -- ROBLOX deviation: using ReactNoop in place of ReactDOM
-            ReactNoop = require(Workspace.ReactNoopRenderer)
+            ReactNoop = require(Packages.Dev.ReactNoopRenderer)
             -- ReactDOM = require('react-dom')
             -- ReactDOMServer = require('react-dom/server')
-            Scheduler = require(Workspace.Scheduler)
+            Scheduler = require(Packages.Dev.Scheduler)
         end)
         it('should warn about unsafe legacy lifecycle methods anywhere in the tree', function()
             local function Wrapper(props)
@@ -620,18 +607,12 @@ Please update the following components: Parent]],
     describe('symbol checks', function()
         beforeEach(function()
             RobloxJest.resetModules()
-            -- deviation: In react, jest _always_ mocks Scheduler -> unstable_mock;
-            -- in our case, we need to do it anywhere we want to use the scheduler,
-            -- directly or indirectly, until we have some form of bundling logic
-            RobloxJest.mock(Workspace.Scheduler, function()
-              return require(Workspace.Scheduler.unstable_mock)
-            end)
-            React = require(Workspace.React)
+            React = require(script.Parent.Parent)
             -- ROBLOX deviation: using ReactNoop in place of ReactDOM
-            ReactNoop = require(Workspace.ReactNoopRenderer)
+            ReactNoop = require(Packages.Dev.ReactNoopRenderer)
             -- ReactDOM = require('react-dom')
             -- ReactDOMServer = require('react-dom/server')
-            Scheduler = require(Workspace.Scheduler)
+            Scheduler = require(Packages.Dev.Scheduler)
         end)
         it('should switch from StrictMode to a Fragment and reset state', function()
             local Fragment, StrictMode = React.Fragment, React.StrictMode
@@ -759,18 +740,12 @@ Please update the following components: Parent]],
     describe('string refs', function()
         beforeEach(function()
             RobloxJest.resetModules()
-            -- deviation: In react, jest _always_ mocks Scheduler -> unstable_mock;
-            -- in our case, we need to do it anywhere we want to use the scheduler,
-            -- directly or indirectly, until we have some form of bundling logic
-            RobloxJest.mock(Workspace.Scheduler, function()
-              return require(Workspace.Scheduler.unstable_mock)
-            end)
-            React = require(Workspace.React)
+            React = require(script.Parent.Parent)
             -- ROBLOX deviation: using ReactNoop in place of ReactDOM
-            ReactNoop = require(Workspace.ReactNoopRenderer)
+            ReactNoop = require(Packages.Dev.ReactNoopRenderer)
             -- ReactDOM = require('react-dom')
             -- ReactDOMServer = require('react-dom/server')
-            Scheduler = require(Workspace.Scheduler)
+            Scheduler = require(Packages.Dev.Scheduler)
         end)
 
         it('should warn within a strict tree', function()
@@ -858,18 +833,12 @@ Please update the following components: Parent]],
     describe('context legacy', function()
         beforeEach(function()
             RobloxJest.resetModules()
-            -- deviation: In react, jest _always_ mocks Scheduler -> unstable_mock;
-            -- in our case, we need to do it anywhere we want to use the scheduler,
-            -- directly or indirectly, until we have some form of bundling logic
-            RobloxJest.mock(Workspace.Scheduler, function()
-              return require(Workspace.Scheduler.unstable_mock)
-            end)
-            React = require(Workspace.React)
+            React = require(script.Parent.Parent)
             -- ROBLOX deviation: using ReactNoop in place of ReactDOM
-            ReactNoop = require(Workspace.ReactNoopRenderer)
+            ReactNoop = require(Packages.Dev.ReactNoopRenderer)
             -- ReactDOM = require('react-dom')
             -- ReactDOMServer = require('react-dom/server')
-            Scheduler = require(Workspace.Scheduler)
+            Scheduler = require(Packages.Dev.Scheduler)
             -- PropTypes = require('prop-types')
         end)
         -- ROBLOX TODO: Proptypes

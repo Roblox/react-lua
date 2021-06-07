@@ -1,0 +1,18 @@
+[package]
+name = "ReactRoblox"
+version = { workspace = true }
+authors = { workspace = true }
+publish = true
+content_root = "src"
+
+[dependencies]
+LuauPolyfill = { workspace = true }
+Cryo = { workspace = true }
+Shared = { path = "../shared" }
+React = { path = "../react" }
+ReactReconciler = { path = "../react-reconciler" }
+Scheduler = { path = "../scheduler" }
+
+[dev_dependencies]
+JestRoblox = { workspace = true }
+RobloxJest = { path = "../roblox-jest" }

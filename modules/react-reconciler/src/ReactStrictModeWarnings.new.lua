@@ -8,16 +8,16 @@
  * @flow
  ]]
 
-local Workspace = script.Parent.Parent
+local Packages = script.Parent.Parent
 -- ROBLOX: use patched console from shared
-local console = require(Workspace.Shared.console)
+local console = require(Packages.Shared).console
 
 local ReactInternalTypes = require(script.Parent.ReactInternalTypes)
 type Fiber = ReactInternalTypes.Fiber
 local ReactCurrentFiber = require(script.Parent.ReactCurrentFiber)
 local resetCurrentDebugFiberInDEV = ReactCurrentFiber.resetCurrentFiber
 local setCurrentDebugFiberInDEV = ReactCurrentFiber.setCurrentFiber
-local getComponentName = require(Workspace.Shared.getComponentName)
+local getComponentName = require(Packages.Shared).getComponentName
 local StrictMode = require(script.Parent.ReactTypeOfMode).StrictMode
 
 type Set<T> = { [T]: boolean }

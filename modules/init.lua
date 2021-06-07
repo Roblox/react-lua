@@ -37,26 +37,15 @@ return {
 	Change = ReactRobloxRenderer.Change,
 	createBinding = ReactRobloxRenderer.createBinding,
 
-	-- Compatibility layer for top-level interface
-	-- TODO: Add warnings
-	update = function(root, element)
-		root:render(element)
-		return root
-	end,
-	mount = function(element)
-		local root = ReactRobloxRenderer.createLegacyRoot(Instance.new("Folder"))
-		root:render(element)
-		return root
-	end,
-	unmount = function(root)
-		root:unmount()
-	end,
+	update = ReactRobloxRenderer.update,
+	mount = ReactRobloxRenderer.mount,
+	unmount = ReactRobloxRenderer.unmount,
 
 	-- Additional compatibility affordances
 	createFragment = React.createFragment,
 
 	-- Compatibility layer for special symbol keys, aligning them with simple
 	-- reserved props used by upstream
-	Children = "children",
-	Ref = "ref",
+	Children = ReactRobloxRenderer.Children,
+	Ref = ReactRobloxRenderer.Ref,
 }

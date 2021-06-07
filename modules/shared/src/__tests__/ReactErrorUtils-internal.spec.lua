@@ -9,20 +9,23 @@
 ]]
 
 return function()
-	local Workspace = script.Parent.Parent.Parent
-	local Packages = Workspace.Parent
+	local Packages = script.Parent.Parent.Parent
 	local LuauPolyfill = require(Packages.LuauPolyfill)
 	local Error = LuauPolyfill.Error
 	local jestModule = require(Packages.Dev.JestRoblox)
-    local jestExpect = jestModule.Globals.expect
-    local jest = jestModule.Globals.jest
-	local RobloxJest = require(Workspace.RobloxJest)
+	local jestExpect = jestModule.Globals.expect
+	local jest = jestModule.Globals.jest
+	local RobloxJest = require(Packages.Dev.RobloxJest)
 	local ReactErrorUtils
 
 	beforeEach(function()
 		-- TODO: can we express this test with only public API?
 		RobloxJest.resetModules()
 		ReactErrorUtils = require(script.Parent.Parent.ReactErrorUtils)
+	end)
+
+	afterEach(function()
+		RobloxJest.unmock(script.Parent.Parent.invokeGuardedCallbackImpl)
 	end)
 
 	it('it should rethrow caught errors', function()

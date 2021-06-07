@@ -7,8 +7,8 @@
 --  * @emails react-core
 --  */
 -- !strict
-local Workspace = script.Parent.Parent.Parent
-local RobloxJest = require(Workspace.RobloxJest)
+local Packages = script.Parent.Parent.Parent
+local RobloxJest = require(Packages.Dev.RobloxJest)
 
 -- local PropTypes
 local React
@@ -16,11 +16,9 @@ local React
 local ReactNoop
 -- local act
 local Scheduler
-local Packages = Workspace.Parent
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local Array = LuauPolyfill.Array
-
-local ReactFeatureFlags = require(Workspace.Shared.ReactFeatureFlags)
+local ReactFeatureFlags = require(Packages.Shared).ReactFeatureFlags
 
 -- ROBLOX deviation: using textContent helper in place of upstream .textContent()
 local function textContent(node)
@@ -66,22 +64,15 @@ return function()
 
 		beforeEach(function()
 			RobloxJest.resetModules()
-			-- deviation: In react, jest _always_ mocks Scheduler -> unstable_mock;
-			-- in our case, we need to do it anywhere we want to use the scheduler,
-			-- directly or indirectly, until we have some form of bundling logic
-			RobloxJest.mock(Workspace.Scheduler, function()
-				return require(Workspace.Scheduler.unstable_mock)
-			end)
-
 			RobloxJest.useFakeTimers()
 
 			-- PropTypes = require('prop-types')
-			ReactFeatureFlags = require(Workspace.Shared.ReactFeatureFlags)
+			ReactFeatureFlags = require(Packages.Shared).ReactFeatureFlags
 			ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false
 			-- ReactDOM = require('react-dom')
-			React = require(Workspace.React)
-			ReactNoop = require(Workspace.ReactNoopRenderer)
-			Scheduler = require(Workspace.Scheduler)
+			React = require(Packages.React)
+			ReactNoop = require(Packages.Dev.ReactNoopRenderer)
+			Scheduler = require(Packages.Scheduler)
 			-- act = require('react-dom/test-utils').unstable_concurrentAct
 
 			BrokenConstructor = React.Component:extend("BrokenConstructor")
@@ -2262,7 +2253,7 @@ return function()
 			end).toErrorDev({
 				"Warning: The above error occurred in one of your React components:\
 \
-    in LoadedCode.RoactAlignment.Packages.Modules.ReactReconciler.__tests__.ReactErrorBoundaries-internal.spec (at **)\
+    in LoadedCode.RoactAlignment._Workspace.ReactReconciler.ReactReconciler.__tests__.ReactErrorBoundaries-internal.spec (at **)\
     in InvalidErrorBoundary (at **)\
 \
 React will try to recreate this component tree from scratch using the error boundary you provided, InvalidErrorBoundary.\

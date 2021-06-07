@@ -6,12 +6,12 @@
  * LICENSE file in the root directory of this source tree.
  ]]
 
-local Workspace = script.Parent.Parent
+local Packages = script.Parent.Parent
 -- ROBLOX: use patched console from shared
-local console = require(Workspace.Shared.console)
+local console = require(Packages.Shared).console
 
-local REACT_MEMO_TYPE = require(Workspace.Shared.ReactSymbols).REACT_MEMO_TYPE
-local isValidElementType = require(Workspace.Shared.isValidElementType)
+local REACT_MEMO_TYPE = require(Packages.Shared).ReactSymbols.REACT_MEMO_TYPE
+local isValidElementType = require(Packages.Shared).isValidElementType
 
 local exports = {}
 

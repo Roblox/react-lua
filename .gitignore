@@ -1,6 +1,9 @@
 rotriever.lock
 Packages/*
 !Packages/.robloxrc
+!Packages/_Workspace/
+Packages/_Workspace/*
+!Packages/_Workspace/.robloxrc
 **/*.rbx[lm]*
 .DS_Store
 .vscode

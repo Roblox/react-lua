@@ -9,13 +9,12 @@
 --  * @flow
 --  */
 
-local Workspace = script.Parent
-local Packages = Workspace.Parent
-local console = require(Packages.Shared.console)
-local inspect = require(Packages.Shared["inspect.roblox"]).inspect
+local Packages = script.Parent.Parent
+local console = require(Packages.Shared).console
+local inspect = require(Packages.Shared).inspect.inspect
 type Map<K, V> = { [K]: V }
 type Object = { [string]: any }
-local ReactTypes = require(Packages.Shared.ReactTypes)
+local ReactTypes = require(Packages.Shared)
 local React = require(Packages.React)
 type Thenable<R, U> = ReactTypes.Thenable<R, U>
 
@@ -55,7 +54,7 @@ local Pending = 0
 local Resolved = 1
 local Rejected = 2
 
-local ReactCurrentDispatcher = require(Packages.React.ReactCurrentDispatcher)
+local ReactCurrentDispatcher = require(Packages.Shared).ReactSharedInternals.ReactCurrentDispatcher
 
 local exports = {}
 

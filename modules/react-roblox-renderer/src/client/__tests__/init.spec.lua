@@ -1,9 +1,8 @@
 return function()
-	local Workspace = script.Parent.Parent.Parent.Parent
-	local Packages = Workspace.Parent
+	local Packages = script.Parent.Parent.Parent.Parent
 	local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
-	local RobloxJest = require(Workspace.RobloxJest)
-	local getJestMatchers = require(Workspace.Scheduler["getJestMatchers.roblox"])
+	local RobloxJest = require(Packages.Dev.RobloxJest)
+	local getJestMatchers = require(Packages.Scheduler).getJestMatchers
 
 	beforeAll(function()
 		jestExpect.extend(getJestMatchers(jestExpect))

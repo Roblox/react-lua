@@ -7,10 +7,9 @@
  * @emails react-core
 ]]
 return function()
-	local Workspace = script.Parent.Parent.Parent
-	local RobloxJest = require(Workspace.RobloxJest)
-    local Packages = Workspace.Parent
-    local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
+	local Packages = script.Parent.Parent.Parent
+	local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
+	local RobloxJest = require(Packages.Dev.RobloxJest)
 
 	local React
 	local ReactNoop
@@ -24,19 +23,13 @@ return function()
 
 		beforeEach(function()
 			RobloxJest.resetModules()
-			-- ROBLOX deviation: In react, jest _always_ mocks Scheduler -> unstable_mock;
-			-- in our case, we need to do it anywhere we want to use the scheduler,
-			-- until we have some form of bundling logic
-			RobloxJest.mock(Workspace.Scheduler, function()
-				return require(Workspace.Scheduler.unstable_mock)
-			end)
 
 			-- PropTypes = require("prop-types")
-			ReactFeatureFlags = require(Workspace.Shared.ReactFeatureFlags)
+			ReactFeatureFlags = require(Packages.Shared).ReactFeatureFlags
 			ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false
-			React = require(Workspace.React)
-			-- ROBLOX deviation: Use Noop to drive these tests instead of DOM renderer
-			ReactNoop = require(Workspace.ReactNoopRenderer)
+			React = require(script.Parent.Parent)
+			-- deviation: Use Noop to drive these tests instead of DOM renderer
+			ReactNoop = require(Packages.Dev.ReactNoopRenderer)
 			-- ReactDOM = require("react-dom")
 			-- ReactTestUtils = require("react-dom/test-utils")
 			ComponentClass = React.Component:extend("ComponentClass")

@@ -8,11 +8,12 @@
  * @flow
 ]]
 
-local Workspace = script.Parent.Parent
+local Packages = script.Parent.Parent
 
-local ReactTypes = require(Workspace.Shared.ReactTypes)
+local ReactTypes = require(Packages.Shared)
 type ReactNodeList = ReactTypes.ReactNodeList
 type Wakeable = ReactTypes.Wakeable
+
 local ReactInternalTypes = require(script.Parent.ReactInternalTypes)
 type Fiber = ReactInternalTypes.Fiber;
 local ReactFiberHostConfig = require(script.Parent.ReactFiberHostConfig)

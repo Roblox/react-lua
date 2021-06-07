@@ -8,10 +8,9 @@
  * @jest-environment node
 ]]
 return function()
-	local Workspace = script.Parent.Parent.Parent
-	local Packages = Workspace.Parent
+	local Packages = script.Parent.Parent.Parent
 	local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
-	local React = require(Workspace.React)
+	local React = require(Packages.React)
 	local ReactShallowRenderer = require(script.Parent.Parent)
 
 	local createRenderer = ReactShallowRenderer.createRenderer

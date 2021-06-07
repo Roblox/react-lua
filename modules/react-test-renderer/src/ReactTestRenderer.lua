@@ -7,25 +7,33 @@
 --  * @flow
 --  */
 
-local Workspace = script.Parent.Parent
--- local jest = require(Workspace.RobloxJest)
-local Scheduler = require(Workspace.Scheduler.unstable_mock)
-local console = require(Workspace.Shared.console)
-local LuauPolyfill = require(Workspace.Parent.LuauPolyfill)
+local Packages = script.Parent.Parent
+-- local jest = require(Packages.RobloxJest)
+local Scheduler = require(Packages.Scheduler)
+local console = require(Packages.Shared).console
+local LuauPolyfill = require(Packages.LuauPolyfill)
 local Symbol = LuauPolyfill.Symbol
 local Array = LuauPolyfill.Array
 local Object = LuauPolyfill.Object
 local setTimeout = LuauPolyfill.setTimeout
 
-local ReactInternalTypes = require(Workspace.ReactReconciler.ReactInternalTypes)
-type Fiber = ReactInternalTypes.Fiber
-type FiberRoot = ReactInternalTypes.FiberRoot
-local ReactTypes = require(Workspace.Shared.ReactTypes)
+-- ROBLOX FIXME: Can't pass types across package boundaries (how do we deal with
+-- this?)
+-- local ReactInternalTypes = require(Packages.ReactReconciler).ReactInternalTypes
+-- type Fiber = ReactInternalTypes.Fiber
+-- type FiberRoot = ReactInternalTypes.FiberRoot
+type Fiber = any;
+type FiberRoot = any;
+
+local ReactTypes = require(Packages.Shared)
 type Thenable<R, U> = ReactTypes.Thenable<R, U>
 
 -- ROBLOX TODO: split below to silence analyze, but why is analyze throwing in first place?
-local ReactFiberReconciler 
-ReactFiberReconciler = require(Workspace.ReactReconciler.ReactFiberReconciler)
+local ReactTestHostConfig = require(script.Parent.ReactTestHostConfig)
+-- ROBLOX deviation: For all tests, we mock the reconciler into a configurable
+-- function interface that allows injection of HostConfig
+local ReactReconciler = require(Packages.ReactReconciler)
+local ReactFiberReconciler = ReactReconciler(ReactTestHostConfig)
 
 local getPublicRootInstance = ReactFiberReconciler.getPublicRootInstance
 local createContainer = ReactFiberReconciler.createContainer
@@ -35,9 +43,8 @@ local injectIntoDevTools = ReactFiberReconciler.injectIntoDevTools
 local batchedUpdates = ReactFiberReconciler.batchedUpdates
 local act = ReactFiberReconciler.act
 local IsThisRendererActing = ReactFiberReconciler.IsThisRendererActing
--- local ReactFiberTreeReflection = require(react-reconciler.src.ReactFiberTreeReflection)
-local findCurrentFiberUsingSlowPath = require(Workspace.ReactReconciler.ReactFiberTreeReflection).findCurrentFiberUsingSlowPath
-local ReactWorkTags = require(script.Parent.Parent.ReactReconciler.ReactWorkTags)
+local findCurrentFiberUsingSlowPath = ReactFiberReconciler.findCurrentFiberUsingSlowPath
+local ReactWorkTags = ReactFiberReconciler.ReactWorkTags
 local Fragment = ReactWorkTags.Fragment
 local FunctionComponent = ReactWorkTags.FunctionComponent
 local ClassComponent = ReactWorkTags.ClassComponent
@@ -55,15 +62,15 @@ local SimpleMemoComponent = ReactWorkTags.SimpleMemoComponent
 local Block = ReactWorkTags.Block
 local IncompleteClassComponent = ReactWorkTags.IncompleteClassComponent
 local ScopeComponent = ReactWorkTags.ScopeComponent
-local invariant = require(Workspace.Shared.invariant)
+local Shared = require(Packages.Shared)
+local invariant = Shared.invariant
 
-local getComponentName = require(Workspace.Shared.getComponentName)
-local ReactVersion = require(Workspace.Shared.ReactVersion)
-local ReactSharedInternals = require(Workspace.React.ReactSharedInternals)
-local enqueueTask = require(Workspace.Shared["enqueueTask.roblox"])
-local ReactTestHostConfig = require(script.Parent.ReactTestHostConfig)
+local getComponentName = Shared.getComponentName
+local ReactVersion = Shared.ReactVersion
+local ReactSharedInternals = require(Packages.Shared).ReactSharedInternals
+local enqueueTask = Shared.enqueueTask
 local getPublicInstance = ReactTestHostConfig.getPublicInstance
-local ReactRootTags = require(Workspace.ReactReconciler.ReactRootTags)
+local ReactRootTags = ReactFiberReconciler.ReactRootTags
 local ConcurrentRoot = ReactRootTags.ConcurrentRoot
 local LegacyRoot = ReactRootTags.LegacyRoot
 local IsSomeRendererActing = ReactSharedInternals.IsSomeRendererActing

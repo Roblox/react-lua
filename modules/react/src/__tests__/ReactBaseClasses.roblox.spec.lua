@@ -1,8 +1,7 @@
 return function()
-    local Workspace = script.Parent.Parent.Parent
-    local Packages = Workspace.Parent
+    local Packages = script.Parent.Parent.Parent
+    local ReactBaseClasses = require(script.Parent.Parent.ReactBaseClasses)
     local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
-    local ReactBaseClasses = require(Workspace.React.ReactBaseClasses)
     local Component = ReactBaseClasses.Component
     local PureComponent = ReactBaseClasses.Component
     local component

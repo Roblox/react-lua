@@ -17,20 +17,20 @@ local function unimplemented(message)
   error("FIXME (roblox): " .. message .. " is unimplemented")
 end
 
-local Workspace = script.Parent.Parent
-local Packages = Workspace.Parent
+local Packages = script.Parent.Parent
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local Array = LuauPolyfill.Array
 local Cryo = require(Packages.Cryo)
 
 -- ROBLOX: use patched console from shared
-local console = require(Workspace.Shared.console)
+local console = require(Packages.Shared).console
 
-local ReactTypes = require(Workspace.Shared.ReactTypes)
+local ReactTypes = require(Packages.Shared)
 type ReactContext<T> = ReactTypes.ReactContext<T>
 type MutableSource<T> = ReactTypes.MutableSource<T>
 type MutableSourceGetSnapshotFn<Source, Snapshot> = ReactTypes.MutableSourceGetSnapshotFn<Source, Snapshot>
 type MutableSourceSubscribeFn<Source, Snapshot> = ReactTypes.MutableSourceSubscribeFn<Source, Snapshot>
+
 local ReactInternalTypes = require(script.Parent.ReactInternalTypes)
 type Fiber = ReactInternalTypes.Fiber
 -- type Dispatcher = ReactInternalTypes.Dispatcher
@@ -46,8 +46,8 @@ type HookFlags = ReactHookEffectTags.HookFlags
 type FiberRoot = ReactInternalTypes.FiberRoot
 -- local type {OpaqueIDType} = require(script.Parent.ReactFiberHostConfig)
 
-local ReactSharedInternals = require(Workspace.Shared.ReactSharedInternals)
-local ReactFeatureFlags = require(Workspace.Shared.ReactFeatureFlags)
+local ReactSharedInternals = require(Packages.Shared).ReactSharedInternals
+local ReactFeatureFlags = require(Packages.Shared).ReactFeatureFlags
 local enableDebugTracing = ReactFeatureFlags.enableDebugTracing
 local enableSchedulingProfiler = ReactFeatureFlags.enableSchedulingProfiler
 local enableNewReconciler = ReactFeatureFlags.enableNewReconciler
@@ -95,9 +95,9 @@ local warnIfNotCurrentlyActingEffectsInDEV = ReactFiberWorkLoop.warnIfNotCurrent
 --   warnIfNotCurrentlyActingEffectsInDEV,
 -- } = require(script.Parent.ReactFiberWorkLoop.new)
 
-local invariant = require(Workspace.Shared.invariant)
-local getComponentName = require(Workspace.Shared.getComponentName)
-local is = require(Workspace.Shared.objectIs)
+local invariant = require(Packages.Shared).invariant
+local getComponentName = require(Packages.Shared).getComponentName
+local is = require(Packages.Shared).objectIs
 local markWorkInProgressReceivedUpdate = require(script.Parent['ReactFiberBeginWork.new']).markWorkInProgressReceivedUpdate :: any
 -- local {
 --   UserBlockingPriority,

@@ -5,14 +5,10 @@
  * LICENSE file in the root directory of this source tree.
 *]]
 
-local Workspace = script.Parent.Parent
-local RobloxJest = require(Workspace.RobloxJest)
-RobloxJest.mock(script.Parent.SchedulerHostConfig, function()
-	return require(script.Parent.forks["SchedulerHostConfig.mock"])
-end)
-
-local Scheduler = require(script.Parent.Scheduler)
+local initializeScheduler = require(script.Parent.Scheduler)
 local HostConfig = require(script.Parent.forks["SchedulerHostConfig.mock"])
+
+local Scheduler = initializeScheduler(HostConfig)
 
 local exports = {}
 for key, value in pairs(Scheduler) do

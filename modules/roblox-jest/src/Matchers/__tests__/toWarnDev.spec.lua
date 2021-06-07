@@ -10,8 +10,7 @@
 --!nocheck
 return function()
 	local RobloxJest = script.Parent.Parent.Parent
-	local Workspace = RobloxJest.Parent
-	local Packages = Workspace.Parent
+	local Packages = RobloxJest.Parent
 	local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
 	local toErrorDev = require(RobloxJest.Matchers.toErrorDev)
 	local toWarnDev = require(RobloxJest.Matchers.toWarnDev)

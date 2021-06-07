@@ -1,0 +1,17 @@
+[package]
+name = "React"
+version = { workspace = true }
+authors = { workspace = true }
+publish = true
+content_root = "src"
+
+[dependencies]
+LuauPolyfill = { workspace = true }
+Cryo = { workspace = true }
+Shared = { path = "../shared" }
+
+[dev_dependencies]
+JestRoblox = { workspace = true }
+RobloxJest = { path = "../roblox-jest" }
+Scheduler = { path = "../scheduler" }
+ReactNoopRenderer = { path = "../react-noop-renderer" }

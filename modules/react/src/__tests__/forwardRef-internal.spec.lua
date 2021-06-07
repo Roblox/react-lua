@@ -9,11 +9,10 @@
 --!strict
 
 return function()
-  local Workspace = script.Parent.Parent.Parent
-  local Packages = Workspace.Parent
+  local Packages = script.Parent.Parent.Parent
+  local RobloxJest = require(Packages.Dev.RobloxJest)
   local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
   local Error = require(Packages.LuauPolyfill).Error
-  local RobloxJest = require(Workspace.RobloxJest)
   local Cryo = require(Packages.Cryo)
 
   local React
@@ -23,18 +22,12 @@ return function()
 
   beforeEach(function()
     RobloxJest.resetModules()
-    -- deviation: In react, jest _always_ mocks Scheduler -> unstable_mock;
-    -- in our case, we need to do it anywhere we want to use the scheduler,
-    -- until we have some form of bundling logic
-    RobloxJest.mock(Workspace.Scheduler, function()
-      return require(Workspace.Scheduler.unstable_mock)
-    end)
-    ReactFeatureFlags = require(Workspace.Shared.ReactFeatureFlags)
+    ReactFeatureFlags = require(Packages.Shared).ReactFeatureFlags
 
     ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false
-    React = require(Workspace.React)
-    ReactNoop = require(Workspace.ReactNoopRenderer)
-    Scheduler = require(Workspace.Scheduler)
+    React = require(script.Parent.Parent)
+    ReactNoop = require(Packages.Dev.ReactNoopRenderer)
+    Scheduler = require(Packages.Dev.Scheduler)
   end)
 
   it("should work without a ref to be forwarded", function()

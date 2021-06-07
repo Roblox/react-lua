@@ -19,11 +19,10 @@
 
  return function()
     local HttpService = game:GetService("HttpService")
-    local Workspace = script.Parent.Parent.Parent
-    local RobloxJest = require(Workspace.RobloxJest)
-    local Packages = Workspace.Parent
+    local Packages = script.Parent.Parent.Parent
+    local RobloxJest = require(Packages.Dev.RobloxJest)
     local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
-  
+
     -- deviation: Move all of the following into the test function body to match
     -- convention
     local React
@@ -31,53 +30,53 @@
     local ReactNoop
     -- local ReactTestUtils
     -- local PropTypes
-  
+
     local clone = function(o)
       return HttpService:JSONDecode(HttpService:JSONEncode(o))
     end
-  
+
     local GET_INIT_STATE_RETURN_VAL = {
       hasWillMountCompleted = false,
       hasRenderCompleted = false,
       hasDidMountCompleted = false,
       hasWillUnmountCompleted = false,
     }
-  
+
     local INIT_RENDER_STATE = {
       hasWillMountCompleted = true,
       hasRenderCompleted = false,
       hasDidMountCompleted = false,
       hasWillUnmountCompleted = false,
     }
-  
+
     local DID_MOUNT_STATE = {
       hasWillMountCompleted = true,
       hasRenderCompleted = true,
       hasDidMountCompleted = false,
       hasWillUnmountCompleted = false,
     }
-  
+
     local NEXT_RENDER_STATE = {
       hasWillMountCompleted = true,
       hasRenderCompleted = true,
       hasDidMountCompleted = true,
       hasWillUnmountCompleted = false,
     }
-  
+
     local WILL_UNMOUNT_STATE = {
       hasWillMountCompleted = true,
       hasDidMountCompleted = true,
       hasRenderCompleted = true,
       hasWillUnmountCompleted = false,
     }
-  
+
     local POST_WILL_UNMOUNT_STATE = {
       hasWillMountCompleted = true,
       hasDidMountCompleted = true,
       hasRenderCompleted = true,
       hasWillUnmountCompleted = true,
     }
-  
+
     --[[
       Every React component is in one of these life cycles.
       * MOUNTED
@@ -87,37 +86,31 @@
         * Unmounted components are inactive and cannot receive new props.
     ]]
     type ComponentLifeCycle = string
-  
+
     local function getLifeCycleState(instance): ComponentLifeCycle
       return instance.updater.isMounted(instance) and "MOUNTED" or "UNMOUNTED"
     end
-  
+
     beforeEach(function()
       RobloxJest.resetModules()
       RobloxJest.useFakeTimers()
-      -- deviation: In react, jest _always_ mocks Scheduler -> unstable_mock;
-      -- in our case, we need to do it anywhere we want to use the scheduler,
-      -- directly or indirectly, until we have some form of bundling logic
-      RobloxJest.mock(Workspace.Scheduler, function()
-        return require(Workspace.Scheduler.unstable_mock)
-      end)
-  
-      React = require(Workspace.React)
-      ReactNoop = require(Workspace.ReactNoopRenderer)
+
+      React = require(Packages.React)
+      ReactNoop = require(Packages.Dev.ReactNoopRenderer)
       -- ReactDOM = require('react-dom')
       -- ReactTestUtils = require('react-dom/test-utils')
       -- PropTypes = require('prop-types')
 
       -- ROBLOX deviation: these tests are failing with debugRenderPhaseSideEffectsForStrictMode on.
       -- https://github.com/Roblox/roact-alignment/issues/105
-      ReactFeatureFlags = require(Workspace.Shared.ReactFeatureFlags)
+      local ReactFeatureFlags = require(Packages.Shared).ReactFeatureFlags
       ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false
     end)
 
     it('should correctly determine if a component is mounted', function()
       local isMounted
       local Component = React.Component:extend("Component")
-  
+
       function Component:init()
         isMounted = function()
           -- No longer a public API, but we can test that it works internally by
@@ -137,9 +130,9 @@
         jestExpect(isMounted()).toBe(false)
         return React.createElement("div")
       end
-  
+
       local element = React.createElement(Component)
-  
+
       jestExpect(function()
         ReactNoop.act(function()
           ReactNoop.render(element)
@@ -153,11 +146,11 @@
         {withoutStack = 1}
       )
     end)
-  
+
     it('should correctly determine if a nil component is mounted', function()
       local isMounted
       local Component = React.Component:extend("Component")
-  
+
       function Component:init()
         isMounted = function()
           -- No longer a public API, but we can test that it works internally by
@@ -175,9 +168,9 @@
         jestExpect(isMounted()).toBe(false)
         return nil
       end
-  
+
       local element = React.createElement(Component)
-  
+
       jestExpect(function()
         ReactNoop.act(function()
           ReactNoop.render(element)
@@ -213,19 +206,19 @@
         _testJournal.lifeCycleAtStartOfGetInitialState = getTestLifeCycleState()
         self.state = initState
       end
-  
+
       function LifeCycleComponent:UNSAFE_componentWillMount()
         _testJournal.stateAtStartOfWillMount = clone(self.state)
         _testJournal.lifeCycleAtStartOfWillMount = getTestLifeCycleState()
         self.state.hasWillMountCompleted = true
       end
-  
+
       function LifeCycleComponent:didMount()
         _testJournal.stateAtStartOfDidMount = clone(self.state)
         _testJournal.lifeCycleAtStartOfDidMount = getTestLifeCycleState()
         self:setState({hasDidMountCompleted = true})
       end
-  
+
       function LifeCycleComponent:render()
           local isInitialRender = not self.state.hasRenderCompleted
           if isInitialRender then
@@ -239,21 +232,21 @@
           self.state.hasRenderCompleted = true
           return React.createElement("TextLabel", { Text = "I am the inner DIV" })
         end
-  
-      function LifeCycleComponent:willUnmount()
+
+        function LifeCycleComponent:willUnmount()
         -- ROBLOX deviation: assert self is non nil
         jestExpect(self).never.toEqual(nil)
-  
+
         _testJournal.stateAtStartOfWillUnmount = clone(self.state)
         _testJournal.lifeCycleAtStartOfWillUnmount = getTestLifeCycleState()
         self.state.hasWillUnmountCompleted = true
       end
-  
+
       -- A component that is merely "constructed" (as in "constructor") but not
       -- yet initialized, or rendered.
       --
       -- local container = document.createElement('div')
-  
+
       jestExpect(function()
         ReactNoop.act(function()
           ReactNoop.render(React.createElement(LifeCycleComponent))
@@ -265,7 +258,7 @@
         },
         {withoutStack = 1}
       )
-  
+
       -- getInitialState
       jestExpect(_testJournal.returnedFromGetInitialState).toEqual(
         GET_INIT_STATE_RETURN_VAL
@@ -273,54 +266,54 @@
       jestExpect(_testJournal.lifeCycleAtStartOfGetInitialState).toBe(
         'UNMOUNTED'
       )
-  
+
       -- componentWillMount
       jestExpect(_testJournal.stateAtStartOfWillMount).toEqual(
         _testJournal.returnedFromGetInitialState
       )
       jestExpect(_testJournal.lifeCycleAtStartOfWillMount).toBe('UNMOUNTED')
-  
+
       -- didMount
       jestExpect(_testJournal.stateAtStartOfDidMount).toEqual(
         DID_MOUNT_STATE
       )
       jestExpect(_testJournal.lifeCycleAtStartOfDidMount).toBe('MOUNTED')
-  
+
       -- initial render
       jestExpect(_testJournal.stateInInitialRender).toEqual(
         INIT_RENDER_STATE
       )
       jestExpect(_testJournal.lifeCycleInInitialRender).toBe('UNMOUNTED')
-  
+
       jestExpect(getTestLifeCycleState()).toBe('MOUNTED')
-  
+
       -- Now *update the component*
       -- instance.forceUpdate()
       ReactNoop.act(function()
         ReactNoop.render(React.createElement(LifeCycleComponent))
       end)
-  
+
       -- render 2nd time
       jestExpect(_testJournal.stateInLaterRender).toEqual(NEXT_RENDER_STATE)
       jestExpect(_testJournal.lifeCycleInLaterRender).toBe('MOUNTED')
-  
+
       jestExpect(getTestLifeCycleState()).toBe('MOUNTED')
-  
+
       ReactNoop.act(function()
         ReactNoop.render(nil)
       end)
-  
+
       jestExpect(_testJournal.stateAtStartOfWillUnmount).toEqual(
         WILL_UNMOUNT_STATE
       )
       -- willUnmount called right before unmount.
       jestExpect(_testJournal.lifeCycleAtStartOfWillUnmount).toBe('MOUNTED')
-  
+
       -- But the current lifecycle of the component is unmounted.
       jestExpect(getTestLifeCycleState()).toBe('UNMOUNTED')
       jestExpect(getInstanceState()).toEqual(POST_WILL_UNMOUNT_STATE)
     end)
-  
+
     it('should allow state updates in didMount', function()
       local getComponentState
       --[[*
@@ -335,15 +328,15 @@
           return self.state
         end
       end
-  
+
       function SetStateInComponentDidMount:didMount()
         self:setState({stateField = self.props.valueToUseAfterMount})
       end
-  
+
       function SetStateInComponentDidMount:render()
         return React.createElement("div")
       end
-  
+
       local element =
         React.createElement(SetStateInComponentDidMount, {
           valueToUseInitially = "hello",
@@ -354,7 +347,7 @@
       end)
       jestExpect(getComponentState().stateField).toBe("goodbye")
     end)
-  
+
     it('should call nested legacy lifecycle methods in the right order', function()
       local log
       local logger = function(msg)
@@ -364,7 +357,7 @@
           return true
         end
       end
-  
+
       local Outer = React.Component:extend("Outer")
       -- pre-declare
       local Inner = React.Component:extend("Inner")
@@ -384,7 +377,7 @@
           })
         )
       end
-  
+
       Inner.UNSAFE_componentWillMount = logger("inner componentWillMount")
       Inner.didMount = logger("inner didMount")
       Inner.UNSAFE_componentWillReceiveProps = logger(
@@ -397,7 +390,7 @@
       function Inner:render()
         return React.createElement("TextLabel", { Text = self.props.x })
       end
-  
+
       log = {}
       ReactNoop.act(function()
         ReactNoop.render(React.createElement(Outer, {x = 1}))
@@ -408,7 +401,7 @@
         "inner didMount",
         "outer didMount",
       })
-  
+
       -- Dedup warnings
       log = {}
       ReactNoop.act(function()
@@ -424,7 +417,7 @@
         "inner didUpdate",
         "outer didUpdate",
       })
-  
+
       log = {}
       ReactNoop.act(function()
         ReactNoop.render(nil)
@@ -434,7 +427,7 @@
         "inner willUnmount",
       })
     end)
-  
+
     it('should call nested new lifecycle methods in the right order', function()
       local log
       local logger = function(msg)
@@ -464,7 +457,7 @@
           React.createElement(Inner, {x = self.props.x})
         )
       end
-  
+
       function Inner:init()
         self.state = {}
       end
@@ -480,7 +473,7 @@
       function Inner:render()
         return React.createElement("TextLabel", {Text = self.props.x})
       end
-  
+
       log = {}
       ReactNoop.act(function()
         ReactNoop.render(React.createElement(Outer, {x = 1}))
@@ -491,7 +484,7 @@
         "inner didMount",
         "outer didMount",
       })
-  
+
       -- Dedup warnings
       log = {}
       ReactNoop.act(function()
@@ -507,7 +500,7 @@
         "inner didUpdate",
         "outer didUpdate",
       })
-  
+
       log = {}
       ReactNoop.act(function()
         ReactNoop.render(nil)
@@ -517,7 +510,7 @@
         "inner willUnmount",
       })
     end)
-  
+
     it("should warn if state is not initialized before getDerivedStateFromProps", function()
       local MyComponent = React.Component:extend("MyComponent")
       function MyComponent.getDerivedStateFromProps()
@@ -526,7 +519,7 @@
       function MyComponent:render()
         return nil
       end
-  
+
       jestExpect(function()
         ReactNoop.act(function()
           ReactNoop.render(React.createElement(MyComponent))
@@ -538,7 +531,7 @@
           "assigning an object to `self.state` in the `init` method of `MyComponent`. " ..
           "This ensures that `getDerivedStateFromProps` arguments have a consistent shape."
       )
-  
+
       -- De-duped
       ReactNoop.act(function()
         ReactNoop.render(React.createElement(MyComponent))
@@ -547,7 +540,7 @@
 
     it('should pass the return value from getSnapshotBeforeUpdate to didUpdate', function()
       local log = {}
-  
+
       local MyComponent = React.Component:extend("MyComponent")
       function MyComponent:init()
         self.state = {
@@ -581,7 +574,7 @@
         table.insert(log, "render")
         return nil
       end
-  
+
       ReactNoop.act(function()
         ReactNoop.render(React.createElement("Frame", {},
           React.createElement(MyComponent, {
@@ -591,7 +584,7 @@
       end)
       jestExpect(log).toEqual({"render"})
       log = {}
-  
+
       ReactNoop.act(function()
         ReactNoop.render(React.createElement("Frame", {},
           React.createElement(MyComponent, {
@@ -605,7 +598,7 @@
         "didUpdate() prevProps:foo prevState:1 snapshot:abc",
       })
       log = {}
-  
+
       ReactNoop.act(function()
         ReactNoop.render(React.createElement("Frame", {},
           React.createElement(MyComponent, {
@@ -619,13 +612,13 @@
         "didUpdate() prevProps:bar prevState:2 snapshot:abc",
       })
       log = {}
-  
+
       ReactNoop.act(function()
         ReactNoop.render(React.createElement("Frame"))
       end)
       jestExpect(log).toEqual({})
     end)
-  
+
     it('should pass previous state to shouldUpdate even with getDerivedStateFromProps', function()
       local divRef = React.createRef()
       local capturedValue
@@ -635,25 +628,25 @@
           value = props.value,
         }
       end
-  
+
       function SimpleComponent.getDerivedStateFromProps(nextProps, prevState)
         if nextProps.value == prevState.value then
           return nil
         end
         return {value = nextProps.value}
       end
-  
+
       function SimpleComponent:shouldUpdate(nextProps, nextState)
         return nextState.value ~= self.state.value
       end
-  
+
       function SimpleComponent:render()
         capturedValue = self.state.value
         return React.createElement("Frame", { ref = divRef },
           React.createElement("TextLabel", { Text = self.state.value })
         )
       end
-  
+
       ReactNoop.act(function()
         ReactNoop.render(React.createElement(SimpleComponent, {value = "initial"}))
       end)
@@ -663,7 +656,7 @@
       end)
       jestExpect(capturedValue).toBe("updated")
     end)
-  
+
     it("should warn if getSnapshotBeforeUpdate is defined with no componentDidUpdate", function()
       local MyComponent = React.Component:extend("MyComponent")
       function MyComponent:getSnapshotBeforeUpdate()
@@ -672,7 +665,7 @@
       function MyComponent:render()
         return nil
       end
-  
+
       jestExpect(function()
         ReactNoop.act(function()
           ReactNoop.render(React.createElement(MyComponent))
@@ -681,7 +674,7 @@
             "This component defines getSnapshotBeforeUpdate() only."
         )
       end)
-  
+
       -- De-duped
       ReactNoop.act(function()
         ReactNoop.render(React.createElement(MyComponent))

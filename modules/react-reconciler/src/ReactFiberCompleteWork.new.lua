@@ -18,7 +18,7 @@ local function unimplemented(message)
   error("FIXME (roblox): " .. message .. " is unimplemented", 2)
 end
 
-local Workspace = script.Parent.Parent
+local Packages = script.Parent.Parent
 
 local ReactInternalTypes = require(script.Parent.ReactInternalTypes)
 type Fiber = ReactInternalTypes.Fiber;
@@ -29,7 +29,7 @@ local OffscreenLane = ReactFiberLane.OffscreenLane
 -- local type {
 --   ReactFundamentalComponentInstance,
 --   ReactScopeInstance,
--- } = require(Workspace.Shared.ReactTypes)
+-- } = require(Packages.Shared).ReactTypes
 -- local type {FiberRoot} = require(script.Parent.ReactInternalTypes)
 local ReactFiberHostConfig = require(script.Parent.ReactFiberHostConfig)
 type Instance = ReactFiberHostConfig.Instance;
@@ -99,7 +99,7 @@ local MutationMask = ReactFiberFlags.MutationMask
 local StaticMask = ReactFiberFlags.StaticMask
 -- local PerformedWork = ReactFiberFlags.PerformedWork
 
-local invariant = require(Workspace.Shared.invariant)
+local invariant = require(Packages.Shared).invariant
 
 local createInstance = ReactFiberHostConfig.createInstance
 local createTextInstance = ReactFiberHostConfig.createTextInstance
@@ -151,7 +151,7 @@ local resetHydrationState = ReactFiberHydrationContext.resetHydrationState
 -- local getIsHydrating = ReactFiberHydrationContext.getIsHydrating
 local prepareToHydrateHostInstance = ReactFiberHydrationContext.prepareToHydrateHostInstance
 local prepareToHydrateHostTextInstance = ReactFiberHydrationContext.prepareToHydrateHostTextInstance
-local ReactFeatureFlags = require(Workspace.Shared.ReactFeatureFlags)
+local ReactFeatureFlags = require(Packages.Shared).ReactFeatureFlags
 local enableSchedulerTracing = ReactFeatureFlags.enableSchedulerTracing
 local enableSuspenseCallback = ReactFeatureFlags.enableSuspenseCallback
 local enableSuspenseServerRenderer = ReactFeatureFlags.enableSuspenseServerRenderer

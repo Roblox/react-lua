@@ -9,7 +9,9 @@
 --  * @flow
 --  */
 type Object = { [string]: any? }
-local Scheduler = require(script.Parent.Parent.Scheduler)
+
+local Packages = script.Parent.Parent
+local Scheduler = require(Packages.Scheduler)
 local exports = {}
 
 -- ROBLOX deviation: predeclare methods to fix declaration ordering problems

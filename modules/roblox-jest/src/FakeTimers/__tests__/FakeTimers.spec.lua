@@ -1,10 +1,10 @@
 
-local Workspace = script.Parent.Parent.Parent.Parent
-local Packages = Workspace.Parent
+local Packages = script.Parent.Parent.Parent.Parent
 local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
+
 return function()
 
-    -- ROBLOX FIXME: remove :: any once CLI understands call metamethods, JIRA ticket CLI-40294
+	-- ROBLOX FIXME: remove :: any once CLI understands call metamethods, JIRA ticket CLI-40294
 	local FakeTimers = require(script.Parent.Parent) :: any
 
 	beforeEach(function()

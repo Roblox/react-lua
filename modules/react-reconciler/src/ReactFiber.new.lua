@@ -9,23 +9,24 @@
 ]]
 --!nolint LocalShadowPedantic
 
-local Workspace = script.Parent.Parent
-local Packages = Workspace.Parent
+local Packages = script.Parent.Parent
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local Object = LuauPolyfill.Object
 
 -- ROBLOX: use patched console from shared
-local console = require(Workspace.Shared.console)
+local console = require(Packages.Shared).console
 
-local ReactElementType = require(Workspace.Shared.ReactElementType)
-type ReactElement = ReactElementType.ReactElement;
-local ReactTypes = require(Workspace.Shared.ReactTypes)
-type ReactFragment = ReactTypes.ReactFragment;
-type ReactPortal = ReactTypes.ReactPortal;
-type ReactFundamentalComponent<T, U> = ReactTypes.ReactFundamentalComponent<T, U>;
-type ReactScope = ReactTypes.ReactScope;
+local ReactTypes = require(Packages.Shared)
+-- ROBLOX deviation: ReactElement is defined at the top level of Shared along
+-- with the rest of the ReactTypes
+type ReactElement = ReactTypes.ReactElement
+type ReactFragment = ReactTypes.ReactFragment
+type ReactPortal = ReactTypes.ReactPortal
+type ReactFundamentalComponent<T, U> = ReactTypes.ReactFundamentalComponent<T, U>
+type ReactScope = ReactTypes.ReactScope
 local ReactInternalTypes = require(script.Parent.ReactInternalTypes)
 export type Fiber = ReactInternalTypes.Fiber
+
 -- ROBLOX deviation: Allow number keys for sparse arrays
 type RoactStableKey = ReactInternalTypes.RoactStableKey
 local ReactRootTags = require(script.Parent.ReactRootTags)
@@ -42,8 +43,8 @@ type SuspenseInstance = ReactFiberHostConfig.SuspenseInstance;
 -- type OffscreenProps = ReactFiberOffscreenComponent.OffscreenProps;
 type OffscreenProps = any; -- FIXME (roblox): types
 
-local invariant = require(Workspace.Shared.invariant)
-local ReactFeatureFlags = require(Workspace.Shared.ReactFeatureFlags)
+local invariant = require(Packages.Shared).invariant
+local ReactFeatureFlags = require(Packages.Shared).ReactFeatureFlags
 local enableProfilerTimer = ReactFeatureFlags.enableProfilerTimer
 local enableFundamentalAPI = ReactFeatureFlags.enableFundamentalAPI
 local enableScopeAPI = ReactFeatureFlags.enableScopeAPI
@@ -76,7 +77,7 @@ local FundamentalComponent = ReactWorkTags.FundamentalComponent
 local ScopeComponent = ReactWorkTags.ScopeComponent
 local OffscreenComponent = ReactWorkTags.OffscreenComponent
 local LegacyHiddenComponent = ReactWorkTags.LegacyHiddenComponent
-local getComponentName = require(Workspace.Shared.getComponentName)
+local getComponentName = require(Packages.Shared).getComponentName
 
 local ReactFiberDevToolsHook = require(script.Parent["ReactFiberDevToolsHook.new"])
 local isDevToolsPresent = ReactFiberDevToolsHook.isDevToolsPresent
@@ -91,7 +92,7 @@ local DebugTracingMode = ReactTypeOfMode.DebugTracingMode
 local ProfileMode = ReactTypeOfMode.ProfileMode
 local StrictMode = ReactTypeOfMode.StrictMode
 local BlockingMode = ReactTypeOfMode.BlockingMode
-local ReactSymbols = require(Workspace.Shared.ReactSymbols)
+local ReactSymbols = require(Packages.Shared).ReactSymbols
 local REACT_FORWARD_REF_TYPE = ReactSymbols.REACT_FORWARD_REF_TYPE
 local REACT_FRAGMENT_TYPE = ReactSymbols.REACT_FRAGMENT_TYPE
 local REACT_DEBUG_TRACING_MODE_TYPE = ReactSymbols.REACT_DEBUG_TRACING_MODE_TYPE

@@ -9,8 +9,7 @@
 * @flow
 ]]
 
-local Workspace = script.Parent.Parent
-local Packages = Workspace.Parent
+local Packages = script.Parent.Parent
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local Array = LuauPolyfill.Array
 
@@ -19,12 +18,12 @@ export type ReactPriorityLevel = ReactInternalTypes.ReactPriorityLevel;
 
 -- Intentionally not named imports because Rollup would use dynamic dispatch for
 -- CommonJS interop named imports.
-local Scheduler = require(Workspace.Scheduler)
--- local __interactionsRef = require(Workspace.Scheduler.tracing).__interactionsRef
-local ReactFeatureFlags = require(Workspace.Shared.ReactFeatureFlags)
+local Scheduler = require(Packages.Scheduler)
+-- local __interactionsRef = require(Packages.Scheduler.tracing).__interactionsRef
+local ReactFeatureFlags = require(Packages.Shared).ReactFeatureFlags
 -- local enableSchedulerTracing = ReactFeatureFlags.enableSchedulerTracing
 local decoupleUpdatePriorityFromScheduler = ReactFeatureFlags.decoupleUpdatePriorityFromScheduler
-local invariant = require(Workspace.Shared.invariant)
+local invariant = require(Packages.Shared).invariant
 local ReactFiberLane = require(script.Parent.ReactFiberLane)
 local SyncLanePriority = ReactFiberLane.SyncLanePriority
 local getCurrentUpdateLanePriority = ReactFiberLane.getCurrentUpdateLanePriority

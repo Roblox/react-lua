@@ -8,7 +8,7 @@
  * @flow
 ]]
 
-local Workspace = script.Parent.Parent
+local Packages = script.Parent.Parent
 
 local ReactInternalTypes = require(script.Parent.ReactInternalTypes)
 type Fiber = ReactInternalTypes.Fiber
@@ -24,7 +24,7 @@ local ForwardRef = ReactWorkTags.ForwardRef
 local SimpleMemoComponent = ReactWorkTags.SimpleMemoComponent
 local ClassComponent = ReactWorkTags.ClassComponent
 
-local ReactComponentStackFrame = require(Workspace.Shared.ReactComponentStackFrame)
+local ReactComponentStackFrame = require(Packages.Shared).ReactComponentStackFrame
 local describeBuiltInComponentFrame = ReactComponentStackFrame.describeBuiltInComponentFrame
 local describeFunctionComponentFrame = ReactComponentStackFrame.describeFunctionComponentFrame
 local describeClassComponentFrame = ReactComponentStackFrame.describeClassComponentFrame

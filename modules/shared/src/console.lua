@@ -4,8 +4,7 @@
 -- Instead of using `LuauPolyfill.console`, React internals should use this
 -- wrapper to be able to use consoleWithStackDev in dev mode
 local Shared = script.Parent
-local Workspace = Shared.Parent
-local Packages = Workspace.Parent
+local Packages = Shared.Parent
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local console = LuauPolyfill.console
 local consoleWithStackDev = require(Shared.consoleWithStackDev)

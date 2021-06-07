@@ -8,15 +8,14 @@
  * @flow
 ]]
 
-local Workspace = script.Parent.Parent
-local Packages = Workspace.Parent
+local Packages = script.Parent.Parent
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local Number = LuauPolyfill.Number
 
 -- ROBLOX: use patched console from shared
-local console = require(Workspace.Shared.console)
+local console = require(Packages.Shared).console
 
-local ReactTypes = require(Workspace.Shared.ReactTypes)
+local ReactTypes = require(Packages.Shared)
 type ReactContext<T> = ReactTypes.ReactContext<T>
 local ReactInternalTypes = require(script.Parent.ReactInternalTypes)
 type Fiber = ReactInternalTypes.Fiber
@@ -47,15 +46,15 @@ local pickArbitraryLane = ReactFiberLane.pickArbitraryLane
 type Lanes = ReactFiberLane.Lanes
 local NoLanes = ReactFiberLane.NoLanes
 
-local invariant = require(Workspace.Shared.invariant)
-local is = require(Workspace.Shared.objectIs)
+local invariant = require(Packages.Shared).invariant
+local is = require(Packages.Shared).objectIs
 local ReactUpdateQueue = require(script.Parent["ReactUpdateQueue.new"])
 local createUpdate = ReactUpdateQueue.createUpdate
 local enqueueUpdate = ReactUpdateQueue.enqueueUpdate
 local ForceUpdate = ReactUpdateQueue.ForceUpdate
 -- deviation: passed in as an arg to eliminate cycle
 -- local markWorkInProgressReceivedUpdate = require(script.Parent["ReactFiberBeginWork.new"]).markWorkInProgressReceivedUpdate
-local enableSuspenseServerRenderer = require(Workspace.Shared.ReactFeatureFlags).enableSuspenseServerRenderer
+local enableSuspenseServerRenderer = require(Packages.Shared).ReactFeatureFlags.enableSuspenseServerRenderer
 
 local exports = {}
 

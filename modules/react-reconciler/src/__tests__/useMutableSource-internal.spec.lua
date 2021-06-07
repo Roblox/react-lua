@@ -8,45 +8,37 @@
 --  * @jest-environment node
 --  */
 
-local Workspace = script.Parent.Parent.Parent
+local Packages = script.Parent.Parent.Parent
 local React
 local ReactNoop
 local Scheduler
 local act
 local createMutableSource
 local useMutableSource
-local RobloxJest = require(Workspace.RobloxJest)
+local RobloxJest = require(Packages.Dev.RobloxJest)
 
-local Packages = Workspace.Parent
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local Promise = require(Packages.Promise)
 local Array = LuauPolyfill.Array
 
-
-local function loadModules()
-    RobloxJest.resetModules()
-    -- deviation: In react, jest _always_ mocks Scheduler -> unstable_mock;
-    -- in our case, we need to do it anywhere we want to use the scheduler,
-    -- directly or indirectly, until we have some form of bundling logic
-    RobloxJest.mock(Workspace.Scheduler, function()
-      return require(Workspace.Scheduler.unstable_mock)
-    end)
-
-    RobloxJest.useFakeTimers()
-    local ReactFeatureFlags = require(Workspace.Shared.ReactFeatureFlags)
-    ReactFeatureFlags.enableSchedulerTracing = false
-    ReactFeatureFlags.enableProfilerTimer = false
-    React = require(Workspace.React)
-    ReactNoop = require(Workspace.ReactNoopRenderer)
-    Scheduler = require(Workspace.Scheduler)
-    act = ReactNoop.act
-    createMutableSource = React.createMutableSource
-    useMutableSource = React.useMutableSource
-end
 return function()
     local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
 
-    describe("useMutableSource", function()
+    local function loadModules()
+        RobloxJest.resetModules()
+        RobloxJest.useFakeTimers()
+        local ReactFeatureFlags = require(Packages.Shared).ReactFeatureFlags
+        ReactFeatureFlags.enableSchedulerTracing = false
+        ReactFeatureFlags.enableProfilerTimer = false
+        React = require(Packages.React)
+        ReactNoop = require(Packages.Dev.ReactNoopRenderer)
+        Scheduler = require(Packages.Scheduler)
+        act = ReactNoop.act
+        createMutableSource = React.createMutableSource
+        useMutableSource = React.useMutableSource
+    end
+
+    describe('useMutableSource', function()
         local defaultGetSnapshot = function(source)
             return source.value
         end

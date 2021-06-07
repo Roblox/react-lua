@@ -9,15 +9,18 @@
 ]]
 --!nolint LocalShadowPedantic
 
-local Workspace = script.Parent.Parent
+local Packages = script.Parent.Parent
 
-local ReactElementType = require(Workspace.Shared.ReactElementType)
-type ReactElement = ReactElementType.ReactElement;
+local ReactTypes = require(Packages.Shared)
+-- ROBLOX deviation: ReactElement is defined at the top level of Shared along
+-- with the rest of the ReactTypes
+type ReactElement = ReactTypes.ReactElement
+
 local ReactInternalTypes = require(script.Parent.ReactInternalTypes)
 type Fiber = ReactInternalTypes.Fiber;
 -- local type {FiberRoot} = require(script.Parent.ReactInternalTypes)
 -- local type {Instance} = require(script.Parent.ReactFiberHostConfig)
--- local type {ReactNodeList} = require(Workspace.Shared.ReactTypes)
+-- local type {ReactNodeList} = require(Packages.Shared).ReactTypes
 
 -- local {
 -- 	flushSync,
@@ -37,7 +40,7 @@ type Fiber = ReactInternalTypes.Fiber;
 -- 	MemoComponent,
 -- 	SimpleMemoComponent,
 -- } = require(script.Parent.ReactWorkTags)
-local ReactSymbols = require(Workspace.Shared.ReactSymbols)
+local ReactSymbols = require(Packages.Shared).ReactSymbols
 local REACT_FORWARD_REF_TYPE = ReactSymbols.REACT_FORWARD_REF_TYPE
 -- 	REACT_MEMO_TYPE,
 -- 	REACT_LAZY_TYPE,

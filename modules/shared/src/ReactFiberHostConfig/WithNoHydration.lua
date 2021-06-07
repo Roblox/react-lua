@@ -8,8 +8,7 @@
  * @flow
 ]]
 
-local Workspace = script.Parent.Parent
-local invariant = require(Workspace.Shared.invariant)
+local invariant = require(script.Parent.Parent.invariant)
 
 -- Renderers that don't support hydration
 -- can re-export everything from this module.

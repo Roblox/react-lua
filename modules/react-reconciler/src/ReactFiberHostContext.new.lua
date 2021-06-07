@@ -8,7 +8,7 @@
  * @flow
 ]]
 
-local Workspace = script.Parent.Parent
+local Packages = script.Parent.Parent
 
 local ReactInternalTypes = require(script.Parent.ReactInternalTypes)
 type Fiber = ReactInternalTypes.Fiber
@@ -18,7 +18,7 @@ local ReactFiberHostConfig = require(script.Parent.ReactFiberHostConfig)
 type Container = ReactFiberHostConfig.Container
 type HostContext = ReactFiberHostConfig.HostContext
 
-local invariant = require(Workspace.Shared.invariant)
+local invariant = require(Packages.Shared).invariant
 
 local getChildHostContext = ReactFiberHostConfig.getChildHostContext
 local getRootHostContext = ReactFiberHostConfig.getRootHostContext

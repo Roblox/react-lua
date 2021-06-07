@@ -17,7 +17,7 @@ local function unimplemented(message)
   error("FIXME (roblox): " .. message .. " is unimplemented", 2)
 end
 
-local Workspace = script.Parent.Parent
+local Packages = script.Parent.Parent
 
 local ReactInternalTypes = require(script.Parent.ReactInternalTypes)
 type Fiber = ReactInternalTypes.Fiber;
@@ -32,7 +32,7 @@ local ReactWorkTags = require(script.Parent.ReactWorkTags)
 local ReactFiberFlags = require(script.Parent.ReactFiberFlags)
 local ReactTypeOfMode = require(script.Parent.ReactTypeOfMode)
 
-local ReactFeatureFlags = require(Workspace.Shared.ReactFeatureFlags)
+local ReactFeatureFlags = require(Packages.Shared).ReactFeatureFlags
 local enableSuspenseServerRenderer = ReactFeatureFlags.enableSuspenseServerRenderer
 local enableProfilerTimer = ReactFeatureFlags.enableProfilerTimer
 
@@ -56,7 +56,7 @@ local popRenderLanes = function(...)
 end
 -- local {transferActualDuration} = require(script.Parent.ReactProfilerTimer.new)
 
-local invariant = require(Workspace.Shared.invariant)
+local invariant = require(Packages.Shared).invariant
 
 
 local function unwindWork(workInProgress: Fiber, renderLanes: Lanes)

@@ -10,19 +10,15 @@
 ]]
 
 return function()
-	local Workspace = script.Parent.Parent.Parent
-	local RobloxJest = require(Workspace.RobloxJest)
-	local Packages = Workspace.Parent
+	local Packages = script.Parent.Parent.Parent
 	local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
+	local RobloxJest = require(Packages.Dev.RobloxJest)
 
 	local ReactFiberRoot
 	local ReactRootTags
 
 	beforeEach(function()
 		RobloxJest.resetModules()
-		RobloxJest.mock(script.Parent.Parent.ReactFiberHostConfig, function()
-			return require(script.Parent.Parent.forks["ReactFiberHostConfig.test"])
-		end)
 
 		ReactFiberRoot = require(script.Parent.Parent["ReactFiberRoot.new"])
 		ReactRootTags = require(script.Parent.Parent.ReactRootTags)

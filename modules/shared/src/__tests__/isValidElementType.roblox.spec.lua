@@ -1,10 +1,9 @@
 return function()
-    local Workspace = script.Parent.Parent.Parent
-	local Packages = Workspace.Parent.Parent.Packages
+    local Packages = script.Parent.Parent.Parent
     local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
 
-    local isValidElementType = require(Workspace.Shared.isValidElementType)
-    local ReactSymbols = require(Workspace.Shared.ReactSymbols)
+    local isValidElementType = require(Packages.Shared).isValidElementType
+    local ReactSymbols = require(Packages.Shared).ReactSymbols
     local element
 
     describe("accept element primitives", function()

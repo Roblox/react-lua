@@ -1,12 +1,11 @@
 -- upstream: https://github.com/facebook/react/blob/702fad4b1b48ac8f626ed3f35e8f86f5ea728084/packages/react/src/__tests__/ReactElement-test.js
 
 return function()
-	local Workspace = script.Parent.Parent.Parent
-    local Packages = Workspace.Parent
-    local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
-	local ReactElement = require(Workspace.React.ReactElement)
-	local isValidElementType = require(Workspace.Shared.isValidElementType)
-	local ReactSymbols = require(Workspace.Shared.ReactSymbols)
+	local Packages = script.Parent.Parent.Parent
+	local ReactElement = require(script.Parent.Parent.ReactElement)
+	local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
+	local isValidElementType = require(Packages.Shared).isValidElementType
+	local ReactSymbols = require(Packages.Shared).ReactSymbols
 	local element
 
 

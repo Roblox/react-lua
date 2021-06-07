@@ -1,0 +1,22 @@
+[package]
+name = "ReactReconciler"
+version = { workspace = true }
+authors = { workspace = true }
+publish = true
+content_root = "src"
+
+[dependencies]
+LuauPolyfill = { workspace = true }
+Cryo = { workspace = true }
+Promise = { workspace = true }
+Scheduler = { path = "../scheduler" }
+Shared = { path = "../shared" }
+React = { path = "../react" }
+
+[dev_dependencies]
+JestRoblox = { workspace = true }
+JestReact = { path = "../jest-react" }
+RobloxJest = { path = "../roblox-jest" }
+ReactCache = { path = "../react-cache" }
+ReactNoopRenderer = { path = "../react-noop-renderer" }
+ReactTestRenderer = { path = "../react-test-renderer" }

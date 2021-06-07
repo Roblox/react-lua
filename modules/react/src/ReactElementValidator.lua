@@ -9,25 +9,24 @@
 
 --!nolint LocalShadowPedantic
 
-local Workspace = script.Parent.Parent
-local Packages = Workspace.Parent
+local Packages = script.Parent.Parent
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local Array = LuauPolyfill.Array
 local Object = LuauPolyfill.Object
-local console = require(Workspace.Shared.console)
+local console = require(Packages.Shared).console
 
-local isValidElementType = require(Workspace.Shared.isValidElementType)
-local getComponentName = require(Workspace.Shared.getComponentName)
-local ReactSymbols = require(Workspace.Shared.ReactSymbols)
+local isValidElementType = require(Packages.Shared).isValidElementType
+local getComponentName = require(Packages.Shared).getComponentName
+local ReactSymbols = require(Packages.Shared).ReactSymbols
 local getIteratorFn = ReactSymbols.getIteratorFn
 local REACT_FORWARD_REF_TYPE = ReactSymbols.REACT_FORWARD_REF_TYPE
 local REACT_MEMO_TYPE = ReactSymbols.REACT_MEMO_TYPE
 local REACT_FRAGMENT_TYPE = ReactSymbols.REACT_FRAGMENT_TYPE
 local REACT_ELEMENT_TYPE = ReactSymbols.REACT_ELEMENT_TYPE
 
-local warnAboutSpreadingKeyToJSX = require(Workspace.Shared.ReactFeatureFlags).warnAboutSpreadingKeyToJSX
-local checkPropTypes = require(Workspace.Shared.checkPropTypes)
-local ReactCurrentOwner = require(script.Parent.ReactCurrentOwner)
+local warnAboutSpreadingKeyToJSX = require(Packages.Shared).ReactFeatureFlags.warnAboutSpreadingKeyToJSX
+local checkPropTypes = require(Packages.Shared).checkPropTypes
+local ReactCurrentOwner = require(Packages.Shared).ReactSharedInternals.ReactCurrentOwner
 
 local ReactElement = require(script.Parent.ReactElement)
 local isValidElement = ReactElement.isValidElement
@@ -35,8 +34,8 @@ local createElement = ReactElement.createElement
 local cloneElement = ReactElement.cloneElement
 local jsxDEV = ReactElement.jsxDEV
 
-local setExtraStackFrame = require(script.Parent.ReactDebugCurrentFrame).setExtraStackFrame
-local describeUnknownElementTypeFrameInDEV = require(Workspace.Shared.ReactComponentStackFrame)
+local setExtraStackFrame = require(Packages.Shared).ReactSharedInternals.ReactDebugCurrentFrame.setExtraStackFrame
+local describeUnknownElementTypeFrameInDEV = require(Packages.Shared).ReactComponentStackFrame
 	.describeUnknownElementTypeFrameInDEV
 
 local exports = {}

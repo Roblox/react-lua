@@ -8,13 +8,12 @@
  * @flow
  ]]
 
-local Workspace = script.Parent.Parent
-local Packages = Workspace.Parent
+local Packages = script.Parent.Parent
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local Object = LuauPolyfill.Object
 
 -- ROBLOX: use patched console from shared
-local console = require(Workspace.Shared.console)
+local console = require(Packages.Shared).console
 
 local ReactInternalTypes = require(script.Parent.ReactInternalTypes)
 type Fiber = ReactInternalTypes.Fiber;
@@ -27,13 +26,15 @@ local ReactCapturedValue = require(script.Parent.ReactCapturedValue)
 type CapturedValue<T> = ReactCapturedValue.CapturedValue<T>
 local ReactUpdateQueue = require(script.Parent["ReactUpdateQueue.new"])
 type Update<T> = ReactUpdateQueue.Update<T>
-local ReactTypes = require(Workspace.Shared.ReactTypes)
-type Thenable<T, U> = ReactTypes.Thenable<T, U>;
-type Wakeable = ReactTypes.Wakeable;
+
+local ReactTypes = require(Packages.Shared)
+type Thenable<T, U> = ReactTypes.Thenable<T, U>
+type Wakeable = ReactTypes.Wakeable
+
 local ReactFiberSuspenseContext = require(script.Parent["ReactFiberSuspenseContext.new"])
 type SuspenseContext = ReactFiberSuspenseContext.SuspenseContext
 
-local getComponentName = require(Workspace.Shared.getComponentName)
+local getComponentName = require(Packages.Shared).getComponentName
 
 local ReactWorkTags = require(script.Parent.ReactWorkTags)
 local ClassComponent = ReactWorkTags.ClassComponent
@@ -53,8 +54,7 @@ local ReactTypeOfMode = require(script.Parent.ReactTypeOfMode)
 local NoMode = ReactTypeOfMode.NoMode
 local BlockingMode = ReactTypeOfMode.BlockingMode
 local DebugTracingMode = ReactTypeOfMode.DebugTracingMode
-local ReactFeatureFlags = require(Workspace.Shared.ReactFeatureFlags)
-
+local ReactFeatureFlags = require(Packages.Shared).ReactFeatureFlags
 local enableDebugTracing = ReactFeatureFlags.enableDebugTracing
 local enableSchedulingProfiler = ReactFeatureFlags.enableSchedulingProfiler
 local createCapturedValue = require(script.Parent.ReactCapturedValue).createCapturedValue
@@ -90,7 +90,7 @@ end
 --   markLegacyErrorBoundaryAsFailed,
 --   isAlreadyFailedLegacyErrorBoundary,
 --   pingSuspendedRoot,
--- } = require(Workspace../ReactFiberWorkLoop.new'
+-- } = require(Packages../ReactFiberWorkLoop.new'
 local pingSuspendedRoot = function(...)
   if ReactFiberWorkLoop == nil then
     ReactFiberWorkLoop = require(script.Parent["ReactFiberWorkLoop.new"])
@@ -107,8 +107,8 @@ local isAlreadyFailedLegacyErrorBoundary = function(...)
 end
 
 local logCapturedError = require(script.Parent.ReactFiberErrorLogger).logCapturedError
--- local {logComponentSuspended} = require(Workspace../DebugTracing'
--- local {markComponentSuspended} = require(Workspace../SchedulingProfiler'
+-- local {logComponentSuspended} = require(Packages../DebugTracing'
+-- local {markComponentSuspended} = require(Packages../SchedulingProfiler'
 
 local SyncLane = ReactFiberLane.SyncLane
 local NoTimestamp = ReactFiberLane.NoTimestamp

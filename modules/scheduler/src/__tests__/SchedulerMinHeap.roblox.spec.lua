@@ -1,7 +1,6 @@
 --!nonstrict
 return function()
-	local Workspace = script.Parent.Parent.Parent
-	local Packages = Workspace.Parent.Parent.Packages
+	local Packages = script.Parent.Parent.Parent
 	local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
 	local Heap = require(script.Parent.Parent.SchedulerMinHeap)
 

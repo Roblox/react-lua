@@ -6,8 +6,7 @@
 * LICENSE file in the root directory of this source tree.
 ]]
 
-local Workspace = script.Parent.Parent.Parent
-local Packages = Workspace.Parent
+local Packages = script.Parent.Parent.Parent
 local LuauPolyfill = require(Packages.LuauPolyfill)
 
 -- deviation: getCurrentTime will always map to `tick` in Luau

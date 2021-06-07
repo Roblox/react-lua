@@ -7,11 +7,11 @@
  *
  *
 ]]
-local Workspace = script.Parent.Parent
+local Packages = script.Parent.Parent
 -- ROBLOX: use patched console from shared
-local console = require(Workspace.Shared.console)
+local console = require(Packages.Shared).console
 
-local ReactSymbols = require(Workspace.Shared.ReactSymbols)
+local ReactSymbols = require(Packages.Shared).ReactSymbols
 local REACT_PROVIDER_TYPE = ReactSymbols.REACT_PROVIDER_TYPE
 local REACT_CONTEXT_TYPE = ReactSymbols.REACT_CONTEXT_TYPE
 

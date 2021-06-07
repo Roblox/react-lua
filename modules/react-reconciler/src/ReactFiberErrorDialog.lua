@@ -6,9 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @flow
- ]]
-
-local _Workspace = script.Parent.Parent
+]]
 
 -- This module is forked in different environments.
 -- By default, return `true` to log errors to the console.

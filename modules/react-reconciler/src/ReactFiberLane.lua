@@ -8,8 +8,7 @@
  *
  * @flow
 ]]
-local Workspace = script.Parent.Parent
-local Packages = Workspace.Parent
+local Packages = script.Parent.Parent
 local LuauPolyfill = require(Packages.LuauPolyfill)
 
 local ReactInternalTypes = require(script.Parent.ReactInternalTypes)
@@ -18,7 +17,7 @@ type ReactPriorityLevel = ReactInternalTypes.ReactPriorityLevel;
 local clz32 = LuauPolyfill.Math.clz32
 
 -- ROBLOX: use patched console from shared
-local console = require(Workspace.Shared.console)
+local console = require(Packages.Shared).console
 local ReactFiberSchedulerPriorities = require(script.Parent["ReactFiberSchedulerPriorities.roblox"])
 
 -- deviation: Instead of defining these here, and and re-exporting in
@@ -29,7 +28,7 @@ export type Lane = ReactInternalTypes.Lane;
 export type Lanes = ReactInternalTypes.Lanes;
 export type LaneMap<T> = ReactInternalTypes.LaneMap<T>;
 
-local invariant = require(Workspace.Shared.invariant)
+local invariant = require(Packages.Shared).invariant
 
 local ImmediateSchedulerPriority = ReactFiberSchedulerPriorities.ImmediatePriority
 local UserBlockingSchedulerPriority = ReactFiberSchedulerPriorities.UserBlockingPriority

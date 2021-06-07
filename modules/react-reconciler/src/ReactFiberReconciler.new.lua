@@ -8,8 +8,7 @@
  * @flow
 ]]
 
-local Workspace = script.Parent.Parent
-local Packages = Workspace.Parent
+local Packages = script.Parent.Parent
 
 local Cryo = require(Packages.Cryo)
 local LuauPolyfill = require(Packages.LuauPolyfill)
@@ -17,7 +16,7 @@ local Array = LuauPolyfill.Array
 local Object = LuauPolyfill.Object
 
 -- ROBLOX: use patched console from shared
-local console = require(Workspace.Shared.console)
+local console = require(Packages.Shared).console
 
 type Object = { [string]: any };
 type Array<T> = { [number]: T };
@@ -39,8 +38,8 @@ type RendererInspectionConfig = ReactFiberHostConfig.RendererInspectionConfig;
 
 local ReactWorkTags = require(script.Parent.ReactWorkTags)
 local FundamentalComponent = ReactWorkTags.FundamentalComponent
-local ReactTypes = require(Workspace.Shared.ReactTypes)
-type ReactNodeList = ReactTypes.ReactNodeList;
+local ReactTypes = require(Packages.Shared)
+type ReactNodeList = ReactTypes.ReactNodeList
 
 local ReactFiberLane = require(script.Parent.ReactFiberLane)
 type Lane = ReactFiberLane.Lane;
@@ -51,15 +50,15 @@ type SuspenseState = ReactFiberSuspenseComponent.SuspenseState;
 local ReactFiberTreeReflection = require(script.Parent.ReactFiberTreeReflection)
 local findCurrentHostFiber = ReactFiberTreeReflection.findCurrentHostFiber
 local findCurrentHostFiberWithNoPortals = ReactFiberTreeReflection.findCurrentHostFiberWithNoPortals
-local getInstance = require(Workspace.Shared.ReactInstanceMap).get
+local getInstance = require(Packages.Shared).ReactInstanceMap.get
 local HostComponent = ReactWorkTags.HostComponent
 local ClassComponent = ReactWorkTags.ClassComponent
 local HostRoot = ReactWorkTags.HostRoot
 local SuspenseComponent = ReactWorkTags.SuspenseComponent
-local getComponentName = require(Workspace.Shared.getComponentName)
-local invariant = require(Workspace.Shared.invariant)
-local enableSchedulingProfiler = require(Workspace.Shared.ReactFeatureFlags).enableSchedulingProfiler
-local ReactSharedInternals = require(Workspace.Shared.ReactSharedInternals)
+local getComponentName = require(Packages.Shared).getComponentName
+local invariant = require(Packages.Shared).invariant
+local enableSchedulingProfiler = require(Packages.Shared).ReactFeatureFlags.enableSchedulingProfiler
+local ReactSharedInternals = require(Packages.Shared).ReactSharedInternals
 local getPublicInstance = require(script.Parent.ReactFiberHostConfig).getPublicInstance
 local ReactFiberContext = require(script.Parent["ReactFiberContext.new"])
 local findCurrentUnmaskedContext = ReactFiberContext.findCurrentUnmaskedContext
@@ -116,6 +115,12 @@ local setCurrentUpdateLanePriority = ReactFiberLane.setCurrentUpdateLanePriority
 -- local markRenderScheduled = require(script.Parent.SchedulingProfiler).markRenderScheduled
 
 local exports = {}
+
+-- ROBLOX deviation: export internals used by the noop and test renderers
+exports.ReactRootTags = ReactRootTags
+-- ROBLOX deviation: export internals used by the test renderer
+exports.ReactWorkTags = ReactWorkTags
+exports.findCurrentFiberUsingSlowPath = ReactFiberTreeReflection.findCurrentFiberUsingSlowPath
 
 -- exports.registerMutableSourceForHydration = require(script.Parent["ReactMutableSource.new"]).registerMutableSourceForHydration
 -- exports.createPortal = require(script.Parent.ReactPortal).createPortal

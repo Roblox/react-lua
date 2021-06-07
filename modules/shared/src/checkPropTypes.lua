@@ -7,13 +7,12 @@
  *
  * @flow
  ]]
-local Workspace = script.Parent.Parent
-local Packages = Workspace.Parent
+local Packages = script.Parent.Parent
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local Error = LuauPolyfill.Error
 
 -- ROBLOX: use patched console from shared
-local console = require(Workspace.Shared.console)
+local console = require(script.Parent.console)
 
 local loggedTypeFailures = {}
 

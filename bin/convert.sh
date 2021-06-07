@@ -27,6 +27,6 @@ do
   sed -i '' -e "s/^}$/end/g" "$file"
   sed -i '' -e "s/'object'/'table’'/g" "$file"
   sed -i '' -e "s/import\ /local\ /g" "$file"
-  sed -i '' -e "s/\ from\ '/\ =\ require(Workspace./g" "$file"
+  sed -i '' -e "s/\ from\ '/\ =\ require(Packages./g" "$file"
 #  sed -i '' -E -e "s/(typeof\s+)(\w+)/typeof($2)/g" "$file"
 done

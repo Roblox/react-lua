@@ -2,10 +2,10 @@
 
 set -x
 
+rotrieve install
 rojo build tests.project.json --output model.rbxmx
 
-echo "Remove .robloxrc from dev dependencies"
-find Packages/Dev -name "*.robloxrc" | xargs rm -f
+echo "Remove .robloxrc from dependencies"
 find Packages/_Index -name "*.robloxrc" | xargs rm -f
 
 roblox-cli analyze tests.project.json

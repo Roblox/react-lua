@@ -8,9 +8,9 @@
  * @flow
  ]]
 
-local Workspace = script.Parent.Parent
+local Packages = script.Parent.Parent
 -- ROBLOX: use patched console from shared
-local console = require(Workspace.Shared.console)
+local console = require(Packages.Shared).console
 
 -- FIXME (roblox): remove this when our unimplemented
 local function unimplemented(message)
@@ -45,7 +45,7 @@ local Placement = ReactFiberFlags.Placement
 local Hydrating = ReactFiberFlags.Hydrating
 -- local Deletion = ReactFiberFlags.Deletion
 
-local invariant = require(Workspace.Shared.invariant)
+local invariant = require(Packages.Shared).invariant
 
 local ReactFiber = require(script.Parent["ReactFiber.new"])
 -- local createFiberFromHostInstanceForDeletion = ReactFiber.createFiberFromHostInstanceForDeletion
@@ -74,8 +74,8 @@ local shouldSetTextContent = ReactFiberHostConfig.shouldSetTextContent
 --   didNotFindHydratableInstance,
 --   didNotFindHydratableTextInstance,
 --   didNotFindHydratableSuspenseInstance,
--- } = require(Workspace../ReactFiberHostConfig'
-local enableSuspenseServerRenderer = require(Workspace.Shared.ReactFeatureFlags).enableSuspenseServerRenderer
+-- } = require(Packages../ReactFiberHostConfig'
+local enableSuspenseServerRenderer = require(Packages.Shared).ReactFeatureFlags.enableSuspenseServerRenderer
 local OffscreenLane = require(script.Parent.ReactFiberLane).OffscreenLane
 
 -- The deepest Fiber on the stack involved in a hydration context.
