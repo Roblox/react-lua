@@ -1,5 +1,5 @@
 local Packages = script.Parent.Parent
-local ReactRobloxRenderer = require(Packages.ReactRobloxRenderer)
+local ReactRoblox = require(Packages.ReactRoblox)
 
 local warnOnce = require(script.Parent.warnOnce)
 
@@ -10,7 +10,7 @@ local function mount(element, parent, key)
 
 	local rootInstance = Instance.new("Folder")
 
-	local root = ReactRobloxRenderer.createLegacyRoot(rootInstance)
+	local root = ReactRoblox.createLegacyRoot(rootInstance)
 	root:render(element)
 
 	if parent ~= nil then

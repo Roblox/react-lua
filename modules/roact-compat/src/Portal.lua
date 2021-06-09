@@ -1,13 +1,13 @@
 local Packages = script.Parent.Parent
-local ReactRobloxRenderer = require(Packages.ReactRobloxRenderer)
+local ReactRoblox = require(Packages.ReactRoblox)
 
 local warnOnce = require(script.Parent.warnOnce)
 
 local function PortalComponent(props)
 	if _G.__DEV__ then
-		warnOnce("Roact.Portal", "Please use the createPortal API on ReactRobloxRenderer instead")
+		warnOnce("Roact.Portal", "Please use the createPortal API on ReactRoblox instead")
 	end
-	return ReactRobloxRenderer.createPortal(props.children, props.target)
+	return ReactRoblox.createPortal(props.children, props.target)
 end
 
 return PortalComponent

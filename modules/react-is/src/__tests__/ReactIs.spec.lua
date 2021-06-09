@@ -8,7 +8,7 @@ return function()
 	local RobloxJest = require(Packages.Dev.RobloxJest)
 	local React
 	local ReactIs
-	local ReactRobloxRenderer
+	local ReactRoblox
 	local ReactFeatureFlags
 
 	describe("ReactIs", function()
@@ -19,7 +19,7 @@ return function()
 
 			React = require(Packages.Dev.React)
 			ReactIs = require(Packages.ReactIs)
-			ReactRobloxRenderer = require(Packages.Dev.ReactRobloxRenderer)
+			ReactRoblox = require(Packages.Dev.ReactRoblox)
 		end)
 
 		it("should return nil for unknown/invalid types", function()
@@ -152,7 +152,7 @@ return function()
 
 		it("should identify portals", function()
 			local ScreenGui = Instance.new("ScreenGui")
-			local portal = ReactRobloxRenderer.createPortal(React.createElement("Frame"), ScreenGui)
+			local portal = ReactRoblox.createPortal(React.createElement("Frame"), ScreenGui)
 			jestExpect(ReactIs.isValidElementType(portal)).toBe(false)
 			jestExpect(ReactIs.typeOf(portal)).toBe(ReactIs.Portal)
 			jestExpect(ReactIs.isPortal(portal)).toBe(true)

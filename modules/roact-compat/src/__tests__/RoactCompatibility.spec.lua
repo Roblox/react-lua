@@ -35,7 +35,7 @@ return function()
 			if k == "Ref" or k == "Children" then
 				memberType = "string"
 			end
-			-- Roact.Portal is replaced by ReactRobloxRenderer.createPortal. The
+			-- Roact.Portal is replaced by ReactRoblox.createPortal. The
 			-- latter is a function that returns a portal object, while the
 			-- former is a special component type. By implementing Roact.Portal
 			-- as a function component that returns `createPortal`'s result, we
@@ -69,7 +69,7 @@ return function()
 		end)
 
 		it("warns about Roact.Portal", function()
-			local ReactRobloxRenderer = require(Packages.ReactRobloxRenderer)
+			local ReactRoblox = require(Packages.ReactRoblox)
 			local target = Instance.new("Folder")
 			local function withPortal(_props)
 				return RoactCompat.createElement(RoactCompat.Portal, {
@@ -79,7 +79,7 @@ return function()
 				})
 			end
 			jestExpect(function()
-				local root = ReactRobloxRenderer.createLegacyRoot(Instance.new("ScreenGui"))
+				local root = ReactRoblox.createLegacyRoot(Instance.new("ScreenGui"))
 				root:render(RoactCompat.createElement(withPortal))
 			end).toWarnDev("Warning: The legacy Roact API 'Roact.Portal' is deprecated")
 		end)

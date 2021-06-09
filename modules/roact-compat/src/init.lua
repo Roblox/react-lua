@@ -1,7 +1,7 @@
 local Packages = script.Parent
 
 local React = require(Packages.React)
-local ReactRobloxRenderer = require(Packages.ReactRobloxRenderer)
+local ReactRoblox = require(Packages.ReactRoblox)
 
 local RoactTree = require(script.RoactTree)
 
@@ -37,10 +37,10 @@ return {
 	None = require(script.None),
 
 	-- Event/Change keys for Roact-specific event subscription behavior
-	Event = ReactRobloxRenderer.Event,
-	Change = ReactRobloxRenderer.Change,
+	Event = ReactRoblox.Event,
+	Change = ReactRoblox.Change,
 
 	-- Binding interface entry-point for Roact-specific 'bindings' feature
-	createBinding = ReactRobloxRenderer.createBinding,
-	joinBindings = ReactRobloxRenderer.joinBindings,
+	createBinding = ReactRoblox.createBinding,
+	joinBindings = ReactRoblox.joinBindings,
 }
