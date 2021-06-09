@@ -13,10 +13,6 @@ local ReactMemo = require(React.ReactMemo)
 local ReactContext = require(React.ReactContext)
 local ReactLazy = require(React.ReactLazy)
 local ReactSymbols = require(Packages.Shared).ReactSymbols
-local console = require(Packages.Shared).console
-
--- ROBLOX deviation: keep track of warnings
-local warnedAbout = {}
 
 local createElement = _G.__DEV__ and
 	ReactElementValidator.createElementWithValidation or
@@ -36,14 +32,6 @@ return {
 	createRef = ReactCreateRef.createRef,
 	forwardRef = ReactForwardRef.forwardRef,
 	lazy = ReactLazy.lazy,
-	createFragment = function(elements)
-		if _G.__DEV__ and not warnedAbout["createFragment"] then
-			console.warn("The legacy Roact createFragment API is deprecated, and will be removed in a future version.\n"..
-			" Please use the supported createElement(React.Fragment, ...) API instead.")
-			warnedAbout["createFragment"] = true
-		end
-		return createElement(ReactSymbols.REACT_FRAGMENT_TYPE, nil, elements)
-	end,
 	Fragment = ReactSymbols.REACT_FRAGMENT_TYPE,
 	Profiler = ReactSymbols.REACT_PROFILER_TYPE,
 	StrictMode = ReactSymbols.REACT_STRICT_MODE_TYPE,

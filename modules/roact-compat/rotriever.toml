@@ -1,0 +1,17 @@
+[package]
+name = "RoactCompat"
+version = { workspace = true }
+authors = { workspace = true }
+publish = true
+content_root = "src"
+
+[dependencies]
+LuauPolyfill = { workspace = true }
+React = { path = "../react" }
+ReactRobloxRenderer = { path = "../react-roblox-renderer" }
+Shared = { path = "../shared" }
+
+[dev_dependencies]
+RobloxJest = { path = "../roblox-jest" }
+Roact = "github.com/roblox/roact@1.4.0"
+JestRoblox = { workspace = true }

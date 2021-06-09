@@ -123,7 +123,7 @@ exports.ReactWorkTags = ReactWorkTags
 exports.findCurrentFiberUsingSlowPath = ReactFiberTreeReflection.findCurrentFiberUsingSlowPath
 
 -- exports.registerMutableSourceForHydration = require(script.Parent["ReactMutableSource.new"]).registerMutableSourceForHydration
--- exports.createPortal = require(script.Parent.ReactPortal).createPortal
+exports.createPortal = require(script.Parent.ReactPortal).createPortal
 -- local ReactTestSelectors = require(script.Parent.ReactTestSelectors)
 -- exports.createComponentSelector = ReactTestSelectors.createComponentSelector
 -- -- FIXME (roblox): Should we deviate and fix this typo?

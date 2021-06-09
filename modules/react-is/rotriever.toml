@@ -12,3 +12,4 @@ Shared = { path = "../shared" }
 JestRoblox = { workspace = true }
 RobloxJest = { path = "../roblox-jest" }
 React = { path = "../react" }
+ReactRobloxRenderer = { path = "../react-roblox-renderer" }

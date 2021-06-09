@@ -2974,30 +2974,30 @@ end
 --   return workInProgress.child
 -- end
 
--- function updatePortalComponent(
---   current: Fiber | nil,
---   workInProgress: Fiber,
---   renderLanes: Lanes,
--- )
---   pushHostContainer(workInProgress, workInProgress.stateNode.containerInfo)
---   local nextChildren = workInProgress.pendingProps
---   if current == nil)
---     -- Portals are special because we don't append the children during mount
---     -- but at commit. Therefore we need to track insertions which the normal
---     -- flow doesn't do during mount. This doesn't happen at the root because
---     -- the root always starts with a "current" with a nil child.
---     -- TODO: Consider unifying this with how the root works.
---     workInProgress.child = reconcileChildFibers(
---       workInProgress,
---       nil,
---       nextChildren,
---       renderLanes,
---     )
---   else
---     reconcileChildren(current, workInProgress, nextChildren, renderLanes)
---   end
---   return workInProgress.child
--- end
+function updatePortalComponent(
+  current: Fiber | nil,
+  workInProgress: Fiber,
+  renderLanes: Lanes
+)
+  pushHostContainer(workInProgress, workInProgress.stateNode.containerInfo)
+  local nextChildren = workInProgress.pendingProps
+  if current == nil then
+    -- Portals are special because we don't append the children during mount
+    -- but at commit. Therefore we need to track insertions which the normal
+    -- flow doesn't do during mount. This doesn't happen at the root because
+    -- the root always starts with a "current" with a nil child.
+    -- TODO: Consider unifying this with how the root works.
+    workInProgress.child = reconcileChildFibers(
+      workInProgress,
+      nil,
+      nextChildren,
+      renderLanes
+    )
+  else
+    reconcileChildren(current, workInProgress, nextChildren, renderLanes)
+  end
+  return workInProgress.child
+end
 
 local hasWarnedAboutUsingNoValuePropOnContextProvider = false
 
@@ -3522,8 +3522,7 @@ exports.beginWork = function(
   elseif workInProgress.tag == SuspenseComponent then
     return updateSuspenseComponent(current, workInProgress, renderLanes)
   elseif workInProgress.tag == HostPortal then
-    unimplemented("beginWork: HostPortal")
-    -- return updatePortalComponent(current, workInProgress, renderLanes)
+    return updatePortalComponent(current, workInProgress, renderLanes)
   elseif workInProgress.tag == ForwardRef then
     local type = workInProgress.type
     local unresolvedProps = workInProgress.pendingProps

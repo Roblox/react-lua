@@ -8,6 +8,7 @@ return function()
 	local RobloxJest = require(Packages.Dev.RobloxJest)
 	local React
 	local ReactIs
+	local ReactRobloxRenderer
 	local ReactFeatureFlags
 
 	describe("ReactIs", function()
@@ -18,6 +19,7 @@ return function()
 
 			React = require(Packages.Dev.React)
 			ReactIs = require(Packages.ReactIs)
+			ReactRobloxRenderer = require(Packages.Dev.ReactRobloxRenderer)
 		end)
 
 		it("should return nil for unknown/invalid types", function()
@@ -148,14 +150,13 @@ return function()
 			jestExpect(ReactIs.isFragment({})).toBe(false)
 		end)
 
-		-- ROBLOX TODO: make this pass when we implement Portals
-		itSKIP("should identify portals", function()
-			-- local div = React.createElement('div')
-			-- local portal = ReactDOM.createPortal(React.createElement('div'), div)
-			-- expect(ReactIs.isValidElementType(portal)).toBe(false)
-			-- expect(ReactIs.typeOf(portal)).toBe(ReactIs.Portal)
-			-- expect(ReactIs.isPortal(portal)).toBe(true)
-			-- expect(ReactIs.isPortal('div')).toBe(false)
+		it("should identify portals", function()
+			local ScreenGui = Instance.new("ScreenGui")
+			local portal = ReactRobloxRenderer.createPortal(React.createElement("Frame"), ScreenGui)
+			jestExpect(ReactIs.isValidElementType(portal)).toBe(false)
+			jestExpect(ReactIs.typeOf(portal)).toBe(ReactIs.Portal)
+			jestExpect(ReactIs.isPortal(portal)).toBe(true)
+			jestExpect(ReactIs.isPortal("Frame")).toBe(false)
 		end)
 
 		it("should identify memo", function()

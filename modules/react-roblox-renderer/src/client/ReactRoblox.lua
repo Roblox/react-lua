@@ -7,16 +7,6 @@
  *
  * @flow
 ]]
--- FIXME (roblox): remove this when our unimplemented
-local function unimplemented(message)
-  print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-  print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-  print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-  print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-  print("UNIMPLEMENTED ERROR: " .. tostring(message))
-  error("FIXME (roblox): " .. message .. " is unimplemented", 2)
-end
-
 local Packages = script.Parent.Parent.Parent
 
 local ReactTypes = require(Packages.Shared)
@@ -57,7 +47,7 @@ local IsThisRendererActing = ReactReconciler.IsThisRendererActing
 -- local runWithPriority = ReactReconciler.runWithPriority
 -- local getCurrentUpdateLanePriority = ReactReconciler.getCurrentUpdateLanePriority
 
--- local createPortalImpl = require(Packages.ReactReconciler.ReactPortal).createPortal
+local createPortalImpl = require(Packages.ReactReconciler).createPortal
 -- local canUseDOM = require(Packages.Shared).ExecutionEnvironment.canUseDOM
 local ReactVersion = require(Packages.Shared).ReactVersion
 local invariant = require(Packages.Shared).invariant
@@ -136,18 +126,17 @@ local function createPortal(
   key: string?
 ): any
 -- ): React$Portal
-  unimplemented("createPortal")
   invariant(
     isValidContainer(container),
-    "Target container is not a DOM element."
+    -- ROBLOX deviation: Use roblox engine terminology
+    "Target container is not a Roblox Instance."
   )
   -- TODO: pass ReactDOM portal implementation as third argument
   -- $FlowFixMe The Flow type is opaque but there's no way to actually create it.
   -- ROBLOX FIXME: luau doesn't realize that this function errors, and it's
   -- expecting us to return something. Can be removed when implementation is
   -- done.
-  return nil
-  -- return createPortalImpl(children, container, nil, key)
+  return createPortalImpl(children, container, nil, key)
 end
 
 -- local function scheduleHydration(target: any)
@@ -256,21 +245,7 @@ local exports = {
   Event = Event,
   Change = Change,
   createBinding = Binding.create,
-
-  -- ROBLOX deviation: Compatibility layer for top-level interface
-  -- ROBLOX TODO: Add warnings
-  update = function(root, element)
-    root:render(element)
-    return root
-  end,
-  mount = function(element)
-    local root = createLegacyRoot(Instance.new("Folder"))
-    root:render(element)
-    return root
-  end,
-  unmount = function(root)
-    root:unmount()
-  end,
+  joinBindings = Binding.join,
 
   -- ROBLOX deviation: Compatibility layer for special symbol keys, aligning
   -- them with simple reserved props used by upstream
