@@ -33,10 +33,7 @@ type PendingResult = {
 	value: Suspender,
 }
 
-type ResolvedResult<V> = {
-	status: number,
-	value: V,
-}
+type ResolvedResult<V> = { status: number, value: V }
 
 type RejectedResult = {
 	status: number,

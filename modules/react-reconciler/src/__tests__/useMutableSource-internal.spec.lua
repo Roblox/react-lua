@@ -1033,7 +1033,7 @@ return function()
             end)
         end)
 
-        -- ROBLOX TODO: Fails due to LUAFDN-206
+        -- ROBLOX FIXME: fails with Error: Should have a queue
         -- @gate experimental
         xit("should still schedule an update if an eager selector throws after a mutation", function()
             local source = createSource({
@@ -1086,7 +1086,7 @@ return function()
             end
 
             act(function()
-                ReactNoop.render(React.createElement(FriendsList, nil), function()
+                ReactNoop.render(React.createElement(FriendsList), function()
                     return Scheduler.unstable_yieldValue("Sync effect")
                 end)
                 jestExpect(Scheduler).toFlushAndYield({
@@ -1761,13 +1761,13 @@ return function()
                     root.render(React.createElement(App, {parentConfig = configA, childConfig = configB}))
                 end)
             end):await()
-            
+
 
             jestExpect(Scheduler).toHaveYielded({
                 "Parent: 1",
                 "Child: 2",
                 "Commit: 1, 2",
-            })  
+            })
             act(function()
                 -- Switch the parent and the child to read using the same config
                 root.render(React.createElement(App, {parentConfig = configB, childConfig = configB}))

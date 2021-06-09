@@ -25,6 +25,7 @@ local Packages = script.Parent.Parent
 local console = require(Packages.Shared).console
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local Array = LuauPolyfill.Array
+local Object = LuauPolyfill.Object
 
 local ReactTypes = require(Packages.Shared)
 type ReactProviderType<T> = ReactTypes.ReactProviderType<T>
@@ -3014,7 +3015,7 @@ local function updateContextProvider(
   local newValue = newProps.value
 
   if  _G.__DEV__ then
-    if Array.indexOf(newProps, "value") < 1 then
+    if Array.indexOf(Object.keys(newProps), "value") < 1 then
       if not hasWarnedAboutUsingNoValuePropOnContextProvider then
         hasWarnedAboutUsingNoValuePropOnContextProvider = true
         console.error(

@@ -1267,9 +1267,7 @@ commitNestedUnmounts = function(
   -- call anyway. We also want to call componentWillUnmount on all
   -- composites before this host node is removed from the tree. Therefore
   -- we do an inner loop while we're still inside the host node.
-  -- ROBLOX FIXME: type coercion
-  local node = root
-  -- local node: Fiber = root
+  local node: Fiber = root
   while true do
     commitUnmount(
       finishedRoot,
@@ -1285,8 +1283,8 @@ commitNestedUnmounts = function(
       -- If we don't use mutation we drill down into portals here instead.
       (not supportsMutation or node.tag ~= HostPortal)
     then
-      node.child.return_ = node
-      node = node.child
+      (node.child :: Fiber).return_ = node
+      node = node.child :: Fiber
       continue
     end
     if node == root then
@@ -1296,10 +1294,10 @@ commitNestedUnmounts = function(
       if node.return_ == nil or node.return_ == root then
         return
       end
-      node = node.return_
+      node = node.return_ :: Fiber
     end
-    node.sibling.return_ = node.return_
-    node = node.sibling
+    (node.sibling :: Fiber).return_ = node.return_
+    node = node.sibling :: Fiber
   end
 end
 
@@ -1395,18 +1393,14 @@ isHostParent = function(fiber: Fiber): boolean
     fiber.tag == HostPortal
 end
 
--- FIXME (roblox): type refinements
--- getHostSibling = function(fiber: Fiber): Instance?
-getHostSibling = function(fiber)
+getHostSibling = function(fiber: Fiber): Instance?
   -- We're going to search forward into the tree until we find a sibling host
   -- node. Unfortunately, if multiple insertions are done in a row we have to
   -- search past them. This leads to exponential search for the next sibling.
   -- TODO: Find a more efficient way to do this.
-  -- FIXME (roblox): type refinements
-  -- local node: Fiber = fiber
-  local node = fiber
+  local node: Fiber = fiber
   while true do
-    -- deviation: we can't `continue` with labels in luau, so some variable
+    -- ROBLOX deviation: we can't `continue` with labels in luau, so some variable
     -- juggling is used instead
     local continueOuter = false
     -- If we didn't find anything, let's try the next sibling.
@@ -1416,10 +1410,10 @@ getHostSibling = function(fiber)
         -- last sibling.
         return nil
       end
-      node = node.return_
+      node = node.return_ :: Fiber
     end
-    node.sibling.return_ = node.return_
-    node = node.sibling
+    (node.sibling :: Fiber).return_ = node.return_ :: Fiber
+    node = node.sibling :: Fiber
     while
       node.tag ~= HostComponent and
       node.tag ~= HostText and
@@ -1438,8 +1432,8 @@ getHostSibling = function(fiber)
         continueOuter = true
         break
       else
-        node.child.return_ = node
-        node = node.child
+        (node.child :: Fiber).return_ = node
+        node = node.child :: Fiber
       end
     end
     if continueOuter then

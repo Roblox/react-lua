@@ -151,7 +151,9 @@ export type Fiber = {
 
 	-- The ref last used to attach this node.
 	-- I'll avoid adding an owner field for prod and model that as functions.
-	ref: (((any) -> ()) & {_stringRef: string?, [any]: any}) | RefObject,
+	-- ROBLOX deviation: Lua doesn't allow fields on functions
+	-- ref: (((any) -> ()) & {_stringRef: string?, [string]: any}) | RefObject,
+	ref: ((any) -> ()) | {_stringRef: string?, [string]: any} | RefObject,
 
 	-- Input is the data coming into process this fiber. Arguments. Props.
 	pendingProps: any, -- This type will be more specific once we overload the tag.

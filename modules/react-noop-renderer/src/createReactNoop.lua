@@ -688,7 +688,7 @@ local function createReactNoop(reconciler, useMutation: boolean)
 			local children = Array.map(child, function(c)
 				return childToJSX(c, nil)
 			end)
-			if Array.every(children, function (c) 
+			if Array.every(children, function (c)
 				return typeof(c) == "string" or typeof(c) == "number"
 			end) then
 				return Array.join(children, "")
@@ -1045,7 +1045,7 @@ local function createReactNoop(reconciler, useMutation: boolean)
 
 		flushPassiveEffects = NoopRenderer.flushPassiveEffects,
 
-		-- deviation: can't assign this now, since even if it's pre-declared,
+		-- ROBLOX deviation: can't assign this now, since even if it's pre-declared,
 		-- the current value will be nil
 		-- act = noopAct,
 
@@ -1301,7 +1301,7 @@ local function createReactNoop(reconciler, useMutation: boolean)
 		end)
 	end
 
-	-- deviation: assign this at the end once it's non-nil
+	-- ROBLOX deviation: assign this at the end once it's non-nil
 	ReactNoop.act = noopAct
 
 	return ReactNoop

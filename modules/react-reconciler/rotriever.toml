@@ -20,3 +20,4 @@ RobloxJest = { path = "../roblox-jest" }
 ReactCache = { path = "../react-cache" }
 ReactNoopRenderer = { path = "../react-noop-renderer" }
 ReactTestRenderer = { path = "../react-test-renderer" }
+ReactRobloxRenderer = { path = "../react-roblox-renderer" }

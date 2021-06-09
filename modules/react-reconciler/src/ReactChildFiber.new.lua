@@ -24,6 +24,7 @@ local Array = LuauPolyfill.Array
 type Array<T> = { [number]: T }
 type Set<T> = { [T]: boolean }
 type Object = { [any]: any }
+type Map<K, V> = { [K]: V }
 -- ROBLOX: use patched console from shared
 local console = require(Packages.Shared).console
 
@@ -70,7 +71,7 @@ local enableBlocksAPI = ReactFeatureFlags.enableBlocksAPI
 
 local ReactFiber = require(script.Parent["ReactFiber.new"])
 local createWorkInProgress = ReactFiber.createWorkInProgress
--- local resetWorkInProgress = ReactFiber.resetWorkInProgress
+local resetWorkInProgress = ReactFiber.resetWorkInProgress
 local createFiberFromElement = ReactFiber.createFiberFromElement
 local createFiberFromFragment = ReactFiber.createFiberFromFragment
 local createFiberFromText = ReactFiber.createFiberFromText
@@ -142,7 +143,7 @@ local isArray = Array.isArray
 
 function coerceRef(
   returnFiber: Fiber,
-  current,
+  current: Fiber | nil,
   element: ReactElement
 )
   local mixedRef = element.ref
@@ -212,16 +213,19 @@ function coerceRef(
         mixedRef
       )
 
-      -- ROBLOX FIXME: is this turning a number into a string?
-      local stringRef = '' .. mixedRef
+      -- ROBLOX deviation: explicitly convert to string
+      local stringRef = tostring(mixedRef)
       -- Check if previous string ref matches new string ref
       if
         current ~= nil and
-        current.ref ~= nil and
-        typeof(current.ref) == 'function' and
-        current.ref._stringRef == stringRef
+        (current :: Fiber).ref ~= nil and
+        -- ROBLOX deviation: Lua doesn't support fields on functions, so invert this check
+        -- typeof((current :: Fiber).ref) == 'function' and
+        typeof((current :: Fiber).ref) ~= 'function' and
+        -- ROBLOX deviation: this partially inlines the ref type from Fiber to workaround Luau refinement issues
+        ((current :: Fiber).ref :: {_stringRef: string?})._stringRef == stringRef
       then
-        return current.ref
+        return (current :: Fiber).ref
       end
       -- ROBLOX deviation: make ref a callable table rather than a function
       local callableRef = function(value)
@@ -427,53 +431,40 @@ local function ChildReconciler(shouldTrackSideEffects)
     return newFiber
   end
 
-  -- ROBLOX FIXME: Luau narrowing issue
-  -- function updateTextNode(
-  --   returnFiber: Fiber,
-  --   current: Fiber | nil,
-  --   textContent: string,
-  --   lanes: Lanes
-  -- )
   local function updateTextNode(
     returnFiber: Fiber,
-    current: any,
+    current: Fiber | nil,
     textContent: string,
     lanes: Lanes
   )
-    if current == nil or current.tag ~= HostText then
+  -- ROBLOX FIXME: Luau narrowing issue
+  if current == nil or (current :: Fiber).tag ~= HostText then
       -- Insert
       local created = createFiberFromText(textContent, returnFiber.mode, lanes)
       created.return_ = returnFiber
       return created
     else
       -- Update
-      local existing = useFiber(current, textContent)
+      local existing = useFiber(current :: Fiber, textContent)
       existing.return_ = returnFiber
       return existing
     end
   end
 
-  -- ROBLOX FIXME: type refinement
-  -- local function updateElement(
-  --   returnFiber: Fiber,
-  --   current: Fiber | nil,
-  --   element: ReactElement,
-  --   lanes: Lanes
-  -- ): Fiber
   local function updateElement(
     returnFiber: Fiber,
-    current: any,
+    current: Fiber | nil,
     element: ReactElement,
     lanes: Lanes
   ): Fiber
     if current ~= nil then
       if
-        current.elementType == element.type or
+        (current :: Fiber).elementType == element.type or
         -- Keep this check inline so it only runs on the false path:
         (_G.__DEV__ and isCompatibleFamilyForHotReloading(current, element))
       then
         -- Move based on index
-        local existing = useFiber(current, element.props)
+        local existing = useFiber(current :: Fiber, element.props)
         existing.ref = coerceRef(returnFiber, current, element)
         existing.return_ = returnFiber
         if _G.__DEV__ then
@@ -481,7 +472,7 @@ local function ChildReconciler(shouldTrackSideEffects)
           existing._debugOwner = element._owner
         end
         return existing
-      elseif enableBlocksAPI and current.tag == Block then
+      elseif enableBlocksAPI and (current :: Fiber).tag == Block then
         -- The new Block might not be initialized yet. We need to initialize
         -- it in case initializing it turns out it would match.
         local type = element.type
@@ -490,10 +481,10 @@ local function ChildReconciler(shouldTrackSideEffects)
         end
         if
           type["$$typeof"] == REACT_BLOCK_TYPE and
-          type._render == current.type._render
+          type._render == (current :: Fiber).type._render
         then
           -- Same as above but also update the .type field.
-          local existing = useFiber(current, element.props)
+          local existing = useFiber((current :: Fiber), element.props)
           existing.return_ = returnFiber
           existing.type = type
           if _G.__DEV__ then
@@ -511,23 +502,17 @@ local function ChildReconciler(shouldTrackSideEffects)
     return created
   end
 
-  -- ROBLOX FIXME: type narrowing.
-  -- function updatePortal(
-  --   returnFiber: Fiber,
-  --   current: Fiber | nil,
-  --   portal: ReactPortal,
-  --   lanes: Lanes,
-  -- ): Fiber {
   local function updatePortal(
     returnFiber: Fiber,
-    current: Fiber,
+    current: Fiber | nil,
     portal: ReactPortal,
     lanes: Lanes
   ): Fiber
-      if current == nil or
-        current.tag ~= HostPortal or
-        current.stateNode.containerInfo ~= portal.containerInfo or
-        current.stateNode.implementation ~= portal.implementation
+  -- ROBLOX FIXME: type narrowing.
+  if current == nil or
+      (current :: Fiber).tag ~= HostPortal or
+      (current :: Fiber).stateNode.containerInfo ~= portal.containerInfo or
+      (current :: Fiber).stateNode.implementation ~= portal.implementation
     then
       -- Insert
       local created = createFiberFromPortal(portal, returnFiber.mode, lanes)
@@ -535,27 +520,22 @@ local function ChildReconciler(shouldTrackSideEffects)
       return created
     else
       -- Update
-      local existing = useFiber(current, portal.children or {})
+      local existing = useFiber(current :: Fiber, portal.children or {})
       existing.return_ = returnFiber
       return existing
     end
   end
 
-  -- function updateFragment(
-  --   returnFiber: Fiber,
-  --   current: Fiber | nil,
-  --   fragment: Iterable<*>,
-  --   lanes: Lanes,
-  --   key: nil | string,
-  -- ): Fiber {
     local function updateFragment(
       returnFiber: Fiber,
-      current: any,
+      current: Fiber | nil,
+      -- ROBLOX TODO: figure out how we should define our Iterable type
+      --   fragment: Iterable<*>,
       fragment: any,
       lanes: Lanes,
       key: nil | string
     ): Fiber
-      if current == nil or current.tag ~= Fragment then
+      if current == nil or (current :: Fiber).tag ~= Fragment then
       -- Insert
       local created = createFiberFromFragment(
         fragment,
@@ -567,7 +547,7 @@ local function ChildReconciler(shouldTrackSideEffects)
       return created
     else
       -- Update
-      local existing = useFiber(current, fragment)
+      local existing = useFiber(current :: Fiber, fragment)
       existing.return_ = returnFiber
       return existing
     end
@@ -666,16 +646,9 @@ local function ChildReconciler(shouldTrackSideEffects)
     return nil
   end
 
-  -- ROBLOX FIXME: type narrowing
-  -- local function updateSlot(
-  --   returnFiber: Fiber,
-  --   oldFiber: Fiber | nil,
-  --   newChild: any,
-  --   lanes: Lanes
-  -- ): Fiber | nil
   local function updateSlot(
     returnFiber: Fiber,
-    oldFiber: Fiber,
+    oldFiber: Fiber | nil,
     newChild: any,
     lanes: Lanes,
     -- ROBLOX deviation: children table key for compat with Roact's stable keys
@@ -754,7 +727,7 @@ local function ChildReconciler(shouldTrackSideEffects)
   end
 
   local function updateFromMap(
-    existingChildren: { [string | number]: Fiber },
+    existingChildren: Map<string | number, Fiber>,
     returnFiber: Fiber,
     newIdx: number,
     newChild: any,
@@ -837,15 +810,9 @@ local function ChildReconciler(shouldTrackSideEffects)
   --[[
     Warns if there is a duplicate or missing key
   ]]
-  -- ROBLOX FIXME: Types
-  -- local function warnOnInvalidKey(
-  --   child: any,
-  --   knownKeys: Set<string> | nil,
-  --   returnFiber: Fiber
-  -- ): Set<string> | nil
   local function warnOnInvalidKey(
     child: any,
-    knownKeys: any,
+    knownKeys: Set<string> | nil,
     returnFiber: Fiber
   ): Set<string> | nil
     if _G.__DEV__ then
@@ -859,9 +826,9 @@ local function ChildReconciler(shouldTrackSideEffects)
           -- break
         elseif knownKeys == nil then
           knownKeys = {}
-          knownKeys[key] = true
-        elseif not knownKeys[key] then
-          knownKeys[key] = true
+          (knownKeys :: Set<string>)[key] = true
+        elseif not (knownKeys :: Set<string>)[key] then
+          (knownKeys :: Set<string>)[key] = true
         else
           console.error(
             "Encountered two children with the same key, `%s`. " ..
@@ -916,11 +883,8 @@ local function ChildReconciler(shouldTrackSideEffects)
       end
     end
 
-    -- ROBLOX FIXME: type narrowing
-    -- local resultingFirstChild: Fiber | nil = nil
-    -- local previousNewFiber: Fiber | nil = nil
-    local resultingFirstChild: any = nil
-    local previousNewFiber: any = nil
+    local resultingFirstChild: Fiber | nil = nil
+    local previousNewFiber: Fiber | nil = nil
 
     local oldFiber = currentFirstChild
     local lastPlacedIndex = 1
@@ -966,7 +930,7 @@ local function ChildReconciler(shouldTrackSideEffects)
         -- I.e. if we had nil values before, then we want to defer this
         -- for each nil value. However, we also don't want to call updateSlot
         -- with the previous one.
-        previousNewFiber.sibling = newFiber
+        (previousNewFiber :: Fiber).sibling = newFiber
       end
       previousNewFiber = newFiber
       oldFiber = nextOldFiber
@@ -996,7 +960,7 @@ local function ChildReconciler(shouldTrackSideEffects)
           -- TODO: Move out of the loop. This only happens for the first run.
           resultingFirstChild = newFiber
         else
-          previousNewFiber.sibling = newFiber
+          (previousNewFiber :: Fiber).sibling = newFiber
         end
         previousNewFiber = newFiber
         -- deviation: increment manually since we're not using a modified for loop
@@ -1039,7 +1003,7 @@ local function ChildReconciler(shouldTrackSideEffects)
         if previousNewFiber == nil then
           resultingFirstChild = newFiber
         else
-          previousNewFiber.sibling = newFiber
+          (previousNewFiber :: Fiber).sibling = newFiber
         end
         previousNewFiber = newFiber
       end
@@ -1058,16 +1022,12 @@ local function ChildReconciler(shouldTrackSideEffects)
     return resultingFirstChild
   end
 
-  -- function reconcileChildrenIterator(
-  --   returnFiber: Fiber,
-  --   currentFirstChild: Fiber | nil,
-  --   newChildrenIterable: Iterable<*>,
-  --   lanes: Lanes,
-  -- ): Fiber | nil
   -- ROBLOX TODO: LUAFDN-254
   local function reconcileChildrenIterator(
     returnFiber: Fiber,
     currentFirstChild: Fiber | nil,
+    -- ROBLOX TODO: figure out our Iterable<> interface
+    --   newChildrenIterable: Iterable<*>,
     newChildrenIterable: any,
     lanes: Lanes
   ): Fiber | nil
@@ -1264,21 +1224,20 @@ local function ChildReconciler(shouldTrackSideEffects)
     return resultingFirstChild
   end
 
-  -- ROBLOX FIXME: Luau narrowing issue
-  -- currentFirstChild: Fiber | nil,
   local function reconcileSingleTextNode(
     returnFiber: Fiber,
-    currentFirstChild: Fiber,
+    currentFirstChild: Fiber | nil,
     textContent: string,
     lanes: Lanes
   ): Fiber
     -- There's no need to check for keys on text nodes since we don't have a
     -- way to define them.
-    if currentFirstChild ~= nil and currentFirstChild.tag == HostText then
+    -- ROBLOX FIXME: Luau narrowing issue
+    if currentFirstChild ~= nil and (currentFirstChild :: Fiber).tag == HostText then
       -- We already have an existing node so let's just update it and delete
       -- the rest.
-      deleteRemainingChildren(returnFiber, currentFirstChild.sibling)
-      local existing = useFiber(currentFirstChild, textContent)
+      deleteRemainingChildren(returnFiber, (currentFirstChild :: Fiber).sibling)
+      local existing = useFiber(currentFirstChild :: Fiber, textContent)
       existing.return_ = returnFiber
       return existing
     end
@@ -1384,16 +1343,9 @@ local function ChildReconciler(shouldTrackSideEffects)
     end
   end
 
-  -- ROBLOX TODO: Luau narrowing
-  -- function reconcileSinglePortal(
-  --   returnFiber: Fiber,
-  --   currentFirstChild: Fiber | nil,
-  --   portal: ReactPortal,
-  --   lanes: Lanes,
-  -- ): Fiber
   local function reconcileSinglePortal(
     returnFiber: Fiber,
-    currentFirstChild: Fiber,
+    currentFirstChild: Fiber | nil,
     portal: ReactPortal,
     lanes: Lanes
   ): Fiber
@@ -1430,14 +1382,12 @@ local function ChildReconciler(shouldTrackSideEffects)
   -- This API will tag the children with the side-effect of the reconciliation
   -- itself. They will be added to the side-effect list as we pass through the
   -- children and the parent.
-  -- ROBLOX FIXME: Luau narrowing issue
-  -- currentFirstChild: Fiber?,
   local function reconcileChildFibers(
     returnFiber: Fiber,
-    currentFirstChild: Fiber,
+    currentFirstChild: Fiber | nil,
     newChild: any,
     lanes: Lanes
-  ): Fiber?
+  ): Fiber | nil
     -- This function is not recursive.
     -- If the top level item is an array, we treat it as a set of children,
     -- not as a fragment. Nested arrays on the other hand will be treated as
@@ -1536,20 +1486,17 @@ local function ChildReconciler(shouldTrackSideEffects)
       -- If the new child is undefined, and the return fiber is a composite
       -- component, throw an error. If Fiber return types are disabled,
       -- we already threw above.
-      if returnFiber.tag == ClassComponent then
-        if _G.__DEV__ then
-          -- ROBLOX TODO: Make this logic compatible with however we expect
-          -- mocked functions to work. With coercion of no returns to `nil`, it
-          -- may not even be necessary to special case this scenario
-
-          -- deviation: This won't work with Lua functions
+      -- ROBLOX deviation: With coercion of no returns to `nil`, it
+      -- if returnFiber.tag == ClassComponent then
+      --   if _G.__DEV__ then
+          -- isn't necessary to special case this scenario
           -- local instance = returnFiber.stateNode
           -- if instance.render._isMockFunction then
           --   -- We allow auto-mocks to proceed as if they're returning nil.
           --   shouldFallThrough = true
           -- end
-        end
-      end
+      --   end
+      -- end
       -- Intentionally fall through to the next case, which handles both
       -- functions and classes
       -- eslint-disable-next-lined no-fallthrough
@@ -1580,17 +1527,12 @@ end
 exports.reconcileChildFibers = ChildReconciler(true)
 exports.mountChildFibers = ChildReconciler(false)
 
--- FIXME (roblox): better type refinement
--- exports.cloneChildFibers = function(
---   current: Fiber | nil
---   workInProgress: Fiber
--- )
 exports.cloneChildFibers = function(
-  current,
+  current: Fiber | nil,
   workInProgress: Fiber
 )
   invariant(
-    current == nil or workInProgress.child == current.child,
+    current == nil or workInProgress.child == (current :: Fiber).child,
     "Resuming work not yet implemented."
   )
 
@@ -1615,13 +1557,13 @@ exports.cloneChildFibers = function(
   newChild.sibling = nil
 end
 
--- -- Reset a workInProgress child set to prepare it for a second pass.
--- exports.resetChildFibers(workInProgress: Fiber, lanes: Lanes): void {
---   local child = workInProgress.child
---   while (child ~= nil then
---     resetWorkInProgress(child, lanes)
---     child = child.sibling
---   end
--- end
+-- Reset a workInProgress child set to prepare it for a second pass.
+exports.resetChildFibers = function(workInProgress: Fiber, lanes: Lanes): ()
+  local child = workInProgress.child
+  while child ~= nil do
+    resetWorkInProgress(child, lanes)
+    child = child.sibling
+  end
+end
 
 return exports

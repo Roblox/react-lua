@@ -13,6 +13,8 @@
 
 local Packages = script.Parent.Parent.Parent
 local RobloxJest = require(Packages.Dev.RobloxJest)
+local LuauPolyfill = require(Packages.LuauPolyfill)
+local Object = LuauPolyfill.Object
 
 local React = require(Packages.React)
 local ReactTestRenderer
@@ -75,7 +77,7 @@ return function()
             -- })),
                 React.createElement(React.Fragment, nil,
                     React.createElement(React.Fragment, nil,
-                        React.createElement(Context.Provider, {value = nil},
+                        React.createElement(Context.Provider, {value = Object.None},
                             React.createElement(Context.Consumer, nil,
                                 function()
                                     return React.createElement(View, {nested = true})
@@ -326,7 +328,7 @@ return function()
                 key = 'foo',
             }, React.createElement('div', nil), React.createElement('div', nil))).root:findAllByType('div')).toEqual(2)
             jestExpect(#ReactTestRenderer.create(React.createElement(React.StrictMode, nil, React.createElement('div', nil), React.createElement('div', nil))).root:findAllByType('div')).toEqual(2)
-            jestExpect(#ReactTestRenderer.create(React.createElement(Context.Provider, {value = nil}, React.createElement('div', nil), React.createElement('div', nil))).root:findAllByType('div')).toEqual(2)
+            jestExpect(#ReactTestRenderer.create(React.createElement(Context.Provider, {value = Object.None}, React.createElement('div', nil), React.createElement('div', nil))).root:findAllByType('div')).toEqual(2)
         end)
     end)
 end
