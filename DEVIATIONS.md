@@ -10,10 +10,14 @@ Upstream naming and logic has some deviations and incompatibilities with existin
   * [Reserved Prop Keys: "children"](#reserved-prop-keys-children)
 * [Behavior](#behavior)
   * [Old Context](#old-context-roact-only)
+  * [Context.Consumer Interface](#contextconsumer-interface)
   * [createFragment](#createfragment) ✔️
   * [Ref Forwarding](#ref-forwarding)
   * [Stable Keys](#stable-keys) ✔️
   * [Use of setState](#use-of-setstate)
+  * [Functional setState](#functional-setstate)
+  * [Roact.Portal](#roactportal) ✔️
+  * [State Initialization](#state-initialization)
 
 ## Naming
 
@@ -52,7 +56,7 @@ An implementation of tactic #2 above was merged in [#88](https://github.com/Robl
 </details>
 
 ### Reserved Prop Keys: "ref"
-**Status:** ❔ Alignment Strategy TBD
+**Status:** 🔨 In Progress (updating consumers to comply)
 
 Upstream React reserves the prop key "ref". In Roact the "ref" key is replaced by a Symbol exported as part of the API and applied as a prop with the key `[Roact.Ref]`. This means that there's no need to reserve a key, because the key is already unique and has a special meaning.
 
@@ -98,7 +102,7 @@ This would be blocked by refactors to remove any existing uses of the `ref` key,
 This alignment effort should be considered in tandem with that of [ref forwarding logic](#ref-forwarding).
 
 ### Reserved Prop Keys: "key"
-**Status:** ❔ Alignment Strategy TBD
+**Status:** 🔨 In Progress (updating consumers to comply)
 
 Upstream React reserves the prop key "key". In Roact, "key" has no special meaning.
 
@@ -119,7 +123,7 @@ However, we may instead consider providing a `Roact.Key` symbol key that can be 
 For any approach to stable key assignment, we should additionally support Roact's approach. This alignment effort should be considered in tandem with that of [stable keys](#stable-keys)
 
 ### Reserved Prop Keys: "children"
-**Status:** ❔ Alignment Strategy TBD
+**Status:** 🔨 In Progress (updating consumers to comply)
 
 Upstream React [reserves the prop key "children"](https://reactjs.org/docs/glossary.html#propschildren). In Roact the "children" key is replaced by a Symbol exported as part of the API and applied as a prop with the key `[Roact.Children]`. This means that there's no need to reserve a key, because the key is already unique and has a special meaning.
 
@@ -153,7 +157,7 @@ The most straightforward approach would be to export `Roact.Children` with a val
 ## Behavior
 
 ### Old Context (Roact only)
-**Status:** ❔ Alignment Strategy TBD
+**Status:** 🔨 In Progress (updating consumers to comply)
 
 In Roact, the "old" context behavior was a `_context` field defined on every class component instance. To provide context, a component would mutate its `_context` field in `init`:
 ```lua
@@ -191,6 +195,16 @@ Examples:
 We'll likely have to modernize all existing uses of `_context` to instead use the `createContext` API provided by the current version of Roact. This will be a blocker for adopting roact-alignment, which has a semantically equivalent API and should make for a smooth cut-over.
 
 This is likely the biggest refactor effort that the Lua Apps adoption is contingent on. It also incurs some knock-on efforts on projects that the App depends upon, like [roact-rodux](https://github.com/roblox/roact-rodux/issues/26), which has some work completed, [but with unaddressed backwards compatibility problems](https://github.com/Roblox/roact-rodux/pull/38#issuecomment-644902307).
+
+### Context.Consumer Interface
+**Status:** ❔ Alignment Strategy TBD
+
+Stub: context consumer api doesn't match that of Roact's createContext context consumer
+
+#### In Production Code
+
+#### Proposed Alignment Strategy
+We'll probably want to support both interfaces
 
 ### createFragment
 **Status:** ✔️ Resolved
@@ -247,7 +261,7 @@ The `createFragment` function described above was added to React.lua in [#92](ht
 </details>
  
 ### Ref Forwarding
-**Status:** ❔ Alignment Strategy TBD
+**Status:** 🔨 In Progress (updating consumers to comply)
 
 Ref forwarding is possible in React via the [`forwardRef` API](https://reactjs.org/docs/forwarding-refs.html).
 
@@ -405,6 +419,151 @@ We should continue to support calling `setState` in init, and ensure that its be
 This will maximize compatibility with existing Roact code, and does not risk incurring significant tech debt, as we anticipate that class components will become less ubiquitous as hooks begin to see adoption.
 
 This deviation may be non-trivial to implement, and might have some subtle and dangerous corner cases. We should apply thorough test cases to confirm that the behavior is as expected, which may mean adapting some of current Roact's tests.
+
+### Functional setState
+**Status:** ❔ Alignment Strategy TBD
+
+In both React and Roact, `setState` can accept a function as its argument in place of a table (with async rendering, this is encouraged as the default choice). In React, however, the argument passed to `setState` is invoked via `payload.call(instance, prevState, nextProps)`. In other words, React calls the function in such a way that the `instance` is in scope as `this` in the body of the updater function.
+
+Roact, however, effectively calls the function as `payload(prevState, nextProps)` which does not provide access to `self`. Currently, in roact-alignment, we inherit the upstream behavior as closely as possible and call: `payload(instance, prevState, nextProps)`, which creates an incompatibility. Since the `prevState` and `nextProps` arguments shift over one space, existing uses of functional `setState` will run into trouble.
+
+#### Example
+React (adapted from the React documentation):
+```js
+this.setState((state, props) => {
+  // `this` is implicitly accessible in this function body due to the calling
+  // syntax in React internals
+  return {counter: state.counter + props.step + this.CONSTANT};
+});
+```
+
+Roact (today):
+```lua
+self:setState(function(state, props)
+  -- `self` is not in function scope (though it _can_ be closed over from
+  -- outside of the function scope)
+  return {counter = state.counter + props.step + self.CONSTANT}
+end)
+```
+
+To make our Roact code compatible with the new behavior, we'd need to write:
+```lua
+self:setState(function(self, state, props)
+  return {counter = state.counter + props.step + self.CONSTANT}
+end)
+```
+
+#### In Production Code
+There are ~12 usages of functional setState in lua-apps and its dependencies, so it might be viable to change them.
+
+#### Proposed Alignment Strategy
+There does not appear to be any explicit need in any tests to rely on this behavior. The update function passed to setState can, in most scenarios, easily close over `self` if it needs to. The best approach is to simply change the call site in this repo from:
+```
+payload(instance, prevState, nextProps)
+```
+to
+```
+payload(prevState, nextProps)
+```
+
+Alternatively, we might consider:
+* Align all existing usages, modifying them to accept `self` as their first argument. While this seems reasonable on the surface, there are serious caveats. Since lua and js have different mechanisms of defining and calling methods with `self`, the exact _behavior_ will be more similar to upstream, but the _API_ will deviate and need to be called out in documentation. We'd likely also want to add additional warnings to detect expected misuses.
+* Perform some trickery with `setfenv` to allow the arguments to be in the same place, but `self` to be accessible. This is ugly, because it won't be understood by linting and I don't actually know how it will interact with shadowing/closures. As far as I'm concerned, this is a non-option, but it's worth calling out for thoroughness.
+
+### Roact.Portal
+**Status:** ✔️ Resolved (backwards compatible)
+<details>
+  <summary>Details</summary>
+
+In Roact, `Portal` is [a special, pre-defined component](https://roblox.github.io/roact/advanced/portals/) that accepts:
+* A `target` prop, which is the roblox instance container under which to mount the portal contents
+* The standard `[Roact.Children]` prop
+
+In React, the dom renderer exports [a function](https://reactjs.org/docs/portals.html) instead:
+```
+ReactDOM.createPortal(children, container)
+```
+
+While the shape of the API differs, the semantics are identical.
+
+#### Example
+React (adapted from the React documentation):
+```js
+render() {
+  // React does *not* create a new div. It renders the children into `domNode`.
+  // `domNode` is any valid DOM node, regardless of its location in the DOM.
+  return ReactDOM.createPortal(
+    this.props.children,
+    domNode
+  );
+}
+```
+
+Roact:
+```lua
+function MyComponent:render()
+  -- Roact does *not* create a new Roblox Instance. It renders the children into `instance`.
+  -- `instance` is any valid Roblox Instance, regardless of its location in the DataModel.
+  return Roact.createElement(Roact.Portal, {
+    target = instance,
+  }, self.props[Roact.Children])
+end
+```
+
+#### In Production Code
+There are ~40 uses of `Roact.Portal` in the lua app and its dependencies. Many of these are in stories and not production code.
+
+#### Proposed Alignment Strategy
+We should create a special component called `Portal`, expose it via our compatibility package, and implement it as a simple function component that unwraps its props and injects them into `createPortal`.
+</details>
+
+### State Initialization
+**Status:** ❔ Alignment Strategy TBD
+
+In Roact, ["stateful" components](https://roblox.github.io/roact/guide/state-and-lifecycle/) (equivalent of React's "class" components) will automatically initialize their state value to an empty table if it is not assigned via `init` or `getDerivedStateFromProps`.
+
+In React's ["class" components](https://reactjs.org/docs/state-and-lifecycle.html#adding-local-state-to-a-class), state will never be initialized automatically. Any use of `this.state` without a prior assignment to state in the constructor results in an error at runtime.
+
+#### Example
+React (adapted from the React documentation):
+```js
+class ShowCount extends React.Component {
+  constructor(props) {
+    super(props);
+    // this.state = {count: 0};
+  }
+
+  render() {
+    return (
+      // Throws an error:
+      // Uncaught TypeError: Cannot read property 'count' of null
+      <div>${this.state.count}</div>
+    );
+  }
+}
+```
+
+Roact:
+```lua
+local ShowCount = Roact.Component:extend("ShowCount")
+function ShowCount:init()
+  -- self.state = {count=0}
+end
+
+function ShowCount:render()
+  return Roact.createElement("TextLabel", {
+    -- `self.state` is an empty table, and `self.state.count` is nil.
+    -- Text will be left as its default value for a TextLabel 
+    Text = self.state.count,
+  })
+end
+```
+
+#### In Production Code
+It's difficult to find where this is relied upon in production!
+
+#### Proposed Alignment Strategy
+We should adopt Roact's behavior to provide less likelihood of runtime surprises.
 
 # Unique Features
 Roact has a couple of unique features that are not present in upstream, while a number of new features from upstream will be introduced by the alignment effort.
