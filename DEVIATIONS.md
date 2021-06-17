@@ -7,7 +7,7 @@ Upstream naming and logic has some deviations and incompatibilities with existin
   * [Component Lifecycle](#component-lifecycle) ✔️
   * [Reserved Prop Keys: "ref"](#reserved-prop-keys-ref)
   * [Reserved Prop Keys: "key"](#reserved-prop-keys-key)
-  * [Reserved Prop Keys: "children"](#reserved-prop-keys-children)
+  * [Reserved Prop Keys: "children"](#reserved-prop-keys-children) ✔️
 * [Behavior](#behavior)
   * [Old Context](#old-context-roact-only)
   * [Context.Consumer Interface](#contextconsumer-interface)
@@ -123,8 +123,8 @@ However, we may instead consider providing a `Roact.Key` symbol key that can be 
 For any approach to stable key assignment, we should additionally support Roact's approach. This alignment effort should be considered in tandem with that of [stable keys](#stable-keys)
 
 ### Reserved Prop Keys: "children"
-**Status:** 🔨 In Progress (updating consumers to comply)
-
+**Status:** ✔️ Resolved
+<details>
 Upstream React [reserves the prop key "children"](https://reactjs.org/docs/glossary.html#propschildren). In Roact the "children" key is replaced by a Symbol exported as part of the API and applied as a prop with the key `[Roact.Children]`. This means that there's no need to reserve a key, because the key is already unique and has a special meaning.
 
 In both upstream React and current Roact, `createElement` has an optional third argument for specifying children _separately_ from other props. This is used in the vast majority of cases for Roact code, is often made irrelevant by JSX (as is `createElement` altogether) in React code.
@@ -154,7 +154,10 @@ Conversely, there are only a couple of uses of `children` as a key, which would 
 #### Proposed Alignment Strategy
 The most straightforward approach would be to export `Roact.Children` with a value equal to "children". We need to refactor the few cases of downstream code that use "children" currently.
 
-## Behavior
+#### Implemented Alignment
+`Roact.Children` was exported with a value equal to `"children"` in the `roact-compat` package. We searched for instances of downstream code that uses `children` as a key but found none.
+
+</details>
 
 ### Old Context (Roact only)
 **Status:** 🔨 In Progress (updating consumers to comply)
