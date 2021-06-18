@@ -376,7 +376,7 @@ exports.createElement = function(type_, config, ...)
 		end
 		-- Remaining properties are added to a new props object
 		for propName, _ in pairs(config) do
-			if config[propName] and not RESERVED_PROPS[propName] then
+			if config[propName] ~= nil and not RESERVED_PROPS[propName] then
 				props[propName] = config[propName]
 			end
 		end

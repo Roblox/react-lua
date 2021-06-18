@@ -89,5 +89,12 @@ return function()
 				Child2 = child2,
 			})
 		end)
+
+		it("a false value for a boolean prop", function()
+			element = ReactElement.createElement("BoolValue", { Value = false })
+
+			jestExpect(element).toBeDefined()
+			jestExpect(element.props.Value).toEqual(false)
+		end)
 	end)
 end
