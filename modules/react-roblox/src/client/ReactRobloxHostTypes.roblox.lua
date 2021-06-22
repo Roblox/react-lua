@@ -1,6 +1,7 @@
 local Packages = script.Parent.Parent.Parent
 
--- ROBLOX FIXME: This creates a require cycle when we mock reconciler :(
+-- ROBLOX FIXME: Since we've modified the reconciler to have a dynamic
+-- host-config entry point, types won't actually carry through
 -- local ReactReconciler = require(Packages.ReactReconciler)
 -- type FiberRoot = ReactReconciler.FiberRoot
 

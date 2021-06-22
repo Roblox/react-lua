@@ -13,8 +13,25 @@ local function oneChild(children)
 		)
 	end
 
-	-- FIXME: Port `ReactChildren`
-	return ((React :: any).Children :: any).only(children)
+	-- This behavior is a bit different from upstream, so we're adapting current
+	-- Roact's logic (which will unwrap a table with a single member)
+	if not children then
+		return nil
+	end
+
+	local key, child = next(children)
+
+	if not child then
+		return nil
+	end
+
+	local after = next(children, key)
+
+	if after then
+		error("Expected at most one child, had more than one child.", 2)
+	end
+
+	return React.Children.only(child)
 end
 
 return oneChild

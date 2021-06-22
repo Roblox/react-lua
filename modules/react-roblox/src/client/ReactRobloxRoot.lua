@@ -16,9 +16,8 @@ type RootType = ReactRobloxHostTypes.RootType;
 type RootOptions = ReactRobloxHostTypes.RootOptions;
 
 -- ROBLOX FIXME: Types across package boundaries
-local ReactRootTags = require(Packages.ReactReconciler).ReactRootTags
--- type RootTag = ReactRootTags.RootTag;
-type RootTag = any
+local ReconcilerTypes = require(Packages.ReactReconciler)
+type RootTag = ReconcilerTypes.RootTag;
 local ReactTypes = require(Packages.Shared)
 type MutableSource<T> = ReactTypes.MutableSource<T>
 type ReactNodeList = ReactTypes.ReactNodeList
@@ -40,7 +39,8 @@ local unmarkContainerAsRoot = ReactRobloxComponentTree.unmarkContainerAsRoot
 -- local DOCUMENT_FRAGMENT_NODE = HTMLNodeType.DOCUMENT_FRAGMENT_NODE
 -- local ensureListeningTo = require(Packages.ReactDOMComponent).ensureListeningTo
 
-local ReactFiberReconciler = require(Packages.ReactReconciler)
+-- ROBLOX deviation: Use the config-injecting entry point for the reconciler
+local ReactFiberReconciler = require(script.Parent.Parent["ReactReconciler.roblox"])
 local createContainer = ReactFiberReconciler.createContainer
 local updateContainer = ReactFiberReconciler.updateContainer
 -- local findHostInstanceWithNoPortals = ReactFiberReconciler.findHostInstanceWithNoPortals
@@ -48,9 +48,9 @@ local updateContainer = ReactFiberReconciler.updateContainer
 local invariant = require(Packages.Shared).invariant
 local enableEagerRootListeners = require(Packages.Shared).ReactFeatureFlags.enableEagerRootListeners
 
-local BlockingRoot = ReactRootTags.BlockingRoot
-local ConcurrentRoot = ReactRootTags.ConcurrentRoot
-local LegacyRoot = ReactRootTags.LegacyRoot
+local BlockingRoot = ReactFiberReconciler.ReactRootTags.BlockingRoot
+local ConcurrentRoot = ReactFiberReconciler.ReactRootTags.ConcurrentRoot
+local LegacyRoot = ReactFiberReconciler.ReactRootTags.LegacyRoot
 
 local createRootImpl
 

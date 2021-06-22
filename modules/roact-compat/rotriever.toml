@@ -8,7 +8,7 @@ content_root = "src"
 [dependencies]
 LuauPolyfill = { workspace = true }
 React = { path = "../react" }
-ReactRoblox = { path = "../react-roblox-renderer" }
+ReactRoblox = { path = "../react-roblox" }
 Shared = { path = "../shared" }
 
 [dev_dependencies]

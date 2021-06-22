@@ -1,54 +1,55 @@
 return function()
 	local PlayerGui = game:GetService("Players").LocalPlayer.PlayerGui
 
-	local Roact = require(game.ReplicatedStorage.Roact)
+	local React = require(script.Parent.ProjectWorkspace.React)
+	local ReactRoblox = require(script.Parent.ProjectWorkspace.ReactRoblox)
 
 	--[[
 		A search bar with an icon and a text box
 		When the icon is clicked, the TextBox captures focus
 	]]
-	local SearchBar = Roact.Component:extend("SearchBar")
+	local SearchBar = React.Component:extend("SearchBar")
 
 	function SearchBar:init()
-		self.textBoxRef = Roact.createRef()
+		self.textBoxRef = React.createRef()
 	end
 
 	function SearchBar:render()
-		return Roact.createElement("Frame", {
+		return React.createElement("Frame", {
 			Size = UDim2.new(0, 300, 0, 50),
 			Position = UDim2.new(0.5, 0, 0.5, 0),
 			AnchorPoint = Vector2.new(0.5, 0.5),
 		}, {
-			SearchIcon = Roact.createElement("TextButton", {
+			SearchIcon = React.createElement("TextButton", {
 				Size = UDim2.new(0, 50, 0, 50),
 				AutoButtonColor = false,
 				Text = "->",
 
 				-- Handle click events on the search button
-				[Roact.Event.Activated] = function()
+				[ReactRoblox.Event.Activated] = function()
 					print("Button clicked; use our ref to have the TextBox capture focus")
 					self.textBoxRef.current:CaptureFocus()
 				end,
 			}),
 
-			SearchTextBox = Roact.createElement("TextBox", {
+			SearchTextBox = React.createElement("TextBox", {
 				Size = UDim2.new(1, -50, 1, 0),
 				Position = UDim2.new(0, 50, 0, 0),
 
-				-- Use Roact.Ref to get a reference to the underlying object
-				[Roact.Ref] = self.textBoxRef,
+				-- Use ref to initalize a reference to the underlying object
+				ref = self.textBoxRef,
 			}),
 		})
 	end
 
-	local app = Roact.createElement("ScreenGui", nil, {
-		SearchBar = Roact.createElement(SearchBar),
+	local app = React.createElement("ScreenGui", nil, {
+		SearchBar = React.createElement(SearchBar),
 	})
 
 	local rootInstance = Instance.new("Folder")
 	rootInstance.Parent = PlayerGui
 
-	local root = Roact.createBlockingRoot(rootInstance)
+	local root = ReactRoblox.createBlockingRoot(rootInstance)
 	root:render(app)
 
 	local function stop()

@@ -30,7 +30,8 @@ local createLegacyRoot = ReactRobloxRoot.createLegacyRoot
 local isValidContainer = ReactRobloxRoot.isValidContainer
 -- local createEventHandle = require(script.Parent.ReactDOMEventHandle).createEventHandle
 
-local ReactReconciler = require(Packages.ReactReconciler)
+-- ROBLOX deviation: Use the config-injecting entry point for the reconciler
+local ReactReconciler = require(script.Parent.Parent["ReactReconciler.roblox"])
 -- local batchedEventUpdates = ReactReconciler.batchedEventUpdates
 -- local batchedUpdates = ReactReconciler.batchedUpdates
 -- local discreteUpdates = ReactReconciler.discreteUpdates
@@ -47,7 +48,7 @@ local IsThisRendererActing = ReactReconciler.IsThisRendererActing
 -- local runWithPriority = ReactReconciler.runWithPriority
 -- local getCurrentUpdateLanePriority = ReactReconciler.getCurrentUpdateLanePriority
 
-local createPortalImpl = require(Packages.ReactReconciler).createPortal
+local createPortalImpl = ReactReconciler.createPortal
 -- local canUseDOM = require(Packages.Shared).ExecutionEnvironment.canUseDOM
 local ReactVersion = require(Packages.Shared).ReactVersion
 local invariant = require(Packages.Shared).invariant

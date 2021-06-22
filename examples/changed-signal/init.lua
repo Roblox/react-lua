@@ -1,7 +1,8 @@
 return function()
 	local PlayerGui = game:GetService("Players").LocalPlayer.PlayerGui
 
-	local Roact = require(game.ReplicatedStorage.Roact)
+	local React = require(script.Parent.ProjectWorkspace.React)
+	local ReactRoblox = require(script.Parent.ProjectWorkspace.ReactRoblox)
 
 	--[[
 		A TextBox that the user can type into. Takes a callback to be
@@ -11,11 +12,11 @@ return function()
 		local onTextChanged = props.onTextChanged
 		local layoutOrder = props.layoutOrder
 
-		return Roact.createElement("TextBox", {
+		return React.createElement("TextBox", {
 			LayoutOrder = layoutOrder,
 			Text = "Type Here!",
 			Size = UDim2.new(1, 0, 0.5, 0),
-			[Roact.Change.Text] = onTextChanged,
+			[ReactRoblox.Change.Text] = onTextChanged,
 		})
 	end
 
@@ -26,7 +27,7 @@ return function()
 		local inputText = props.inputText
 		local layoutOrder = props.layoutOrder
 
-		return Roact.createElement("TextLabel", {
+		return React.createElement("TextLabel", {
 			LayoutOrder = layoutOrder,
 			Size = UDim2.new(1, 0, 0.5, 0),
 			Text = "Reversed: " .. inputText:reverse(),
@@ -37,7 +38,7 @@ return function()
 		Displays a TextBox and a TextLabel that shows the reverse of
 		the TextBox's input in real time
 	]]
-	local TextReverser = Roact.Component:extend("TextReverser")
+	local TextReverser = React.Component:extend("TextReverser")
 
 	function TextReverser:init()
 		self.state = {
@@ -48,15 +49,15 @@ return function()
 	function TextReverser:render()
 		local text = self.state.text
 
-		return Roact.createElement("Frame", {
+		return React.createElement("Frame", {
 			Size = UDim2.new(0, 400, 0, 400),
 			Position = UDim2.new(0.5, 0, 0.5, 0),
 			AnchorPoint = Vector2.new(0.5, 0.5),
 		}, {
-			Roact.createElement("UIListLayout", {
+			React.createElement("UIListLayout", {
 				SortOrder = Enum.SortOrder.LayoutOrder,
 			}),
-			Roact.createElement(InputTextBox, {
+			React.createElement(InputTextBox, {
 				layoutOrder = 1,
 				onTextChanged = function(rbx)
 					self:setState({
@@ -64,21 +65,21 @@ return function()
 					})
 				end,
 			}),
-			Roact.createElement(ReversedText, {
+			React.createElement(ReversedText, {
 				layoutOrder = 2,
 				inputText = text,
 			}),
 		})
 	end
 
-	local app = Roact.createElement("ScreenGui", nil, {
-		TextReverser = Roact.createElement(TextReverser),
+	local app = React.createElement("ScreenGui", nil, {
+		TextReverser = React.createElement(TextReverser),
 	})
 
 	local rootInstance = Instance.new("Folder")
 	rootInstance.Parent = PlayerGui
 
-	local root = Roact.createBlockingRoot(rootInstance)
+	local root = ReactRoblox.createBlockingRoot(rootInstance)
 	root:render(app)
 
 	local function stop()

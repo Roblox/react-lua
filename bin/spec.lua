@@ -15,21 +15,6 @@ local RobloxJest = require(RotrieverWorkspace.React.Dev.RobloxJest)
 RobloxJest.mock(RotrieverWorkspace.Scheduler.Scheduler, function()
 	return require(RotrieverWorkspace.Scheduler.Scheduler.unstable_mock)
 end)
-local function mockReconciler(config)
-	RobloxJest.mock(RotrieverWorkspace.ReactReconciler.ReactReconciler.ReactFiberHostConfig, function()
-		return config
-	end)
-	return require(RotrieverWorkspace.ReactReconciler.ReactReconciler.ReactFiberReconciler)
-end
--- Mock the reconciler to be configurable with the proper host config by
--- whichever renderer is in use
-RobloxJest.mock(RotrieverWorkspace.ReactReconciler.ReactReconciler, function()
-	return mockReconciler
-end)
--- "Mock" the renderer's host config with the real host config
-RobloxJest.mock(RotrieverWorkspace.ReactRoblox.ReactReconciler, function()
-	return mockReconciler(require(RotrieverWorkspace.ReactRoblox.ReactRoblox.client.ReactRobloxHostConfig))
-end)
 
 -- Run all tests, collect results, and report to stdout.
 local result = JestRoblox.TestBootstrap:run(

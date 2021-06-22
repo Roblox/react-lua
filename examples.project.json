@@ -5,9 +5,8 @@
 
     "ReplicatedStorage": {
       "$className": "ReplicatedStorage",
-      "$path": "Packages",
-      "Roact": {
-        "$path": "modules"
+      "Packages": {
+        "$path": "Packages"
       }
     },
 

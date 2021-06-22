@@ -4,12 +4,13 @@ return function()
 	local Mouse = LocalPlayer:GetMouse()
 
 	local COUNT = 500
-	local Roact = require(game.ReplicatedStorage.Roact)
+	local React = require(script.Parent.ProjectWorkspace.React)
+	local ReactRoblox = require(script.Parent.ProjectWorkspace.ReactRoblox)
 
-	local BindingExample = Roact.Component:extend("BindingExample")
+	local BindingExample = React.Component:extend("BindingExample")
 
 	local function Follower(props)
-		return Roact.createElement("Frame", {
+		return React.createElement("Frame", {
 			Size = UDim2.fromOffset(12, 12),
 			AnchorPoint = Vector2.new(0.5, 0.5),
 			Position = props.position,
@@ -18,13 +19,13 @@ return function()
 	end
 
 	function BindingExample:init()
-		self.binding, self.updateBinding = Roact.createBinding({})
+		self.binding, self.updateBinding = ReactRoblox.createBinding({})
 	end
 
 	function BindingExample:render()
 		local followers = {}
 		for i = 0, COUNT do
-			followers[i] = Roact.createElement(Follower, {
+			followers[i] = React.createElement(Follower, {
 				position = self.binding:map(function(lastPositions)
 					return lastPositions[i]
 				end),
@@ -50,14 +51,14 @@ return function()
 		self.mouseConnection:Disconnect()
 	end
 
-	local app = Roact.createElement("ScreenGui", nil, {
-		BindingExample = Roact.createElement(BindingExample),
+	local app = React.createElement("ScreenGui", nil, {
+		BindingExample = React.createElement(BindingExample),
 	})
 
 	local rootInstance = Instance.new("Folder")
 	rootInstance.Parent = PlayerGui
 
-	local root = Roact.createBlockingRoot(rootInstance)
+	local root = ReactRoblox.createBlockingRoot(rootInstance)
 	root:render(app)
 
 	local function stop()

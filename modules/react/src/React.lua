@@ -4,6 +4,7 @@ local Packages = React.Parent
 local createMutableSource = require(React.ReactMutableSource)
 local ReactSharedInternals = require(Packages.Shared).ReactSharedInternals
 local ReactBaseClasses = require(React.ReactBaseClasses)
+local ReactChildren = require(React.ReactChildren)
 local ReactElementValidator = require(React.ReactElementValidator)
 local ReactElement = require(React.ReactElement)
 local ReactCreateRef = require(React.ReactCreateRef)
@@ -23,6 +24,7 @@ local cloneElement = _G.__DEV__ and
 
 return {
 	__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = ReactSharedInternals,
+	Children = ReactChildren,
 	Component = ReactBaseClasses.Component,
 	PureComponent = ReactBaseClasses.PureComponent,
 	createElement = createElement,
