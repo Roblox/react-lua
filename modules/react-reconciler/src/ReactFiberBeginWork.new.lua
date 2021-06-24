@@ -21,8 +21,9 @@ local function unimplemented(message)
 end
 
 local Packages = script.Parent.Parent
--- ROBLOX: use patched console from shared
+-- ROBLOX: use patched console from Shared
 local console = require(Packages.Shared).console
+
 local LuauPolyfill = require(Packages.LuauPolyfill)
 local Array = LuauPolyfill.Array
 local Object = LuauPolyfill.Object
@@ -3093,7 +3094,23 @@ function updateContextConsumer(
     end
   end
   local newProps = workInProgress.pendingProps
-  local render = newProps.children
+
+  -- ROBLOX deviation: compatibility for old Roact's context consumer API
+  local render
+  if newProps.render then
+    if _G.__DEV__ then
+      console.warn("Your Context.Consumer component is using legacy Roact syntax, which won't be supported in future versions of Roact. \n" ..
+        "Please provide no props and supply the 'render' function as a child (the 3rd argument of createElement). For example: \n" ..
+        "       createElement(ContextConsumer, {render = function(...) end})\n" ..
+        "becomes:\n" ..
+        "       createElement(ContextConsumer, nil, function(...) end)\n" ..
+        "For more info, reference the React documentation here: \n" ..
+        "https://reactjs.org/docs/context.html#contextconsumer")
+      end
+    render = newProps.render
+  else
+    render = newProps.children
+  end
 
   if  _G.__DEV__ then
     if typeof(render) ~= 'function' then

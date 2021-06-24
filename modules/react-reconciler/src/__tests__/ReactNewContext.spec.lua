@@ -11,8 +11,10 @@
 
 local Packages = script.Parent.Parent.Parent
 local Array = require(Packages.LuauPolyfill).Array
--- ROBLOX: use patched console from shared
+
+-- ROBLOX: use patched console from Shared
 local console = require(Packages.Shared).console
+
 local React
 local useContext
 local ReactNoop
@@ -1046,6 +1048,99 @@ return function()
 				})
 			end)
 		end)
+
+		-- ROBLOX deviation: tests for our temporary compatibility with old Roact's ability to use props = {render = <func>}
+		describe("Compatibility with old Roact's Context Consumer API", function()
+			it("simple mount and update", function()
+				local Context = React.createContext(1)
+				local Consumer = Context.Consumer
+
+				local Indirection = React.Fragment
+
+				local function App(props)
+					return React.createElement(
+						Context.Provider,
+						{ value = props.value },
+						React.createElement(
+							Indirection,
+							nil,
+							React.createElement(Indirection, nil, React.createElement(Consumer, {render = function(value)
+								return React.createElement("span", { prop = "Result: " .. tostring(value) })
+							end}))
+						)
+					)
+				end
+
+				ReactNoop.render(React.createElement(App, { value = 2 }))
+				jestExpect(Scheduler).toFlushWithoutYielding()
+				jestExpect(ReactNoop.getChildren()).toEqual({ span("Result: 2") })
+
+				-- Update
+				ReactNoop.render(React.createElement(App, { value = 3 }))
+				jestExpect(Scheduler).toFlushWithoutYielding()
+				jestExpect(ReactNoop.getChildren()).toEqual({ span("Result: 3") })
+			end)
+			it("propagates through shouldComponentUpdate false", function()
+				local Context = React.createContext(1)
+				local ContextConsumer = Context.Consumer
+
+				local function Provider(props)
+					Scheduler.unstable_yieldValue("Provider")
+					return React.createElement(Context.Provider, { value = props.value }, props.children)
+				end
+
+				local function Consumer(props)
+					Scheduler.unstable_yieldValue("Consumer")
+					return React.createElement(ContextConsumer, {render = function(value)
+						Scheduler.unstable_yieldValue("Consumer render prop")
+						return React.createElement("span", { prop = "Result: " .. tostring(value) })
+					end})
+				end
+
+				local Indirection = React.Component:extend("Indirection")
+
+				function Indirection:shouldComponentUpdate()
+					return false
+				end
+				function Indirection:render()
+					Scheduler.unstable_yieldValue("Indirection")
+					return self.props.children
+				end
+
+				local function App(props)
+					Scheduler.unstable_yieldValue("App")
+					return React.createElement(
+						Provider,
+						{ value = props.value },
+						React.createElement(
+							Indirection,
+							nil,
+							React.createElement(Indirection, nil, React.createElement(Consumer, nil))
+						)
+					)
+				end
+
+				ReactNoop.render(React.createElement(App, { value = 2 }))
+				jestExpect(Scheduler).toFlushAndYield({
+					"App",
+					"Provider",
+					"Indirection",
+					"Indirection",
+					"Consumer",
+					"Consumer render prop",
+				})
+				jestExpect(ReactNoop.getChildren()).toEqual({ span("Result: 2") })
+
+				-- Update
+				ReactNoop.render(React.createElement(App, { value = 3 }))
+				jestExpect(Scheduler).toFlushAndYield({
+					"App",
+					"Provider",
+					"Consumer render prop",
+				})
+				jestExpect(ReactNoop.getChildren()).toEqual({ span("Result: 3") })
+			end)
+		end)
 	end
 
 	-- We have several ways of reading from context. sharedContextTests runs
@@ -1334,6 +1429,30 @@ return function()
 					"A context consumer was rendered with multiple children, or a child " .. "that isn't a function"
 				)
 			end
+		end)
+
+		-- ROBLOX deviation: tests legacy Roact compatibility feature
+		it("warns if using legacy Roact render prop", function()
+			local Context = React.createContext()
+
+			ReactNoop.render(
+				React.createElement(
+						Context.Provider,
+						{ value = 1 },
+						React.createElement(Context.Consumer, {render = function(value)
+								return React.createElement("span", { prop = "Result: " .. tostring(value) })
+						end}))
+			)
+
+			jestExpect(function()
+				jestExpect(Scheduler).toFlushWithoutYielding()
+			end).toWarnDev("Warning: Your Context.Consumer component is using legacy Roact syntax, which won't be supported in future versions of Roact. \n" ..
+				"Please provide no props and supply the 'render' function as a child (the 3rd argument of createElement). For example: \n" ..
+				"       createElement(ContextConsumer, {render = function(...) end})\n" ..
+				"becomes:\n" ..
+				"       createElement(ContextConsumer, nil, function(...) end)\n" ..
+				"For more info, reference the React documentation here: \n" ..
+				"https://reactjs.org/docs/context.html#contextconsumer", {withoutStack = true})
 		end)
 
 		it("can read other contexts inside consumer render prop", function()
