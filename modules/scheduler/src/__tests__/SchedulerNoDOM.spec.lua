@@ -29,63 +29,63 @@ return function()
 		NormalPriority = Scheduler.unstable_NormalPriority
 	end)
 
-	it('runAllTimers flushes all scheduled callbacks', function()
+	it("runAllTimers flushes all scheduled callbacks", function()
 		local log = {}
 		scheduleCallback(NormalPriority, function()
-			table.insert(log, 'A')
+			table.insert(log, "A")
 		end)
 		scheduleCallback(NormalPriority, function()
-			table.insert(log, 'B')
+			table.insert(log, "B")
 		end)
 		scheduleCallback(NormalPriority, function()
-			table.insert(log, 'C')
+			table.insert(log, "C")
 		end)
 
 		jestExpect(log).toEqual({})
 
 		RobloxJest.runAllTimers()
 
-		jestExpect(log).toEqual({'A', 'B', 'C'})
+		jestExpect(log).toEqual({ "A", "B", "C" })
 	end)
 
-	it('executes callbacks in order of priority', function()
+	it("executes callbacks in order of priority", function()
 		local log = {}
 
 		scheduleCallback(NormalPriority, function()
-			table.insert(log, 'A')
+			table.insert(log, "A")
 		end)
 		scheduleCallback(NormalPriority, function()
-			table.insert(log, 'B')
+			table.insert(log, "B")
 		end)
 		scheduleCallback(UserBlockingPriority, function()
-			table.insert(log, 'C')
+			table.insert(log, "C")
 		end)
 		scheduleCallback(UserBlockingPriority, function()
-			table.insert(log, 'D')
+			table.insert(log, "D")
 		end)
 
 		jestExpect(log).toEqual({})
 		RobloxJest.runAllTimers()
-		jestExpect(log).toEqual({'C', 'D', 'A', 'B'})
+		jestExpect(log).toEqual({ "C", "D", "A", "B" })
 	end)
 
-	it('handles errors', function()
+	it("handles errors", function()
 		local log = {}
 
 		scheduleCallback(ImmediatePriority, function()
-			table.insert(log, 'A')
-			error('Oops A')
+			table.insert(log, "A")
+			error("Oops A")
 		end)
 		scheduleCallback(ImmediatePriority, function()
-			table.insert(log, 'B')
+			table.insert(log, "B")
 		end)
 		scheduleCallback(ImmediatePriority, function()
-			table.insert(log, 'C')
-			error('Oops C')
+			table.insert(log, "C")
+			error("Oops C")
 		end)
 
-		jestExpect(RobloxJest.runAllTimers).toThrow('Oops A')
-		jestExpect(log).toEqual({'A'})
+		jestExpect(RobloxJest.runAllTimers).toThrow("Oops A")
+		jestExpect(log).toEqual({ "A" })
 
 		log = {}
 
@@ -93,7 +93,7 @@ return function()
 		-- swallowed.
 		jestExpect(function()
 			RobloxJest.runAllTimers()
-		end).toThrow('Oops C')
-		jestExpect(log).toEqual({'B', 'C'})
+		end).toThrow("Oops C")
+		jestExpect(log).toEqual({ "B", "C" })
 	end)
 end

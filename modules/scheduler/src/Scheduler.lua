@@ -98,12 +98,12 @@ return function(hostConfig)
 				timer.sortIndex = timer.expirationTime
 				push(taskQueue, timer)
 				if enableProfiling then
-					markTaskStart(timer, currentTime);
-					timer.isQueued = true;
+					markTaskStart(timer, currentTime)
+					timer.isQueued = true
 				end
 			else
 				-- Remaining timers are pending.
-				return;
+				return
 			end
 
 			timer = peek(timerQueue)
@@ -121,7 +121,7 @@ return function(hostConfig)
 			else
 				local firstTimer = peek(timerQueue)
 				if firstTimer ~= nil then
-					requestHostTimeout(handleTimeout, firstTimer.startTime - currentTime);
+					requestHostTimeout(handleTimeout, firstTimer.startTime - currentTime)
 				end
 			end
 		end
@@ -193,11 +193,13 @@ return function(hostConfig)
 		local currentTime = initialTime
 		advanceTimers(currentTime)
 		currentTask = peek(taskQueue)
-		while currentTask ~= nil and
-			not (enableSchedulerDebugging and isSchedulerPaused) do
+		while
+			currentTask ~= nil
+			and not (enableSchedulerDebugging and isSchedulerPaused)
+		do
 			if
-				currentTask.expirationTime > currentTime and
-				(not hasTimeRemaining or shouldYieldToHost())
+				currentTask.expirationTime > currentTime
+				and (not hasTimeRemaining or shouldYieldToHost())
 			then
 				-- This currentTask hasn't expired, and we've reached the deadline.
 				break
@@ -247,11 +249,11 @@ return function(hostConfig)
 
 	local function unstable_runWithPriority(priorityLevel, eventHandler)
 		if
-			priorityLevel == ImmediatePriority or
-			priorityLevel == UserBlockingPriority or
-			priorityLevel == NormalPriority or
-			priorityLevel == LowPriority or
-			priorityLevel == IdlePriority
+			priorityLevel == ImmediatePriority
+			or priorityLevel == UserBlockingPriority
+			or priorityLevel == NormalPriority
+			or priorityLevel == LowPriority
+			or priorityLevel == IdlePriority
 		then
 			-- Leave priority alone if assigned
 		else
@@ -283,9 +285,9 @@ return function(hostConfig)
 	local function unstable_next(eventHandler)
 		local priorityLevel
 		if
-			currentPriorityLevel == ImmediatePriority or
-			currentPriorityLevel == UserBlockingPriority or
-			currentPriorityLevel == NormalPriority
+			currentPriorityLevel == ImmediatePriority
+			or currentPriorityLevel == UserBlockingPriority
+			or currentPriorityLevel == NormalPriority
 		then
 			-- Shift down to normal priority
 			priorityLevel = NormalPriority
@@ -375,7 +377,7 @@ return function(hostConfig)
 			timeout = NORMAL_PRIORITY_TIMEOUT
 		end
 
-		local expirationTime = startTime + timeout;
+		local expirationTime = startTime + timeout
 
 		local newTask = {
 			id = taskIdCounter,
@@ -388,7 +390,7 @@ return function(hostConfig)
 		taskIdCounter += 1
 
 		if enableProfiling then
-			newTask.isQueued = false;
+			newTask.isQueued = false
 		end
 
 		if startTime > currentTime then
@@ -445,9 +447,9 @@ return function(hostConfig)
 	local function unstable_cancelCallback(task)
 		if enableProfiling then
 			if task.isQueued then
-			local currentTime = getCurrentTime()
-			markTaskCanceled(task, currentTime)
-			task.isQueued = false;
+				local currentTime = getCurrentTime()
+				markTaskCanceled(task, currentTime)
+				task.isQueued = false
 			end
 		end
 

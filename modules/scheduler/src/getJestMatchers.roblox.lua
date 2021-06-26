@@ -33,8 +33,11 @@ return function(jestExpect)
 	local function assertYieldsWereCleared(scheduler)
 		local actualYields = scheduler.unstable_clearYields()
 		if #actualYields ~= 0 then
-			error("Log of yielded values is not empty. " ..
-				"Call expectToHaveYielded(scheduler, ...) first.", 3)
+			error(
+				"Log of yielded values is not empty. "
+					.. "Call expectToHaveYielded(scheduler, ...) first.",
+				3
+			)
 		end
 	end
 
@@ -48,7 +51,11 @@ return function(jestExpect)
 		end)
 	end
 
-	local function expectToFlushAndYieldThrough(_matcherContext, scheduler, expectedYields)
+	local function expectToFlushAndYieldThrough(
+		_matcherContext,
+		scheduler,
+		expectedYields
+	)
 		assertYieldsWereCleared(scheduler)
 		scheduler.unstable_flushNumberOfYields(#expectedYields)
 		local actualYields = scheduler.unstable_clearYields()
@@ -95,6 +102,6 @@ return function(jestExpect)
 		toFlushWithoutYielding = expectToFlushWithoutYielding,
 		toFlushExpired = expectToFlushExpired,
 		toHaveYielded = expectToHaveYielded,
-		toFlushAndThrow = expectToFlushAndThrow
+		toFlushAndThrow = expectToFlushAndThrow,
 	}
 end

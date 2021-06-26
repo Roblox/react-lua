@@ -49,7 +49,7 @@ end
 siftUp = function(heap: Heap, node: Node, index: number): ()
 	while true do
 		local parentIndex = math.floor(index / 2)
-		local parent = heap[parentIndex];
+		local parent = heap[parentIndex]
 		if parent ~= nil and compare(parent :: Node, node :: Node) > 0 then
 			-- The parent is larger. Swap positions.
 			heap[parentIndex] = node

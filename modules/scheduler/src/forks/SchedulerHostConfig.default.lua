@@ -32,9 +32,9 @@ local _timeoutID = nil
 
 local function _flushCallback()
 	if _callback ~= nil then
-        -- ROBLOX deviation: YOLO flag for disabling pcall
-        local ok, result
-        if not _G.__YOLO__ then
+		-- ROBLOX deviation: YOLO flag for disabling pcall
+		local ok, result
+		if not _G.__YOLO__ then
 			ok, result = pcall(function()
 				local currentTime = getCurrentTime()
 				local hasRemainingTime = true
@@ -47,7 +47,7 @@ local function _flushCallback()
 			local hasRemainingTime = true
 			_callback(hasRemainingTime, currentTime)
 			_callback = nil
-	end
+		end
 
 		if not ok then
 			setTimeout(_flushCallback, 0)

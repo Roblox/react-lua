@@ -8,7 +8,7 @@
 ]]
 
 return {
-    enableSchedulerDebugging = false,
-    enableIsInputPending = false,
-    enableProfiling = _G.__PROFILE__
+	enableSchedulerDebugging = false,
+	enableIsInputPending = false,
+	enableProfiling = _G.__PROFILE__,
 }
