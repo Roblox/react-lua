@@ -126,7 +126,13 @@ function Component:extend(name)
     -- things like `state` if its necessary, consider if we want some sort of
     -- alternate naming or syntax for the constructor equivalent
     if typeof(class.init) == 'function' then
+      function instance.setState(_, initialState)
+        instance.state = initialState
+      end
+
       class.init(instance, props, context)
+
+      instance.setState = (nil :: any)
     end
 
     return instance

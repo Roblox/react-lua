@@ -345,7 +345,7 @@ return function()
 					return s
 				end, 0)
 				local name, updateName = React.useState(props.defaultName)
-				_dispatch = function()
+				_dispatch = function(...)
 					return dispatch("inc")
 				end
 

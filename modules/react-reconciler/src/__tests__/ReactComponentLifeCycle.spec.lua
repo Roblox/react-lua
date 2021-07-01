@@ -243,9 +243,8 @@ return function()
     )
   end)
 
-  -- Not sure why I couldn't get this one to work
-  -- ROBLOX deviation? setState doesn't exist on the instance during init()
-  it('should not allow update state inside of getInitialState', function()
+  -- ROBLOX DEVIATION: skipped because we ARE supporting setState in constructor in roact alignment (see LUAFDN-322)
+  xit('should not allow update state inside of getInitialState', function()
     local StatefulComponent = React.Component:extend("StatefulComponent")
 
     function StatefulComponent:init()
