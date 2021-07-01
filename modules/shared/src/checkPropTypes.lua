@@ -17,7 +17,8 @@ local console = require(script.Parent.console)
 local loggedTypeFailures = {}
 
 local ReactComponentStackFrame = require(script.Parent.ReactComponentStackFrame)
-local describeUnknownElementTypeFrameInDEV = ReactComponentStackFrame.describeUnknownElementTypeFrameInDEV
+local describeUnknownElementTypeFrameInDEV =
+	ReactComponentStackFrame.describeUnknownElementTypeFrameInDEV
 
 local ReactSharedInternals = require(script.Parent.ReactSharedInternals)
 
@@ -56,20 +57,20 @@ local function checkPropTypes(typeSpecs, values, location, componentName, elemen
 			local _, result = pcall(function()
 				-- This is intentionally an invariant that gets caught. It's the same
 				-- behavior as without this statement except with a better message.
-				if typeof(typeSpecs[typeSpecName]) ~= 'function' then
+				if typeof(typeSpecs[typeSpecName]) ~= "function" then
 					local err = Error(
-						(componentName or 'React class') ..
-						': ' ..
-						location ..
-						' type `' ..
-						typeSpecName ..
-						'` is invalid; ' ..
-						'it must be a function, usually from the `prop-types` package, but received `' ..
-						typeof(typeSpecs[typeSpecName]) ..
-						'`.' ..
-						'This often happens because of typos such as `PropTypes.function` instead of `PropTypes.func`.'
+						(componentName or "React class")
+							.. ": "
+							.. location
+							.. " type `"
+							.. typeSpecName
+							.. "` is invalid; "
+							.. "it must be a function, usually from the `prop-types` package, but received `"
+							.. typeof(typeSpecs[typeSpecName])
+							.. "`."
+							.. "This often happens because of typos such as `PropTypes.function` instead of `PropTypes.func`."
 					)
-					err.name = 'Invariant Violation'
+					err.name = "Invariant Violation"
 					error(err)
 				end
 
@@ -79,7 +80,7 @@ local function checkPropTypes(typeSpecs, values, location, componentName, elemen
 					componentName,
 					location,
 					nil,
-					'SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED'
+					"SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED"
 				)
 			end)
 
@@ -89,18 +90,20 @@ local function checkPropTypes(typeSpecs, values, location, componentName, elemen
 			local isErrorObject = typeof(result) == "table"
 			if result ~= nil and not isErrorObject then
 				setCurrentlyValidatingElement(element)
-				console.error(string.format(
-					'%s: type specification of %s' ..
-						' `%s` is invalid; the type checker ' ..
-						'function must return `null` or an `Error` but returned a %s. ' ..
-						'You may have forgotten to pass an argument to the type checker ' ..
-						'creator (arrayOf, instanceOf, objectOf, oneOf, oneOfType, and ' ..
-						'shape all require an argument).',
-					componentName or 'React class',
-					location,
-					typeSpecName,
-					typeof(result)
-				))
+				console.error(
+					string.format(
+						"%s: type specification of %s"
+							.. " `%s` is invalid; the type checker "
+							.. "function must return `null` or an `Error` but returned a %s. "
+							.. "You may have forgotten to pass an argument to the type checker "
+							.. "creator (arrayOf, instanceOf, objectOf, oneOf, oneOfType, and "
+							.. "shape all require an argument).",
+						componentName or "React class",
+						location,
+						typeSpecName,
+						typeof(result)
+					)
+				)
 				setCurrentlyValidatingElement(nil)
 			end
 
@@ -109,7 +112,7 @@ local function checkPropTypes(typeSpecs, values, location, componentName, elemen
 				-- same error.
 				loggedTypeFailures[result.message] = true
 				setCurrentlyValidatingElement(element)
-				warn(string.format('Failed %s type: %s', location, result.message))
+				warn(string.format("Failed %s type: %s", location, result.message))
 				setCurrentlyValidatingElement(nil)
 			end
 		end

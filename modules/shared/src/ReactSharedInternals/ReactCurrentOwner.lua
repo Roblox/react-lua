@@ -15,11 +15,11 @@
  * currently being constructed.
 ]]
 local ReactCurrentOwner = {
-  --[[*
+	--[[*
    * @internal
    * @type {ReactComponent}
    ]]
-  current = nil,
+	current = nil,
 }
 
 return ReactCurrentOwner

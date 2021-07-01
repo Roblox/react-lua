@@ -34,7 +34,7 @@ local function invokeGuardedCallbackProd(reporter, name, func, context, ...)
 		else
 			func(context, ...)
 		end
-end
+	end
 
 	if not ok then
 		-- deviation: functions have no notion of "this"/"self", so we expect
@@ -70,7 +70,7 @@ if _G.__DEV__ then
 
 	-- deviation: `window` is not defined in our environment
 	-- deviation: FIXME: should we define our own impl for invokeGuardedCallbackDev?
---[[
+	--[[
 	if typeof window ~= 'undefined' and typeof window.dispatchEvent == 'function' and typeof document ~= 'undefined' and typeof document.createEvent == 'function' then
 		local fakeNode = document.createElement('react')
 

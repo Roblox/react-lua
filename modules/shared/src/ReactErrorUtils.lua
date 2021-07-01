@@ -24,7 +24,7 @@ local reporter = {
 	onError = function(err)
 		hasError = true
 		caughtError = err
-	end
+	end,
 }
 local exports = {}
 
@@ -96,9 +96,10 @@ clearCaughtError = function()
 		caughtError = nil
 		return err
 	else
-		invariant(false,
-			'clearCaughtError was called but no error was captured. This error ' ..
-			'is likely caused by a bug in React. Please file an issue.'
+		invariant(
+			false,
+			"clearCaughtError was called but no error was captured. This error "
+				.. "is likely caused by a bug in React. Please file an issue."
 		)
 		-- deviation: luau doesn't know that invariant throws, so we return nil
 		return nil

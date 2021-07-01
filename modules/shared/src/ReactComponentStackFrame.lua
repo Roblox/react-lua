@@ -58,7 +58,7 @@ local function describeBuiltInComponentFrame(
 		-- 	end
 		-- end
 		-- We use the prefix to ensure our stacks line up with native stack frames.
-		return '\n' .. prefix .. name
+		return "\n" .. prefix .. name
 	else
 		local ownerName = nil
 
@@ -77,7 +77,10 @@ if _G.__DEV__ then
 	componentFrameCache = setmetatable({}, { __mode = "k" })
 end
 
-local function describeNativeComponentFrame(fn: ((any) -> any)?, construct: boolean): string
+local function describeNativeComponentFrame(
+	fn: ((any) -> any)?,
+	construct: boolean
+): string
 	-- // If something asked for a stack inside a fake render, it should get ignored.
 	if not fn or reentry then
 		return ""
@@ -141,9 +144,7 @@ local function describeNativeComponentFrame(fn: ((any) -> any)?, construct: bool
 	-- instructions in the finally block.
 	local earlyOutValue = nil
 
-	if sample and control and
-		typeof(sample.stack) == "string"
-	then
+	if sample and control and typeof(sample.stack) == "string" then
 		-- // This extracts the first frame from the sample that isn't also in the control.
 		-- // Skipping one frame that we assume is the frame that calls the two.
 		local sampleLines = sample.stack:split("\n")
@@ -153,7 +154,9 @@ local function describeNativeComponentFrame(fn: ((any) -> any)?, construct: bool
 		local sampleIndex = #sampleLines - 1
 		local controlIndex = #controlLines - 1
 
-		while sampleIndex >= 2 and controlIndex >= 0
+		while
+			sampleIndex >= 2
+			and controlIndex >= 0
 			and sampleLines[sampleIndex] ~= controlLines[controlIndex]
 		do
 			-- // We expect at least one stack frame to be shared.
@@ -182,15 +185,16 @@ local function describeNativeComponentFrame(fn: ((any) -> any)?, construct: bool
 						controlIndex = controlIndex - 1
 						-- // We may still have similar intermediate frames from the construct call.
 						-- // The next one that isn't the same should be our match though.
-						if controlIndex < 0
+						if
+							controlIndex < 0
 							or sampleLines[sampleIndex] ~= controlLines[controlIndex]
 						then
 							-- deviation: add the '    in ' prefix to format the component stack
 							-- similar to React
-							local frame = '\n' .. prefix .. sampleLines[sampleIndex]
+							local frame = "\n" .. prefix .. sampleLines[sampleIndex]
 
 							if _G.__DEV__ then
-								if typeof(fn) == 'function' then
+								if typeof(fn) == "function" then
 									componentFrameCache[fn] = frame
 								end
 							end
@@ -228,10 +232,10 @@ local function describeNativeComponentFrame(fn: ((any) -> any)?, construct: bool
 	if typeof(fn) == "function" then
 		-- ROBLOX FIXME: selene currently flags debug.info for not having field info
 		-- selene: allow(incorrect_standard_library_use)
-			-- ROBLOX FIXME: Luau flow analysis bug workaround
-			name = debug.info((fn :: (any) -> any), "n")
+		-- ROBLOX FIXME: Luau flow analysis bug workaround
+		name = debug.info(fn :: (any) -> any, "n")
 
-	-- ROBLOX deviation: since fn can be a class, we can get the class name here
+		-- ROBLOX deviation: since fn can be a class, we can get the class name here
 	elseif typeof(fn) == "table" then
 		name = tostring(fn)
 	end
@@ -329,7 +333,7 @@ end
 -- 	return not not (prototype and prototype.isReactComponent)
 -- end
 
-local function describeUnknownElementTypeFrameInDEV(type, source, ownerFn):string
+local function describeUnknownElementTypeFrameInDEV(type, source, ownerFn): string
 	if not _G.__DEV__ then
 		return ""
 	end
@@ -363,7 +367,6 @@ local function describeUnknownElementTypeFrameInDEV(type, source, ownerFn):strin
 
 	if type == REACT_SUSPENSE_TYPE then
 		return describeBuiltInComponentFrame("Suspense", source, ownerFn)
-
 	elseif type == REACT_SUSPENSE_LIST_TYPE then
 		return describeBuiltInComponentFrame("SuspenseList", source, ownerFn)
 	end
@@ -372,14 +375,11 @@ local function describeUnknownElementTypeFrameInDEV(type, source, ownerFn):strin
 		local typeProp = type["$$typeof"]
 		if typeProp == REACT_FORWARD_REF_TYPE then
 			return describeFunctionComponentFrame(type.render, source, ownerFn)
-
 		elseif typeProp == REACT_MEMO_TYPE then
 			-- // Memo may contain any component type so we recursively resolve it.
 			return describeUnknownElementTypeFrameInDEV(type.type, source, ownerFn)
-
 		elseif typeProp == REACT_BLOCK_TYPE then
 			return describeFunctionComponentFrame(type._render, source, ownerFn)
-
 		elseif typeProp == REACT_LAZY_TYPE then
 			local lazyComponent = type
 			local payload = lazyComponent._payload
@@ -387,7 +387,11 @@ local function describeUnknownElementTypeFrameInDEV(type, source, ownerFn):strin
 
 			local ok, result = pcall(function()
 				-- // Lazy may contain any component type so we recursively resolve it.
-				return describeUnknownElementTypeFrameInDEV(init(payload), source, ownerFn)
+				return describeUnknownElementTypeFrameInDEV(
+					init(payload),
+					source,
+					ownerFn
+				)
 			end)
 
 			if ok then

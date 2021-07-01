@@ -31,25 +31,25 @@ local ReactFeatureFlags = require(script.Parent.ReactFeatureFlags)
 local enableScopeAPI = ReactFeatureFlags.enableScopeAPI
 
 return function(type)
-	if typeof(type) == 'string' or typeof(type) == 'function' then
+	if typeof(type) == "string" or typeof(type) == "function" then
 		return true
 	end
 
 	-- Note: typeof might be other than 'symbol' or 'number' (e.g. if it's a polyfill).
 	if
-		type == REACT_FRAGMENT_TYPE or
-		type == REACT_PROFILER_TYPE or
-		type == REACT_DEBUG_TRACING_MODE_TYPE or
-		type == REACT_STRICT_MODE_TYPE or
-		type == REACT_SUSPENSE_TYPE or
-		type == REACT_SUSPENSE_LIST_TYPE or
-		type == REACT_LEGACY_HIDDEN_TYPE or
-		(enableScopeAPI and type == REACT_SCOPE_TYPE)
+		type == REACT_FRAGMENT_TYPE
+		or type == REACT_PROFILER_TYPE
+		or type == REACT_DEBUG_TRACING_MODE_TYPE
+		or type == REACT_STRICT_MODE_TYPE
+		or type == REACT_SUSPENSE_TYPE
+		or type == REACT_SUSPENSE_LIST_TYPE
+		or type == REACT_LEGACY_HIDDEN_TYPE
+		or (enableScopeAPI and type == REACT_SCOPE_TYPE)
 	then
 		return true
 	end
 
-	if typeof(type) == 'table' and type ~= nil then
+	if typeof(type) == "table" and type ~= nil then
 		-- ROBLOX deviation: In React, component classes are of type 'function'; for
 		-- us, they're tables with a special value on their metatable
 		if type.isReactComponent then
@@ -57,14 +57,14 @@ return function(type)
 		end
 
 		if
-			type["$$typeof"] == REACT_LAZY_TYPE or
-			type["$$typeof"] == REACT_MEMO_TYPE or
-			type["$$typeof"] == REACT_PROVIDER_TYPE or
-			type["$$typeof"] == REACT_CONTEXT_TYPE or
-			type["$$typeof"] == REACT_FORWARD_REF_TYPE or
-			type["$$typeof"] == REACT_FUNDAMENTAL_TYPE or
-			type["$$typeof"] == REACT_BLOCK_TYPE or
-			type[1] == REACT_SERVER_BLOCK_TYPE
+			type["$$typeof"] == REACT_LAZY_TYPE
+			or type["$$typeof"] == REACT_MEMO_TYPE
+			or type["$$typeof"] == REACT_PROVIDER_TYPE
+			or type["$$typeof"] == REACT_CONTEXT_TYPE
+			or type["$$typeof"] == REACT_FORWARD_REF_TYPE
+			or type["$$typeof"] == REACT_FUNDAMENTAL_TYPE
+			or type["$$typeof"] == REACT_BLOCK_TYPE
+			or type[1] == REACT_SERVER_BLOCK_TYPE
 		then
 			return true
 		end

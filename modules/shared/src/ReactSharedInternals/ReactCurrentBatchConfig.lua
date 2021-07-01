@@ -13,7 +13,7 @@
  * should suspend for if it needs to.
 ]]
 local ReactCurrentBatchConfig = {
-  transition = 0,
+	transition = 0,
 }
 
 return ReactCurrentBatchConfig

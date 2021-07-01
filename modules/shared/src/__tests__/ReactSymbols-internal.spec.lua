@@ -18,15 +18,22 @@ return function()
 		for key, value in pairs(keyValuePairs) do
 			if map[value] ~= nil then
 				-- ROBLOX TODO: workaround for Luau false positive nil-ability
-				error(string.format("%s value %s is the same as %s", key, tostring(value), map[value] :: any))
+				error(
+					string.format(
+						"%s value %s is the same as %s",
+						key,
+						tostring(value),
+						map[value] :: any
+					)
+				)
 			end
-				-- ROBLOX TODO: workaround for Luau false positive nil-ability
-				map[value] = key :: any
+			-- ROBLOX TODO: workaround for Luau false positive nil-ability
+			map[value] = key :: any
 		end
 	end
 
 	-- deviation: Symbol values are not used
-	itSKIP('Symbol values should be unique', function()
+	itSKIP("Symbol values should be unique", function()
 		-- expectToBeUnique(require(script.Parent.ReactSymbols));
 	end)
 
@@ -34,7 +41,7 @@ return function()
 	-- commented out portion of this test are actually a thing; they don't seem
 	-- to exist, so we may be able to update the upstream test and the pull in
 	-- the simplified logic
-	it('numeric values should be unique', function()
+	it("numeric values should be unique", function()
 		-- deviation: We don't use symbol anyways, so it's no use to
 		-- override it. We also don't need to filter any values, since
 		-- they're internal-only.

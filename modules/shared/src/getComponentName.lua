@@ -27,15 +27,17 @@ local function getWrappedName(outerType, innerType, wrapperName)
 	-- deviation: Account for indexing into function
 	local functionName = "<function>"
 	if typeof(innerType) == "table" then
-		functionName = innerType.displayName or innerType.name or ''
+		functionName = innerType.displayName or innerType.name or ""
 	end
-	return
-		outerType.displayName or
-		(functionName ~= '' and string.format("%s(%s)", wrapperName, functionName) or wrapperName)
+	return outerType.displayName or (functionName ~= "" and string.format(
+		"%s(%s)",
+		wrapperName,
+		functionName
+	) or wrapperName)
 end
 
 local function getContextName(type)
-	return type.displayName or 'Context'
+	return type.displayName or "Context"
 end
 
 local function getComponentName(type): string?
@@ -48,8 +50,8 @@ local function getComponentName(type): string?
 	if _G.__DEV__ then
 		if typeofType == "table" and typeof(type.tag) == "number" then
 			console.warn(
-				"Received an unexpected object in getComponentName(). " ..
-					"This is likely a bug in React. Please file an issue."
+				"Received an unexpected object in getComponentName(). "
+					.. "This is likely a bug in React. Please file an issue."
 			)
 		end
 	end
@@ -58,7 +60,7 @@ local function getComponentName(type): string?
 		-- ROBLOX FIXME: selene currently flags debug.info for not having field info
 		-- selene: allow(incorrect_standard_library_use)
 		-- ROBLOX FIXME: Luau flow analysis bug workaround
-		local name = debug.info((type :: (any) -> any), "n")
+		local name = debug.info(type :: (any) -> any, "n")
 		-- when name = (null) we want it to be treated as nil, not as an empty (truthy) string
 		if name and #name > 0 then
 			return name
@@ -72,43 +74,33 @@ local function getComponentName(type): string?
 	end
 
 	if type == REACT_FRAGMENT_TYPE then
-		return 'Fragment'
-
+		return "Fragment"
 	elseif type == REACT_PORTAL_TYPE then
-		return 'Portal'
-
+		return "Portal"
 	elseif type == REACT_PROFILER_TYPE then
-		return 'Profiler'
-
+		return "Profiler"
 	elseif type == REACT_STRICT_MODE_TYPE then
-		return 'StrictMode'
-
+		return "StrictMode"
 	elseif type == REACT_SUSPENSE_TYPE then
-		return 'Suspense'
-
+		return "Suspense"
 	elseif type == REACT_SUSPENSE_LIST_TYPE then
-		return 'SuspenseList'
+		return "SuspenseList"
 	end
 
 	if typeofType == "table" then
 		local typeProp = type["$$typeof"]
 		if typeProp == REACT_CONTEXT_TYPE then
 			local context = type
-			return getContextName(context) .. '.Consumer'
-
+			return getContextName(context) .. ".Consumer"
 		elseif typeProp == REACT_PROVIDER_TYPE then
 			local provider = type
-			return getContextName(provider._context) .. '.Provider'
-
+			return getContextName(provider._context) .. ".Provider"
 		elseif typeProp == REACT_FORWARD_REF_TYPE then
-			return getWrappedName(type, type.render, 'ForwardRef')
-
+			return getWrappedName(type, type.render, "ForwardRef")
 		elseif typeProp == REACT_MEMO_TYPE then
 			return getComponentName(type.type)
-
 		elseif typeProp == REACT_BLOCK_TYPE then
 			return getComponentName(type._render)
-
 		elseif typeProp == REACT_LAZY_TYPE then
 			local lazyComponent = type
 			local payload = lazyComponent._payload

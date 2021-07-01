@@ -5,7 +5,7 @@
 -- ROBLOX: use patched console from shared
 local console = require(script.Parent.console)
 
- -- Helpers to patch console.logs to avoid logging during side-effect free
+-- Helpers to patch console.logs to avoid logging during side-effect free
 -- replaying on render function. This currently only patches the object
 -- lazily which won't cover if the log function was extracted eagerly.
 -- We could also eagerly patch the method.
@@ -66,8 +66,10 @@ exports.reenableLogs = function()
 		end
 
 		if disabledDepth < 0 then
-			console.error("disabledDepth fell below zero. " ..
-				"This is a bug in React. Please file an issue.")
+			console.error(
+				"disabledDepth fell below zero. "
+					.. "This is a bug in React. Please file an issue."
+			)
 		end
 	end
 end

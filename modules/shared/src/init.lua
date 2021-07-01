@@ -13,15 +13,18 @@ export type ReactContext<T> = ReactTypes.ReactContext<T>
 export type ReactPortal = ReactTypes.ReactPortal
 export type RefObject = ReactTypes.RefObject
 export type EventPriority = ReactTypes.EventPriority
-export type ReactFundamentalComponentInstance<C, H> = ReactTypes.ReactFundamentalComponentInstance<C, H>
+export type ReactFundamentalComponentInstance<C, H> =
+	ReactTypes.ReactFundamentalComponentInstance<C, H>
 export type ReactFundamentalImpl<C, H> = ReactTypes.ReactFundamentalImpl<C, H>
 export type ReactFundamentalComponent<C, H> = ReactTypes.ReactFundamentalComponent<C, H>
 export type ReactScope = ReactTypes.ReactScope
 export type ReactScopeQuery = ReactTypes.ReactScopeQuery
 export type ReactScopeInstance = ReactTypes.ReactScopeInstance
 export type MutableSourceVersion = ReactTypes.MutableSourceVersion
-export type MutableSourceGetSnapshotFn<Source, Snapshot> = ReactTypes.MutableSourceGetSnapshotFn<Source, Snapshot>
-export type MutableSourceSubscribeFn<Source, Snapshot> = ReactTypes.MutableSourceSubscribeFn<Source, Snapshot>
+export type MutableSourceGetSnapshotFn<Source, Snapshot> =
+	ReactTypes.MutableSourceGetSnapshotFn<Source, Snapshot>
+export type MutableSourceSubscribeFn<Source, Snapshot> =
+	ReactTypes.MutableSourceSubscribeFn<Source, Snapshot>
 export type MutableSourceGetVersionFn = ReactTypes.MutableSourceGetVersionFn
 export type MutableSource<Source> = ReactTypes.MutableSource<Source>
 export type Wakeable = ReactTypes.Wakeable

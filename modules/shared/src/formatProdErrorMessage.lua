@@ -15,16 +15,16 @@
 local HttpService = game:GetService("HttpService")
 
 local function formatProdErrorMessage(code, ...)
-	local url = 'https://reactjs.org/docs/error-decoder.html?invariant=' .. tostring(code)
+	local url = "https://reactjs.org/docs/error-decoder.html?invariant=" .. tostring(code)
 	local argsLength = select("#", ...)
 	for i = 1, argsLength, 1 do
 		-- deviation: UrlEncode should be equivalent to encodeURIComponent
-		url = url .. '&args[]=' .. HttpService:UrlEncode(select(i, ...))
+		url = url .. "&args[]=" .. HttpService:UrlEncode(select(i, ...))
 	end
 	return string.format(
-		'Minified React error #%d; visit %s for the full message or ' ..
-		'use the non-minified dev environment for full errors and additional ' ..
-		'helpful warnings.',
+		"Minified React error #%d; visit %s for the full message or "
+			.. "use the non-minified dev environment for full errors and additional "
+			.. "helpful warnings.",
 		code,
 		url
 	)

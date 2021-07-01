@@ -73,32 +73,32 @@ exports.REACT_LEGACY_HIDDEN_TYPE = 0xeae3
 --local FAUX_ITERATOR_SYMBOL = '@@iterator'
 
 type Iterator<T> = {
-  next: () -> {
-    value: T,
-    key: any,
-    done: boolean,
-  },
+	next: () -> {
+		value: T,
+		key: any,
+		done: boolean,
+	},
 }
 exports.getIteratorFn = function(maybeIterable): nil | () -> Iterator<any>
-  if typeof(maybeIterable) == "table" then
-    return function()
-      local currentKey: any, currentValue: any
-      return {
-        next = function()
-          currentKey, currentValue = next(maybeIterable, currentKey)
-          return {
-            done = currentValue == nil,
-            -- deviation: To support Roact's table-keys-as-stable-keys feature,
-            -- we need the iterator to return the key as well
-            key = currentKey,
-            value = currentValue,
-          }
-        end,
-      }
-    end
-  end
+	if typeof(maybeIterable) == "table" then
+		return function()
+			local currentKey: any, currentValue: any
+			return {
+				next = function()
+					currentKey, currentValue = next(maybeIterable, currentKey)
+					return {
+						done = currentValue == nil,
+						-- deviation: To support Roact's table-keys-as-stable-keys feature,
+						-- we need the iterator to return the key as well
+						key = currentKey,
+						value = currentValue,
+					}
+				end,
+			}
+		end
+	end
 
-  return nil
+	return nil
 end
 
 return exports

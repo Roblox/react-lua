@@ -13,7 +13,9 @@ if _G.__DEV__ then
 	local newConsole = setmetatable({
 		warn = consoleWithStackDev.warn,
 		error = consoleWithStackDev.error,
-	}, { __index = console })
+	}, {
+		__index = console,
+	})
 	return newConsole
 end
 

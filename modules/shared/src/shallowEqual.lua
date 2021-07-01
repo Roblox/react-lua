@@ -19,7 +19,12 @@ local function shallowEqual(objA, objB)
 		return true
 	end
 
-	if typeof(objA) ~= 'table' or objA == nil or typeof(objB) ~= 'table' or objB == nil then
+	if
+		typeof(objA) ~= "table"
+		or objA == nil
+		or typeof(objB) ~= "table"
+		or objB == nil
+	then
 		return false
 	end
 

@@ -21,8 +21,11 @@ return function()
 		beforeEach(function()
 			RobloxJest.resetModules()
 
-			ReactComponentStackFrame = require(script.Parent.Parent.ReactComponentStackFrame)
-			describeNativeComponentFrame = ReactComponentStackFrame.describeNativeComponentFrame
+			ReactComponentStackFrame = require(
+				script.Parent.Parent.ReactComponentStackFrame
+			)
+			describeNativeComponentFrame =
+				ReactComponentStackFrame.describeNativeComponentFrame
 		end)
 
 		it("finds the appropriate line in the stack trace", function()
@@ -54,13 +57,17 @@ return function()
 				})
 			end)
 
-			ReactComponentStackFrame = require(script.Parent.Parent.ReactComponentStackFrame)
+			ReactComponentStackFrame = require(
+				script.Parent.Parent.ReactComponentStackFrame
+			)
 		end)
 
 		describe("describeBuiltInComponentFrame", function()
 			it("shows only the component name if there is no source", function()
 				local componentName = "SomeComponent"
-				local frame = ReactComponentStackFrame.describeBuiltInComponentFrame(componentName)
+				local frame = ReactComponentStackFrame.describeBuiltInComponentFrame(
+					componentName
+				)
 				assertStringContains(frame, componentName)
 			end)
 
@@ -123,15 +130,23 @@ return function()
 				it(("converts the file name %q"):format(fileName), function()
 					local owner = nil
 					local componentName = "SomeComponent"
-					local frame = ReactComponentStackFrame.describeBuiltInComponentFrame(componentName, {
-						fileName = fileName,
-						lineNumber = lineNumber,
-					}, owner)
+					local frame = ReactComponentStackFrame.describeBuiltInComponentFrame(
+						componentName,
+						{
+							fileName = fileName,
+							lineNumber = lineNumber,
+						},
+						owner
+					)
 
 					if _G.__DEV__ then
 						assertStringContains(
 							frame,
-							("%s (at %s:%s)"):format(componentName, expectedFileName, lineNumber)
+							("%s (at %s:%s)"):format(
+								componentName,
+								expectedFileName,
+								lineNumber
+							)
 						)
 					else
 						assertStringContains(frame, componentName)
@@ -156,8 +171,11 @@ return function()
 				})
 			end)
 
-			ReactComponentStackFrame = require(script.Parent.Parent.ReactComponentStackFrame)
-			describeBuiltInComponentFrame = ReactComponentStackFrame.describeBuiltInComponentFrame
+			ReactComponentStackFrame = require(
+				script.Parent.Parent.ReactComponentStackFrame
+			)
+			describeBuiltInComponentFrame =
+				ReactComponentStackFrame.describeBuiltInComponentFrame
 		end)
 
 		describe("describeBuiltInComponentFrame", function()
