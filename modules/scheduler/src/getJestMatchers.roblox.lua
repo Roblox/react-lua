@@ -65,7 +65,16 @@ return function(jestExpect)
 		end)
 	end
 
-	local function expectToFlushWithoutYielding(_matcherContext, scheduler)
+	local function toFlushUntilNextPaint(_matcherContext, Scheduler, expectedYields)
+		assertYieldsWereCleared(Scheduler)
+		Scheduler.unstable_flushUntilNextPaint()
+		local actualYields = Scheduler.unstable_clearYields()
+		return captureAssertion(function()
+			jestExpect(actualYields).toEqual(expectedYields)
+		end)
+	end
+
+		  local function expectToFlushWithoutYielding(_matcherContext, scheduler)
 		return expectToFlushAndYield(_matcherContext, scheduler, {})
 	end
 
@@ -100,6 +109,7 @@ return function(jestExpect)
 		toFlushAndYield = expectToFlushAndYield,
 		toFlushAndYieldThrough = expectToFlushAndYieldThrough,
 		toFlushWithoutYielding = expectToFlushWithoutYielding,
+		toFlushUntilNextPaint = toFlushUntilNextPaint,
 		toFlushExpired = expectToFlushExpired,
 		toHaveYielded = expectToHaveYielded,
 		toFlushAndThrow = expectToFlushAndThrow,

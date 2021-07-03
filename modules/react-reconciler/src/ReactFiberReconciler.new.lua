@@ -112,7 +112,7 @@ local setCurrentUpdateLanePriority = ReactFiberLane.setCurrentUpdateLanePriority
 -- local scheduleRoot = ReactFiberHotReloading.scheduleRoot
 -- local setRefreshHandler = ReactFiberHotReloading.setRefreshHandler
 -- local findHostInstancesForRefresh = ReactFiberHotReloading.findHostInstancesForRefresh
--- local markRenderScheduled = require(script.Parent.SchedulingProfiler).markRenderScheduled
+local markRenderScheduled = require(script.Parent.SchedulingProfiler).markRenderScheduled
 
 local exports = {}
 
@@ -304,8 +304,7 @@ exports.updateContainer = function(
 	local lane = requestUpdateLane(current)
 
 	if enableSchedulingProfiler then
-		-- FIXME (roblox): enable scheduling profiler logic
-		-- markRenderScheduled(lane)
+		markRenderScheduled(lane)
 	end
 
 	local context = getContextForSubtree(parentComponent)

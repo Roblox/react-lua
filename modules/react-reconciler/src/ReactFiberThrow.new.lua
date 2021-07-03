@@ -108,7 +108,7 @@ end
 
 local logCapturedError = require(script.Parent.ReactFiberErrorLogger).logCapturedError
 -- local {logComponentSuspended} = require(Packages../DebugTracing'
--- local {markComponentSuspended} = require(Packages../SchedulingProfiler'
+local markComponentSuspended = require(script.Parent.SchedulingProfiler).markComponentSuspended
 
 local SyncLane = ReactFiberLane.SyncLane
 local NoTimestamp = ReactFiberLane.NoTimestamp
@@ -276,8 +276,7 @@ function throwException(
     end
 
     if enableSchedulingProfiler then
-      unimplemented("markComponentSuspended")
-      -- markComponentSuspended(sourceFiber, wakeable)
+      markComponentSuspended(sourceFiber, wakeable)
     end
 
     if bit32.band(sourceFiber.mode, BlockingMode) == NoMode then

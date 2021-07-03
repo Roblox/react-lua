@@ -128,6 +128,7 @@ exports.unstable_flushUntilNextPaint = function()
 		shouldYieldForPaint = true
 		needsPaint = false
 		isFlushing = true
+		-- ROBLOX try
 		local ok, result = pcall(function()
 			local hasMoreWork = true
 			repeat
@@ -139,6 +140,7 @@ exports.unstable_flushUntilNextPaint = function()
 			end
 		end)
 
+		-- ROBLOX finally
 		shouldYieldForPaint = false
 		didStop = false
 		isFlushing = false

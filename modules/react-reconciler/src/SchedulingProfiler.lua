@@ -32,16 +32,8 @@ local getComponentName = require(Packages.Shared).getComponentName
 --  * require.
 --  */
 -- ROBLOX TODO: maybe use our debug.profile* API?
-local supportsUserTiming = false
-local performance = {
-    now = function()
-        error("!!!!!!!!! performance.now() is unimplemented")
-    end,
-    mark = function(_: string)
-        error("!!!!!!!!! performance.mark() is unimplemented")
-    end
-}
---   typeof performance not == 'undefined' and typeof performance.mark === 'function'
+local supportsUserTiming = _G.performance ~= nil
+local performance = _G.performance
 
 function formatLanes(laneOrLanes: Lane | Lanes): string
   return tostring(laneOrLanes)
