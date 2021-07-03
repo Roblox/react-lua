@@ -9,6 +9,8 @@
 ]]
 
 local Packages = script.Parent.Parent
+local LuauPolyfill = require(Packages.LuauPolyfill)
+local Set = LuauPolyfill.Set
 
 local ReactInternalTypes = require(script.Parent.ReactInternalTypes)
 type FiberRoot = ReactInternalTypes.FiberRoot;
@@ -29,8 +31,9 @@ local createLaneMap = ReactFiberLane.createLaneMap
 local ReactFeatureFlags = require(Packages.Shared).ReactFeatureFlags
 local enableSchedulerTracing = ReactFeatureFlags.enableSchedulerTracing
 local enableSuspenseCallback = ReactFeatureFlags.enableSuspenseCallback
--- local Scheduler = require(Packages.Scheduler.tracing)
--- local unstable_getThreadID = Scheduler.unstable_getThreadID
+-- ROBLOX deviation: import from tracing from Scheduler export to avoid direct file access
+local Scheduler = require(Packages.Scheduler).tracing
+local unstable_getThreadID = Scheduler.unstable_getThreadID
 local ReactUpdateQueue = require(script.Parent["ReactUpdateQueue.new"])
 local initializeUpdateQueue = ReactUpdateQueue.initializeUpdateQueue
 local LegacyRoot = ReactRootTags.LegacyRoot
@@ -72,9 +75,8 @@ local function FiberRootNode(containerInfo, tag, hydrate)
 	end
 
 	if enableSchedulerTracing then
-		-- FIXME (roblox): Port Scheduler tracing
-		-- rootNode.interactionThreadID = unstable_getThreadID()
-		rootNode.memoizedInteractions = {}
+		rootNode.interactionThreadID = unstable_getThreadID()
+		rootNode.memoizedInteractions = Set.new()
 		rootNode.pendingInteractionMap = {}
 	end
 	if enableSuspenseCallback then

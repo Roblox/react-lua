@@ -7,15 +7,6 @@
  *
  * @flow
 ]]
--- FIXME (roblox): remove this when our unimplemented
-local function unimplemented(message)
-  print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-  print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-  print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-  print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-  print("UNIMPLEMENTED ERROR: " .. tostring(message))
-  error("FIXME (roblox): " .. message .. " is unimplemented", 2)
-end
 
 local Packages = script.Parent.Parent
 
@@ -54,7 +45,7 @@ local popRenderLanes = function(...)
   end
   return popRenderLanesRef(...)
 end
--- local {transferActualDuration} = require(script.Parent.ReactProfilerTimer.new)
+local transferActualDuration = require(script.Parent["ReactProfilerTimer.new"]).transferActualDuration
 
 local invariant = require(Packages.Shared).invariant
 
@@ -72,8 +63,7 @@ local function unwindWork(workInProgress: Fiber, renderLanes: Lanes)
         enableProfilerTimer and
         bit32.band(workInProgress.mode, ReactTypeOfMode.ProfileMode) ~= ReactTypeOfMode.NoMode
       then
-        unimplemented("profiler timer")
-        -- transferActualDuration(workInProgress)
+        transferActualDuration(workInProgress)
       end
       return workInProgress
     end
@@ -116,8 +106,7 @@ local function unwindWork(workInProgress: Fiber, renderLanes: Lanes)
         enableProfilerTimer and
         (bit32.band(workInProgress.mode, ReactTypeOfMode.ProfileMode) ~= ReactTypeOfMode.NoMode)
       then
-        unimplemented("profiler timer")
-      -- transferActualDuration(workInProgress)
+      transferActualDuration(workInProgress)
       end
       return workInProgress
     end

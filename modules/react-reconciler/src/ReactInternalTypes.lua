@@ -21,6 +21,7 @@ type MutableSource<Source> = ReactTypes.MutableSource<Source>
 -- type MutableSourceSubscribeFn = ReactTypes.MutableSourceSubscribeFn;
 -- type MutableSourceGetSnapshotFn = ReactTypes.MutableSourceGetSnapshotFn;
 
+-- ROBLOX deviation: These are 'mixed' by default, and specialized by the renderer, need complicated dynamic resolution to do this properly
 -- local ReactFiberHostConfig = require(script.Parent.ReactFiberHostConfig)
 -- type SuspenseInstance = ReactFiberHostConfig.SuspenseInstance
 type SuspenseInstance = any; -- FIXME (roblox): type
@@ -28,15 +29,15 @@ type SuspenseInstance = any; -- FIXME (roblox): type
 -- type NoTimeout = ReactFiberHostConfig.NoTimeout;
 type TimeoutHandle = any; -- FIXME (roblox): type
 type NoTimeout = any; -- FIXME (roblox): type
-local ReactWorkTags = require(script.Parent.ReactWorkTags)
-type WorkTag = ReactWorkTags.WorkTag;
-local ReactTypeOfMode = require(script.Parent.ReactTypeOfMode)
-type TypeOfMode = ReactTypeOfMode.TypeOfMode;
--- local ReactFiberFlags = require(script.Parent.ReactFiberFlags)
--- type Flags = ReactFiberFlags.Flags;
-type Flags = any; -- FIXME (roblox)
 
- -- FIXME (roblox): no support for type literals
+local ReactWorkTags = require(script.Parent.ReactWorkTags)
+type WorkTag = ReactWorkTags.WorkTag
+local ReactTypeOfMode = require(script.Parent.ReactTypeOfMode)
+type TypeOfMode = ReactTypeOfMode.TypeOfMode
+local ReactFiberFlags = require(script.Parent.ReactFiberFlags)
+type Flags = ReactFiberFlags.Flags
+
+-- FIXME (roblox): no support for type literals
 -- export type HookType =
 --  | 'useState'
 --  | 'useReducer'
@@ -55,15 +56,18 @@ type Flags = any; -- FIXME (roblox)
 export type HookType = string;
 local ReactRootTags = require(script.Parent.ReactRootTags)
 type RootTag = ReactRootTags.RootTag;
--- local ReactTypes = require(Packages.shared.ReactTypes)
--- type Wakeable = ReactTypes.Wakeable;
-type Wakeable = any; -- FIXME (roblox)
--- local Tracing = require(Packages.Scheduler.Tracing)
--- type Interaction = Tracing.Interaction;
-type Interaction = any; -- FIXME (roblox): type
+
+-- ROBLOX deviation: type forwarded to top-level export
+local Shared = require(Packages.Shared)
+type Wakeable = Shared.Wakeable;
+
+-- ROBLOX deviation: Interaction type forwarded to top-level export
+local Scheduler = require(Packages.Scheduler)
+type Interaction = Scheduler.Interaction
 
 -- generic types
 type Array<T> = { [number]: T };
+type Map<K, V> = { [K]: V }
 type Object = { [any]: any };
 type Set<T> = { [T]: boolean };
 
@@ -77,7 +81,8 @@ export type LaneMap<T> = { [number]: T };
 -- export type ReactPriorityLevel = 99 | 98 | 97 | 96 | 95 | 90
 export type ReactPriorityLevel = number;
 
--- deviation: Doesn't play nice with `next: ContextDependency<any>`
+-- ROBLOX FIXME: Doesn't play nice with `next: ContextDependency<any>`
+-- 1 Jul 2022 Luau analyze error: "ReactReconciler/ReactFiberNewContext.new.lua:420:7-32: (E001) Expected type table, got 'ContextDependency<any>?' instead"
 -- export type ContextDependency<T> = {
 -- 	context: ReactContext<T>,
 -- 	next: ContextDependency<any>?,
@@ -259,7 +264,7 @@ export type FiberRoot = {
 	-- The currently active root fiber. This is the mutable root of the tree.
 	current: Fiber,
 
-	pingCache: { [Wakeable]: Set<any> }?,
+	pingCache: Map<Wakeable, (Set<any> | Map<Wakeable, Set<any>>)> | nil,
 
 	-- A finished work-in-progress HostRoot that's ready to be committed.
 	finishedWork: Fiber?,
@@ -300,7 +305,7 @@ export type FiberRoot = {
 	-- Note that these attributes are only defined when the enableSchedulerTracing flag is enabled.
 	interactionThreadID: number,
 	memoizedInteractions: Set<Interaction>,
-	pendingInteractionMap: { [Lane | Lanes]: Set<Interaction> },
+	pendingInteractionMap: Map<Lane | Lanes, Set<Interaction>>,
 
 	-- ...SuspenseCallbackOnlyFiberRootProperties,
 	-- The follow fields are only used by enableSuspenseCallback for hydration.

@@ -47,9 +47,7 @@ exports.resetWorkInProgressVersions = function()
       mutableSource._workInProgressVersionSecondary = nil
     end
   end
-  for k in pairs(workInProgressSources) do
-    workInProgressSources[k] = nil
-  end
+  table.clear(workInProgressSources)
 end
 
 exports.getWorkInProgressVersion = function(

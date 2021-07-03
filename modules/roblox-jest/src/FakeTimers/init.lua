@@ -98,6 +98,7 @@ local tickOverride = {}
 tickOverride.__call = realTick
 
 local function useFakeTimers()
+	reset()
 	delayOverride.__call = mockDelay
 	tickOverride.__call = mockTick
 end
@@ -115,4 +116,5 @@ return {
 	useRealTimers = useRealTimers,
 	advanceTimersByTime = advanceTimersByTime,
 	reset = reset,
+	now = function() return now end
 }

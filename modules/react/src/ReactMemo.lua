@@ -18,7 +18,10 @@ local exports = {}
 exports.memo = function(_type, compare)
 	if _G.__DEV__ then
 		if not isValidElementType(type) then
-			console.error("memo: The first argument must be a component. Instead " .. "received: ", tostring(type))
+			console.error(
+				"memo: The first argument must be a component. Instead " .. "received: ",
+				tostring(type)
+			)
 		end
 	end
 

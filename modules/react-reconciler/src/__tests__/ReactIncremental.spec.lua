@@ -282,9 +282,8 @@ return function()
 				text2 = "baz",
 			})
 		end)
-		-- ROBLOX TODO: Unexpected pop, leading to invalid argument #1 to 'band' (number expected, got table)
 		-- @gate experimental
-		xit("can deprioritize unfinished work and resume it later", function()
+		it("can deprioritize unfinished work and resume it later", function()
 			local function Bar(props)
 				Scheduler.unstable_yieldValue("Bar")
 				return React.createElement("div", nil, props.children)
@@ -339,9 +338,8 @@ return function()
 			})
 		end)
 
-		-- ROBLOX TODO: Unexpected pop, leading to invalid argument #1 to 'band' (number expected, got table)
 		-- @gate experimental
-		xit("can deprioritize a tree from without dropping work", function()
+		it("can deprioritize a tree from without dropping work", function()
 			local function Bar(props)
 				Scheduler.unstable_yieldValue("Bar")
 
@@ -2195,9 +2193,9 @@ return function()
 				})
 			end)
 		end
-		-- ROBLOX FIXME: ReactFiberLane:657: invalid argument #1 to 'band' (number expected, got nil)
+
 		-- @gate experimental
-		xit("provides context when reusing work", function()
+		it("provides context when reusing work", function()
 			local Intl = React.Component:extend("Intl")
 
 			function Intl:getChildContext()

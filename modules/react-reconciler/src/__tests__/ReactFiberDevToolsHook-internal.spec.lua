@@ -32,16 +32,21 @@ return function()
 			_G.__REACT_DEVTOOLS_GLOBAL_HOOK__ = originalDevtoolsState
 		end)
 
-		-- ROBLOX TODO: devtools
 		if _G.__DEV__ then
-			itSKIP("should log an error when fibers aren't supported", function()
+			it("should log an error when fibers aren't supported", function()
 				_G.__REACT_DEVTOOLS_GLOBAL_HOOK__ = {
 					isDisabled = false,
 					supportsHooks = false,
 				}
-				local result = ReactFiberDevToolsHook.injectInternals({})
-				-- expect logs to include error
-				jestExpect(result).toBe(true)
+				jestExpect(function()
+					local result = ReactFiberDevToolsHook.injectInternals({})
+					-- expect logs to include error
+					jestExpect(result).toBe(true)
+				-- ROBLOX deviation: assert the console error, upstream doesn't
+				end).toErrorDev(
+					"The installed version of React DevTools is too old",
+					{withoutStack = true}
+				)
 			end)
 		end
 	end)

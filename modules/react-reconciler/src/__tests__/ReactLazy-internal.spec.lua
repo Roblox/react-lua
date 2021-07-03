@@ -374,8 +374,12 @@ return function()
             })
             jestExpect(root).never.toMatchRenderedOutput('AB')
 
-            LazyChildA:await()
-            LazyChildB:await()
+            -- ROBLOX FIXME: these are not Promises, so I'm not sure what usptream awaiting them means
+            -- LazyChildA:await()
+            -- LazyChildB:await()
+            -- ROBLOX FIXME: these awaits let the test get further, but values in mountLazyComponent() are way off
+            Promise.delay(0):await()
+            Promise.delay(0):await()
 
             jestExpect(Scheduler).toFlushAndYield({
                 'A',

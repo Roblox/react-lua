@@ -834,7 +834,9 @@ return function()
 
 		      -- Increment a counter every time the signal changes
 		      if signal ~= newSignal then
-		        setCounter(function(c) return c + 1 end)
+		        setCounter(function(c)
+					return c + 1
+				end)
 		        setSignal(newSignal)
 		      end
 

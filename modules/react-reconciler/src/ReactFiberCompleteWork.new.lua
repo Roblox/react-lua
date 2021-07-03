@@ -87,17 +87,17 @@ local ProfileMode = ReactTypeOfMode.ProfileMode
 local ReactFiberFlags = require(script.Parent.ReactFiberFlags)
 local Ref = ReactFiberFlags.Ref
 local Update = ReactFiberFlags.Update
--- local Callback = ReactFiberFlags.Callback
--- local Passive = ReactFiberFlags.Passive
--- local Deletion = ReactFiberFlags.Deletion
+local Callback = ReactFiberFlags.Callback
+local Passive = ReactFiberFlags.Passive
+local Deletion = ReactFiberFlags.Deletion
 local NoFlags = ReactFiberFlags.NoFlags
 local DidCapture = ReactFiberFlags.DidCapture
 local Snapshot = ReactFiberFlags.Snapshot
 local MutationMask = ReactFiberFlags.MutationMask
--- local LayoutMask = ReactFiberFlags.LayoutMask
--- local PassiveMask = ReactFiberFlags.PassiveMask
+local LayoutMask = ReactFiberFlags.LayoutMask
+local PassiveMask = ReactFiberFlags.PassiveMask
 local StaticMask = ReactFiberFlags.StaticMask
--- local PerformedWork = ReactFiberFlags.PerformedWork
+local PerformedWork = ReactFiberFlags.PerformedWork
 
 local invariant = require(Packages.Shared).invariant
 
@@ -162,7 +162,8 @@ local enableProfilerTimer = ReactFeatureFlags.enableProfilerTimer
 local ReactFiberWorkLoop = require(script.Parent["ReactFiberWorkLoop.new"]) :: any
 
 local popRenderLanes = ReactFiberWorkLoop.popRenderLanes
-local subtreeRenderLanes = ReactFiberWorkLoop.subtreeRenderLanes
+-- ROBLOX deviation: this is a live value in WorkLoop's module state, so it must be accessed directly and not 'cached'
+-- local subtreeRenderLanes = ReactFiberWorkLoop.subtreeRenderLanes
 local markSpawnedWork = ReactFiberWorkLoop.markSpawnedWork
 local renderDidSuspend = ReactFiberWorkLoop.renderDidSuspend
 local renderDidSuspendDelayIfPossible = ReactFiberWorkLoop.renderDidSuspendDelayIfPossible
@@ -178,7 +179,8 @@ local includesSomeLane = ReactFiberLane.includesSomeLane
 local mergeLanes = ReactFiberLane.mergeLanes
 -- local {resetChildFibers} = require(script.Parent.ReactChildFiber.new)
 -- local {createScopeInstance} = require(script.Parent.ReactFiberScope.new)
--- local {transferActualDuration} = require(script.Parent.ReactProfilerTimer.new)
+local ReactProfilerTimer = require(script.Parent["ReactProfilerTimer.new"])
+local transferActualDuration = ReactProfilerTimer.transferActualDuration
 
 local function markUpdate(workInProgress: Fiber)
   -- Tag the fiber with an update effect. This turns a Placement into
@@ -255,7 +257,7 @@ if supportsMutation then
     end
   end
 
-  updateHostContainer = function(workInProgress: Fiber)
+  updateHostContainer = function(current: nil | Fiber, workInProgress: Fiber)
     -- Noop
   end
   updateHostComponent = function(
@@ -501,9 +503,7 @@ elseif supportsPersistence then
     -- end
   end
 
-  -- ROBLOX FIXME: type refinement
-  -- updateHostContainer = function(current: nil | Fiber, workInProgress: Fiber)
-  updateHostContainer = function(current, workInProgress: Fiber)
+  updateHostContainer = function(current: nil | Fiber, workInProgress: Fiber)
     local portalOrRoot: {
       containerInfo: Container,
       pendingChildren: ChildSet,
@@ -618,7 +618,7 @@ elseif supportsPersistence then
 --   end
 else
   -- No host operations
-  updateHostContainer = function(workInProgress: Fiber)
+  updateHostContainer = function(current: nil | Fiber, workInProgress: Fiber)
     -- Noop
   end
 --   updateHostComponent = function(
@@ -722,37 +722,36 @@ local function bubbleProperties(completedWork: Fiber)
   if not didBailout then
     -- Bubble up the earliest expiration time.
     if enableProfilerTimer and bit32.band(completedWork.mode, ProfileMode) ~= NoMode then
-      unimplemented("profiler timer logic")
-      -- -- In profiling mode, resetChildExpirationTime is also used to reset
-      -- -- profiler durations.
-      -- local actualDuration = completedWork.actualDuration
-      -- local treeBaseDuration = ((completedWork.selfBaseDuration: any): number)
+      -- In profiling mode, resetChildExpirationTime is also used to reset
+      -- profiler durations.
+      local actualDuration = completedWork.actualDuration
+      local treeBaseDuration = completedWork.selfBaseDuration
 
-      -- local child = completedWork.child
-      -- while (child ~= nil)
-      --   newChildLanes = mergeLanes(
-      --     newChildLanes,
-      --     mergeLanes(child.lanes, child.childLanes),
-      --   )
+      local child = completedWork.child
+      while child ~= nil do
+        newChildLanes = mergeLanes(
+          newChildLanes,
+          mergeLanes(child.lanes, child.childLanes)
+        )
 
-      --   subtreeFlags |= child.subtreeFlags
-      --   subtreeFlags |= child.flags
+        subtreeFlags = bit32.bor(subtreeFlags, child.subtreeFlags)
+        subtreeFlags = bit32.bor(subtreeFlags, child.flags)
 
-      --   -- When a fiber is cloned, its actualDuration is reset to 0. This value will
-      --   -- only be updated if work is done on the fiber (i.e. it doesn't bailout).
-      --   -- When work is done, it should bubble to the parent's actualDuration. If
-      --   -- the fiber has not been cloned though, (meaning no work was done), then
-      --   -- this value will reflect the amount of time spent working on a previous
-      --   -- render. In that case it should not bubble. We determine whether it was
-      --   -- cloned by comparing the child pointer.
-      --   actualDuration += child.actualDuration
+        -- When a fiber is cloned, its actualDuration is reset to 0. This value will
+        -- only be updated if work is done on the fiber (i.e. it doesn't bailout).
+        -- When work is done, it should bubble to the parent's actualDuration. If
+        -- the fiber has not been cloned though, (meaning no work was done), then
+        -- this value will reflect the amount of time spent working on a previous
+        -- render. In that case it should not bubble. We determine whether it was
+        -- cloned by comparing the child pointer.
+        actualDuration += child.actualDuration
 
-      --   treeBaseDuration += child.treeBaseDuration
-      --   child = child.sibling
-      -- end
+        treeBaseDuration += child.treeBaseDuration
+        child = child.sibling
+      end
 
-      -- completedWork.actualDuration = actualDuration
-      -- completedWork.treeBaseDuration = treeBaseDuration
+      completedWork.actualDuration = actualDuration
+      completedWork.treeBaseDuration = treeBaseDuration
     else
       local child = completedWork.child
       while child ~= nil do
@@ -772,30 +771,29 @@ local function bubbleProperties(completedWork: Fiber)
   else
     -- Bubble up the earliest expiration time.
     if enableProfilerTimer and bit32.band(completedWork.mode, ProfileMode) ~= NoMode then
-      unimplemented("profiler timer logic")
-      -- -- In profiling mode, resetChildExpirationTime is also used to reset
-      -- -- profiler durations.
-      -- local treeBaseDuration = ((completedWork.selfBaseDuration: any): number)
+      -- In profiling mode, resetChildExpirationTime is also used to reset
+      -- profiler durations.
+      local treeBaseDuration = completedWork.selfBaseDuration
 
-      -- local child = completedWork.child
-      -- while (child ~= nil)
-      --   newChildLanes = mergeLanes(
-      --     newChildLanes,
-      --     mergeLanes(child.lanes, child.childLanes),
-      --   )
+      local child = completedWork.child
+      while child ~= nil do
+        newChildLanes = mergeLanes(
+          newChildLanes,
+          mergeLanes(child.lanes, child.childLanes)
+        )
 
-      --   -- "Static" flags share the lifetime of the fiber/hook they belong to,
-      --   -- so we should bubble those up even during a bailout. All the other
-      --   -- flags have a lifetime only of a single render + commit, so we should
-      --   -- ignore them.
-      --   subtreeFlags |= child.subtreeFlags & StaticMask
-      --   subtreeFlags |= child.flags & StaticMask
+        -- "Static" flags share the lifetime of the fiber/hook they belong to,
+        -- so we should bubble those up even during a bailout. All the other
+        -- flags have a lifetime only of a single render + commit, so we should
+        -- ignore them.
+        subtreeFlags = bit32.bor(subtreeFlags, bit32.band(child.subtreeFlags, StaticMask))
+        subtreeFlags = bit32.bor(subtreeFlags, bit32.band(child.flags, StaticMask))
 
-      --   treeBaseDuration += child.treeBaseDuration
-      --   child = child.sibling
-      -- end
+        treeBaseDuration += child.treeBaseDuration
+        child = child.sibling
+      end
 
-      -- completedWork.treeBaseDuration = treeBaseDuration
+      completedWork.treeBaseDuration = treeBaseDuration
     else
       local child = completedWork.child
       while child ~= nil do
@@ -844,7 +842,6 @@ local function completeWork(
     workInProgress.tag == ForwardRef or
     workInProgress.tag == Fragment or
     workInProgress.tag == Mode or
-    workInProgress.tag == Profiler or
     workInProgress.tag == ContextConsumer or
     workInProgress.tag == MemoComponent
   then
@@ -884,7 +881,7 @@ local function completeWork(
         workInProgress.flags = bit32.bor(workInProgress.flags, Snapshot)
       end
     end
-    updateHostContainer(workInProgress)
+    updateHostContainer(current, workInProgress)
     bubbleProperties(workInProgress)
     return nil
   elseif workInProgress.tag == HostComponent then
@@ -1007,56 +1004,55 @@ local function completeWork(
     bubbleProperties(workInProgress)
     return nil
   elseif workInProgress.tag == Profiler then
-    unimplemented("Profiler")
-    -- local didBailout = bubbleProperties(workInProgress)
-    -- if !didBailout)
-    --   -- Use subtreeFlags to determine which commit callbacks should fire.
-    --   -- TODO: Move this logic to the commit phase, since we already check if
-    --   -- a fiber's subtree contains effects. Refactor the commit phase's
-    --   -- depth-first traversal so that we can put work tag-specific logic
-    --   -- before or after committing a subtree's effects.
-    --   local OnRenderFlag = Update
-    --   local OnCommitFlag = Callback
-    --   local OnPostCommitFlag = Passive
-    --   local subtreeFlags = workInProgress.subtreeFlags
-    --   local flags = workInProgress.flags
-    --   local newFlags = flags
+    local didBailout = bubbleProperties(workInProgress)
+    if not didBailout then
+      -- Use subtreeFlags to determine which commit callbacks should fire.
+      -- TODO: Move this logic to the commit phase, since we already check if
+      -- a fiber's subtree contains effects. Refactor the commit phase's
+      -- depth-first traversal so that we can put work tag-specific logic
+      -- before or after committing a subtree's effects.
+      local OnRenderFlag = Update
+      local OnCommitFlag = Callback
+      local OnPostCommitFlag = Passive
+      local subtreeFlags = workInProgress.subtreeFlags
+      local flags = workInProgress.flags
+      local newFlags = flags
 
-    --   -- Call onRender any time this fiber or its subtree are worked on.
-    --   if
-    --     (flags & PerformedWork) ~= NoFlags or
-    --     (subtreeFlags & PerformedWork) ~= NoFlags
-    --   )
-    --     newFlags |= OnRenderFlag
-    --   end
+      -- Call onRender any time this fiber or its subtree are worked on.
+      if
+        bit32.band(flags, PerformedWork) ~= NoFlags or
+        bit32.band(subtreeFlags, PerformedWork) ~= NoFlags
+      then
+        newFlags = bit32.bor(newFlags, OnRenderFlag)
+      end
 
-    --   -- Call onCommit only if the subtree contains layout work, or if it
-    --   -- contains deletions, since those might result in unmount work, which
-    --   -- we include in the same measure.
-    --   -- TODO: Can optimize by using a static flag to track whether a tree
-    --   -- contains layout effects, like we do for passive effects.
-    --   if
-    --     (flags & (LayoutMask | Deletion)) ~= NoFlags or
-    --     (subtreeFlags & (LayoutMask | Deletion)) ~= NoFlags
-    --   )
-    --     newFlags |= OnCommitFlag
-    --   end
+      -- Call onCommit only if the subtree contains layout work, or if it
+      -- contains deletions, since those might result in unmount work, which
+      -- we include in the same measure.
+      -- TODO: Can optimize by using a static flag to track whether a tree
+      -- contains layout effects, like we do for passive effects.
+      if
+        bit32.band(flags, bit32.bor(LayoutMask, Deletion)) ~= NoFlags or
+        bit32.band(subtreeFlags, bit32.bor(LayoutMask, Deletion)) ~= NoFlags
+      then
+        newFlags = bit32.bor(newFlags, OnCommitFlag)
+      end
 
-    --   -- Call onPostCommit only if the subtree contains passive work.
-    --   -- Don't have to check for deletions, because Deletion is already
-    --   -- a passive flag.
-    --   if
-    --     (flags & PassiveMask) ~= NoFlags or
-    --     (subtreeFlags & PassiveMask) ~= NoFlags
-    --   )
-    --     newFlags |= OnPostCommitFlag
-    --   end
-    --   workInProgress.flags = newFlags
-    -- else
-    --   -- This fiber and its subtree bailed out, so don't fire any callbacks.
-    -- end
+      -- Call onPostCommit only if the subtree contains passive work.
+      -- Don't have to check for deletions, because Deletion is already
+      -- a passive flag.
+      if
+        bit32.band(flags, PassiveMask) ~= NoFlags or
+        bit32.band(subtreeFlags, PassiveMask) ~= NoFlags
+      then
+        newFlags = bit32.bor(newFlags, OnPostCommitFlag)
+      end
+      workInProgress.flags = newFlags
+    else
+      -- This fiber and its subtree bailed out, so don't fire any callbacks.
+    end
 
-    -- return nil
+    return nil
   elseif workInProgress.tag == SuspenseComponent then
     popSuspenseContext(workInProgress)
     local nextState: nil | SuspenseState = workInProgress.memoizedState
@@ -1133,9 +1129,7 @@ local function completeWork(
         enableProfilerTimer and
         bit32.band(workInProgress.mode, ProfileMode) ~= NoMode
       then
-        -- ROBLOX TODO: once
-        unimplemented("profiler timer logic")
-        -- transferActualDuration(workInProgress)
+        transferActualDuration(workInProgress)
       end
       -- Don't bubble properties in this case.
       return workInProgress
@@ -1567,7 +1561,7 @@ local function completeWork(
     -- Don't bubble properties for hidden children.
     if
       not nextIsHidden or
-      includesSomeLane(subtreeRenderLanes, (OffscreenLane :: Lane)) or
+      includesSomeLane(ReactFiberWorkLoop.subtreeRenderLanes, (OffscreenLane :: Lane)) or
       bit32.band(workInProgress.mode, ConcurrentMode) == NoMode
     then
       bubbleProperties(workInProgress)

@@ -724,6 +724,7 @@ return function()
 
             jestExpect(root).toMatchRenderedOutput("ABCD")
         end)
+        -- ROBLOX FIXME: fails with incorrect values
         xit(
             "when rebasing, does not exclude updates that were already committed, regardless of priority (classes)",
             function()

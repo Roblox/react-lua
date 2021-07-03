@@ -51,7 +51,11 @@ type RejectedPayload = {
 	_result: any,
 }
 
-type Payload<T> = UninitializedPayload<T> | PendingPayload | ResolvedPayload<T> | RejectedPayload
+type Payload<T> =
+	UninitializedPayload<T>
+	| PendingPayload
+	| ResolvedPayload<T>
+	| RejectedPayload
 
 export type LazyComponent<T, P> = any -- {
 -- ROBLOX FIXME: Luau can't express type keys with special chars
@@ -156,10 +160,8 @@ exports.lazy = function(
 					-- Match production behavior more closely:
 					-- $FlowFixMe
 					setmetatable(self, {
-						__index = function()
-						end,
-						__newindex = function()
-						end,
+						__index = function() end,
+						__newindex = function() end,
 					})
 				end
 				if key == "propTypes" then
@@ -172,10 +174,8 @@ exports.lazy = function(
 					-- Match production behavior more closely:
 					-- $FlowFixMe
 					setmetatable(self, {
-						__index = function()
-						end,
-						__newindex = function()
-						end,
+						__index = function() end,
+						__newindex = function() end,
 					})
 				end
 			end,

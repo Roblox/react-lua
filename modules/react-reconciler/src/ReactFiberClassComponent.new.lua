@@ -96,9 +96,9 @@ local ConsolePatchingDev = require(Packages.Shared).ConsolePatchingDev
 local disableLogs = ConsolePatchingDev.disableLogs
 local reenableLogs = ConsolePatchingDev.reenableLogs
 
--- local SchedulingProfiler = require(script.Parent.SchedulingProfiler)
--- local markForceUpdateScheduled = SchedulingProfiler.markForceUpdateScheduled
--- local markStateUpdateScheduled = SchedulingProfiler.markStateUpdateScheduled
+local SchedulingProfiler = require(script.Parent.SchedulingProfiler)
+local markForceUpdateScheduled = SchedulingProfiler.markForceUpdateScheduled
+local markStateUpdateScheduled = SchedulingProfiler.markStateUpdateScheduled
 
 local fakeInternalInstance = {}
 -- ROBLOX TODO: If this is being localized, it might be for a hot path; that's
@@ -271,15 +271,14 @@ local function initializeClassComponentUpdater()
         if enableDebugTracing then
           if bit32.band(fiber.mode, DebugTracingMode) ~= 0 then
             local _name = getComponentName(fiber.type) or "Unknown"
-            warn("Skip unimplemented: logStateUpdateScheduled")
+            unimplemented("logStateUpdateScheduled")
             -- logStateUpdateScheduled(name, lane, payload)
           end
         end
       end
 
       if enableSchedulingProfiler then
-        unimplemented("scheduling profiler logic")
-        -- markStateUpdateScheduled(fiber, lane)
+        markStateUpdateScheduled(fiber, lane)
       end
     end,
     enqueueReplaceState = function(inst, payload, callback)
@@ -312,8 +311,7 @@ local function initializeClassComponentUpdater()
       end
 
       if enableSchedulingProfiler then
-        unimplemented("scheduling profiler logic")
-        -- markStateUpdateScheduled(fiber, lane)
+        markStateUpdateScheduled(fiber, lane)
       end
     end,
     enqueueForceUpdate = function(inst, callback)
@@ -345,8 +343,7 @@ local function initializeClassComponentUpdater()
       end
 
       if enableSchedulingProfiler then
-        unimplemented("scheduling profiler logic")
-        -- markForceUpdateScheduled(fiber, lane)
+        markForceUpdateScheduled(fiber, lane)
       end
     end,
   }
@@ -466,14 +463,16 @@ local function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: an
         name
       )
     end
-    if instance.propTypes then
+    -- ROBLOX TODO? the original check causes false positives, this adjustment should live up to the intention
+    if instance.propTypes and not ctor.propTypes then
       console.error(
         "propTypes was defined as an instance property on %s. Use a static " ..
           "property to define propTypes instead.",
         name
       )
     end
-    if instance.contextType then
+    -- ROBLOX TODO? the original check causes false positives, this adjustment should live up to the intention
+    if instance.contextType and not ctor.contextType then
       console.error(
         "contextType was defined as an instance property on %s. Use a static " ..
           "property to define contextType instead.",
@@ -497,7 +496,8 @@ local function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: an
         )
       end
     else
-      if instance.contextTypes then
+      -- ROBLOX TODO? the original check causes false positives, this adjustment should live up to the intention
+      if instance.contextTypes and not ctor.contextTypes then
         console.error(
           "contextTypes was defined as an instance property on %s. Use a static " ..
             "property to define contextTypes instead.",

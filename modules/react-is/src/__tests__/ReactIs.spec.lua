@@ -200,8 +200,7 @@ return function()
 			jestExpect(ReactIs.isSuspense(React.createElement("div"))).toBe(false)
 		end)
 
-		-- ROBLOX TODO: make this pass once Profiler is implemented
-		itSKIP("should identify profile root", function()
+		it("should identify profile root", function()
 			jestExpect(ReactIs.isValidElementType(React.Profiler)).toBe(true)
 			jestExpect(ReactIs.typeOf(React.createElement(React.Profiler, { id = "foo", onRender = jest:fn() }))).toBe(ReactIs.Profiler)
 			jestExpect(ReactIs.isProfiler(React.createElement(React.Profiler, { id = "foo", onRender = jest:fn() }))).toBe(true)

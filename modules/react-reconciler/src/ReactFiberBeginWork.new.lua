@@ -199,7 +199,7 @@ local bailoutHooks = function(...)
   return lazyRefs.bailoutHooksRef(...)
 end
 
--- local {stopProfilerTimerIfRunning} = require(script.Parent.ReactProfilerTimer.new)
+local stopProfilerTimerIfRunning = require(script.Parent["ReactProfilerTimer.new"]).stopProfilerTimerIfRunning
 local ReactFiberContext = require(script.Parent["ReactFiberContext.new"])
 local getMaskedContext = ReactFiberContext.getMaskedContext
 local getUnmaskedContext = ReactFiberContext.getUnmaskedContext
@@ -243,7 +243,7 @@ local getExecutionContext = ReactFiberWorkLoop.getExecutionContext
 local RetryAfterError = ReactFiberWorkLoop.RetryAfterError
 local NoContext = ReactFiberWorkLoop.NoContext
 
--- local {unstable_wrap as Schedule_tracing_wrap} = require(Packages.scheduler/tracing'
+local Schedule_tracing_wrap = require(Packages.Scheduler).tracing.unstable_wrap
 local setWorkInProgressVersion = require(script.Parent["ReactMutableSource.new"]).setWorkInProgressVersion
 local markSkippedUpdateLanes = require(script.Parent.ReactFiberWorkInProgress).markSkippedUpdateLanes
 local ConsolePatchingDev = require(Packages.Shared).ConsolePatchingDev
@@ -481,7 +481,8 @@ local function updateMemoComponent(
       )
     end
     if  _G.__DEV__ then
-      local innerPropTypes = type.propTypes
+      -- ROBLOX deviation: avoid accessing propTypes on a function, Lua doesn't support fields on functions
+      local innerPropTypes = typeof(type) == "table" and type.propTypes
       if innerPropTypes then
         -- Inner memo component props aren't currently validated in createElement.
         -- We could move it there, but we'd still need this for lazy code path.
@@ -511,7 +512,8 @@ local function updateMemoComponent(
   local current = (current :: Fiber)
   if  _G.__DEV__ then
     local type = Component.type
-    local innerPropTypes = type.propTypes
+    -- ROBLOX deviation: only check for propTypes on class components, Lua doesn't support fields on functions
+    local innerPropTypes = typeof(type) == "table" and type.propTypes
     if innerPropTypes then
       -- Inner memo component props aren't currently validated in createElement.
       -- We could move it there, but we'd still need this for lazy code path.
@@ -577,7 +579,8 @@ function updateSimpleMemoComponent(
           outerMemoType = nil
         end
         -- Inner propTypes will be validated in the function component path.
-        local outerPropTypes = outerMemoType and (outerMemoType :: any).propTypes
+        -- ROBLOX deviation: avoid accessing propTypes on a function, Lua doesn't support fields on functions
+        local outerPropTypes = typeof(outerMemoType) == "table" and (outerMemoType :: any).propTypes
         if outerPropTypes then
           checkPropTypes(
             outerPropTypes,
@@ -680,7 +683,6 @@ local function updateOffscreenComponent(
 
       -- Schedule this fiber to re-render at offscreen priority. Then bailout.
       if enableSchedulerTracing then
-        -- ROBLOX TODO: recast ReactFiberLane.OffscreenLane to type Lane
         markSpawnedWork(ReactFiberLane.OffscreenLane)
       end
 
@@ -760,31 +762,29 @@ function updateMode(
   return workInProgress.child
 end
 
--- function updateProfiler(
---   current: Fiber | nil,
---   workInProgress: Fiber,
---   renderLanes: Lanes,
--- )
---   if enableProfilerTimer)
---     -- Reset effect durations for the next eventual effect phase.
---     -- These are reset during render to allow the DevTools commit hook a chance to read them,
---     local stateNode = workInProgress.stateNode
---     stateNode.effectDuration = 0
---     stateNode.passiveEffectDuration = 0
---   end
---   local nextProps = workInProgress.pendingProps
---   local nextChildren = nextProps.children
---   reconcileChildren(current, workInProgress, nextChildren, renderLanes)
---   return workInProgress.child
--- end
+function updateProfiler(
+  current: Fiber | nil,
+  workInProgress: Fiber,
+  renderLanes: Lanes
+)
+  if enableProfilerTimer then
+    -- Reset effect durations for the next eventual effect phase.
+    -- These are reset during render to allow the DevTools commit hook a chance to read them,
+    local stateNode = workInProgress.stateNode
+    stateNode.effectDuration = 0
+    stateNode.passiveEffectDuration = 0
+  end
+  local nextProps = workInProgress.pendingProps
+  local nextChildren = nextProps.children
+  reconcileChildren(current, workInProgress, nextChildren, renderLanes)
+  return workInProgress.child
+end
 
--- FIXME (roblox): type refinement
--- local function markRef(current: Fiber | nil, workInProgress: Fiber)
-local function markRef(current: any, workInProgress: Fiber)
+local function markRef(current: Fiber | nil, workInProgress: Fiber)
   local ref = workInProgress.ref
   if
     (current == nil and ref ~= nil) or
-    (current ~= nil and current.ref ~= ref)
+    (current ~= nil and (current :: Fiber).ref ~= ref)
   then
     -- Schedule a Ref effect
     workInProgress.flags = bit32.bor(workInProgress.flags, Ref)
@@ -1088,8 +1088,7 @@ function finishClassComponent(
     nextChildren = nil
 
     if enableProfilerTimer then
-      unimplemented("profiler timer logic")
-      -- stopProfilerTimerIfRunning(workInProgress)
+      stopProfilerTimerIfRunning(workInProgress)
     end
   else
     if _G.__DEV__ then
@@ -2345,7 +2344,7 @@ function updateSuspenseFallbackChildren(
     )
     -- Needs a placement effect because the parent (the Suspense boundary) already
     -- mounted but this is a new fiber.
-    bit32.bor(fallbackChildFragment.flags, Placement)
+    fallbackChildFragment.flags = bit32.bor(fallbackChildFragment.flags, Placement)
   end
 
   fallbackChildFragment.return_ = workInProgress
@@ -2565,10 +2564,9 @@ function updateDehydratedSuspenseComponent(
       return retryDehydratedSuspenseBoundary(current)
     end
 
-    -- ROBLOX FIXME: scheduler tracing unimplemented
-    -- if enableSchedulerTracing then
-    --   retry = Schedule_tracing_wrap(retry)
-    -- end
+    if enableSchedulerTracing then
+      retry = Schedule_tracing_wrap(retry)
+    end
 
     registerSuspenseInstanceRetry(suspenseInstance, retry)
     return nil
@@ -3176,9 +3174,8 @@ bailoutOnAlreadyFinishedWork = function(
   end
 
   if enableProfilerTimer then
-    unimplemented("profiler timer logic")
-    -- -- Don't update "base" render times for bailouts.
-    -- stopProfilerTimerIfRunning(workInProgress)
+    -- Don't update "base" render times for bailouts.
+    stopProfilerTimerIfRunning(workInProgress)
   end
 
   markSkippedUpdateLanes(workInProgress.lanes)
@@ -3289,18 +3286,16 @@ exports.beginWork = function(
   if current ~= nil then
     local oldProps = current.memoizedProps
     local newProps = workInProgress.pendingProps
-    -- ROBLOX FIXME: re-compare to upstream
-    -- deviation: cannot translate ternary
-    local didHotReload = false
-    if _G.__DEV__ then
-      didHotReload = workInProgress.type ~= current.type
-    end
     if
       oldProps ~= newProps or
       hasLegacyContextChanged() or
       -- Force a re-render if the implementation changed due to hot reload:
-      -- deviation: cannot translate ternary
-      didHotReload
+      (function()
+        if _G.__DEV__ then
+          return workInProgress.type ~= current.type
+        end
+        return false
+      end)()
     then
       -- If props or context changed, mark the fiber as having performed work.
       -- This may be unset if the props are determined to be equal later (memo).
@@ -3330,12 +3325,11 @@ exports.beginWork = function(
         pushProvider(workInProgress, newValue)
       elseif workInProgress.tag == Profiler then
         if enableProfilerTimer then
-          unimplemented("beginWork: Profiler timer logic")
-          -- -- Reset effect durations for the next eventual effect phase.
-          -- -- These are reset during render to allow the DevTools commit hook a chance to read them,
-          -- local stateNode = workInProgress.stateNode
-          -- stateNode.effectDuration = 0
-          -- stateNode.passiveEffectDuration = 0
+          -- Reset effect durations for the next eventual effect phase.
+          -- These are reset during render to allow the DevTools commit hook a chance to read them,
+          local stateNode = workInProgress.stateNode
+          stateNode.effectDuration = 0
+          stateNode.passiveEffectDuration = 0
         end
       elseif workInProgress.tag == SuspenseComponent then
         local state: SuspenseState | nil = workInProgress.memoizedState
@@ -3559,8 +3553,7 @@ exports.beginWork = function(
   elseif workInProgress.tag == Mode then
     return updateMode(current, workInProgress, renderLanes)
   elseif workInProgress.tag == Profiler then
-    unimplemented("beginWork: Profiler")
-    -- return updateProfiler(current, workInProgress, renderLanes)
+    return updateProfiler(current, workInProgress, renderLanes)
   elseif workInProgress.tag == ContextProvider then
     return updateContextProvider(current, workInProgress, renderLanes)
   elseif workInProgress.tag == ContextConsumer then
@@ -3572,7 +3565,8 @@ exports.beginWork = function(
     local resolvedProps = resolveDefaultProps(type, unresolvedProps)
     if _G.__DEV__ then
       if workInProgress.type ~= workInProgress.elementType then
-        local outerPropTypes = type.propTypes
+        -- ROBLOX deviation: only get propTypes from class components, Lua doesn't support fields on functions
+        local outerPropTypes = typeof(type) == "table" and type.propTypes
         if outerPropTypes then
           checkPropTypes(
             outerPropTypes,

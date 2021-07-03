@@ -110,9 +110,9 @@ local function checkPropTypes(typeSpecs, values, location, componentName, elemen
 			if isErrorObject and loggedTypeFailures[result.message] == nil then
 				-- Only monitor this failure once because there tends to be a lot of the
 				-- same error.
-				loggedTypeFailures[result.message] = true
+				loggedTypeFailures[tostring(result.message)] = true
 				setCurrentlyValidatingElement(element)
-				warn(string.format("Failed %s type: %s", location, result.message))
+				warn(string.format('Failed %s type: %s', location, tostring(result.message)))
 				setCurrentlyValidatingElement(nil)
 			end
 		end

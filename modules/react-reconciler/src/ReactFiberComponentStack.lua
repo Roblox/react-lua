@@ -25,8 +25,10 @@ local SimpleMemoComponent = ReactWorkTags.SimpleMemoComponent
 local ClassComponent = ReactWorkTags.ClassComponent
 
 local ReactComponentStackFrame = require(Packages.Shared).ReactComponentStackFrame
-local describeBuiltInComponentFrame = ReactComponentStackFrame.describeBuiltInComponentFrame
-local describeFunctionComponentFrame = ReactComponentStackFrame.describeFunctionComponentFrame
+local describeBuiltInComponentFrame =
+	ReactComponentStackFrame.describeBuiltInComponentFrame
+local describeFunctionComponentFrame =
+	ReactComponentStackFrame.describeFunctionComponentFrame
 local describeClassComponentFrame = ReactComponentStackFrame.describeClassComponentFrame
 
 local function describeFiber(fiber: Fiber): string

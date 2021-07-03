@@ -890,7 +890,7 @@ local function ChildReconciler(shouldTrackSideEffects)
     local lastPlacedIndex = 1
     local newIdx = 1
     local nextOldFiber = nil
-    -- deviation: use while loop in place of modified for loop
+    -- ROBLOX deviation: use while loop in place of modified for loop
     while oldFiber ~= nil and newIdx <= #newChildren do
       if oldFiber.index > newIdx then
         nextOldFiber = oldFiber
@@ -949,7 +949,7 @@ local function ChildReconciler(shouldTrackSideEffects)
       -- since the rest will all be insertions.
       -- deviation: use while loop in place of modified for loop
       while newIdx <= #newChildren do
-        local newFiber = createChild(returnFiber, newChildren[newIdx], lanes, nil)
+        local newFiber = createChild(returnFiber, newChildren[newIdx], lanes)
         if newFiber == nil then
           -- deviation: increment manually since we're not using a modified for loop
           newIdx += 1;
@@ -972,15 +972,14 @@ local function ChildReconciler(shouldTrackSideEffects)
     -- Add all children to a key map for quick lookups.
     local existingChildren = mapRemainingChildren(returnFiber, oldFiber)
     -- Keep scanning and use the map to restore deleted items as moves.
-    -- deviation: use while loop in place of modified for loop
+    -- ROBLOX deviation: use while loop in place of modified for loop
     while newIdx <= #newChildren do
       local newFiber = updateFromMap(
         existingChildren,
         returnFiber,
         newIdx,
         newChildren[newIdx],
-        lanes,
-        nil
+        lanes
       )
       if newFiber ~= nil then
         if shouldTrackSideEffects then

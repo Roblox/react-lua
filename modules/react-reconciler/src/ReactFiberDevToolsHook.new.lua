@@ -11,8 +11,24 @@
 local Packages = script.Parent.Parent
 -- ROBLOX: use patched console from shared
 local console = require(Packages.Shared).console
-
 local exports = {}
+
+local function isCallable(value)
+  if typeof(value) == "function" then
+    return true
+  end
+  if typeof(value) == "table" then
+    local mt = getmetatable(value)
+    if mt and rawget(mt, "__call") then
+      return true
+    end
+    if value._isMockFunction then
+      return true
+    end
+  end
+  return false
+end
+
 
 local enableProfilerTimer = require(Packages.Shared).ReactFeatureFlags.enableProfilerTimer
 
@@ -78,8 +94,9 @@ end
 exports.onScheduleRoot = function(root: FiberRoot, children: ReactNodeList)
   if _G.__DEV__ then
     if
-      injectedHook and
-      typeof(injectedHook.onScheduleFiberRoot) == 'function'
+      injectedHook
+      -- ROBLOX deviation: our mocked functions are tables with __call, since they have fields
+      and isCallable(injectedHook.onScheduleFiberRoot)
     then
       local ok, err = pcall(function()
         injectedHook.onScheduleFiberRoot(rendererID, root, children)
@@ -99,7 +116,10 @@ exports.onCommitRoot = function(
   root: FiberRoot,
   priorityLevel: ReactPriorityLevel
 )
-  if injectedHook and typeof(injectedHook.onCommitFiberRoot) == 'function' then
+  if injectedHook
+      -- ROBLOX deviation: our mocked functions are tables with __call, since they have fields
+      and isCallable(injectedHook.onCommitFiberRoot)
+  then
     local ok, err = pcall(function()
       local didError = bit32.band(root.current.flags, DidCapture) == DidCapture
       if enableProfilerTimer then
@@ -125,7 +145,10 @@ exports.onCommitRoot = function(
 end
 
 exports.onCommitUnmount = function(fiber: Fiber)
-  if injectedHook and typeof(injectedHook.onCommitFiberUnmount) == 'function' then
+  if injectedHook
+      -- ROBLOX deviation: our mocked functions are tables with __call, since they have fields
+      and isCallable(injectedHook.onCommitFiberUnmount)
+  then
     local ok, err = pcall(function()
       injectedHook.onCommitFiberUnmount(rendererID, fiber)
     end)

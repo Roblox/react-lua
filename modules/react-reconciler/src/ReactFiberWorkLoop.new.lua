@@ -20,6 +20,39 @@ end
 local Packages = script.Parent.Parent
 -- ROBLOX: use patched console from shared
 local console = require(Packages.Shared).console
+local LuauPolyfill = require(Packages.LuauPolyfill)
+local Set = LuauPolyfill.Set
+
+-- ROBLOX TODO: inline definition here until luau-polyfill #61 is fixed
+type Set<T> = {
+	size: number,
+	-- method definitions
+	add: (Set<T>, T) -> Set<T>,
+	clear: (Set<T>) -> (),
+	delete: (Set<T>, T) -> boolean,
+	has: (Set<T>, T) -> boolean,
+	ipairs: (Set<T>) -> any,
+}
+type Array<T> = { [number]: T }
+
+local exports: any = {}
+
+local function copySet(from)
+	local to = Set.new()
+	if from == nil then
+		return to
+	end
+	for _, v in from:ipairs() do
+		to:add(v)
+	end
+
+	return to
+end
+
+local function collectionHasEntries(collection)
+  return next(collection) ~= nil
+end
+
 
 local ReactTypes = require(Packages.Shared)
 type Thenable<T, U> = ReactTypes.Thenable<T, U>
@@ -31,25 +64,27 @@ type ReactPriorityLevel = ReactInternalTypes.ReactPriorityLevel;
 local ReactFiberLane = require(script.Parent.ReactFiberLane)
 type Lanes = ReactFiberLane.Lanes;
 type Lane = ReactFiberLane.Lane;
--- local type {Interaction} = require(Packages.Scheduler.Tracing)
+-- The scheduler is imported here *only* to detect whether it's been mocked
+local Scheduler = require(Packages.Scheduler)
+-- ROBLOX deviation: we import from top-level Scheduler exports to avoid direct file access
+
+type Interaction = Scheduler.Interaction
+
 local ReactFiberSuspenseComponent = require(script.Parent["ReactFiberSuspenseComponent.new"])
 type SuspenseState = ReactFiberSuspenseComponent.SuspenseState
 local ReactFiberStack = require(script.Parent["ReactFiberStack.new"])
 type StackCursor<T> = ReactFiberStack.StackCursor<T>;
+-- ROBLOX TODO: avoid a circular dependency
 -- local type {FunctionComponentUpdateQueue} = require(script.Parent["ReactFiberHooks.new"])
 
 local ReactFeatureFlags = require(Packages.Shared).ReactFeatureFlags
 -- deviation: Use some properties directly instead of localizing to avoid 200 limit
-local warnAboutDeprecatedLifecycles = ReactFeatureFlags.warnAboutDeprecatedLifecycles
 -- local enableSuspenseServerRenderer = ReactFeatureFlags.enableSuspenseServerRenderer
 -- local replayFailedUnitOfWorkWithInvokeGuardedCallback = ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback
-local enableProfilerTimer = ReactFeatureFlags.enableProfilerTimer
-local enableProfilerCommitHooks = ReactFeatureFlags.enableProfilerCommitHooks
-local enableSchedulerTracing = ReactFeatureFlags.enableSchedulerTracing
 -- local warnAboutUnmockedScheduler = ReactFeatureFlags.warnAboutUnmockedScheduler
-local deferRenderPhaseUpdateToNextBatch = ReactFeatureFlags.deferRenderPhaseUpdateToNextBatch
-local decoupleUpdatePriorityFromScheduler = ReactFeatureFlags.decoupleUpdatePriorityFromScheduler
-local enableDebugTracing = ReactFeatureFlags.enableDebugTracing
+-- local deferRenderPhaseUpdateToNextBatch = ReactFeatureFlags.ReactFeatureFlags.deferRenderPhaseUpdateToNextBatch
+-- local decoupleUpdatePriorityFromScheduler = ReactFeatureFlags.ReactFeatureFlags.decoupleUpdatePriorityFromScheduler
+-- local enableDebugTracing = ReactFeatureFlags.enableDebugTracing
 local enableSchedulingProfiler = ReactFeatureFlags.enableSchedulingProfiler
 local skipUnmountedBoundaries = ReactFeatureFlags.skipUnmountedBoundaries
 local enableDoubleInvokingEffects = ReactFeatureFlags.enableDoubleInvokingEffects
@@ -85,21 +120,20 @@ local ReactHookEffectTags = require(script.Parent.ReactHookEffectTags)
 --   logRenderStopped,
 -- } = require(script.Parent.DebugTracing)
 -- local {
---   markCommitStarted,
---   markCommitStopped,
---   markLayoutEffectsStarted,
---   markLayoutEffectsStopped,
---   markPassiveEffectsStarted,
---   markPassiveEffectsStopped,
---   markRenderStarted,
---   markRenderYielded,
---   markRenderStopped,
--- } = require(script.Parent.SchedulingProfiler)
+--   SchedulingProfiler.markCommitStarted,
+--   SchedulingProfiler.markCommitStopped,
+--   SchedulingProfiler.markLayoutEffectsStarted,
+--   SchedulingProfiler.markLayoutEffectsStopped,
+--   SchedulingProfiler.markPassiveEffectsStarted,
+--   SchedulingProfiler.markPassiveEffectsStopped,
+--   SchedulingProfiler.markRenderStarted,
+--   SchedulingProfiler.markRenderYielded,
+--   SchedulingProfiler.markRenderStopped,
+local SchedulingProfiler = require(script.Parent.SchedulingProfiler)
 
--- The scheduler is imported here *only* to detect whether it's been mocked
-local Scheduler = require(Packages.Scheduler)
 
--- local {__interactionsRef, __subscriberRef} = require(Packages.Scheduler.tracing)
+local SchedulerTracing = require(Packages.Scheduler).tracing
+local __interactionsRef, __subscriberRef = SchedulerTracing.__interactionsRef, SchedulerTracing.__subscriberRef
 
 local ReactFiberHostConfig = require(script.Parent.ReactFiberHostConfig)
 -- deviation: Use properties directly instead of localizing to avoid 200 limit
@@ -281,11 +315,7 @@ local pushToStack = ReactFiberStack.push
 local popFromStack = ReactFiberStack.pop
 local createCursor = ReactFiberStack.createCursor
 
--- local {
---   recordCommitTime,
---   startProfilerTimer,
---   stopProfilerTimerIfRunningAndRecordDelta,
--- } = require(script.Parent.ReactProfilerTimer.new)
+local ReactProfilerTimer = require(script.Parent["ReactProfilerTimer.new"])
 
 -- -- DEV stuff
 local getComponentName = require(Packages.Shared).getComponentName
@@ -311,11 +341,6 @@ local ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher
 local ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner
 local IsSomeRendererActing = ReactSharedInternals.IsSomeRendererActing
 local  captureCommitPhaseErrorOnRoot, flushPassiveMountEffects
--- ROBLOX deviation: Common types
-type Set<T> = { [T]: boolean };
-type Array<T> = { [number]: T };
-
-local exports: any = {}
 
 -- local ceil = math.ceil
 
@@ -365,8 +390,8 @@ local workInProgressRootRenderLanes: Lanes = ReactFiberLane.NoLanes
 -- Offscreen component.
 --
 -- Most things in the work loop should deal with workInProgressRootRenderLanes.
--- Most things in begin/complete phases should deal with subtreeRenderLanes.
-local subtreeRenderLanes = ReactFiberLane.NoLanes
+-- Most things in begin/complete phases should deal with exports.subtreeRenderLanes.
+exports.subtreeRenderLanes = ReactFiberLane.NoLanes
 local subtreeRenderLanesCursor: StackCursor<Lanes> = createCursor(ReactFiberLane.NoLanes)
 
 -- Whether to root completed, errored, suspended, etc.
@@ -437,7 +462,7 @@ local nestedPassiveUpdateCount: number = 0
 -- that spawn new work during render. E.g. hidden boundaries, suspended SSR
 -- hydration or SuspenseList.
 -- TODO: Can use a bitmask instead of an array
-local _spawnedWorkDuringRender: nil | Array<Lane | Lanes> = nil
+local spawnedWorkDuringRender: nil | Array<Lane | Lanes> = nil
 
 -- -- If two updates are scheduled within the same event, we should treat their
 -- -- event times as simultaneous, even if the actual clock time has advanced
@@ -486,7 +511,7 @@ exports.requestUpdateLane = function(fiber: Fiber): Lane
       and SyncLane
       or SyncBatchedLane
   elseif
-    not deferRenderPhaseUpdateToNextBatch and
+    not ReactFeatureFlags.deferRenderPhaseUpdateToNextBatch and
     bit32.band(executionContext, RenderContext) ~= NoContext and
     workInProgressRootRenderLanes ~= ReactFiberLane.NoLanes
   then
@@ -523,8 +548,8 @@ exports.requestUpdateLane = function(fiber: Fiber): Lane
   local isTransition = ReactFiberTransition.requestCurrentTransition() ~= ReactFiberTransition.NoTransition
   if isTransition then
     if currentEventPendingLanes ~= ReactFiberLane.NoLanes then
-      if mostRecentlyUpdatedRoot then
-        currentEventPendingLanes = mostRecentlyUpdatedRoot.pendingLanes
+      if mostRecentlyUpdatedRoot ~= nil then
+        currentEventPendingLanes = (mostRecentlyUpdatedRoot :: ReactInternalTypes.FiberRoot).pendingLanes
       else
         currentEventPendingLanes = ReactFiberLane.NoLanes
       end
@@ -554,7 +579,7 @@ exports.requestUpdateLane = function(fiber: Fiber): Lane
       schedulerPriority
     )
 
-    if decoupleUpdatePriorityFromScheduler then
+    if ReactFeatureFlags.decoupleUpdatePriorityFromScheduler then
       -- In the new strategy, we will track the current update lane priority
       -- inside React and use that priority to select a lane for this update.
       -- For now, we're just logging when they're different so we can assess.
@@ -625,11 +650,11 @@ exports.scheduleUpdateOnFiber = function(
   if root == workInProgressRoot then
     -- Received an update to a tree that's in the middle of rendering. Mark
     -- that there was an interleaved update work on this root. Unless the
-    -- `deferRenderPhaseUpdateToNextBatch` flag is off and this is a render
+    -- `ReactFeatureFlags.deferRenderPhaseUpdateToNextBatch` flag is off and this is a render
     -- phase update. In that case, we don't treat render phase updates as if
     -- they were interleaved, for backwards compat reasons.
     if
-      deferRenderPhaseUpdateToNextBatch or
+      ReactFeatureFlags.deferRenderPhaseUpdateToNextBatch or
       bit32.band(executionContext, RenderContext) == NoContext
     then
       workInProgressRootUpdatedLanes = mergeLanes(
@@ -691,7 +716,8 @@ exports.scheduleUpdateOnFiber = function(
       -- This is the result of a discrete event. Track the lowest priority
       -- discrete update per root so we can flush them early, if needed.
       if rootsWithPendingDiscreteUpdates == nil then
-        rootsWithPendingDiscreteUpdates = { root = true }
+      -- ROBLOX FIXME? not sure this translation is correct
+        rootsWithPendingDiscreteUpdates = { [root] = true }
       else
         rootsWithPendingDiscreteUpdates[root] = true
       end
@@ -1200,7 +1226,7 @@ end
 -- ROBLOX deviation: FIXME establish generics in signature when Luau supports this
 -- local function deferredUpdates<A>(fn: () => A): A
 exports.deferredUpdates = function(fn: () -> any): any
-  if decoupleUpdatePriorityFromScheduler then
+  if ReactFeatureFlags.decoupleUpdatePriorityFromScheduler then
     local previousLanePriority = getCurrentUpdateLanePriority()
     -- ROBLOX deviation: YOLO flag for disabling pcall
     local ok, result
@@ -1322,7 +1348,7 @@ exports.discreteUpdates = function(fn: (any, any, any, any) -> any, a, b, c, d):
   local prevExecutionContext = executionContext
   executionContext = bit32.bor(executionContext, DiscreteEventContext)
 
-  if decoupleUpdatePriorityFromScheduler then
+  if ReactFeatureFlags.decoupleUpdatePriorityFromScheduler then
     local previousLanePriority = getCurrentUpdateLanePriority()
     local ok, result = pcall(function()
       setCurrentUpdateLanePriority(ReactFiberLane.InputDiscreteLanePriority)
@@ -1422,7 +1448,7 @@ exports.flushSync = function(fn: (any) -> any, a: any): any
   end
   executionContext = bit32.bor(executionContext, BatchedContext)
 
-  if decoupleUpdatePriorityFromScheduler then
+  if ReactFeatureFlags.decoupleUpdatePriorityFromScheduler then
     local previousLanePriority = getCurrentUpdateLanePriority()
 
     -- ROBLOX deviation: YOLO flag for disabling pcall
@@ -1502,7 +1528,7 @@ end
 exports.flushControlled = function(fn: () -> any)
   local prevExecutionContext = executionContext
   executionContext = bit32.bor(executionContext, BatchedContext)
-  if decoupleUpdatePriorityFromScheduler then
+  if ReactFeatureFlags.decoupleUpdatePriorityFromScheduler then
     local previousLanePriority = getCurrentUpdateLanePriority()
     local ok, result = pcall(function()
       setCurrentUpdateLanePriority(ReactFiberLane.SyncLanePriority)
@@ -1541,8 +1567,8 @@ exports.flushControlled = function(fn: () -> any)
 end
 
 exports.pushRenderLanes = function(fiber: Fiber, lanes: Lanes)
-  pushToStack(subtreeRenderLanesCursor, subtreeRenderLanes, fiber)
-  subtreeRenderLanes = mergeLanes(subtreeRenderLanes, lanes)
+  pushToStack(subtreeRenderLanesCursor, exports.subtreeRenderLanes, fiber)
+  exports.subtreeRenderLanes = mergeLanes(exports.subtreeRenderLanes, lanes)
   workInProgressRootIncludedLanes = mergeLanes(
     workInProgressRootIncludedLanes,
     lanes
@@ -1550,7 +1576,7 @@ exports.pushRenderLanes = function(fiber: Fiber, lanes: Lanes)
 end
 
 exports.popRenderLanes = function(fiber: Fiber)
-  subtreeRenderLanes = subtreeRenderLanesCursor.current
+  exports.subtreeRenderLanes = subtreeRenderLanesCursor.current
   popFromStack(subtreeRenderLanesCursor, fiber)
 end
 
@@ -1567,9 +1593,8 @@ mod.prepareFreshStack = function(root: ReactInternalTypes.FiberRoot, lanes: Lane
     ReactFiberHostConfig.cancelTimeout(timeoutHandle)
   end
 
-  -- ROBLOX deviation: should be ~= nil check, but need to do this to work around Luau narrowing issue
-  if workInProgress then
-    local interruptedWork = workInProgress.return_
+  if workInProgress ~= nil then
+    local interruptedWork = (workInProgress :: Fiber).return_
     while interruptedWork ~= nil do
       unwindInterruptedWork(interruptedWork)
       interruptedWork = interruptedWork.return_
@@ -1578,7 +1603,7 @@ mod.prepareFreshStack = function(root: ReactInternalTypes.FiberRoot, lanes: Lane
   workInProgressRoot = root
   workInProgress = ReactFiber.createWorkInProgress(root.current, nil)
   workInProgressRootRenderLanes = lanes
-  subtreeRenderLanes = lanes
+  exports.subtreeRenderLanes = lanes
   workInProgressRootIncludedLanes = lanes
   workInProgressRootExitStatus = RootExitStatus.Incomplete
   workInProgressRootFatalError = nil
@@ -1586,8 +1611,8 @@ mod.prepareFreshStack = function(root: ReactInternalTypes.FiberRoot, lanes: Lane
   workInProgressRootUpdatedLanes = ReactFiberLane.NoLanes
   workInProgressRootPingedLanes = ReactFiberLane.NoLanes
 
-  if enableSchedulerTracing then
-    _spawnedWorkDuringRender = nil
+  if ReactFeatureFlags.enableSchedulerTracing then
+    spawnedWorkDuringRender = nil
   end
 
   if _G.__DEV__ then
@@ -1624,12 +1649,11 @@ mod.handleError = function(root, thrownValue)
         return
       end
 
-      if enableProfilerTimer and bit32.band(erroredWork.mode, ReactTypeOfMode.ProfileMode) ~= 0 then
+      if ReactFeatureFlags.enableProfilerTimer and bit32.band(erroredWork.mode, ReactTypeOfMode.ProfileMode) ~= 0 then
         -- Record the time spent rendering before an error was thrown. This
         -- avoids inaccurate Profiler durations in the case of a
         -- suspended render.
-        unimplemented("scheduler tracing logic")
-        -- stopProfilerTimerIfRunningAndRecordDelta(erroredWork, true)
+        ReactProfilerTimer.stopProfilerTimerIfRunningAndRecordDelta(erroredWork, true)
       end
 
       -- ROBLOX deviation, we pass in onUncaughtError and renderDidError here since throwException can't call them due to a require cycle
@@ -1684,19 +1708,17 @@ mod.popDispatcher = function(prevDispatcher)
 end
 
 mod.pushInteractions = function(root)
-  if enableSchedulerTracing then
-    unimplemented("scheduler tracing logic")
-    -- local prevInteractions: Set<Interaction>? = __interactionsRef.current
-    -- __interactionsRef.current = root.memoizedInteractions
-    -- return prevInteractions
+  if ReactFeatureFlags.enableSchedulerTracing then
+    local prevInteractions: Set<Interaction>? = __interactionsRef.current
+    __interactionsRef.current = root.memoizedInteractions
+    return prevInteractions
   end
   return nil
 end
 
 mod.popInteractions = function(prevInteractions)
-  if enableSchedulerTracing then
-    unimplemented("scheduler tracing logic")
-  -- __interactionsRef.current = prevInteractions
+  if ReactFeatureFlags.enableSchedulerTracing then
+  __interactionsRef.current = prevInteractions
   end
 end
 
@@ -1766,19 +1788,17 @@ mod.renderRootSync = function(root: ReactInternalTypes.FiberRoot, lanes: Lanes)
     mod.startWorkOnPendingInteractions(root, lanes)
   end
 
-  -- ROBLOX FIXME: commented out until scheduler tracing is implemented
-  -- local prevInteractions = mod.pushInteractions(root)
+  local prevInteractions = mod.pushInteractions(root)
 
   if _G.__DEV__ then
-    if enableDebugTracing then
+    if ReactFeatureFlags.enableDebugTracing then
       unimplemented("debug tracing logic")
       -- logRenderStarted(lanes)
     end
   end
 
   if enableSchedulingProfiler then
-    unimplemented("scheduling profiler logic")
-    -- markRenderStarted(lanes)
+    SchedulingProfiler.markRenderStarted(lanes)
   end
 
   while true do
@@ -1800,9 +1820,8 @@ mod.renderRootSync = function(root: ReactInternalTypes.FiberRoot, lanes: Lanes)
     end
   end
   resetContextDependencies()
-  if enableSchedulerTracing then
-    unimplemented("scheduler tracing logic")
-    -- mod.popInteractions(((prevInteractions: any): Set<Interaction>))
+  if ReactFeatureFlags.enableSchedulerTracing then
+    mod.popInteractions(prevInteractions)
   end
 
   executionContext = prevExecutionContext
@@ -1818,15 +1837,14 @@ mod.renderRootSync = function(root: ReactInternalTypes.FiberRoot, lanes: Lanes)
   end
 
   if _G.__DEV__ then
-    if enableDebugTracing then
+    if ReactFeatureFlags.enableDebugTracing then
       unimplemented("debug tracing logic")
       -- logRenderStopped()
     end
   end
 
   if enableSchedulingProfiler then
-    unimplemented("scheduling profiler logic")
-    -- markRenderStopped()
+    SchedulingProfiler.markRenderStopped()
   end
 
   -- Set this to nil to indicate there's no in-progress render.
@@ -1858,19 +1876,17 @@ mod.renderRootConcurrent = function(root: ReactInternalTypes.FiberRoot, lanes: L
     mod.startWorkOnPendingInteractions(root, lanes)
   end
 
-  -- ROBLOX TODO: uncomment during scheduler tracing impl pass
-  -- local _prevInteractions = mod.pushInteractions(root)
+  local prevInteractions = mod.pushInteractions(root)
 
   if _G.__DEV__ then
-    if enableDebugTracing then
+    if ReactFeatureFlags.enableDebugTracing then
       unimplemented("debug tracing logic")
       -- logRenderStarted(lanes)
     end
   end
 
   if enableSchedulingProfiler then
-    unimplemented("scheduling profiler logic")
-    -- markRenderStarted(lanes)
+    SchedulingProfiler.markRenderStarted(lanes)
   end
 
   while true do
@@ -1896,16 +1912,15 @@ mod.renderRootConcurrent = function(root: ReactInternalTypes.FiberRoot, lanes: L
     end
   end
   resetContextDependencies()
-  if enableSchedulerTracing then
-    unimplemented("scheduler tracing logic")
-    -- mod.popInteractions(((prevInteractions: any): Set<Interaction>))
+  if ReactFeatureFlags.enableSchedulerTracing then
+    mod.popInteractions(prevInteractions)
   end
 
   mod.popDispatcher(prevDispatcher)
   executionContext = prevExecutionContext
 
   if _G.__DEV__ then
-    if enableDebugTracing then
+    if ReactFeatureFlags.enableDebugTracing then
       unimplemented("debug tracing logic")
       -- logRenderStopped()
     end
@@ -1915,15 +1930,13 @@ mod.renderRootConcurrent = function(root: ReactInternalTypes.FiberRoot, lanes: L
   if workInProgress ~= nil then
     -- Still work remaining.
     if enableSchedulingProfiler then
-      unimplemented("scheduling profiler logic")
-      -- markRenderYielded()
+      SchedulingProfiler.markRenderYielded()
     end
     return RootExitStatus.Incomplete
   else
     -- Completed the tree.
     if enableSchedulingProfiler then
-      unimplemented("scheduling profiler logic")
-      -- markRenderStopped()
+      SchedulingProfiler.markRenderStopped()
     end
 
     -- Set this to nil to indicate there's no in-progress render.
@@ -1943,8 +1956,7 @@ mod.workLoopConcurrent = function()
   end
 end
 
--- FIXME (roblox): restore type annotation 'unitOfWork: Fiber'
-mod.performUnitOfWork = function(unitOfWork)
+mod.performUnitOfWork = function(unitOfWork: Fiber): ()
   -- The current, flushed, state of this fiber is the alternate. Ideally
   -- nothing should rely on this, but relying on it here means that we don't
   -- need an additional field on the work in progress.
@@ -1952,13 +1964,12 @@ mod.performUnitOfWork = function(unitOfWork)
   setCurrentDebugFiberInDEV(unitOfWork)
 
   local next_
-  if enableProfilerTimer and bit32.band(unitOfWork.mode, ReactTypeOfMode.ProfileMode) ~= ReactTypeOfMode.NoMode then
-    unimplemented("profiler timer logic")
-    -- startProfilerTimer(unitOfWork)
-    -- next_ = mod.beginWork(current, unitOfWork, subtreeRenderLanes)
-    -- stopProfilerTimerIfRunningAndRecordDelta(unitOfWork, true)
+  if ReactFeatureFlags.enableProfilerTimer and bit32.band(unitOfWork.mode, ReactTypeOfMode.ProfileMode) ~= ReactTypeOfMode.NoMode then
+    ReactProfilerTimer.startProfilerTimer(unitOfWork)
+    next_ = mod.beginWork(current, unitOfWork, exports.subtreeRenderLanes)
+    ReactProfilerTimer.stopProfilerTimerIfRunningAndRecordDelta(unitOfWork, true)
   else
-    next_ = mod.beginWork(current, unitOfWork, subtreeRenderLanes)
+    next_ = mod.beginWork(current, unitOfWork, exports.subtreeRenderLanes)
   end
 
   resetCurrentDebugFiberInDEV()
@@ -1989,16 +2000,15 @@ mod.completeUnitOfWork = function(unitOfWork: Fiber)
       setCurrentDebugFiberInDEV(completedWork)
       local next_
       if
-        not enableProfilerTimer or
+        not ReactFeatureFlags.enableProfilerTimer or
         bit32.band(completedWork.mode, ReactTypeOfMode.ProfileMode) == ReactTypeOfMode.NoMode
       then
-        next_ = completeWork(current, completedWork, subtreeRenderLanes)
+        next_ = completeWork(current, completedWork, exports.subtreeRenderLanes)
       else
-        unimplemented("Profiler timer logic")
-        -- startProfilerTimer(completedWork)
-        -- next_ = completeWork(current, completedWork, subtreeRenderLanes)
-        -- -- Update render duration assuming we didn't error.
-        -- stopProfilerTimerIfRunningAndRecordDelta(completedWork, false)
+        ReactProfilerTimer.startProfilerTimer(completedWork)
+        next_ = completeWork(current, completedWork, exports.subtreeRenderLanes)
+        -- Update render duration assuming we didn't error.
+        ReactProfilerTimer.stopProfilerTimerIfRunningAndRecordDelta(completedWork, false)
       end
       resetCurrentDebugFiberInDEV()
 
@@ -2011,7 +2021,7 @@ mod.completeUnitOfWork = function(unitOfWork: Fiber)
       -- This fiber did not complete because something threw. Pop values off
       -- the stack without entering the complete phase. If this is a boundary,
       -- capture values if possible.
-      local next_ = unwindWork(completedWork, subtreeRenderLanes)
+      local next_ = unwindWork(completedWork, exports.subtreeRenderLanes)
 
       -- Because this fiber did not complete, don't reset its expiration time.
 
@@ -2026,21 +2036,20 @@ mod.completeUnitOfWork = function(unitOfWork: Fiber)
       end
 
       if
-        enableProfilerTimer and
+        ReactFeatureFlags.enableProfilerTimer and
         bit32.band(completedWork.mode, ReactTypeOfMode.ProfileMode) ~= ReactTypeOfMode.NoMode
       then
-        unimplemented("Profiler timer logic")
-        -- -- Record the render duration for the fiber that errored.
-        -- stopProfilerTimerIfRunningAndRecordDelta(completedWork, false)
+        -- Record the render duration for the fiber that errored.
+        ReactProfilerTimer.stopProfilerTimerIfRunningAndRecordDelta(completedWork, false)
 
-        -- -- Include the time spent working on failed children before continuing.
-        -- local actualDuration = completedWork.actualDuration
-        -- local child = completedWork.child
-        -- while child ~= nil do
-        --   actualDuration += child.actualDuration
-        --   child = child.sibling
-        -- end
-        -- completedWork.actualDuration = actualDuration
+        -- Include the time spent working on failed children before continuing.
+        local actualDuration = completedWork.actualDuration
+        local child = completedWork.child
+        while child ~= nil do
+          actualDuration += child.actualDuration
+          child = child.sibling
+        end
+        completedWork.actualDuration = actualDuration
       end
 
       if returnFiber ~= nil then
@@ -2101,28 +2110,26 @@ mod.commitRootImpl = function(root, renderPriorityLevel)
   local lanes = root.finishedLanes
 
   if _G.__DEV__ then
-    if enableDebugTracing then
+    if ReactFeatureFlags.enableDebugTracing then
       unimplemented("debug tracing logic")
       -- logCommitStarted(lanes)
     end
   end
 
   if enableSchedulingProfiler then
-    unimplemented("scheduling profiler logic")
-    -- markCommitStarted(lanes)
+    SchedulingProfiler.markCommitStarted(lanes)
   end
 
   if finishedWork == nil then
     if _G.__DEV__ then
-      if enableDebugTracing then
+      if ReactFeatureFlags.enableDebugTracing then
         unimplemented("debug tracing logic")
         -- logCommitStopped()
       end
     end
 
     if enableSchedulingProfiler then
-      unimplemented("scheduling profiler logic")
-      -- markCommitStopped()
+      SchedulingProfiler.markCommitStopped()
     end
 
     return nil
@@ -2192,15 +2199,14 @@ mod.commitRootImpl = function(root, renderPriorityLevel)
 
   if subtreeHasEffects or rootHasEffect then
     local previousLanePriority
-    if decoupleUpdatePriorityFromScheduler then
+    if ReactFeatureFlags.decoupleUpdatePriorityFromScheduler then
       previousLanePriority = getCurrentUpdateLanePriority()
       setCurrentUpdateLanePriority(ReactFiberLane.SyncLanePriority)
     end
 
     local prevExecutionContext = executionContext
     executionContext = bit32.bor(executionContext, CommitContext)
-  -- ROBLOX TODO: uncomment during scheduler tracing impl pass
-  -- local _prevInteractions = mod.pushInteractions(root)
+  local prevInteractions = mod.pushInteractions(root)
 
     -- Reset this to nil before calling lifecycles
     ReactCurrentOwner.current = nil
@@ -2220,11 +2226,10 @@ mod.commitRootImpl = function(root, renderPriorityLevel)
     -- We no longer need to track the active instance fiber
     focusedInstanceHandle = nil
 
-    if enableProfilerTimer then
-      unimplemented("profiler timer logic")
-      -- -- Mark the current commit time to be shared by all Profilers in this
-      -- -- batch. This enables them to be grouped later.
-      -- recordCommitTime()
+    if ReactFeatureFlags.enableProfilerTimer then
+      -- Mark the current commit time to be shared by all Profilers in this
+      -- batch. This enables them to be grouped later.
+      ReactProfilerTimer.recordCommitTime()
     end
 
     -- The next phase is the mutation phase, where we mutate the host tree.
@@ -2245,14 +2250,13 @@ mod.commitRootImpl = function(root, renderPriorityLevel)
     -- the host tree after it's been mutated. The idiomatic use case for this is
     -- layout, but class component lifecycles also fire here for legacy reasons.
     if _G.__DEV__ then
-      if enableDebugTracing then
+      if ReactFeatureFlags.enableDebugTracing then
         unimplemented("debug tracing logic")
         -- logLayoutEffectsStarted(lanes)
       end
     end
     if enableSchedulingProfiler then
-      unimplemented("scheduling profiler logic")
-      -- markLayoutEffectsStarted(lanes)
+      SchedulingProfiler.markLayoutEffectsStarted(lanes)
     end
 
     if _G.__DEV__ then
@@ -2291,14 +2295,13 @@ mod.commitRootImpl = function(root, renderPriorityLevel)
     end
 
     if _G.__DEV__ then
-      if enableDebugTracing then
+      if ReactFeatureFlags.enableDebugTracing then
         unimplemented("debug tracing logic")
         -- logLayoutEffectsStopped()
       end
     end
     if enableSchedulingProfiler then
-      unimplemented("scheduling profiler logic")
-      -- markLayoutEffectsStopped()
+      SchedulingProfiler.markLayoutEffectsStopped()
     end
 
     -- If there are pending passive effects, schedule a callback to process them.
@@ -2319,13 +2322,12 @@ mod.commitRootImpl = function(root, renderPriorityLevel)
     -- opportunity to paint.
     requestPaint()
 
-    if enableSchedulerTracing then
-      unimplemented("scheduler tracing logic")
-      -- mod.popInteractions(((prevInteractions: any): Set<Interaction>))
+    if ReactFeatureFlags.enableSchedulerTracing then
+      mod.popInteractions(prevInteractions)
     end
     executionContext = prevExecutionContext
 
-    if decoupleUpdatePriorityFromScheduler and previousLanePriority ~= nil then
+    if ReactFeatureFlags.decoupleUpdatePriorityFromScheduler and previousLanePriority ~= nil then
       -- Reset the priority to the previous non-sync value.
       setCurrentUpdateLanePriority(previousLanePriority)
     end
@@ -2335,9 +2337,8 @@ mod.commitRootImpl = function(root, renderPriorityLevel)
     -- Measure these anyway so the flamegraph explicitly shows that there were
     -- no effects.
     -- TODO: Maybe there's a better way to report this.
-    if enableProfilerTimer then
-      unimplemented("profiler timer logic")
-      -- recordCommitTime()
+    if ReactFeatureFlags.enableProfilerTimer then
+      ReactProfilerTimer.recordCommitTime()
     end
   end
 
@@ -2357,20 +2358,19 @@ mod.commitRootImpl = function(root, renderPriorityLevel)
 
   -- Check if there's remaining work on this root
   if remainingLanes ~= ReactFiberLane.NoLanes then
-    if enableSchedulerTracing then
-      unimplemented("scheduler tracing logic")
-      -- if spawnedWorkDuringRender ~= nil then
-      --   local expirationTimes = spawnedWorkDuringRender
-      --   spawnedWorkDuringRender = nil
-      --   for (local i = 0; i < expirationTimes.length; i++)
-      --     scheduleInteractions(
-      --       root,
-      --       expirationTimes[i],
-      --       root.memoizedInteractions,
-      --     )
-      --   end
-      -- end
-      -- mod.schedulePendingInteractions(root, remainingLanes)
+    if ReactFeatureFlags.enableSchedulerTracing then
+      if spawnedWorkDuringRender ~= nil then
+        local expirationTimes = spawnedWorkDuringRender
+        spawnedWorkDuringRender = nil
+        for i = 1, #expirationTimes do
+          scheduleInteractions(
+            root,
+            expirationTimes[i],
+            root.memoizedInteractions
+          )
+        end
+      end
+      mod.schedulePendingInteractions(root, remainingLanes)
     end
   else
     -- If there's no remaining work, we can clear the set of already failed
@@ -2384,15 +2384,14 @@ mod.commitRootImpl = function(root, renderPriorityLevel)
     end
   end
 
-  if enableSchedulerTracing then
-    unimplemented("scheduler tracing logic")
-    -- if not rootDidHavePassiveEffects then
-    --   -- If there are no passive effects, then we can complete the pending interactions.
-    --   -- Otherwise, we'll wait until after the passive effects are flushed.
-    --   -- Wait to do this until after remaining work has been scheduled,
-    --   -- so that we don't prematurely signal complete for interactions when there's e.g. hidden work.
-    --   mod.finishPendingInteractions(root, lanes)
-    -- end
+  if ReactFeatureFlags.enableSchedulerTracing then
+    if not rootDidHavePassiveEffects then
+      -- If there are no passive effects, then we can complete the pending interactions.
+      -- Otherwise, we'll wait until after the passive effects are flushed.
+      -- Wait to do this until after remaining work has been scheduled,
+      -- so that we don't prematurely signal complete for interactions when there's e.g. hidden work.
+      mod.finishPendingInteractions(root, lanes)
+    end
   end
 
   if remainingLanes == SyncLane then
@@ -2427,15 +2426,14 @@ mod.commitRootImpl = function(root, renderPriorityLevel)
 
   if bit32.band(executionContext, LegacyUnbatchedContext) ~= NoContext then
     if _G.__DEV__ then
-      if enableDebugTracing then
+      if ReactFeatureFlags.enableDebugTracing then
         unimplemented("debug tracing logic")
         -- logCommitStopped()
       end
     end
 
     if enableSchedulingProfiler then
-      unimplemented("scheduling profiler logic")
-      -- markCommitStopped()
+      SchedulingProfiler.markCommitStopped()
     end
 
     -- This is a legacy edge case. We just committed the initial mount of
@@ -2449,15 +2447,14 @@ mod.commitRootImpl = function(root, renderPriorityLevel)
   flushSyncCallbackQueue()
 
   if _G.__DEV__ then
-    if enableDebugTracing then
+    if ReactFeatureFlags.enableDebugTracing then
       unimplemented("debug tracing logic")
       -- logCommitStopped()
     end
   end
 
   if enableSchedulingProfiler then
-    unimplemented("scheduling profiler logic")
-    -- markCommitStopped()
+    SchedulingProfiler.markCommitStopped()
   end
 
   return nil
@@ -2748,7 +2745,7 @@ exports.flushPassiveEffects = function(): boolean
         and NormalSchedulerPriority
         or pendingPassiveEffectsRenderPriority
     pendingPassiveEffectsRenderPriority = NoSchedulerPriority
-    if decoupleUpdatePriorityFromScheduler then
+    if ReactFeatureFlags.decoupleUpdatePriorityFromScheduler then
       local previousLanePriority = getCurrentUpdateLanePriority()
 
       -- ROBLOX deviation: YOLO flag for disabling pcall
@@ -2782,11 +2779,11 @@ exports.flushPassiveEffects = function(): boolean
   return false
 end
 
-flushPassiveMountEffects = function(root, firstChild: Fiber)
+flushPassiveMountEffects = function(root, firstChild: Fiber): ()
   local fiber = firstChild
   while fiber ~= nil do
     local prevProfilerOnStack = nil
-    if enableProfilerTimer and enableProfilerCommitHooks then
+    if ReactFeatureFlags.enableProfilerTimer and ReactFeatureFlags.enableProfilerCommitHooks then
       if fiber.tag == ReactWorkTags.Profiler then
         prevProfilerOnStack = nearestProfilerOnStack
         nearestProfilerOnStack = fiber
@@ -2832,7 +2829,7 @@ flushPassiveMountEffects = function(root, firstChild: Fiber)
       end
     end
 
-    if enableProfilerTimer and enableProfilerCommitHooks then
+    if ReactFeatureFlags.enableProfilerTimer and ReactFeatureFlags.enableProfilerCommitHooks then
       if fiber.tag == ReactWorkTags.Profiler then
         -- Bubble times to the next nearest ancestor Profiler.
         -- After we process that Profiler, we'll bubble further up.
@@ -2849,7 +2846,7 @@ flushPassiveMountEffects = function(root, firstChild: Fiber)
   end
 end
 
-local function flushPassiveUnmountEffects(firstChild: Fiber)
+local function flushPassiveUnmountEffects(firstChild: Fiber): ()
   local fiber = firstChild
   while fiber ~= nil do
     local deletions = fiber.deletions
@@ -2931,7 +2928,7 @@ flushPassiveEffectsImpl = function()
   )
 
   if _G.__DEV__ then
-    if enableDebugTracing then
+    if ReactFeatureFlags.enableDebugTracing then
       unimplemented("debug tracing")
       -- FIXME (roblox): enable tracing logic
       -- logPassiveEffectsStarted(lanes)
@@ -2939,9 +2936,7 @@ flushPassiveEffectsImpl = function()
   end
 
   if enableSchedulingProfiler then
-    unimplemented("scheduling profiler")
-    -- FIXME (roblox): enable scheduling profiler logic
-    -- markPassiveEffectsStarted(lanes)
+    SchedulingProfiler.markPassiveEffectsStarted(_lanes)
   end
 
   if _G.__DEV__ then
@@ -2950,8 +2945,7 @@ flushPassiveEffectsImpl = function()
 
   local prevExecutionContext = executionContext
   executionContext = bit32.bor(executionContext, CommitContext)
-  -- ROBLOX TODO: uncomment during scheduler tracing impl pass
-  -- local prevInteractions = mod.pushInteractions(root)
+  local prevInteractions = mod.pushInteractions(root)
 
   -- It's important that ALL pending passive effect destroy functions are called
   -- before ANY passive effect create functions are called.
@@ -2963,15 +2957,14 @@ flushPassiveEffectsImpl = function()
   flushPassiveMountEffects(root, root.current)
 
   if _G.__DEV__ then
-    if enableDebugTracing then
+    if ReactFeatureFlags.enableDebugTracing then
       unimplemented("debug tracing logic")
       -- logPassiveEffectsStopped()
     end
   end
 
   if enableSchedulingProfiler then
-    unimplemented("scheduling profiler logic")
-    -- markPassiveEffectsStopped()
+    SchedulingProfiler.markPassiveEffectsStopped()
   end
 
   if _G.__DEV__ and enableDoubleInvokingEffects then
@@ -2982,12 +2975,9 @@ flushPassiveEffectsImpl = function()
     isFlushingPassiveEffects = false
   end
 
-  if enableSchedulerTracing then
-    unimplemented("scheduler tracing")
-    -- deviation: Luau can't do all this weird type coercion
-    -- mod.popInteractions(((prevInteractions: any): Set<Interaction>))
-    -- mod.popInteractions(prevInteractions)
-    -- mod.finishPendingInteractions(root, lanes)
+  if ReactFeatureFlags.enableSchedulerTracing then
+    mod.popInteractions(prevInteractions)
+    mod.finishPendingInteractions(root, _lanes)
   end
 
   executionContext = prevExecutionContext
@@ -3273,7 +3263,7 @@ function flushRenderPhaseStrictModeWarningsInDEV()
   if _G.__DEV__ then
     ReactStrictModeWarnings.flushLegacyContextWarning()
 
-    if warnAboutDeprecatedLifecycles then
+    if ReactFeatureFlags.warnAboutDeprecatedLifecycles then
       ReactStrictModeWarnings.flushPendingUnsafeLifecycleWarnings()
     end
   end
@@ -3364,6 +3354,7 @@ mod.warnAboutUpdateOnNotYetMountedFiberInDEV = function(fiber)
       end
       didWarnStateUpdateForNotYetMountedComponent[componentName] = true
     else
+      -- ROBLOX FIXME? not sure this translation is correct
       didWarnStateUpdateForNotYetMountedComponent = { [componentName] = true }
     end
 
@@ -3440,6 +3431,7 @@ mod.warnAboutUpdateOnUnmountedFiberInDEV = function(fiber)
       end
       didWarnStateUpdateForUnmountedComponent[componentName] = true
     else
+      -- ROBLOX FIXME? not sure this translation is correct
       didWarnStateUpdateForUnmountedComponent = { [componentName] = true }
     end
 
@@ -3527,11 +3519,10 @@ if _G.__DEV__ and ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallb
       -- Restore the original properties of the fiber.
       ReactFiber.assignFiberPropertiesInDEV(unitOfWork, originalWorkInProgressCopy)
 
-      if enableProfilerTimer and
+      if ReactFeatureFlags.enableProfilerTimer and
         bit32.band(unitOfWork.mode, ReactTypeOfMode.ProfileMode) ~= 0 then
-        unimplemented("profiler timer")
-        -- -- Reset the profiler timer.
-        -- startProfilerTimer(unitOfWork)
+        -- Reset the profiler timer.
+        ReactProfilerTimer.startProfilerTimer(unitOfWork)
       end
 
       -- Run beginWork again.
@@ -3777,168 +3768,212 @@ exports.warnIfUnmockedScheduler = function(fiber: Fiber)
   end
 end
 
--- function computeThreadID(root: ReactInternalTypes.FiberRoot, lane: Lane | Lanes)
---   -- Interaction threads are unique per root and expiration time.
---   -- NOTE: Intentionally unsound cast. All that matters is that it's a number
---   -- and it represents a batch of work. Could make a helper function instead,
---   -- but meh this is fine for now.
---   return (lane: any) * 1000 + root.interactionThreadID
--- end
+function computeThreadID(root: ReactInternalTypes.FiberRoot, lane: Lane | Lanes)
+  -- Interaction threads are unique per root and expiration time.
+  -- NOTE: Intentionally unsound cast. All that matters is that it's a number
+  -- and it represents a batch of work. Could make a helper function instead,
+  -- but meh this is fine for now.
+  return lane * 1000 + root.interactionThreadID
+end
 
--- exports.markSpawnedWork(lane: Lane | Lanes)
---   if !enableSchedulerTracing)
---     return
---   end
---   if spawnedWorkDuringRender == nil)
---     spawnedWorkDuringRender = [lane]
---   } else {
---     spawnedWorkDuringRender.push(lane)
---   end
--- end
+exports.markSpawnedWork = function(lane: Lane | Lanes)
+  if not ReactFeatureFlags.enableSchedulerTracing then
+    return
+  end
+  if spawnedWorkDuringRender == nil then
+    spawnedWorkDuringRender = {lane}
+  else
+    -- ROBLOX TODO: Luau type narrowing workaround
+    table.insert(spawnedWorkDuringRender :: Array<Lane | Lanes>, lane)
+  end
+end
 
--- function scheduleInteractions(
---   root: ReactInternalTypes.FiberRoot,
---   lane: Lane | Lanes,
---   interactions: Set<Interaction>,
--- )
---   if !enableSchedulerTracing)
---     return
---   end
+function scheduleInteractions(
+  root: ReactInternalTypes.FiberRoot,
+  lane: Lane | Lanes,
+  interactions: Set<Interaction>
+)
+  if not ReactFeatureFlags.enableSchedulerTracing then
+    return
+  end
 
---   if interactions.size > 0)
---     local pendingInteractionMap = root.pendingInteractionMap
---     local pendingInteractions = pendingInteractionMap.get(lane)
---     if pendingInteractions ~= nil)
---       interactions.forEach(interaction => {
---         if !pendingInteractions.has(interaction))
---           -- Update the pending async work count for previously unscheduled interaction.
---           interaction.__count++
---         end
+  if collectionHasEntries(interactions) then
+    local pendingInteractionMap = root.pendingInteractionMap
+    local pendingInteractions = pendingInteractionMap[lane]
+    if pendingInteractions ~= nil then
+      if interactions.ipairs ~= nil then
+        for _, interaction in interactions:ipairs() do
+          if not pendingInteractions[interaction] then
+            -- Update the pending async work count for previously unscheduled interaction.
+            interaction.__count += 1
+          end
 
---         pendingInteractions.add(interaction)
---       })
---     } else {
---       pendingInteractionMap.set(lane, new Set(interactions))
+          pendingInteractions[interaction] = true
+        end
+      else
+        for _, interaction in ipairs(interactions :: any) do
+          if not pendingInteractions[interaction] then
+            -- Update the pending async work count for previously unscheduled interaction.
+            interaction.__count += 1
+          end
 
---       -- Update the pending async work count for the current interactions.
---       interactions.forEach(interaction => {
---         interaction.__count++
---       })
---     end
+          pendingInteractions[interaction] = true
+        end
+      end
+    else
+      pendingInteractionMap[lane] = copySet(interactions)
 
---     local subscriber = __subscriberRef.current
---     if subscriber ~= nil)
---       local threadID = computeThreadID(root, lane)
---       subscriber.onWorkScheduled(interactions, threadID)
---     end
---   end
--- end
+      -- Update the pending async work count for the current interactions.
+      if interactions.ipairs ~= nil then
+        for _, interaction in interactions:ipairs() do
+          interaction.__count += 1
+        end
+      else
+        for _, interaction in ipairs(interactions :: any) do
+          interaction.__count += 1
+        end
+      end
+    end
+
+    local subscriber = __subscriberRef.current
+    if subscriber ~= nil then
+      local threadID = computeThreadID(root, lane)
+      subscriber.onWorkScheduled(interactions, threadID)
+    end
+  end
+end
 
 mod.schedulePendingInteractions = function(root: ReactInternalTypes.FiberRoot, lane: Lane | Lanes)
   -- This is called when work is scheduled on a root.
   -- It associates the current interactions with the newly-scheduled expiration.
   -- They will be restored when that expiration is later committed.
-  if not enableSchedulerTracing then
+  if not ReactFeatureFlags.enableSchedulerTracing then
     return
   end
 
-  unimplemented("scheduler tracing logic")
-  -- scheduleInteractions(root, lane, __interactionsRef.current)
+  scheduleInteractions(root, lane, __interactionsRef.current)
 end
 
 mod.startWorkOnPendingInteractions = function(root: ReactInternalTypes.FiberRoot, lanes: Lanes)
   -- This is called when new work is started on a root.
-  if not enableSchedulerTracing then
+  if not ReactFeatureFlags.enableSchedulerTracing then
     return
   end
 
-  unimplemented("scheduler tracing logic")
-  -- -- Determine which interactions this batch of work currently includes, So that
-  -- -- we can accurately attribute time spent working on it, And so that cascading
-  -- -- work triggered during the render phase will be associated with it.
-  -- local interactions: Set<Interaction> = new Set()
-  -- root.pendingInteractionMap.forEach((scheduledInteractions, scheduledLane) => {
-  --   if includesSomeLane(lanes, scheduledLane))
-  --     scheduledInteractions.forEach(interaction =>
-  --       interactions.add(interaction),
-  --     )
-  --   end
-  -- })
+  -- Determine which interactions this batch of work currently includes, So that
+  -- we can accurately attribute time spent working on it, And so that cascading
+  -- work triggered during the render phase will be associated with it.
+  local interactions: Set<Interaction> = Set.new()
+  for scheduledLane, scheduledInteractions in pairs(root.pendingInteractionMap) do
+    if includesSomeLane(lanes, scheduledLane) then
+      for _, interaction in scheduledInteractions:ipairs() do
+        interactions:add(interaction)
+      end
+    end
+  end
 
-  -- -- Store the current set of interactions on the ReactInternalTypes.FiberRoot for a few reasons:
-  -- -- We can re-use it in hot functions like performConcurrentWorkOnRoot()
-  -- -- without having to recalculate it. We will also use it in commitWork() to
-  -- -- pass to any Profiler onRender() hooks. This also provides DevTools with a
-  -- -- way to access it when the onCommitRoot() hook is called.
-  -- root.memoizedInteractions = interactions
+  -- Store the current set of interactions on the ReactInternalTypes.FiberRoot for a few reasons:
+  -- We can re-use it in hot functions like performConcurrentWorkOnRoot()
+  -- without having to recalculate it. We will also use it in commitWork() to
+  -- pass to any Profiler onRender() hooks. This also provides DevTools with a
+  -- way to access it when the onCommitRoot() hook is called.
+  -- ROBLOX FIXME: manual type check to workaround Luau analyze bug "Type 'Set<Interaction>' could not be converted into 'Set<Interaction>'"
+  root.memoizedInteractions = interactions :: any
 
-  -- if interactions.size > 0)
-  --   local subscriber = __subscriberRef.current
-  --   if subscriber ~= nil)
-  --     local threadID = computeThreadID(root, lanes)
-  --     try {
-  --       subscriber.onWorkStarted(interactions, threadID)
-  --     } catch (error)
-  --       -- If the subscriber throws, rethrow it in a separate task
-  --       scheduleCallback(ImmediateSchedulerPriority, () => {
-  --         throw error
-  --       })
-  --     end
-  --   end
-  -- end
+  if collectionHasEntries(interactions) then
+    local subscriber = __subscriberRef.current
+    if subscriber ~= nil then
+      local threadID = computeThreadID(root, lanes)
+      local ok, error_ = pcall(function()
+        subscriber.onWorkStarted(interactions, threadID)
+      end)
+      if not ok then
+        -- If the subscriber throws, rethrow it in a separate task
+        scheduleCallback(ImmediateSchedulerPriority, function()
+          error(error_)
+        end)
+      end
+    end
+  end
 end
 
 mod.finishPendingInteractions = function(root, committedLanes)
-  if not enableSchedulerTracing then
+  if not ReactFeatureFlags.enableSchedulerTracing then
     return
   end
 
-  unimplemented("scheduler tracing logic")
-  -- local remainingLanesAfterCommit = root.pendingLanes
+  local remainingLanesAfterCommit = root.pendingLanes
 
-  -- local subscriber
+  local subscriber
 
-  -- try {
-  --   subscriber = __subscriberRef.current
-  --   if subscriber ~= nil and root.memoizedInteractions.size > 0)
-  --     -- FIXME: More than one lane can finish in a single commit.
-  --     local threadID = computeThreadID(root, committedLanes)
-  --     subscriber.onWorkStopped(root.memoizedInteractions, threadID)
-  --   end
-  -- } catch (error)
-  --   -- If the subscriber throws, rethrow it in a separate task
-  --   scheduleCallback(ImmediateSchedulerPriority, () => {
-  --     throw error
-  --   })
-  -- } finally {
-  --   -- Clear completed interactions from the pending Map.
-  --   -- Unless the render was suspended or cascading work was scheduled,
-  --   -- In which case– leave pending interactions until the subsequent render.
-  --   local pendingInteractionMap = root.pendingInteractionMap
-  --   pendingInteractionMap.forEach((scheduledInteractions, lane) => {
-  --     -- Only decrement the pending interaction count if we're done.
-  --     -- If there's still work at the current priority,
-  --     -- That indicates that we are waiting for suspense data.
-  --     if !includesSomeLane(remainingLanesAfterCommit, lane))
-  --       pendingInteractionMap.delete(lane)
+  -- ROBLOX try
+  local ok, error_ = pcall(function()
+    subscriber = __subscriberRef.current
+    -- ROBLOX deviation: helper for raw table set/map size > 0
+    if subscriber ~= nil and collectionHasEntries(root.memoizedInteractions) then
+      -- FIXME: More than one lane can finish in a single commit.
+      local threadID = computeThreadID(root, committedLanes)
+      subscriber.onWorkStopped(root.memoizedInteractions, threadID)
+    end
+  end)
 
-  --       scheduledInteractions.forEach(interaction => {
-  --         interaction.__count--
+  -- ROBLOX finally
+  -- Clear completed interactions from the pending Map.
+  -- Unless the render was suspended or cascading work was scheduled,
+  -- In which case– leave pending interactions until the subsequent render.
+  local pendingInteractionMap = root.pendingInteractionMap
+  for lane, scheduledInteractions in pairs(pendingInteractionMap) do
+    -- Only decrement the pending interaction count if we're done.
+    -- If there's still work at the current priority,
+    -- That indicates that we are waiting for suspense data.
+    if not includesSomeLane(remainingLanesAfterCommit, lane) then
+      pendingInteractionMap[lane] = nil
 
-  --         if subscriber ~= nil and interaction.__count == 0)
-  --           try {
-  --             subscriber.onInteractionScheduledWorkCompleted(interaction)
-  --           } catch (error)
-  --             -- If the subscriber throws, rethrow it in a separate task
-  --             scheduleCallback(ImmediateSchedulerPriority, () => {
-  --               throw error
-  --             })
-  --           end
-  --         end
-  --       })
-  --     end
-  --   })
-  -- end
+      if scheduledInteractions.size == 0 then
+        continue
+      end
+      if scheduledInteractions.ipairs ~= nil then
+        for _, interaction in scheduledInteractions:ipairs() do
+          interaction.__count -= 1
+
+          if subscriber ~= nil and interaction.__count == 0 then
+            local ok_, error__ = pcall(function()
+              subscriber.onInteractionScheduledWorkCompleted(interaction)
+            end)
+            if not ok_ then
+              -- If the subscriber throws, rethrow it in a separate task
+              scheduleCallback(ImmediateSchedulerPriority, function()
+                error(error__)
+              end)
+            end
+          end
+        end
+      else
+        for _, interaction in ipairs(scheduledInteractions) do
+          interaction.__count -= 1
+
+          if subscriber ~= nil and interaction.__count == 0 then
+            local ok_, error__ = pcall(function()
+              subscriber.onInteractionScheduledWorkCompleted(interaction)
+            end)
+            if not ok_ then
+              -- If the subscriber throws, rethrow it in a separate task
+              scheduleCallback(ImmediateSchedulerPriority, function()
+                error(error__)
+              end)
+            end
+          end
+        end
+      end
+  end
+end
+  -- ROBLOX catch
+  if not ok then
+    -- If the subscriber throws, rethrow it in a separate task
+    scheduleCallback(ImmediateSchedulerPriority, function()
+      error(error_)
+    end)
+  end
 end
 
 -- `act` testing API

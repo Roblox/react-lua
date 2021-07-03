@@ -35,7 +35,6 @@ local function textContent(node)
 			end
 		end
 	end
-	assert(queue ~= node.getChildren())
 	return res or ""
 end
 

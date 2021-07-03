@@ -204,8 +204,7 @@ return function()
 			end
 		end)
 
-		-- ROBLOX TODO: not sure why the noted expectation fails. make fake timer related?
-		xit("evicts least recently used values", function()
+		it("evicts least recently used values", function()
 			ReactCache.unstable_setGlobalCacheLimit(3)
 
 			-- Render 1, 2, and 3
@@ -253,7 +252,6 @@ return function()
 				"Promise resolved [5]",
 			})
 			jestExpect(Scheduler).toFlushAndYield({ 1, 4, 5 })
-			-- ROBLOX FIXME: fails here =, only matching '15'
 			jestExpect(root).toMatchRenderedOutput("145")
 
 			-- We've now rendered values 1, 2, 3, 4, 5, over our limit of 3. The least

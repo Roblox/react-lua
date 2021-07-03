@@ -22,14 +22,16 @@ local Promise = require(Packages.Promise)
 local Array = LuauPolyfill.Array
 
 return function()
-    local jestExpect = require(Packages.Dev.JestRoblox).Globals.expect
+    local JestRoblox = require(Packages.Dev.JestRoblox)
+    local jestExpect = JestRoblox.Globals.expect
+    local jest = JestRoblox.Globals.jest
 
     local function loadModules()
         RobloxJest.resetModules()
         RobloxJest.useFakeTimers()
         local ReactFeatureFlags = require(Packages.Shared).ReactFeatureFlags
-        ReactFeatureFlags.enableSchedulerTracing = false
-        ReactFeatureFlags.enableProfilerTimer = false
+        ReactFeatureFlags.enableSchedulerTracing = true
+        ReactFeatureFlags.enableProfilerTimer = true
         React = require(Packages.React)
         ReactNoop = require(Packages.Dev.ReactNoopRenderer)
         Scheduler = require(Packages.Scheduler)
@@ -43,7 +45,11 @@ return function()
             return source.value
         end
         local defaultSubscribe = function(source, callback)
-            return source.subscribe(callback)
+            if callback ~= nil then
+                return source.subscribe(callback)
+            end
+            -- ROBLOX deviation: Lua can't insert nils into the callbacks array, so insert a no-op instread
+            return source.subscribe(function() end)
         end
 
         local function createComplexSource(initialValueA, initialValueB)
@@ -375,38 +381,32 @@ return function()
                 })
             end)
         end)
-        -- ROBLOX TODO: jest.fn
-        xit("should unsubscribe and resubscribe if a new subscribe function is provided", function()
+
+        it("should unsubscribe and resubscribe if a new subscribe function is provided", function()
             local source = createSource("a-one")
             local mutableSource = createMutableSource(source, function(param)
                 return param.version
             end)
 
-            -- ROBLOX TODO: mock functions commented out to silence analyze
-            local unsubscribeA = nil
-            local subscribeA = nil
+            local unsubscribeA = jest:fn()
+            local subscribeA = jest:fn(function(s)
+                local unsubscribe = defaultSubscribe(s)
 
-            -- local unsubscribeA = RobloxJest.fn()
-            -- local subscribeA = RobloxJest.fn(function(s)
-            --     local unsubscribe = defaultSubscribe(s)
+                return function()
+                    unsubscribe()
+                    unsubscribeA()
+                end
+            end)
 
-            --     return function()
-            --         unsubscribe()
-            --         unsubscribeA()
-            --     end
-            -- end)
-            -- ROBLOX TODO: mock functions commented out to silence analyze
-            local unsubscribeB = nil
-            local subscribeB = nil
-            -- local unsubscribeB = RobloxJest.fn()
-            -- local subscribeB = RobloxJest.fn(function(s)
-            --     local unsubscribe = defaultSubscribe(s)
+            local unsubscribeB = jest:fn()
+            local subscribeB = jest:fn(function(s)
+                local unsubscribe = defaultSubscribe(s)
 
-            --     return function()
-            --         unsubscribe()
-            --         unsubscribeB()
-            --     end
-            -- end)
+                return function()
+                    unsubscribe()
+                    unsubscribeB()
+                end
+            end)
 
             act(function()
                 ReactNoop.renderToRootWithID(React.createElement(Component, {
@@ -917,18 +917,14 @@ return function()
                 jestExpect(Scheduler).toFlushAndYield({})
             end)
         end)
-        -- ROBLOX TODO: unimplemented Profiler, RobloxJest.fn
         -- @gate experimental
-        xit("should not throw if the new getSnapshot returns the same snapshot value", function()
+        it("should not throw if the new getSnapshot returns the same snapshot value", function()
             local source = createSource("one")
             local mutableSource = createMutableSource(source, function(param)
                 return param.version
             end)
-            -- ROBLOX TODO: mock functions commented out to silence analyze
-            local onRenderA = nil
-            local onRenderB = nil
-            -- local onRenderA = RobloxJest.fn()
-            -- local onRenderB = RobloxJest.fn()
+            local onRenderA = jest:fn()
+            local onRenderB = jest:fn()
             local getSnapshot, updateGetSnapshot
 
             local function WrapperWithState()
@@ -1807,10 +1803,9 @@ return function()
 
         end)
 
-        -- ROBLOX TODO: beginWork: Profiler is unimplemented
         -- @gate experimental
-        xit("should not tear with newly mounted component when updates were scheduled at a lower priority", function()
-                local source = createSource("one")
+        it("should not tear with newly mounted component when updates were scheduled at a lower priority", function()
+            local source = createSource("one")
             local mutableSource = createMutableSource(source, function(param)
                 return param.version
             end)

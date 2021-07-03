@@ -5,11 +5,16 @@ local Module = require(script.Module)
 -- override require from now to make sure Matchers are
 -- hitting the Module's cache
 local require = Module.requireOverride
-
+local InteractionTracingMatchers = require(script.Matchers.interactionTracingMatchers)
 local RobloxJest = {
 	Matchers = {
 		toErrorDev = require(script.Matchers.toErrorDev),
 		toWarnDev = require(script.Matchers.toWarnDev),
+		toContainNoInteractions = InteractionTracingMatchers.toContainNoInteractions,
+		toHaveBeenLastNotifiedOfInteraction = InteractionTracingMatchers.toHaveBeenLastNotifiedOfInteraction,
+		toHaveBeenLastNotifiedOfWork = InteractionTracingMatchers.toHaveBeenLastNotifiedOfWork,
+		toMatchInteraction = InteractionTracingMatchers.toMatchInteraction,
+		toMatchInteractions = InteractionTracingMatchers.toMatchInteractions,
 	},
 
 	resetModules = Module.resetModules,
@@ -21,6 +26,8 @@ local RobloxJest = {
 	useRealTimers = FakeTimers.useRealTimers,
 	runAllTimers = FakeTimers.runAllTimers,
 	advanceTimersByTime = FakeTimers.advanceTimersByTime,
+	now = FakeTimers.now,
+	resetFakeTimers = FakeTimers.reset,
 
 	testEnv = {
 		require = Module.requireOverride,

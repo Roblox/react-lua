@@ -51,7 +51,8 @@ local Pending = 0
 local Resolved = 1
 local Rejected = 2
 
-local ReactCurrentDispatcher = require(Packages.Shared).ReactSharedInternals.ReactCurrentDispatcher
+local ReactCurrentDispatcher =
+	require(Packages.Shared).ReactSharedInternals.ReactCurrentDispatcher
 
 local exports = {}
 
@@ -102,7 +103,12 @@ local CacheContext = React.createContext(nil)
 --    input: I,
 --    key: K
 -- ): Result<V>
-local function accessResult(resource: any, fetch: (any) -> Thenable<any, any>, input: any, key: any): Result<any>
+local function accessResult(
+	resource: any,
+	fetch: (any) -> Thenable<any, any>,
+	input: any,
+	key: any
+): Result<any>
 	local entriesForResource = entries[resource]
 	if entriesForResource == nil then
 		entriesForResource = {}
@@ -160,7 +166,10 @@ end
 --     maybeHashInput: ((I) -> K)?
 --  ): Resource<I, V>
 exports.unstable_createResource =
-	function(fetch: (any) -> Thenable<any, any>, maybeHashInput: ((any) -> any)?): Resource<any, any>
+	function(
+		fetch: (any) -> Thenable<any, any>,
+		maybeHashInput: ((any) -> any)?
+	): Resource<any, any>
 		local hashInput: (any) -> any
 		if maybeHashInput ~= nil then
 			-- ROBLOX TODO: remove recast once Luau understands nil check

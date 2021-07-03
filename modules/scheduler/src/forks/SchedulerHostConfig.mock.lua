@@ -52,8 +52,7 @@ exports.shouldYieldToHost = function(): boolean
 			expectedNumberOfYields ~= -1
 			and values ~= nil
 			and #values >= expectedNumberOfYields
-		)
-		or (shouldYieldForPaint and needsPaint)
+		) or (shouldYieldForPaint and needsPaint)
 	then
 		-- We yielded at least as many values as expected. Stop flushing.
 		didStop = true

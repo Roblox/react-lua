@@ -123,7 +123,7 @@ local markSourceAsDirty = ReactMutableSource.markSourceAsDirty
 
 -- local getIsRendering = require(script.Parent.ReactCurrentFiber).getIsRendering
 -- local logStateUpdateScheduled = require(script.Parent.DebugTracing)
--- local markStateUpdateScheduled = require(script.Parent.SchedulingProfiler)
+local markStateUpdateScheduled = require(script.Parent.SchedulingProfiler).markStateUpdateScheduled
 
 local ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher
 -- local ReactCurrentBatchConfig = ReactSharedInternals.ReactCurrentBatchConfig
@@ -1859,6 +1859,7 @@ function dispatchAction(
           prevDispatcher = ReactCurrentDispatcher.current
           ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV
         end
+        -- ROBLOX try
         local ok, result = pcall(function()
           local currentState = queue.lastRenderedState
           local eagerState = lastRenderedReducer(currentState, action)
@@ -1880,7 +1881,7 @@ function dispatchAction(
           end
           return
         end)
-        -- Finally
+        -- ROBLOX finally
         if _G.__DEV__ then
           ReactCurrentDispatcher.current = prevDispatcher
         end
@@ -1889,7 +1890,7 @@ function dispatchAction(
         elseif ok then
           -- Left pcall without error, don't return
         else
-          -- Catch
+          -- ROBLOX catch
           -- Suppress the error. It will throw again in the render phase.
         end
       end
@@ -1916,8 +1917,7 @@ function dispatchAction(
   end
 
   if enableSchedulingProfiler then
-    unimplemented("scheduling profiler logic")
-    -- markStateUpdateScheduled(fiber, lane)
+    markStateUpdateScheduled(fiber, lane)
   end
 
   return

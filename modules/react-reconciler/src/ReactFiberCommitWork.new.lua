@@ -18,9 +18,26 @@ local function unimplemented(message)
   error("FIXME (roblox): " .. message .. " is unimplemented", 2)
 end
 
+local function isCallable(value)
+  if typeof(value) == "function" then
+    return true
+  end
+  if typeof(value) == "table" then
+    local mt = getmetatable(value)
+    if mt and rawget(mt, "__call") then
+      return true
+    end
+    if value._isMockFunction then
+      return true
+    end
+  end
+  return false
+end
+
 local Packages = script.Parent.Parent
 -- ROBLOX: use patched console from shared
 local console = require(Packages.Shared).console
+type Array<T> = { [number]: T }
 
 local ReactFiberHostConfig = require(script.Parent.ReactFiberHostConfig)
 type Instance = ReactFiberHostConfig.Instance;
@@ -32,7 +49,7 @@ type TextInstance = ReactFiberHostConfig.TextInstance
 --   UpdatePayload,
 -- } = require(script.Parent.ReactFiberHostConfig)
 local ReactInternalTypes = require(script.Parent.ReactInternalTypes)
-type Fiber = ReactInternalTypes.Fiber;
+type Fiber = ReactInternalTypes.Fiber
 type FiberRoot = ReactInternalTypes.FiberRoot;
 local ReactFiberSuspenseComponent = require(script.Parent["ReactFiberSuspenseComponent.new"])
 type SuspenseState = ReactFiberSuspenseComponent.SuspenseState
@@ -40,7 +57,20 @@ type SuspenseState = ReactFiberSuspenseComponent.SuspenseState
 local ReactUpdateQueueModule = require(script.Parent["ReactUpdateQueue.new"])
 type UpdateQueue<T> = ReactUpdateQueueModule.UpdateQueue<T>
 
--- local type {FunctionComponentUpdateQueue} = require(script.Parent.ReactFiberHooks.new)
+-- local ReactFiberHooks = require(script.Parent["ReactFiberHooks.new"])
+-- type FunctionComponentUpdateQueue = ReactFiberHooks.FunctionComponentUpdateQueue
+-- ROBLOX deviation: inline the typedef here to avoid circular dependency
+type Effect = {
+  tag: HookFlags,
+  create: () -> (() -> ())?,
+  destroy: (() -> ())?,
+  deps: Array<any>?,
+  next: Effect,
+}
+type FunctionComponentUpdateQueue = {
+  lastEffect: Effect?
+}
+
 local ReactTypes = require(Packages.Shared)
 type Wakeable = ReactTypes.Wakeable
 
@@ -50,9 +80,10 @@ type OffscreenState = ReactFiberOffscreenComponent.OffscreenState
 local ReactHookEffectTags = require(script.Parent.ReactHookEffectTags)
 type HookFlags = ReactHookEffectTags.HookFlags;
 
--- local {unstable_wrap as Schedule_tracing_wrap} = require(Packages.scheduler/tracing'
+-- ROBLOX deviation: import tracing as a top-level export to avoid direct file access
+local Schedule_tracing_wrap = require(Packages.Scheduler).tracing.unstable_wrap
 local ReactFeatureFlags = require(Packages.Shared).ReactFeatureFlags
--- local enableSchedulerTracing = ReactFeatureFlags.enableSchedulerTracing
+local enableSchedulerTracing = ReactFeatureFlags.enableSchedulerTracing
 local enableProfilerTimer = ReactFeatureFlags.enableProfilerTimer
 local enableProfilerCommitHooks = ReactFeatureFlags.enableProfilerCommitHooks
 local enableSuspenseServerRenderer = ReactFeatureFlags.enableSuspenseServerRenderer
@@ -97,19 +128,18 @@ local Ref = ReactFiberFlags.Ref
 local getComponentName = require(Packages.Shared).getComponentName
 local invariant = require(Packages.Shared).invariant
 local ReactCurrentFiber = require(script.Parent.ReactCurrentFiber)
--- deviation: this property would be captured as values instead of bound
--- local currentDebugFiberInDEV = ReactCurrentFiber.current
+--  ROBLOX deviation: this property would be captured as values instead of bound
+local currentDebugFiberInDEV = ReactCurrentFiber.current
 local resetCurrentDebugFiberInDEV = ReactCurrentFiber.resetCurrentFiber
 local setCurrentDebugFiberInDEV = ReactCurrentFiber.setCurrentFiber
 local onCommitUnmount = require(script.Parent["ReactFiberDevToolsHook.new"]).onCommitUnmount
 local resolveDefaultProps = require(script.Parent["ReactFiberLazyComponent.new"]).resolveDefaultProps
--- local {
---   getCommitTime,
---   recordLayoutEffectDuration,
---   startLayoutEffectTimer,
---   recordPassiveEffectDuration,
---   startPassiveEffectTimer,
--- } = require(script.Parent.ReactProfilerTimer.new)
+local ReactProfilerTimer = require(script.Parent["ReactProfilerTimer.new"])
+local startLayoutEffectTimer = ReactProfilerTimer.startLayoutEffectTimer
+local recordPassiveEffectDuration = ReactProfilerTimer.recordPassiveEffectDuration
+local recordLayoutEffectDuration = ReactProfilerTimer.recordLayoutEffectDuration
+local startPassiveEffectTimer = ReactProfilerTimer.startPassiveEffectTimer
+local getCommitTime = ReactProfilerTimer.getCommitTime
 local ProfileMode = require(script.Parent.ReactTypeOfMode).ProfileMode
 local commitUpdateQueue = ReactUpdateQueueModule.commitUpdateQueue
 local getPublicInstance = ReactFiberHostConfig.getPublicInstance
@@ -203,8 +233,8 @@ local isHostParent, getHostSibling, insertOrAppendPlacementNode,
   commitLayoutEffectsForHostComponent, commitLayoutEffectsForClassComponent,
   unmountHostComponents, commitNestedUnmounts, commitUnmount
 
--- -- Used to avoid traversing the return path to find the nearest Profiler ancestor during commit.
--- local nearestProfilerOnStack: Fiber | nil = nil
+-- Used to avoid traversing the return path to find the nearest Profiler ancestor during commit.
+local nearestProfilerOnStack: Fiber | nil = nil
 
 -- deviation: Not possible to return `undefined` in lua
 -- local didWarnAboutUndefinedSnapshotBeforeUpdate: Set<any>? = nil
@@ -223,20 +253,18 @@ local callComponentWillUnmountWithTimer = function(current, instance)
     bit32.band(current.mode, ProfileMode) ~= 0
   then
     local ok, exception = pcall(function()
-      -- unimplemented("profiler timer logic")
-      -- startLayoutEffectTimer()
-      -- deviation: Call with ":" so that the method receives self
+      startLayoutEffectTimer()
+      -- ROBLOX deviation: Call with ":" so that the method receives self
       instance:componentWillUnmount()
     end)
 
-    -- unimplemented("profiler timer logic")
-    -- recordLayoutEffectDuration(current)
+    recordLayoutEffectDuration(current)
 
     if not ok then
       error(exception)
     end
   else
-    -- deviation: Call with ":" so that the method receives self
+    -- ROBLOX deviation: Call with ":" so that the method receives self
     instance:componentWillUnmount()
   end
 end
@@ -433,12 +461,10 @@ local function commitHookEffectListUnmount(
   finishedWork: Fiber,
   nearestMountedAncestor: Fiber?
 )
-  -- FIXME (roblox): type coercion
-  -- local updateQueue: FunctionComponentUpdateQueue | nil = (finishedWork.updateQueue: any)
-  local updateQueue = finishedWork.updateQueue
+  local updateQueue: FunctionComponentUpdateQueue | nil = finishedWork.updateQueue
   local lastEffect
   if updateQueue ~= nil then
-    lastEffect = updateQueue.lastEffect
+    lastEffect = (updateQueue :: FunctionComponentUpdateQueue).lastEffect
   end
 
   if lastEffect ~= nil then
@@ -459,12 +485,10 @@ local function commitHookEffectListUnmount(
 end
 
 local function commitHookEffectListMount(flags: HookFlags, finishedWork: Fiber)
-  -- FIXME (roblox): type coercion
-  -- local updateQueue: FunctionComponentUpdateQueue | nil = (finishedWork.updateQueue: any)
-  local updateQueue = finishedWork.updateQueue
+  local updateQueue: FunctionComponentUpdateQueue | nil = finishedWork.updateQueue
   local lastEffect
   if updateQueue ~= nil then
-    lastEffect = updateQueue.lastEffect
+    lastEffect = (updateQueue :: FunctionComponentUpdateQueue).lastEffect
   end
   if lastEffect ~= nil then
     local firstEffect = lastEffect.next
@@ -513,50 +537,55 @@ local function commitHookEffectListMount(flags: HookFlags, finishedWork: Fiber)
   end
 end
 
--- function commitProfilerPassiveEffect(
---   finishedRoot: FiberRoot,
---   finishedWork: Fiber,
--- ): void {
---   if enableProfilerTimer and enableProfilerCommitHooks)
---     switch (finishedWork.tag)
---       case Profiler: {
---         local {passiveEffectDuration} = finishedWork.stateNode
---         local {id, onPostCommit} = finishedWork.memoizedProps
+function commitProfilerPassiveEffect(
+  finishedRoot: FiberRoot,
+  finishedWork: Fiber
+): ()
+  if enableProfilerTimer and enableProfilerCommitHooks then
+    if finishedWork.tag == Profiler then
+        local passiveEffectDuration = finishedWork.stateNode.passiveEffectDuration
+        local id, onPostCommit = finishedWork.memoizedProps.id, finishedWork.memoizedProps.onPostCommit
 
---         -- This value will still reflect the previous commit phase.
---         -- It does not get reset until the start of the next commit phase.
---         local commitTime = getCommitTime()
+        -- This value will still reflect the previous commit phase.
+        -- It does not get reset until the start of the next commit phase.
+        local commitTime = getCommitTime()
 
---         if typeof onPostCommit == 'function')
---           if enableSchedulerTracing)
---             onPostCommit(
---               id,
---               finishedWork.alternate == nil ? 'mount' : 'update',
---               passiveEffectDuration,
---               commitTime,
---               finishedRoot.memoizedInteractions,
---             )
---           } else {
---             onPostCommit(
---               id,
---               finishedWork.alternate == nil ? 'mount' : 'update',
---               passiveEffectDuration,
---               commitTime,
---             )
---           end
---         end
---         break
---       end
---       default:
---         break
---     end
---   end
--- end
+        if typeof(onPostCommit) == 'function' then
+          if enableSchedulerTracing then
+            onPostCommit(
+              id,
+              (function()
+                if finishedWork.alternate == nil then
+                  return 'mount'
+                end
+                return 'update'
+              end)(),
+              passiveEffectDuration,
+              commitTime,
+              finishedRoot.memoizedInteractions
+            )
+          else
+            onPostCommit(
+              id,
+              (function()
+                if finishedWork.alternate == nil then
+                  return 'mount'
+                end
+                return 'update'
+              end)(),
+              passiveEffectDuration,
+              commitTime
+            )
+          end
+        end
+    end
+  end
+end
 
 local function recursivelyCommitLayoutEffects(
   finishedWork: Fiber,
   finishedRoot: FiberRoot,
-  -- ROBLOX deviation: pass in this function to avoid dependency cycle
+  -- ROBLOX deviation: pass in these functions to avoid dependency cycle
   _captureCommitPhaseError: (any, Fiber, any) -> (),
   _schedulePassiveEffectCallback: () -> ()
 )
@@ -569,98 +598,102 @@ local function recursivelyCommitLayoutEffects(
   local flags = finishedWork.flags
   local tag = finishedWork.tag
   if tag == Profiler then
-    unimplemented("Profiler")
-    -- local prevProfilerOnStack = nil
-    -- if enableProfilerTimer and enableProfilerCommitHooks)
-    --   prevProfilerOnStack = nearestProfilerOnStack
-    --   nearestProfilerOnStack = finishedWork
-    -- end
+    local prevProfilerOnStack = nil
+    if enableProfilerTimer and enableProfilerCommitHooks then
+      prevProfilerOnStack = nearestProfilerOnStack
+      nearestProfilerOnStack = finishedWork
+    end
 
-    -- local child = finishedWork.child
-    -- while (child ~= nil)
-    --   local primarySubtreeFlags = finishedWork.subtreeFlags & LayoutMask
-    --   if primarySubtreeFlags ~= NoFlags)
-    --     if _G.__DEV__ then
-    --       local prevCurrentFiberInDEV = currentDebugFiberInDEV
-    --       setCurrentDebugFiberInDEV(child)
-    --       invokeGuardedCallback(
-    --         nil,
-    --         recursivelyCommitLayoutEffects,
-    --         nil,
-    --         child,
-    --         finishedRoot,
-        -- ROBLOX deviation: pass in this function to avoid dependency cycle
+    local child = finishedWork.child
+    while child ~= nil do
+      local primarySubtreeFlags = bit32.band(finishedWork.subtreeFlags, LayoutMask)
+      if primarySubtreeFlags ~= NoFlags then
+        if _G.__DEV__ then
+          local prevCurrentFiberInDEV = currentDebugFiberInDEV
+          setCurrentDebugFiberInDEV(child)
+          invokeGuardedCallback(
+            nil,
+            recursivelyCommitLayoutEffects,
+            nil,
+            child,
+            finishedRoot,
+            -- ROBLOX deviation: pass in these functions to avoid dependency cycle
+            captureCommitPhaseError,
+            schedulePassiveEffectCallback
+          )
+          if hasCaughtError() then
+            local error_ = clearCaughtError()
+            captureCommitPhaseError(child, finishedWork, error_)
+          end
+          if prevCurrentFiberInDEV ~= nil then
+            setCurrentDebugFiberInDEV(prevCurrentFiberInDEV)
+          else
+            resetCurrentDebugFiberInDEV()
+          end
+        else
+          local ok, error_ = pcall(function()
+            -- ROBLOX deviation: pass in captureCommitPhaseError function to avoid dependency cycle
+            recursivelyCommitLayoutEffects(
+              child,
+              finishedRoot,
+              captureCommitPhaseError,
+              schedulePassiveEffectCallback
+            )
+          end)
+          if not ok then
+            captureCommitPhaseError(child, finishedWork, error_)
+          end
+        end
+      end
+      child = child.sibling
+    end
 
-    --         captureCommitPhaseError
-    --       )
-    --       if hasCaughtError())
-    --         local error = clearCaughtError()
-    --         captureCommitPhaseError(child, finishedWork, error)
-    --       end
-    --       if prevCurrentFiberInDEV ~= nil)
-    --         setCurrentDebugFiberInDEV(prevCurrentFiberInDEV)
-    --       } else {
-    --         resetCurrentDebugFiberInDEV()
-    --       end
-    --     } else {
-    --       try {
-        -- ROBLOX deviation: pass in this function to avoid dependency cycle
+    local primaryFlags = bit32.band(flags, bit32.bor(Update, Callback))
+    if primaryFlags ~= NoFlags then
+      if enableProfilerTimer then
+        if _G.__DEV__ then
+          local prevCurrentFiberInDEV = currentDebugFiberInDEV
+          setCurrentDebugFiberInDEV(finishedWork)
+          invokeGuardedCallback(
+            nil,
+            commitLayoutEffectsForProfiler,
+            nil,
+            finishedWork,
+            finishedRoot
+          )
+          if hasCaughtError() then
+            local error_ = clearCaughtError()
+            captureCommitPhaseError(finishedWork, finishedWork.return_, error_)
+          end
+          if prevCurrentFiberInDEV ~= nil then
+            setCurrentDebugFiberInDEV(prevCurrentFiberInDEV)
+          else
+            resetCurrentDebugFiberInDEV()
+          end
+        else
+          local ok, error_ = pcall(function()
+            -- ROBLOX TODO? pass in captureCommitPhaseError?
+            commitLayoutEffectsForProfiler(finishedWork, finishedRoot)
+          end)
+          if not ok then
+            captureCommitPhaseError(finishedWork, finishedWork.return_, error_)
+          end
+        end
+      end
+    end
 
-    --         recursivelyCommitLayoutEffects(child, finishedRoot, captureCommitPhaseError)
-    --       } catch (error)
-    --         captureCommitPhaseError(child, finishedWork, error)
-    --       end
-    --     end
-    --   end
-    --   child = child.sibling
-    -- end
+    if enableProfilerTimer and enableProfilerCommitHooks then
+      -- Propagate layout effect durations to the next nearest Profiler ancestor.
+      -- Do not reset these values until the next render so DevTools has a chance to read them first.
+      if prevProfilerOnStack ~= nil then
+        prevProfilerOnStack.stateNode.effectDuration +=
+          finishedWork.stateNode.effectDuration
+      end
 
-    -- local primaryFlags = flags & (Update | Callback)
-    -- if primaryFlags ~= NoFlags)
-    --   if enableProfilerTimer)
-    --     if _G.__DEV__ then
-    --       local prevCurrentFiberInDEV = currentDebugFiberInDEV
-    --       setCurrentDebugFiberInDEV(finishedWork)
-    --       invokeGuardedCallback(
-    --         nil,
-    --         commitLayoutEffectsForProfiler,
-    --         nil,
-    --         finishedWork,
-    --         finishedRoot,
-    --       )
-    --       if hasCaughtError())
-    --         local error = clearCaughtError()
-    --         captureCommitPhaseError(finishedWork, finishedWork.return, error)
-    --       end
-    --       if prevCurrentFiberInDEV ~= nil)
-    --         setCurrentDebugFiberInDEV(prevCurrentFiberInDEV)
-    --       } else {
-    --         resetCurrentDebugFiberInDEV()
-    --       end
-    --     } else {
-    --       try {
-    --         commitLayoutEffectsForProfiler(finishedWork, finishedRoot)
-    --       } catch (error)
-    --         captureCommitPhaseError(finishedWork, finishedWork.return, error)
-    --       end
-    --     end
-    --   end
-    -- end
-
-    -- if enableProfilerTimer and enableProfilerCommitHooks)
-    --   -- Propagate layout effect durations to the next nearest Profiler ancestor.
-    --   -- Do not reset these values until the next render so DevTools has a chance to read them first.
-    --   if prevProfilerOnStack ~= nil)
-    --     prevProfilerOnStack.stateNode.effectDuration +=
-    --       finishedWork.stateNode.effectDuration
-    --   end
-
-    --   nearestProfilerOnStack = prevProfilerOnStack
-    -- end
-  -- -- elseif tag == Offscreen then
-  --   --   TODO: Fast path to invoke all nested layout effects when Offscren goes from hidden to visible.
-  --   --   break
-  --   -- end
+      nearestProfilerOnStack = prevProfilerOnStack
+    end
+  -- elseif tag == Offscreen then
+    -- TODO: Fast path to invoke all nested layout effects when Offscren goes from hidden to visible.
   else
     local child = finishedWork.child
     while child ~= nil do
@@ -722,16 +755,19 @@ local function recursivelyCommitLayoutEffects(
           enableProfilerCommitHooks and
           bit32.band(finishedWork.mode, ProfileMode) ~= 0
         then
-          unimplemented("profiler timer logic")
-          -- try {
-          --   startLayoutEffectTimer()
-          --   commitHookEffectListMount(
-          --     bit32.bor(HookLayout, HookHasEffect),
-          --     finishedWork
-          --   )
-          -- } finally {
-          --   recordLayoutEffectDuration(finishedWork)
-          -- end
+          -- ROBLOX try
+          local ok, error_ = pcall(function()
+            startLayoutEffectTimer()
+            commitHookEffectListMount(
+              bit32.bor(HookLayout, HookHasEffect),
+              finishedWork
+            )
+          end)
+          -- ROBLOX finally
+          recordLayoutEffectDuration(finishedWork)
+          if not ok then
+            error(error_)
+          end
         else
           commitHookEffectListMount(
             bit32.bor(HookLayout, HookHasEffect),
@@ -784,70 +820,94 @@ local function recursivelyCommitLayoutEffects(
   end
 end
 
--- function commitLayoutEffectsForProfiler(
---   finishedWork: Fiber,
---   finishedRoot: FiberRoot,
--- )
---   if enableProfilerTimer)
---     local flags = finishedWork.flags
---     local current = finishedWork.alternate
+function commitLayoutEffectsForProfiler(
+  finishedWork: Fiber,
+  finishedRoot: FiberRoot
+)
+  if enableProfilerTimer then
+    local flags = finishedWork.flags
+    local current = finishedWork.alternate
 
---     local {onCommit, onRender} = finishedWork.memoizedProps
---     local {effectDuration} = finishedWork.stateNode
+    local onCommit, onRender = finishedWork.memoizedProps.onCommit, finishedWork.memoizedProps.onRender
+    local effectDuration = finishedWork.stateNode.effectDuration
 
---     local commitTime = getCommitTime()
+    local commitTime = getCommitTime()
 
---     local OnRenderFlag = Update
---     local OnCommitFlag = Callback
+    local OnRenderFlag = Update
+    local OnCommitFlag = Callback
 
---     if (flags & OnRenderFlag) ~= NoFlags and typeof onRender == 'function')
---       if enableSchedulerTracing)
---         onRender(
---           finishedWork.memoizedProps.id,
---           current == nil ? 'mount' : 'update',
---           finishedWork.actualDuration,
---           finishedWork.treeBaseDuration,
---           finishedWork.actualStartTime,
---           commitTime,
---           finishedRoot.memoizedInteractions,
---         )
---       } else {
---         onRender(
---           finishedWork.memoizedProps.id,
---           current == nil ? 'mount' : 'update',
---           finishedWork.actualDuration,
---           finishedWork.treeBaseDuration,
---           finishedWork.actualStartTime,
---           commitTime,
---         )
---       end
---     end
+    if bit32.band(flags, OnRenderFlag) ~= NoFlags
+      -- ROBLOX deviation: our mocked functions are tables with __call, since they have fields
+      and isCallable(onRender)
+    then
+      if enableSchedulerTracing then
+        onRender(
+          finishedWork.memoizedProps.id,
+          (function()
+            if current == nil then
+              return 'mount'
+            end
+            return 'update'
+          end)(),
+          finishedWork.actualDuration,
+          finishedWork.treeBaseDuration,
+          finishedWork.actualStartTime,
+          commitTime,
+          finishedRoot.memoizedInteractions
+        )
+      else
+        onRender(
+          finishedWork.memoizedProps.id,
+          (function()
+            if current == nil then
+              return 'mount'
+            end
+            return 'update'
+          end)(),
+          finishedWork.actualDuration,
+          finishedWork.treeBaseDuration,
+          finishedWork.actualStartTime,
+          commitTime
+        )
+      end
+    end
 
---     if enableProfilerCommitHooks)
---       if
---         (flags & OnCommitFlag) ~= NoFlags and
---         typeof onCommit == 'function'
---       )
---         if enableSchedulerTracing)
---           onCommit(
---             finishedWork.memoizedProps.id,
---             current == nil ? 'mount' : 'update',
---             effectDuration,
---             commitTime,
---             finishedRoot.memoizedInteractions,
---           )
---         } else {
---           onCommit(
---             finishedWork.memoizedProps.id,
---             current == nil ? 'mount' : 'update',
---             effectDuration,
---             commitTime,
---           )
---         end
---       end
---     end
---   end
--- end
+    if enableProfilerCommitHooks then
+      if
+        bit32.band(flags, OnCommitFlag) ~= NoFlags
+        -- ROBLOX deviation: our mocked functions are tables with __call, since they have fields
+        and isCallable(onCommit)
+      then
+        if enableSchedulerTracing then
+          onCommit(
+            finishedWork.memoizedProps.id,
+            (function()
+              if current == nil then
+                return 'mount'
+              end
+              return 'update'
+            end)(),
+            effectDuration,
+            commitTime,
+            finishedRoot.memoizedInteractions
+          )
+        else
+          onCommit(
+            finishedWork.memoizedProps.id,
+            (function()
+              if current == nil then
+                return 'mount'
+              end
+              return 'update'
+            end)(),
+            effectDuration,
+            commitTime
+          )
+        end
+      end
+    end
+  end
+end
 
 commitLayoutEffectsForClassComponent = function(finishedWork: Fiber)
   local instance = finishedWork.stateNode
@@ -889,19 +949,18 @@ commitLayoutEffectsForClassComponent = function(finishedWork: Fiber)
         enableProfilerCommitHooks and
         bit32.band(finishedWork.mode, ProfileMode) ~= 0
       then
-        unimplemented("profiler timer logic")
-        -- local ok, result = pcall(function()
-        --   startLayoutEffectTimer()
-        --   -- deviation: Call with ":" so that the method receives self
-        --   instance:componentDidMount()
-        -- end)
-        -- -- finally
-        -- recordLayoutEffectDuration(finishedWork)
-        -- if not ok then
-        --   error(result)
-        -- end
+        local ok, result = pcall(function()
+          startLayoutEffectTimer()
+          -- ROBLOX deviation: Call with ":" so that the method receives self
+          instance:componentDidMount()
+        end)
+        -- finally
+        recordLayoutEffectDuration(finishedWork)
+        if not ok then
+          error(result)
+        end
       else
-        -- deviation: Call with ":" so that the method receives self
+        -- ROBLOX deviation: Call with ":" so that the method receives self
         instance:componentDidMount()
       end
     else
@@ -945,21 +1004,20 @@ commitLayoutEffectsForClassComponent = function(finishedWork: Fiber)
         enableProfilerCommitHooks and
         bit32.band(finishedWork.mode, ProfileMode) ~= 0
       then
-        unimplemented("profiler timer logic")
-        -- local ok, result = pcall(function()
-        --   startLayoutEffectTimer()
-        --   -- deviation: Call with ":" so that the method receives self
-        --   instance:componentDidUpdate(
-        --     prevProps,
-        --     prevState,
-        --     instance.__reactInternalSnapshotBeforeUpdate
-        --   )
-        -- end)
-        -- -- finally
-        -- recordLayoutEffectDuration(finishedWork)
-        -- if not ok then
-        --   error(result)
-        -- end
+        local ok, result = pcall(function()
+          startLayoutEffectTimer()
+          -- deviation: Call with ":" so that the method receives self
+          instance:componentDidUpdate(
+            prevProps,
+            prevState,
+            instance.__reactInternalSnapshotBeforeUpdate
+          )
+        end)
+        -- finally
+        recordLayoutEffectDuration(finishedWork)
+        if not ok then
+          error(result)
+        end
       else
         -- deviation: Call with ":" so that the method receives self
         instance:componentDidUpdate(
@@ -973,9 +1031,7 @@ commitLayoutEffectsForClassComponent = function(finishedWork: Fiber)
 
   -- TODO: I think this is now always non-null by the time it reaches the
   -- commit phase. Consider removing the type check.
-  -- ROBLOX FIXME: type coercion
-  -- local updateQueue: UpdateQueue<*> | nil = (finishedWork.updateQueue: any)
-  local updateQueue = finishedWork.updateQueue
+  local updateQueue: UpdateQueue<any> | nil = finishedWork.updateQueue
   if updateQueue ~= nil then
     if _G.__DEV__ then
       if
@@ -1014,9 +1070,7 @@ end
 commitLayoutEffectsForHostRoot = function(finishedWork: Fiber)
   -- TODO: I think this is now always non-null by the time it reaches the
   -- commit phase. Consider removing the type check.
-  -- FIXME (roblox): type coercion
-  -- local updateQueue: UpdateQueue<*> | nil = (finishedWork.updateQueue: any)
-  local updateQueue = finishedWork.updateQueue
+  local updateQueue: UpdateQueue<any> | nil = finishedWork.updateQueue
   if updateQueue ~= nil then
     local instance = nil
     if finishedWork.child ~= nil then
@@ -1155,7 +1209,7 @@ commitUnmount = function(
   current: Fiber,
   nearestMountedAncestor: Fiber,
   renderPriorityLevel: ReactPriorityLevel
-)
+): ()
   onCommitUnmount(current)
 
   if
@@ -1165,11 +1219,9 @@ commitUnmount = function(
     current.tag == SimpleMemoComponent or
     current.tag == Block
   then
-    -- ROBLOX FIXME: type refinement
-    -- local updateQueue: FunctionComponentUpdateQueue | nil = (current.updateQueue: any)
-    local updateQueue = current.updateQueue
+    local updateQueue: FunctionComponentUpdateQueue | nil = current.updateQueue
     if updateQueue ~= nil then
-      local lastEffect = updateQueue.lastEffect
+      local lastEffect = (updateQueue :: FunctionComponentUpdateQueue).lastEffect
       if lastEffect ~= nil then
         local firstEffect = lastEffect.next
 
@@ -1182,10 +1234,9 @@ commitUnmount = function(
                 enableProfilerCommitHooks and
                 bit32.band(current.mode, ProfileMode) ~= 0
               then
-                unimplemented("profiler timer logic")
-                -- startLayoutEffectTimer()
+                startLayoutEffectTimer()
                 safelyCallDestroy(current, nearestMountedAncestor, effect.destroy)
-                -- recordLayoutEffectDuration(current)
+                recordLayoutEffectDuration(current)
               else
                 safelyCallDestroy(current, nearestMountedAncestor, effect.destroy)
               end
@@ -1507,7 +1558,7 @@ insertOrAppendPlacementNodeIntoContainer = function(
   local isHost = tag == HostComponent or tag == HostText
   if isHost or (enableFundamentalAPI and tag == FundamentalComponent) then
     local stateNode
-    if isHost ~= nil then
+    if isHost then
        stateNode = node.stateNode
     else
       stateNode = node.stateNode.instance
@@ -1775,9 +1826,7 @@ local function commitDeletion(
   end
 end
 
--- ROBLOX FIXME: Luau type narrow issue
--- local function commitWork(current: Fiber | nil, finishedWork: Fiber)
-  local function commitWork(current: Fiber, finishedWork: Fiber)
+  local function commitWork(current: Fiber | nil, finishedWork: Fiber)
   if not supportsMutation then
     unimplemented("commitWork: non-mutation branch")
     -- switch (finishedWork.tag)
@@ -1801,7 +1850,7 @@ end
     --         commitHookEffectListUnmount(
     --           HookLayout | HookHasEffect,
     --           finishedWork,
-    --           finishedWork.return,
+    --           finishedWork.return_,
     --         )
     --       } finally {
     --         recordLayoutEffectDuration(finishedWork)
@@ -1810,7 +1859,7 @@ end
     --       commitHookEffectListUnmount(
     --         HookLayout | HookHasEffect,
     --         finishedWork,
-    --         finishedWork.return,
+    --         finishedWork.return_,
     --       )
     --     end
     --     return
@@ -1865,20 +1914,20 @@ end
       enableProfilerCommitHooks and
       bit32.band(finishedWork.mode, ProfileMode) ~= 0
     then
-      unimplemented("profiler timer logic")
-      -- local ok, result = pcall(function()
-      --   startLayoutEffectTimer()
-      --   commitHookEffectListUnmount(
-      --     bit32.bor(HookLayout, HookHasEffect),
-      --     finishedWork,
-      --     finishedWork.return_
-      --   )
-      -- end)
-      -- -- finally
-      -- recordLayoutEffectDuration(finishedWork)
-      -- if not ok then
-      --   error(result)
-      -- end
+      -- ROBLOX try
+      local ok, result = pcall(function()
+        startLayoutEffectTimer()
+        commitHookEffectListUnmount(
+          bit32.bor(HookLayout, HookHasEffect),
+          finishedWork,
+          finishedWork.return_
+        )
+      end)
+      -- ROBLOX finally
+      recordLayoutEffectDuration(finishedWork)
+      if not ok then
+        error(result)
+      end
     else
       commitHookEffectListUnmount(
         bit32.bor(HookLayout, HookHasEffect),
@@ -1934,7 +1983,7 @@ end
     -- this case.
     local oldText: string
     if current ~= nil then
-      oldText = current.memoizedProps
+      oldText = (current :: Fiber).memoizedProps
       oldText = newText
     end
     commitTextUpdate(textInstance, oldText, newText)
@@ -2081,12 +2130,11 @@ function attachSuspenseRetryListeners(finishedWork: Fiber)
       end
 
       if not retryCache[wakeable] then
-        -- ROBLOX FIXME: scheduler tracing unimplemented
-        -- if enableSchedulerTracing then
-          -- if wakeable.__reactDoNotTraceInteractions ~= true then
-          --   retry = Schedule_tracing_wrap(retry)
-          -- end
-        -- end
+        if enableSchedulerTracing then
+          if wakeable.__reactDoNotTraceInteractions ~= true then
+            retry = Schedule_tracing_wrap(retry)
+          end
+        end
         table.insert(retryCache, wakeable)
         wakeable:andThen(retry, retry)
       end
@@ -2119,7 +2167,7 @@ function commitResetTextContent(current: Fiber): ()
   resetTextContent(current.stateNode)
 end
 
-local function commitPassiveUnmount(finishedWork: Fiber)
+local function commitPassiveUnmount(finishedWork: Fiber): ()
   if
     finishedWork.tag == FunctionComponent or
     finishedWork.tag == ForwardRef or
@@ -2131,14 +2179,13 @@ local function commitPassiveUnmount(finishedWork: Fiber)
       enableProfilerCommitHooks and
       bit32.band(finishedWork.mode, ProfileMode) ~= 0
     then
-      unimplemented("profiler timer logic")
-      -- startPassiveEffectTimer()
-      -- commitHookEffectListUnmount(
-      --   HookPassive | HookHasEffect,
-      --   finishedWork,
-      --   finishedWork.return,
-      -- )
-      -- recordPassiveEffectDuration(finishedWork)
+      startPassiveEffectTimer()
+      commitHookEffectListUnmount(
+        bit32.bor(HookPassive, HookHasEffect),
+        finishedWork,
+        finishedWork.return_
+      )
+      recordPassiveEffectDuration(finishedWork)
     else
       commitHookEffectListUnmount(
         bit32.bor(HookPassive, HookHasEffect),
@@ -2152,7 +2199,7 @@ end
 local function commitPassiveUnmountInsideDeletedTree(
   current: Fiber,
   nearestMountedAncestor: Fiber | nil
-)
+): ()
   if
     current.tag == FunctionComponent or
     current.tag == ForwardRef or
@@ -2164,14 +2211,13 @@ local function commitPassiveUnmountInsideDeletedTree(
       enableProfilerCommitHooks and
       bit32.band(current.mode, ProfileMode) ~= 0
     then
-      unimplemented("profiler timer logic")
-      -- startPassiveEffectTimer()
+      startPassiveEffectTimer()
       commitHookEffectListUnmount(
         HookPassive,
         current,
         nearestMountedAncestor
       )
-      -- recordPassiveEffectDuration(current)
+      recordPassiveEffectDuration(current)
     else
       commitHookEffectListUnmount(
         HookPassive,
@@ -2185,7 +2231,7 @@ end
 local function commitPassiveMount(
   finishedRoot: FiberRoot,
   finishedWork: Fiber
-)
+): ()
   if
     finishedWork.tag == FunctionComponent or
     finishedWork.tag == ForwardRef or
@@ -2197,23 +2243,25 @@ local function commitPassiveMount(
       enableProfilerCommitHooks and
       bit32.band(finishedWork.mode, ProfileMode) ~= 0
     then
-      unimplemented("profiler timer logic")
-      -- startPassiveEffectTimer()
-      -- try {
-      --   commitHookEffectListMount(HookPassive | HookHasEffect, finishedWork)
-      -- } finally {
-      --   recordPassiveEffectDuration(finishedWork)
-      -- end
+      startPassiveEffectTimer()
+      -- ROBLOX try
+      local ok, error_ = pcall(function()
+        commitHookEffectListMount(bit32.bor(HookPassive, HookHasEffect), finishedWork)
+      end)
+      -- ROBLOX finally
+      recordPassiveEffectDuration(finishedWork)
+      if not ok then
+        error(error_)
+      end
     else
       commitHookEffectListMount(bit32.bor(HookPassive, HookHasEffect), finishedWork)
     end
   elseif finishedWork.tag == Profiler then
-    unimplemented("commitProfilerPassiveEffect")
-    -- commitProfilerPassiveEffect(finishedRoot, finishedWork)
+    commitProfilerPassiveEffect(finishedRoot, finishedWork)
   end
 end
 
-function invokeLayoutEffectMountInDEV(fiber: Fiber)
+function invokeLayoutEffectMountInDEV(fiber: Fiber): ()
   if _G.__DEV__ and enableDoubleInvokingEffects then
     if fiber.tag == FunctionComponent or
       fiber.tag == ForwardRef or
@@ -2244,7 +2292,7 @@ function invokeLayoutEffectMountInDEV(fiber: Fiber)
 end
 
 
-function invokePassiveEffectMountInDEV(fiber: Fiber)
+function invokePassiveEffectMountInDEV(fiber: Fiber): ()
   if _G.__DEV__ and enableDoubleInvokingEffects then
     if fiber.tag == FunctionComponent or
       fiber.tag == ForwardRef or
@@ -2267,7 +2315,7 @@ function invokePassiveEffectMountInDEV(fiber: Fiber)
 end
 
 
-function invokeLayoutEffectUnmountInDEV(fiber: Fiber)
+function invokeLayoutEffectUnmountInDEV(fiber: Fiber): ()
   if _G.__DEV__ and enableDoubleInvokingEffects then
     if fiber.tag == FunctionComponent or
       fiber.tag == ForwardRef or
@@ -2296,7 +2344,7 @@ function invokeLayoutEffectUnmountInDEV(fiber: Fiber)
     end
 end
 
-function invokePassiveEffectUnmountInDEV(fiber: Fiber)
+function invokePassiveEffectUnmountInDEV(fiber: Fiber): ()
   if _G.__DEV__ and enableDoubleInvokingEffects then
     if fiber.tag == FunctionComponent or
       fiber.tag == ForwardRef or

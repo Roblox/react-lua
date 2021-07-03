@@ -117,7 +117,7 @@ return function()
 			)
 		end)
 
-		-- ROBLOX FIXME: only one part of the stack is incorrect
+		-- ROBLOX FIXME: instead of component name "Parent", outputs "LoadedCode.RoactAlignment._Workspace.React.React.__tests__.ReactElementValidator-internal.spec"
 		xit("warns for keys with component stack info", function()
 			local function Component()
 				return React.createElement("div", nil, {
@@ -344,7 +344,8 @@ return function()
 			React.createElement("Frame")
 		end)
 
-		xit("includes the owner name when passing null, undefined, boolean, or number", function()
+		-- ROBLOX TODO: ReactTestUtils should be backed by react-test-renderer
+		itSKIP("includes the owner name when passing null, undefined, boolean, or number", function()
 			local function ParentComp()
 				return React.createElement(nil)
 			end

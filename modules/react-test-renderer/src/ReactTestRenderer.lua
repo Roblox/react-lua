@@ -282,7 +282,7 @@ toTree = function(nodeInput: Fiber | nil)
       }
     elseif node.tag == HostText then
       return node.stateNode.text;
-    elseif node.tag == Fragment or 
+    elseif node.tag == Fragment or
         node.tag == ContextProvider or
         node.tag == ContextConsumer or
         node.tag == Mode or
@@ -630,9 +630,9 @@ local function create(element, options: TestRendererOptions)
                 if root == nil then
                     error("Can't access .root on unmounted test renderer")
                 end
-    
+
                 local children = getChildren(root.current)
-    
+
                 if #children == 0 then
                     error("Can't access .root on unmounted test renderer")
                 elseif #children == 1 then
@@ -677,7 +677,7 @@ local function unstable_concurrentAct(scope: () -> () | Thenable<any, any>)
     if Scheduler.unstable_flushAllWithoutAsserting == nil then
         error('This version of `act` requires a special mock build of Scheduler.')
     end
-    if setTimeout._isMockFunction ~= true then
+    if typeof(setTimeout) == "table" and setTimeout._isMockFunction ~= true then
         error("This version of `act` requires Jest's timer mocks " .. '(i.e. jest.useFakeTimers).')
     end
 
@@ -706,7 +706,7 @@ local function unstable_concurrentAct(scope: () -> () | Thenable<any, any>)
     -- our test suite, we should be able to.
     local ok, _ = pcall(function()
         local thenable = batchedUpdates(scope)
-        if 
+        if
             typeof(thenable) == 'table' and
             thenable ~= nil and
             typeof(thenable.andThen) == 'function' then
@@ -741,7 +741,7 @@ local function unstable_concurrentAct(scope: () -> () | Thenable<any, any>)
     if not ok then
         unwind()
         error('')
-    end    
+    end
 end
 
 function flushActWork(resolve, reject)

@@ -158,7 +158,7 @@ return function()
             })
             jestExpect(instances[1]:_isMounted()).toBe(false)
         end)
-        -- ROBLOX TODO: 292: received[1][2]: value of type 'nil' expected[1][2]: value of type 'table'
+        -- ROBLOX TODO: 292: gets "componentDidMount", but not the inner span
         xit('finds no node before insertion and correct node before deletion', function()
             local classInstance = nil
             local function findInstance(inst)

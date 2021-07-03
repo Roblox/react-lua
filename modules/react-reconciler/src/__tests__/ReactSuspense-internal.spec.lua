@@ -18,7 +18,7 @@ return function()
     local LuauPolyfill = require(Packages.LuauPolyfill)
     local setTimeout = LuauPolyfill.setTimeout
     local Error = LuauPolyfill.Error
-        -- Additional tests can be found in ReactSuspenseWithNoopRenderer. Plan is
+    -- Additional tests can be found in ReactSuspenseWithNoopRenderer. Plan is
     -- to gradually migrate those to this file.
     describe('ReactSuspense', function()
         beforeEach(function()
@@ -313,8 +313,7 @@ return function()
             jestExpect(root).toMatchRenderedOutput('AsyncAfter SuspenseSibling')
         end)
 
-        -- ROBLOX FIXME: this test somehow interferes with later tests, 'Async' pops up. maybe because we aren't resetting FakeTimers?
-        xit('interrupts current render if something already suspended with a ' .. "delay, and then subsequently there's a lower priority update", function(
+        it('interrupts current render if something already suspended with a ' .. "delay, and then subsequently there's a lower priority update", function(
         )
             local root = ReactTestRenderer.create(React.createElement(React.Fragment, nil, React.createElement(Suspense, {
                 fallback = React.createElement(Text, {
@@ -737,7 +736,7 @@ return function()
                 'Suspend! [Hi]',
             })
         end)
-        xit('updates memoized child of suspense component when context updates (simple memo)', function()
+        it('updates memoized child of suspense component when context updates (simple memo)', function()
             local useContext, createContext, useState, memo = React.useContext, React.createContext, React.useState, React.memo
             local ValueContext = createContext(nil)
             local MemoizedChild = memo(function()
@@ -1144,7 +1143,7 @@ return function()
         --         })
         --         jestExpect(root).toMatchRenderedOutput('Stateful: 2B')
         --     end)
-            xit('when updating a timed-out tree, always retries the suspended component', function()
+            it('when updating a timed-out tree, always retries the suspended component', function()
                 local instance
                 local Stateful = React.Component:extend("Stateful")
                 function Stateful:init()
@@ -1198,7 +1197,7 @@ return function()
                 })
                 -- ROBLOX FIXME: test fails here, rendered output is empty
                 jestExpect(root).toMatchRenderedOutput('Loading...')
-                instance.setState({step = 2})
+                instance:setState({step = 2})
                 jestExpect(Scheduler).toHaveYielded({
                     'Stateful: 2',
                     'Suspend! [B]',
@@ -1268,8 +1267,7 @@ return function()
                 })
                 jestExpect(root).toMatchRenderedOutput('B')
             end)
-            -- ROBLOX FIXME: only passes when focused,
-            xit('suspends in a component that also contains useEffect', function()
+            it('suspends in a component that also contains useEffect', function()
                 local useLayoutEffect = React.useLayoutEffect
 
                 local function AsyncTextWithEffect(props)
@@ -1326,7 +1324,7 @@ return function()
                     'Did commit: A',
                 })
             end)
-            xit('retries when an update is scheduled on a timed out tree', function()
+            it('retries when an update is scheduled on a timed out tree', function()
                 local instance
                 local Stateful = React.Component:extend("Stateful")
 

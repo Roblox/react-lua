@@ -12,9 +12,6 @@
 local Packages = script.Parent.Parent.Parent
 local Array = require(Packages.LuauPolyfill).Array
 
--- ROBLOX: use patched console from Shared
-local console = require(Packages.Shared).console
-
 local React
 local useContext
 local ReactNoop
@@ -891,8 +888,7 @@ return function()
 			end)
 
 			-- @gate experimental
-			-- ROBLOX TODO: Unexpected fiber popped, leading to invalid argument #1 to 'band' (number expected, got nil)
-			xit("context consumer doesn't bail out inside hidden subtree", function()
+			it("context consumer doesn't bail out inside hidden subtree", function()
 				local Context = React.createContext("dark")
 				local Consumer = getConsumer(Context)
 
@@ -917,26 +913,13 @@ return function()
 					theme = "dark",
 				}))
 				jestExpect(Scheduler).toFlushAndYield({ "dark" })
-				jestExpect(ReactNoop.getChildren()).toEqual(React.createElement("div", {
-					hidden = true,
-				}, React.createElement(
-					"span",
-					{
-						prop = "dark",
-					}
-				)))
+				-- ROBLOX deviation: noop children are in a different format
+				jestExpect(ReactNoop.getChildren()[1].children[1]).toEqual(span("dark"))
 				ReactNoop.render(React.createElement(App, {
 					theme = "light",
 				}))
 				jestExpect(Scheduler).toFlushAndYield({ "light" })
-				jestExpect(ReactNoop.getChildren()).toEqual(React.createElement("div", {
-					hidden = true,
-				}, React.createElement(
-					"span",
-					{
-						prop = "light",
-					}
-				)))
+				jestExpect(ReactNoop.getChildren()[1].children[1]).toEqual(span("light"))
 			end)
 
 			-- This is a regression case for https://github.com/facebook/react/issues/12389.
@@ -1266,10 +1249,7 @@ return function()
 			)
 		end)
 
-		-- ROBLOX TODO: spyOnDev
-		xit("warns if multiple renderers concurrently render the same context", function()
-			-- ROBLOX TODO: how do we do this elsewhere?
-			-- spyOnDev(console, 'error');
+		it("warns if multiple renderers concurrently render the same context", function()
 			local Context = React.createContext(0)
 
 			local function Foo(props)
@@ -1279,8 +1259,9 @@ return function()
 
 			local function App(props)
 				return (React.createElement(Context.Provider, { value = props.value }, {
-					React.createElement(Foo),
-					React.createElement(Foo),
+					-- ROBLOX deviation: add key prop so we get the correct warning
+					React.createElement(Foo, {key = 1}),
+					React.createElement(Foo, {key = 2}),
 				}))
 			end
 
@@ -1297,14 +1278,14 @@ return function()
 
 			-- Render the provider again using a different renderer
 			ReactNoop.render(React.createElement(App, { value = 1 }))
-			jestExpect(Scheduler).toFlushAndYield({ "Foo", "Foo" })
 
-			if _G.__DEV__ then
-				jestExpect(console.error.calls.argsFor(0)({ 1 })).toContain(
-					"Detected multiple renderers concurrently rendering the same "
-						.. "context provider. This is currently unsupported"
-				)
-			end
+			-- ROBLOX deviation: use toErrorDev
+			jestExpect(function()
+				jestExpect(Scheduler).toFlushAndYield({ "Foo", "Foo" })
+			end).toErrorDev(
+				"Detected multiple renderers concurrently rendering the same "
+					.. "context provider. This is currently unsupported"
+			)
 		end)
 
 		it("provider bails out if children and value are unchanged (like sCU)", function()
@@ -1336,10 +1317,7 @@ return function()
 			jestExpect(ReactNoop.getChildren()).toEqual({ span("Child") })
 		end)
 
-		-- ROBLOX TODO: fails due to incomplete support of legacy context; since
-		-- legacy context doesn't resemble anything that Roact ever shipped, we'll
-		-- likely never need to actually implement it
-		xit("provider does not bail out if legacy context changed above", function()
+		it("provider does not bail out if legacy context changed above", function()
 			local Context = React.createContext(0)
 
 			local function Child()
@@ -1359,7 +1337,6 @@ return function()
 				self.state = { legacyValue = 1 }
 			end
 			function LegacyProvider:getChildContext()
-				-- ROBLOX FIXME: test fails here with "attempt to index nil with 'state'", maybe due to no ref support
 				return { legacyValue = self.state.legacyValue }
 			end
 			function LegacyProvider:render()
@@ -1398,25 +1375,24 @@ return function()
 			jestExpect(ReactNoop.getChildren()).toEqual({ span("Child") })
 
 			-- Update App with same value (should bail out)
-			appRef.current.setState({ value = 1 })
+			appRef.current:setState({ value = 1 })
 			jestExpect(Scheduler).toFlushAndYield({ "App" })
 			jestExpect(ReactNoop.getChildren()).toEqual({ span("Child") })
 
 			-- Update LegacyProvider (should not bail out)
-			legacyProviderRef.current.setState({ value = 1 })
+			legacyProviderRef.current:setState({ value = 1 })
 			jestExpect(Scheduler).toFlushAndYield({ "LegacyProvider", "App", "Child" })
 			jestExpect(ReactNoop.getChildren()).toEqual({ span("Child") })
 
 			-- Update App with same value (should bail out)
-			appRef.current.setState({ value = 1 })
+			appRef.current:setState({ value = 1 })
 			jestExpect(Scheduler).toFlushAndYield({ "App" })
 			jestExpect(ReactNoop.getChildren()).toEqual({ span("Child") })
 		end)
 	end)
 
 	describe("Context.Consumer", function()
-		-- ROBLOX TODO: implement spyOnDev (should pass in release for now)
-		xit("warns if child is not a function", function()
+		it("warns if child is not a function", function()
 			-- spyOnDev(console, 'error')
 			local Context = React.createContext(0)
 			ReactNoop.render(React.createElement(Context.Consumer))
@@ -1424,11 +1400,12 @@ return function()
 			-- containing "is not a function"; for us, the relevant error message is
 			-- "attempt to call a nil value"
 			jestExpect(Scheduler).toFlushAndThrow("attempt to call a nil value")
-			if _G.__DEV__ then
-				jestExpect(console.error.calls.argsFor(0)({ 0 })).toContain(
-					"A context consumer was rendered with multiple children, or a child " .. "that isn't a function"
-				)
-			end
+			-- ROBLOX TODO: Warning is logged (verified in debugger), but toErrorDev doesn't match
+			-- if _G.__DEV__ then
+			-- 	jestExpect(console.error.calls.argsFor(0)({ 0 })).toContain(
+			-- 		"A context consumer was rendered with multiple children, or a child " .. "that isn't a function"
+			-- 	)
+			-- end
 		end)
 
 		-- ROBLOX deviation: tests legacy Roact compatibility feature
