@@ -5411,6 +5411,7 @@ struct = "EnumItem"
 struct = "EnumItem"
 [Enum.DraggerCoordinateSpace.GetEnumItems]
 method = true
+
 args = []
 
 [Enum.DraggerCoordinateSpace.Object]
@@ -10071,6 +10072,17 @@ removed = true
 
 [debug.getupvalue]
 removed = true
+
+[[debug.info.args]]
+type = "any"
+
+[[debug.info.args]]
+type = "any"
+
+[[debug.info.args]]
+type = "string"
+required = false
+
 [[debug.profilebegin.args]]
 type = "string"
 

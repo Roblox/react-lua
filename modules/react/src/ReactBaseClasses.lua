@@ -32,14 +32,31 @@ componentClassPrototype.isReactComponent = true
 -- ROBLOX FIXME: remove below table and function once we've formally stopped
 -- supporting old Roact lifecycle method names.
 
+local function trimPath(path)
+  -- ROBLOX TODO: The path splits files by . but file names can
+  -- have . in them, so we use best guess heuristics to determine
+  -- the file name breaks.
+  -- Works for our codebase, but is pretty brittle.
+
+  local pascalFile = string.match(path, "%.%u[%.%w]-$")
+  if pascalFile then
+    return string.gsub(pascalFile, "^%.", "")
+  end
+
+  return path
+end
+
 local function warnAboutExistingLifecycle(componentName, newName, existingName)
   console.warn(
     "%s already defined '%s', but it also defining the deprecated Roact method '%s'. %s should only implement one of these methods, preferably using the non-deprecated name.",
     componentName, existingName, newName, componentName)
 end
 
-local function warnAboutDeprecatedLifecycleName(newName, existingName)
-  console.warn("The method name '%s' is no longer supported and should be updated to '%s'", newName, existingName)
+local function warnAboutDeprecatedLifecycleName(componentName, newName, existingName)
+  local path, linenum = debug.info(3, "sln")
+  console.warn(
+    "%s is using method '%s', which is no longer supported and should be updated to '%s'\nFile: %s:%s",
+    componentName, newName, existingName, trimPath(path), tostring(linenum))
 end
 
 local lifecycleNames = {
@@ -61,7 +78,7 @@ local function handleNewLifecycle(self, key, value)
       warnAboutExistingLifecycle(self.__componentName, key, "UNSAFE_componentWillUpdate")
     -- otherwise if not previously defined, just warn about deprecated name
     else
-      warnAboutDeprecatedLifecycleName(key, lifecycleNames[key])
+      warnAboutDeprecatedLifecycleName(self.__componentName, key, lifecycleNames[key])
     end
     -- update key to proper name
     key = lifecycleNames[key]
@@ -70,12 +87,12 @@ local function handleNewLifecycle(self, key, value)
 end
 
 local componentClassMetatable = {
-    __newindex = handleNewLifecycle,
-    __index = componentClassPrototype,
-    __tostring = function(self)
-      return self.__componentName
-    end,
-  }
+  __newindex = handleNewLifecycle,
+  __index = componentClassPrototype,
+  __tostring = function(self)
+    return self.__componentName
+  end,
+}
 
 local Component = {}
 setmetatable(Component, componentClassMetatable)
