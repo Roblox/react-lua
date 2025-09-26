@@ -22,8 +22,8 @@ local LuauPolyfill = require(Packages.LuauPolyfill)
 local ReactSymbols = require(Packages.Shared).ReactSymbols
 local ReactTypes = require(Packages.Shared)
 
-local BASE_BINDING_PROTOTYPE = {}
-do
+-- stylua: ignore
+local BASE_BINDING_PROTOTYPE = {} do
 	BASE_BINDING_PROTOTYPE["$$typeof"] = ReactSymbols.REACT_BINDING_TYPE
 	BASE_BINDING_PROTOTYPE.__index = BASE_BINDING_PROTOTYPE
 
@@ -144,7 +144,6 @@ do -- join
 	): { [string | number]: any }
 		local value = {}
 
-		-- ROBLOX FIXME Luau: needs CLI-56711 resolved to eliminate ipairs()
 		for key, upstream in upstreamBindings do
 			value[key] = upstream:getValue()
 		end
