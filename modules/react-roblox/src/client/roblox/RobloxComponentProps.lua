@@ -12,7 +12,6 @@
 	* See the License for the specific language governing permissions and
 	* limitations under the License.
 ]]
-local CollectionService = game:GetService("CollectionService")
 local Packages = script.Parent.Parent.Parent.Parent
 local ReactGlobals = require(Packages.ReactGlobals)
 local LuauPolyfill = require(Packages.LuauPolyfill)
@@ -38,6 +37,12 @@ local Tag = require(Packages.React).Tag
 
 type Array<T> = { [number]: T }
 type Object = { [any]: any }
+
+-- localizing instance methods used, as it'll avoid having lookups every time
+local resetPropertyToDefault = game.ResetPropertyToDefault
+local removeTag = game.RemoveTag
+local getTags = game.GetTags
+local addTag = game.AddTag
 
 -- deviation: Can't assign attributes to Roblox instances, so we use maps to
 -- store associated data for host instance features like binding and event
@@ -73,20 +78,13 @@ local function identity(...)
 	return ...
 end
 
-local function setRobloxInstanceProperty(hostInstance, key, newValue): ()
-	if newValue == nil then
-		local success, _ = pcall(hostInstance.ResetPropertyToDefault, hostInstance, key)
-		if success then
-			return
-		end
-
-		local hostClass = hostInstance.ClassName
-		local _, defaultValue = getDefaultInstanceProperty(hostClass, key)
-		newValue = defaultValue
+local function setRobloxInstanceProperty(hostInstance: Instance, key: string, newValue: any)
+	if newValue then
+		-- Assign the new value to the object
+		hostInstance[key] = newValue
+	else
+		resetPropertyToDefault(hostInstance, key)
 	end
-
-	-- Assign the new value to the object
-	hostInstance[key] = newValue
 end
 
 local function removeBinding(hostInstance, key)
@@ -155,19 +153,19 @@ local function applyTags(hostInstance: Instance, oldTags: string?, newTags: stri
 
 	for tag, _ in oldTagSet do
 		if not newTagSet[tag] then
-			CollectionService:RemoveTag(hostInstance, tag)
+			removeTag(hostInstance, tag)
 		end
 	end
 	for tag, _ in newTagSet do
 		if not oldTagSet[tag] then
-			CollectionService:AddTag(hostInstance, tag)
+			addTag(hostInstance, tag)
 		end
 	end
 end
 
 local function removeAllTags(hostInstance: Instance)
-	for _, tag in CollectionService:GetTags(hostInstance) do
-		CollectionService:RemoveTag(hostInstance, tag)
+	for _, tag in getTags(hostInstance) do
+		removeTag(hostInstance, tag)
 	end
 end
 
@@ -198,10 +196,10 @@ local function applyProp(hostInstance: Instance, key, newValue, oldValue): ()
 	end
 
 	-- Handle bindings
-	local newIsBinding = typeof(newValue) == "table"
+	local newIsBinding = type(newValue) == "table"
 		and newValue["$$typeof"] == ReactSymbols.REACT_BINDING_TYPE
 	local oldIsBinding = oldValue ~= nil
-		and typeof(oldValue) == "table"
+		and type(oldValue) == "table"
 		and oldValue["$$typeof"] == ReactSymbols.REACT_BINDING_TYPE
 	if oldIsBinding then
 		removeBinding(hostInstance, key)
