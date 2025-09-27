@@ -198,10 +198,7 @@ do -- join
 			)
 
 			for key, value in upstreamBindings do
-				if
-					type(value) == "table"
-					and value["$$typeof"] == ReactSymbols.REACT_BINDING_TYPE
-				then
+				if IS_BINDING(value) then
 					continue
 				end
 
