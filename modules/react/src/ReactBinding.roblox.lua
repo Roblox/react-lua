@@ -18,7 +18,6 @@ local Packages = script.Parent.Parent
 
 local createSignal = require(script.Parent["createSignal.roblox"])
 local ReactGlobals = require(Packages.ReactGlobals)
-local LuauPolyfill = require(Packages.LuauPolyfill)
 local ReactSymbols = require(Packages.Shared).ReactSymbols
 local ReactTypes = require(Packages.Shared)
 
