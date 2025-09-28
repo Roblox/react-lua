@@ -23,20 +23,34 @@ local ReactTypes = require(Packages.Shared)
 
 type AnyBinding<T> = Binding<T> | MapBinding<T>
 
-type BindingPrototype<T> = {
-	__subscribe: (binding: Binding<T>, f: (value: T) -> ()) -> (() -> ()),
-	__tostring: (binding: Binding<T>) -> string,
-	update: (binding: Binding<T>, newValue: T) -> (),
-	getValue: (binding: Binding<T>) -> T,
+type BindingPrototype<B, T> = {
+	__subscribe: (binding: B, f: (value: T) -> ()) -> (() -> ()),
+	__tostring: (binding: B) -> string,
+	update: (binding: B, newValue: T) -> (),
+	getValue: (binding: B) -> T,
 
 	["$$typeof"]: typeof(ReactSymbols.REACT_BINDING_TYPE),
-	__index: BindingPrototype<T>,
+	__index: BindingPrototype<B, T>,
 }
+
+type BaseInheritedBindingPrototype<B, T, U, GV> = typeof(setmetatable({} :: {
+	getValue: GV,
+	update: U,
+}, {} :: BindingPrototype<B, T>))
+
+type BaseInheritedBinding<B, T, U, GV, UB, P, V> = typeof(setmetatable({} :: {
+	__upstreamBindings: UB,
+	__source: string?,
+	__predicate: P,
+	value: V,
+}, ({} :: any) :: BaseInheritedBindingPrototype<B, T, U, GV>))
+
+
 
 type Binding<T> = typeof(setmetatable({} :: {
 	__source: string?,
 	value: T,
-}, {} :: BindingPrototype<T>))
+}, {} :: BindingPrototype<Binding<T>, T>))
 
 -- ROBLOX FIXME: correct MapBindingPrototype type that currently doesn't work because of recursive type restriction
 -- type MapBindingPrototype<U, T = any> = typeof(setmetatable({} :: {
@@ -66,7 +80,7 @@ type JoinBindingPrototype<T> = typeof(setmetatable({} :: {
 
 type JoinBinding<T> = typeof(setmetatable({} :: {
 	__upstreamBindings: { [string | number]: Binding<any> | JoinBinding<any> | MapBinding<any> }
-}, {} :: JoinBindingPrototype<T>))
+}, {} :: BindingPrototype<T>))
 
 -- stylua: ignore
 local BASE_BINDING_PROTOTYPE = {} do
