@@ -16,81 +16,10 @@
 
 local Packages = script.Parent.Parent
 
-local createSignal = require(script.Parent["createSignal.roblox"])
 local ReactGlobals = require(Packages.ReactGlobals)
-local ReactSymbols = require(Packages.Shared).ReactSymbols
-local ReactTypes = require(Packages.Shared)
-
-type AnyBinding<T> = Binding<T> | MapBinding<T>
-
-type BindingPrototype<B, T> = {
-	__subscribe: (binding: B, f: (value: T) -> ()) -> (() -> ()),
-	__tostring: (binding: B) -> string,
-	update: (binding: B, newValue: T) -> (),
-	getValue: (binding: B) -> T,
-
-	["$$typeof"]: typeof(ReactSymbols.REACT_BINDING_TYPE),
-	__index: BindingPrototype<B, T>,
-}
-
-type BaseInheritedBindingPrototype<B, T, U, GV> = typeof(setmetatable({} :: {
-	getValue: GV,
-	update: U,
-}, {} :: BindingPrototype<B, T>))
-
-type BaseInheritedBinding<B, T, U, GV, UB, P, V> = typeof(setmetatable({} :: {
-	__upstreamBindings: UB,
-	__source: string?,
-	__predicate: P,
-	value: V,
-}, ({} :: any) :: BaseInheritedBindingPrototype<B, T, U, GV>))
-
-
-
-type Binding<T> = typeof(setmetatable({} :: {
-	__source: string?,
-	value: T,
-}, {} :: BindingPrototype<Binding<T>, T>))
-
--- ROBLOX FIXME: correct MapBindingPrototype type that currently doesn't work because of recursive type restriction
--- type MapBindingPrototype<U, T = any> = typeof(setmetatable({} :: {
---    update: (mapBinding: MapBinding<U, T>) -> never,
---    getValue: (MapBinding: MapBinding<U, T>) -> U,
--- }, {} :: BindingPrototype<U>))
-type MapBindingPrototype<U> = typeof(setmetatable({} :: {
-	update: (mapBinding: MapBinding<U>) -> never,
-	getValue: (MapBinding: MapBinding<U>) -> U,
-}, {} :: BindingPrototype<U>))
-
--- ROBLOX FIXME: correct MapBinding type that currently doesn't work because of recursive type restriction
--- type MapBinding<T, U = any> = typeof(setmetatable({} :: {
---     __upstreamBinding:  Binding<T> | MapBinding<any, T>,
---     __predicate: (value: T) -> U,
---     __source: string?,
--- }, {} :: MapBindingPrototype<T, U>))
-type MapBinding<U> = typeof(setmetatable({} :: {
-	__upstreamBinding: Binding<any> | MapBinding<any> | JoinBinding<any>,
-	__predicate: (value: any) -> U,
-	__source: string?,
-}, {} :: MapBindingPrototype<U>))
-
-type JoinBindingPrototype<T> = typeof(setmetatable({} :: {
-	update: (mapBinding: JoinBinding<T>) -> never,
-}, {} :: BindingPrototype<T>))
-
-type JoinBinding<T> = typeof(setmetatable({} :: {
-	__upstreamBindings: { [string | number]: Binding<any> | JoinBinding<any> | MapBinding<any> }
-}, {} :: BindingPrototype<T>))
-
--- stylua: ignore
-local BASE_BINDING_PROTOTYPE = {} do
-	BASE_BINDING_PROTOTYPE["$$typeof"] = ReactSymbols.REACT_BINDING_TYPE
-	BASE_BINDING_PROTOTYPE.__index = BASE_BINDING_PROTOTYPE
-
-	function BASE_BINDING_PROTOTYPE.__tostring(baseBinding)
-		return `RoactBinding({baseBinding:getValue()})`
-	end
-end
+local Shared = require(Packages.Shared)
+local ReactSymbols = Shared.ReactSymbols
+local ReactTypes = Shared
 
 local function IS_BINDING(value: unknown): boolean
 	-- stylua: ignore
@@ -110,20 +39,26 @@ local bindingPrototype = {} do
 	end
 
 	function bindingPrototype.__subscribe(binding, callback)
-		return binding.__subscribe(callback)
-	end
+		local callbacks = binding.__callbacks
+		local callbackState = callbacks[callback]
 
-	function bindingPrototype.update(binding, newValue)
-		binding.value = newValue
-		binding.__fire(newValue)
+		if binding.__firing and callbackState then
+			callbacks[callback] = false
+		elseif callbackState == nil then
+			callbacks[callback] = true
+		end
+
+		return function()
+			callbacks[callback] = nil
+		end
 	end
 
 	function bindingPrototype.getValue(binding)
 		return binding.value
 	end
 
-	function ReactBinding.create<T>(initialValue: T): (Binding<T>, BindingUpdater<T>)
-		local subscribe, fire = createSignal()
+	function ReactBinding.create<T>(initialValue: T): (Binding<T>, (newValue: T) -> ())
+		local callbacks = {}
 		local source
 
 		if ReactGlobals.__DEV__ then
@@ -131,19 +66,30 @@ local bindingPrototype = {} do
 			source = debug.traceback("Binding created at:", 3)
 		end
 
-		local binding = setmetatable({
-			__subscribe = subscribe,
+		local binding = {
+			__callbacks = callbacks,
 			value = initialValue,
+			__firing = false,
 			__source = source,
-			__fire = fire,
-		}, bindingPrototype)
+		}
 
-		local function setAndFire(newValue)
+		local function update<T>(newValue: T)
 			binding.value = newValue
-			fire(newValue)
+
+			binding.__firing = true
+			for callback, notSuspended in callbacks do
+				if notSuspended then
+					callback(newValue)
+				else
+					callbacks[callback] = false
+				end
+			end
+			binding.__firing = false
 		end
 
-		return binding, setAndFire
+		binding.update = update
+
+		return setmetatable(binding, bindingPrototype), update
 	end
 
 end
@@ -193,8 +139,8 @@ do -- map binding
 		}, mapBindingPrototype)
 	end
 
-	function BASE_BINDING_PROTOTYPE.map(baseBinding, predicate)
-		return mapBinding(baseBinding, predicate)
+	function bindingPrototype.map(binding, predicate)
+		return mapBinding(binding, predicate)
 	end
 
 	ReactBinding.map = mapBinding
