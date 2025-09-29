@@ -38,11 +38,11 @@ local bindingPrototype = {} do
 		return `RoactBinding({binding:getValue()})`
 	end
 
-	function bindingPrototype.__subscribe(binding, callback)
-		local callbacks = binding.__callbacks
+	function bindingPrototype._subscribe(binding, callback)
+		local callbacks = binding._callbacks
 		local callbackState = callbacks[callback]
 
-		if binding.__firing and callbackState then
+		if binding._firing and callbackState then
 			callbacks[callback] = false
 		elseif callbackState == nil then
 			callbacks[callback] = true
@@ -54,10 +54,13 @@ local bindingPrototype = {} do
 	end
 
 	function bindingPrototype.getValue(binding)
-		return binding.value
+		return binding._value
 	end
 
-	function ReactBinding.create<T>(initialValue: T): (Binding<T>, (newValue: T) -> ())
+	function ReactBinding.create<T>(initialValue: T): (
+		ReactTypes.ReactBinding<T>,
+		ReactTypes.ReactBindingUpdater<T>
+	)
 		local callbacks = {}
 		local source
 
@@ -67,16 +70,16 @@ local bindingPrototype = {} do
 		end
 
 		local binding = {
-			__callbacks = callbacks,
-			value = initialValue,
-			__firing = false,
-			__source = source,
+			_callbacks = callbacks,
+			_value = initialValue,
+			_source = source,
+			_firing = false,
 		}
 
 		local function update<T>(newValue: T)
-			binding.value = newValue
+			binding._value = newValue
 
-			binding.__firing = true
+			binding._firing = true
 			for callback, notSuspended in callbacks do
 				if notSuspended then
 					callback(newValue)
@@ -84,14 +87,13 @@ local bindingPrototype = {} do
 					callbacks[callback] = false
 				end
 			end
-			binding.__firing = false
+			binding._firing = false
 		end
 
 		binding.update = update
 
-		return setmetatable(binding, bindingPrototype), update
+		return setmetatable(binding, bindingPrototype) :: any, update
 	end
-
 end
 
 do -- map binding
@@ -99,13 +101,13 @@ do -- map binding
 	mapBindingPrototype.__index = mapBindingPrototype
 
 	function mapBindingPrototype.getValue(mapBinding)
-		return mapBinding.__predicate(mapBinding.__upstreamBinding:getValue())
+		return mapBinding._predicate(mapBinding._upstreamBinding:getValue())
 	end
 
-	function mapBindingPrototype.__subscribe(mapBinding, callback)
-		local predicate = mapBinding.__predicate
+	function mapBindingPrototype._subscribe(mapBinding, callback)
+		local predicate = mapBinding._predicate
 
-		return mapBinding.__upstreamBinding:__subscribe(function(newValue)
+		return mapBinding._upstreamBinding:_subscribe(function(newValue)
 			callback(predicate(newValue))
 		end)
 	end
@@ -115,9 +117,9 @@ do -- map binding
 	end
 
 	local function mapBinding<T, U>(
-		upstreamBinding: BindingInternal<T>,
+		upstreamBinding: ReactTypes.ReactBinding<T>,
 		predicate: (T) -> U
-	): MapBinding<U>
+	): ReactTypes.ReactBinding<U>
 		local source
 
 		if ReactGlobals.__DEV__ then
@@ -133,10 +135,10 @@ do -- map binding
 		end
 
 		return setmetatable({
-			__upstreamBinding = upstreamBinding,
-			__predicate = predicate,
-			__source = source,
-		}, mapBindingPrototype)
+			_upstreamBinding = upstreamBinding,
+			_predicate = predicate,
+			_source = source,
+		}, mapBindingPrototype) :: any
 	end
 
 	function bindingPrototype.map(binding, predicate)
@@ -150,7 +152,7 @@ end
 
 do -- join
 	local function getValueJoin(
-		upstreamBindings: { [string | number]: Binding<any> }
+		upstreamBindings: { [string | number]: ReactTypes.ReactBinding<any> }
 	): { [string | number]: any }
 		local value = {}
 
@@ -165,28 +167,23 @@ do -- join
 	joinBindingPrototype.__index = joinBindingPrototype
 
 	function joinBindingPrototype.getValue(joinBinding)
-		return getValueJoin(joinBinding.__upstreamBindings)
+		return getValueJoin(joinBinding._upstreamBindings)
 	end
 
-	function joinBindingPrototype.__subscribe(joinBinding, callback)
-		local upstreamBindings = joinBinding.__upstreamBindings
-		local disconnects: any = {}
+	function joinBindingPrototype._subscribe(joinBinding, callback)
+		local upstreamBindings = joinBinding._upstreamBindings
+		local disconnects = {} :: { () -> () }
 
 		for key, upstream in upstreamBindings do
-			disconnects[key] = upstream:__subscribe(function(newValue)
+			table.insert(disconnects, upstream:_subscribe(function(newValue)
 				callback(getValueJoin(upstreamBindings))
-			end)
+			end))
 		end
 
 		return function()
-			if not disconnects then
-				return
-			end
-
 			for _, disconnect in disconnects do
 				disconnect()
 			end
-			disconnects = nil
 		end
 	end
 
@@ -197,8 +194,8 @@ do -- join
 	-- The `join` API is used statically, so the input will be a table with values
 	-- typed as the public Binding type
 	function ReactBinding.join<T>(
-		upstreamBindings: { [string | number]: Binding<any> }
-	): Binding<T>
+		upstreamBindings: { [string | number]: ReactTypes.ReactBinding<any> }
+	): ReactTypes.ReactBinding<T>
 		local source
 
 		if ReactGlobals.__DEV__ then
@@ -223,9 +220,9 @@ do -- join
 		end
 
 		return setmetatable({
-			__upstreamBindings = upstreamBindings,
-			__source = source,
-		}, joinBindingPrototype)
+			_upstreamBindings = upstreamBindings,
+			_source = source,
+		}, joinBindingPrototype) :: any
 	end
 
 	table.freeze(joinBindingPrototype)
