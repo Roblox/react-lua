@@ -141,10 +141,8 @@ do -- map binding
 		}, mapBindingPrototype) :: any
 	end
 
-	function bindingPrototype.map(binding, predicate)
-		return mapBinding(binding, predicate)
-	end
-
+	
+	bindingPrototype.map = mapBinding
 	ReactBinding.map = mapBinding
 	table.freeze(mapBindingPrototype)
 	table.freeze(bindingPrototype)
