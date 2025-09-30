@@ -23,12 +23,8 @@ local RoactTree = require(script.RoactTree)
 
 return {
 	-- Overlapping contents of public `React` interface
-	Component = @[deprecated{ use = "React.Component"}] function(...)
-		return React.Component(...)
-	end,
-	PureComponent = @[deprecated{ use = "React.PureComponent"}] function(...)
-		return React.PureComponent(...)
-	end,
+	Component = React.Component,
+	PureComponent = React.PureComponent,
 	createElement = @[deprecated{ use = "React.createElement"}] function(...)
 		return React.createElement(...)
 	end,
