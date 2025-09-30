@@ -76,7 +76,7 @@ local bindingPrototype = {} do
 			_firing = false,
 		}
 
-		local function update<T>(newValue: T)
+		local function update(newValue: T)
 			binding._value = newValue
 
 			binding._firing = true
@@ -97,23 +97,23 @@ local bindingPrototype = {} do
 end
 
 do -- map binding
-	local mapBindingPrototype = setmetatable({}, bindingPrototype)
-	mapBindingPrototype.__index = mapBindingPrototype
+	local mappedBindingPrototype = setmetatable({}, bindingPrototype)
+	mappedBindingPrototype.__index = mappedBindingPrototype
 
-	function mapBindingPrototype.getValue(mapBinding)
-		return mapBinding._predicate(mapBinding._upstreamBinding:getValue())
+	function mappedBindingPrototype.getValue(mappedBinding)
+		return mappedBinding._predicate(mappedBinding._upstreamBinding:getValue())
 	end
 
-	function mapBindingPrototype._subscribe(mapBinding, callback)
-		local predicate = mapBinding._predicate
+	function mappedBindingPrototype._subscribe(mappedBinding, callback)
+		local predicate = mappedBinding._predicate
 
-		return mapBinding._upstreamBinding:_subscribe(function(newValue)
+		return mappedBinding._upstreamBinding:_subscribe(function(newValue)
 			callback(predicate(newValue))
 		end)
 	end
 
-	function mapBindingPrototype.update()
-		error("Bindings created by Binding:map() cannot be updated directly", 2)
+	function mappedBindingPrototype.update()
+		error("Bindings created by ReactBinding:map() cannot be updated directly", 2)
 	end
 
 	local function mapBinding<T, U>(
@@ -126,30 +126,30 @@ do -- map binding
 			-- ROBLOX TODO: More informative error messages here
 			assert(
 				IS_BINDING(upstreamBinding),
-				"Expected 'upstreamBinding' to be of type 'Binding'"
+				"Expected 'upstreamBinding' to be of type 'ReactBinding'"
 			)
-			assert(type(predicate) == "function", "Expected 'predicate' to be a function")
+			assert(type(predicate) == "function", "Expected 'predicate' to be of type function")
 
 			-- ROBLOX TODO: LUAFDN-619 - improve debug stacktraces for bindings
-			source = debug.traceback("Mapped binding created at:", 3)
+			source = debug.traceback("Mapped Binding created at:", 3)
 		end
 
 		return setmetatable({
 			_upstreamBinding = upstreamBinding,
 			_predicate = predicate,
 			_source = source,
-		}, mapBindingPrototype) :: any
+		}, mappedBindingPrototype) :: any
 	end
 
-	
+
 	bindingPrototype.map = mapBinding
 	ReactBinding.map = mapBinding
-	table.freeze(mapBindingPrototype)
+	table.freeze(mappedBindingPrototype)
 	table.freeze(bindingPrototype)
 end
 
 do -- join
-	local function getValueJoin(
+	local function getValueJoined(
 		upstreamBindings: { [string | number]: ReactTypes.ReactBinding<any> }
 	): { [string | number]: any }
 		local value = {}
@@ -161,20 +161,20 @@ do -- join
 		return value
 	end
 
-	local joinBindingPrototype = setmetatable({}, bindingPrototype)
-	joinBindingPrototype.__index = joinBindingPrototype
+	local joinedBindingPrototype = setmetatable({}, bindingPrototype)
+	joinedBindingPrototype.__index = joinedBindingPrototype
 
-	function joinBindingPrototype.getValue(joinBinding)
-		return getValueJoin(joinBinding._upstreamBindings)
+	function joinedBindingPrototype.getValue(joinedBinding)
+		return getValueJoined(joinedBinding._upstreamBindings)
 	end
 
-	function joinBindingPrototype._subscribe(joinBinding, callback)
-		local upstreamBindings = joinBinding._upstreamBindings
+	function joinedBindingPrototype._subscribe(joinedBinding, callback)
+		local upstreamBindings = joinedBinding._upstreamBindings
 		local disconnects = {} :: { () -> () }
 
 		for key, upstream in upstreamBindings do
 			table.insert(disconnects, upstream:_subscribe(function(newValue)
-				callback(getValueJoin(upstreamBindings))
+				callback(getValueJoined(upstreamBindings))
 			end))
 		end
 
@@ -185,7 +185,7 @@ do -- join
 		end
 	end
 
-	function joinBindingPrototype.update()
+	function joinedBindingPrototype.update()
 		error("Bindings created by React.joinBindings() cannot be updated directly", 2)
 	end
 
@@ -199,7 +199,7 @@ do -- join
 		if ReactGlobals.__DEV__ then
 			assert(
 				type(upstreamBindings) == "table",
-				"Expected arg #1 to be of type table"
+				"Expected 'upstreamBindings' to be of type table"
 			)
 
 			for key, value in upstreamBindings do
@@ -214,16 +214,16 @@ do -- join
 			end
 
 			-- ROBLOX TODO: LUAFDN-619 - improve debug stacktraces for bindings
-			source = debug.traceback("Joined binding created at:", 2)
+			source = debug.traceback("Joined Binding created at:", 2)
 		end
 
 		return setmetatable({
 			_upstreamBindings = upstreamBindings,
 			_source = source,
-		}, joinBindingPrototype) :: any
+		}, joinedBindingPrototype) :: any
 	end
 
-	table.freeze(joinBindingPrototype)
+	table.freeze(joinedBindingPrototype)
 end
 
 return table.freeze(ReactBinding)
