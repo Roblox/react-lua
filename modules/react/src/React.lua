@@ -134,8 +134,8 @@ return {
 	-- ROBLOX TODO: useOpaqueIdentifier as unstable_useOpaqueIdentifier,
 
 	-- ROBLOX DEVIATION START: bindings support
-	__subscribeToBinding = @[deprecated{ use = "Binding:_subscribe()" }] function<T>(
-		binding: ReactTypes.ReactBinding<T>,
+	__subscribeToBinding = @[deprecated{ use = "ReactBinding:_subscribe()" }] function<T>(
+		binding: ReactBinding<T>,
 		f: (value: T) -> ()
 	): () -> ()
 		return binding:_subscribe()
